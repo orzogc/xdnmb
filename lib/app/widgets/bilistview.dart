@@ -1,0 +1,303 @@
+import 'package:easy_refresh/easy_refresh.dart';
+import 'package:flutter/material.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+
+import 'loading.dart';
+import '../utils/exception.dart';
+import '../utils/theme.dart';
+import '../utils/toast.dart';
+
+typedef FetchPage<T> = Future<List<T>> Function(int page);
+
+class BiListView<T> extends StatefulWidget {
+  final int initialPage;
+
+  final int firstPage;
+
+  final int? lastPage;
+
+  final FetchPage<T> fetch;
+
+  final ItemWidgetBuilder<T> itemBuilder;
+
+  final Widget separator;
+
+  final WidgetBuilder? noItemsFoundBuilder;
+
+  const BiListView(
+      {super.key,
+      required this.initialPage,
+      this.firstPage = 1,
+      this.lastPage,
+      required this.fetch,
+      required this.itemBuilder,
+      this.separator = const Divider(height: 10.0, thickness: 1.0),
+      this.noItemsFoundBuilder});
+
+  @override
+  State<BiListView<T>> createState() => _BiListViewState<T>();
+}
+
+class _BiListViewState<T> extends State<BiListView<T>>
+    with AutomaticKeepAliveClientMixin<BiListView<T>> {
+  PagingController<int, T>? _pagingUpController;
+
+  PagingController<int, T>? _pagingDownController;
+
+  final Key _downKey = UniqueKey();
+
+  EasyRefreshController? _refreshController = EasyRefreshController(
+    controlFinishRefresh: true,
+    controlFinishLoad: true,
+  );
+
+  bool _isLoading = false;
+
+  bool _isRefreshing = false;
+
+  int _lastPage = 0;
+
+  int _itemListLength = 0;
+
+  Future<void> _fetchUpPage(int page) async {
+    final lastPage = widget.lastPage;
+    if (lastPage != null && page > lastPage) {
+      _pagingUpController?.appendPage([], page - 1);
+      return;
+    }
+
+    if (page >= widget.firstPage) {
+      try {
+        debugPrint('up page fetching $T page: $page');
+
+        final list = await widget.fetch(page);
+
+        page != widget.firstPage
+            ? _pagingUpController?.appendPage(list.reversed.toList(), page - 1)
+            : _pagingUpController?.appendLastPage(list.reversed.toList());
+      } catch (e) {
+        debugPrint('up page获取$T列表失败：$e');
+        _pagingUpController?.error = e;
+      }
+    } else {
+      _pagingUpController?.appendLastPage([]);
+    }
+  }
+
+  Future<void> _fetchDownPage(int page) async {
+    final lastPage = widget.lastPage;
+    if (lastPage != null && page > lastPage) {
+      _pagingDownController?.appendLastPage([]);
+      return;
+    }
+
+    if (page >= widget.firstPage) {
+      try {
+        debugPrint('down page fetching $T page: $page');
+
+        final list = await widget.fetch(page);
+
+        if (_isLoading && _pagingDownController?.itemList != null) {
+          _pagingDownController?.itemList!.removeRange(
+              _itemListLength, (_pagingDownController?.itemList)!.length);
+        }
+
+        if (list.isNotEmpty) {
+          _lastPage = page;
+          _itemListLength = _pagingDownController?.itemList?.length ?? 0;
+        }
+
+        (lastPage != null && page != lastPage) ||
+                (lastPage == null && list.isNotEmpty)
+            ? _pagingDownController?.appendPage(list, page + 1)
+            : _pagingDownController?.appendLastPage(list);
+      } catch (e) {
+        debugPrint('down page获取$T列表失败：$e');
+        _pagingDownController?.error = e;
+      }
+    } else {
+      _pagingDownController?.appendPage([], page + 1);
+    }
+  }
+
+  Future<void> _refresh() async {
+    if (!_isRefreshing) {
+      _isRefreshing = true;
+
+      try {
+        if (widget.initialPage == widget.firstPage) {
+          _pagingUpController?.refresh();
+          _pagingDownController?.refresh();
+        } else {
+          _pagingUpController?.itemList?.clear();
+          _pagingDownController?.itemList?.clear();
+
+          await _fetchUpPage(widget.firstPage);
+          await _fetchDownPage(widget.firstPage + 1);
+        }
+      } finally {
+        _isRefreshing = false;
+      }
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (!_isLoading) {
+      _isLoading = true;
+
+      try {
+        await _fetchDownPage(_lastPage);
+      } finally {
+        _isLoading = false;
+      }
+    }
+  }
+
+  Widget _errorWidgetBuilder(PagingController<int, T> controller) {
+    showToast(exceptionMessage(controller.error));
+
+    return InkWell(
+      onTap: () {
+        if (controller.error != null) {
+          controller.retryLastFailedRequest();
+        }
+      },
+      child: DefaultTextStyle.merge(
+        style: const TextStyle(
+          color: Colors.red,
+          fontWeight: FontWeight.bold,
+        ),
+        child: const Center(child: Text('出现错误，点击重新尝试')),
+      ),
+    );
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pagingUpController =
+        PagingController(firstPageKey: widget.initialPage - 1);
+    _pagingDownController = PagingController(firstPageKey: widget.initialPage);
+
+    _pagingUpController!.addPageRequestListener(_fetchUpPage);
+    _pagingDownController!.addPageRequestListener(_fetchDownPage);
+  }
+
+  @override
+  void dispose() {
+    _pagingUpController?.dispose();
+    _pagingUpController = null;
+    _pagingDownController?.dispose();
+    _pagingDownController = null;
+    _refreshController?.dispose();
+    _refreshController = null;
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: EasyRefresh(
+        controller: _refreshController,
+        onRefresh: () async {
+          if (!_isRefreshing) {
+            await _refresh();
+            _refreshController?.finishRefresh();
+          }
+        },
+        onLoad: widget.lastPage == null
+            ? () async {
+                if (!_isLoading) {
+                  await _loadMore();
+                  _refreshController?.finishLoad();
+                }
+              }
+            : null,
+        header: const MaterialHeader(clamping: false),
+        footer: widget.lastPage == null
+            ? const MaterialFooter(clamping: false)
+            : null,
+        noMoreRefresh: true,
+        noMoreLoad: widget.lastPage == null ? true : false,
+        child: Scrollable(
+          viewportBuilder: (context, position) => Viewport(
+            offset: position,
+            center: _downKey,
+            slivers: [
+              if (widget.initialPage > 1)
+                PagedSliverList.separated(
+                  pagingController: _pagingUpController!,
+                  separatorBuilder: (context, index) => widget.separator,
+                  builderDelegate: PagedChildBuilderDelegate<T>(
+                    itemBuilder: widget.itemBuilder,
+                    firstPageErrorIndicatorBuilder: (context) =>
+                        _errorWidgetBuilder(_pagingUpController!),
+                    newPageErrorIndicatorBuilder: (context) =>
+                        _errorWidgetBuilder(_pagingUpController!),
+                    firstPageProgressIndicatorBuilder: (context) =>
+                        const QuotationLoadingIndicator(),
+                    newPageProgressIndicatorBuilder: (context) =>
+                        const Quotation(),
+                    noItemsFoundIndicatorBuilder: (context) =>
+                        const SizedBox.shrink(),
+                    noMoreItemsIndicatorBuilder: (context) =>
+                        const SizedBox.shrink(),
+                  ),
+                ),
+              if (widget.initialPage > 1)
+                SliverToBoxAdapter(child: widget.separator),
+              PagedSliverList.separated(
+                key: _downKey,
+                pagingController: _pagingDownController!,
+                separatorBuilder: (context, index) => widget.separator,
+                builderDelegate: PagedChildBuilderDelegate<T>(
+                  itemBuilder: widget.itemBuilder,
+                  firstPageErrorIndicatorBuilder: (context) =>
+                      _errorWidgetBuilder(_pagingDownController!),
+                  newPageErrorIndicatorBuilder: (context) =>
+                      _errorWidgetBuilder(_pagingDownController!),
+                  firstPageProgressIndicatorBuilder: (context) =>
+                      const QuotationLoadingIndicator(),
+                  newPageProgressIndicatorBuilder: (context) =>
+                      const Quotation(),
+                  noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
+                  noMoreItemsIndicatorBuilder: (context) =>
+                      widget.lastPage == null
+                          ? GestureDetector(
+                              onTap: _loadMore,
+                              child: Center(
+                                child: Text(
+                                  '上拉或点击刷新',
+                                  style: TextStyle(
+                                    color: specialTextColor(),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Center(
+                              child: Text(
+                                '已经抵达X岛的尽头',
+                                style: TextStyle(
+                                  color: specialTextColor(),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
