@@ -1,7 +1,9 @@
+import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/page.dart';
 import '../data/services/forum.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
@@ -112,51 +114,61 @@ class ForumBody extends StatelessWidget {
     final forums = ForumListService.to;
 
     return Obx(
-      () => BiListView<ForumThread>(
-        key: ValueKey<PostList>(PostList.fromController(controller)),
-        initialPage: controller.page.value,
-        lastPage: forums.maxPage(controller.id.value!,
-                isTimeline: controller.postListType.value.isTimeline()) ??
-            100,
-        fetch: controller.postListType.value.isTimeline()
-            ? (page) => client.getTimeline(controller.id.value!, page: page)
-            : (page) => client.getForum(controller.id.value!, page: page),
-        itemBuilder: (context, thread, index) => Card(
-          margin: const EdgeInsets.symmetric(vertical: 4.0),
-          elevation: 1.5,
-          child: PostCard(
-            key: thread.mainPost.toValueKey(index),
-            post: thread.mainPost,
-            showForumName: controller.postListType.value.isTimeline(),
-            contentMaxLines: 8,
-            poUserHash: thread.mainPost.userHash,
-            onTap: (post) => Get.toNamed(
-              AppRoutes.thread,
-              id: StackCacheView.getKeyId(),
-              arguments: thread.mainPost,
-              parameters: {
-                'mainPostId': '${thread.mainPost.id}',
-                'page': '1',
-              },
-            ),
-            onLongPress: (post) => postListDialog(_ForumDialog(post)),
-            onLinkTap: null,
-            onHiddenText: (context, element, textStyle) => onHiddenText(
-              context: context,
-              element: element,
-              textStyle: textStyle,
-              poUserHash: thread.mainPost.userHash,
+      () {
+        final anchorController = AnchorScrollController(
+          onIndexChanged: (index, userScroll) =>
+              controller.currentPage.value = index.getPageFromIndex(),
+        );
+
+        return BiListView<ThreadWithPage>(
+          key: ValueKey<PostList>(PostList.fromController(controller)),
+          controller: anchorController,
+          initialPage: controller.page.value,
+          lastPage: forums.maxPage(controller.id.value!,
+                  isTimeline: controller.postListType.value.isTimeline()) ??
+              100,
+          fetch: (page) async => controller.postListType.value.isTimeline()
+              ? (await client.getTimeline(controller.id.value!, page: page))
+                  .map((thread) => ThreadWithPage(thread, page))
+                  .toList()
+              : (await client.getForum(controller.id.value!, page: page))
+                  .map((thread) => ThreadWithPage(thread, page))
+                  .toList(),
+          itemBuilder: (context, thread, index) => AnchorItemWrapper(
+            key: thread.toValueKey(),
+            controller: anchorController,
+            index: thread.toIndex(),
+            child: Card(
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              elevation: 1.5,
+              child: PostCard(
+                post: thread.thread.mainPost,
+                showForumName: controller.postListType.value.isTimeline(),
+                contentMaxLines: 8,
+                poUserHash: thread.thread.mainPost.userHash,
+                onTap: (post) => AppRoutes.toThread(
+                    mainPostId: thread.thread.mainPost.id,
+                    mainPost: thread.thread.mainPost),
+                onLongPress: (post) => postListDialog(_ForumDialog(post)),
+                onLinkTap: null,
+                onHiddenText: (context, element, textStyle) => onHiddenText(
+                  context: context,
+                  element: element,
+                  textStyle: textStyle,
+                  poUserHash: thread.thread.mainPost.userHash,
+                ),
+              ),
             ),
           ),
-        ),
-        separator: const SizedBox.shrink(),
-        noItemsFoundBuilder: (context) => const Center(
-          child: Text(
-            '这个板块没有帖子',
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          separator: const SizedBox.shrink(),
+          noItemsFoundBuilder: (context) => const Center(
+            child: Text(
+              '这里没有串',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

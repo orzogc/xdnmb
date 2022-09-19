@@ -1,8 +1,10 @@
+import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/page.dart';
 import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
@@ -108,58 +110,68 @@ class FeedBody extends StatelessWidget {
     return ValueListenableBuilder<Box>(
       valueListenable: settings.feedUuidListenable,
       builder: (context, value, child) => Obx(
-        () => BiListView<Feed>(
-          key: ValueKey<_FeedKey>(_FeedKey.fromController(controller)),
-          initialPage: controller.page.value,
-          fetch: (page) => client.getFeed(settings.feedUuid, page: page),
-          itemBuilder: (context, feed, index) {
-            final isVisible = true.obs;
+        () {
+          final anchorController = AnchorScrollController(
+            onIndexChanged: (index, userScroll) =>
+                controller.currentPage.value = index.getPageFromIndex(),
+          );
 
-            return Obx(
-              () => isVisible.value
-                  ? Card(
-                      margin: const EdgeInsets.symmetric(vertical: 4.0),
-                      elevation: 1.5,
-                      child: PostCard(
-                        key: feed.toValueKey(index),
-                        post: feed,
-                        contentMaxLines: 8,
-                        poUserHash: feed.userHash,
-                        onTap: (post) => Get.toNamed(
-                          AppRoutes.thread,
-                          id: StackCacheView.getKeyId(),
-                          arguments: feed,
-                          parameters: {
-                            'mainPostId': '${feed.id}',
-                            'page': '1',
-                          },
-                        ),
-                        onLongPress: (post) => postListDialog<bool>(
-                          _FeedDialog(
-                            post: post,
-                            onDelete: () => isVisible.value = false,
+          return BiListView<PostWithPage>(
+            key: ValueKey<_FeedKey>(_FeedKey.fromController(controller)),
+            controller: anchorController,
+            initialPage: controller.page.value,
+            fetch: (page) async =>
+                (await client.getFeed(settings.feedUuid, page: page))
+                    .map((feed) => PostWithPage(feed, page))
+                    .toList(),
+            itemBuilder: (context, feed, index) {
+              final isVisible = true.obs;
+
+              return Obx(
+                () => isVisible.value
+                    ? AnchorItemWrapper(
+                        key: feed.toValueKey(),
+                        controller: anchorController,
+                        index: feed.toIndex(),
+                        child: Card(
+                          margin: const EdgeInsets.symmetric(vertical: 4.0),
+                          elevation: 1.5,
+                          child: PostCard(
+                            post: feed.post,
+                            contentMaxLines: 8,
+                            poUserHash: feed.post.userHash,
+                            onTap: (post) => AppRoutes.toThread(
+                                mainPostId: feed.post.id, mainPost: feed.post),
+                            onLongPress: (post) => postListDialog<bool>(
+                              _FeedDialog(
+                                post: post,
+                                onDelete: () => isVisible.value = false,
+                              ),
+                            ),
+                            onLinkTap: null,
+                            onHiddenText: (context, element, textStyle) =>
+                                onHiddenText(
+                                    context: context,
+                                    element: element,
+                                    textStyle: textStyle,
+                                    poUserHash: feed.post.userHash),
                           ),
                         ),
-                        onLinkTap: null,
-                        onHiddenText: (context, element, textStyle) =>
-                            onHiddenText(
-                                context: context,
-                                element: element,
-                                textStyle: textStyle,
-                                poUserHash: feed.userHash),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            );
-          },
-          separator: const SizedBox.shrink(),
-          noItemsFoundBuilder: (context) => const Center(
-            child: Text(
-              '没有订阅',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                      )
+                    : const SizedBox.shrink(),
+              );
+            },
+            separator: const SizedBox.shrink(),
+            noItemsFoundBuilder: (context) => const Center(
+              child: Text(
+                '这里没有订阅',
+                style:
+                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-        ),
+            canRefreshAtBottom: false,
+          );
+        },
       ),
     );
   }

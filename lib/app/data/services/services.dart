@@ -4,6 +4,7 @@ import 'drafts.dart';
 import 'forum.dart';
 import 'image.dart';
 import 'persistent.dart';
+import 'history.dart';
 import 'settings.dart';
 import 'time.dart';
 import 'user.dart';
@@ -16,6 +17,7 @@ Bindings servicesBindings() => BindingsBuilder(() {
       Get.put(PersistentDataService());
       Get.put(ImageService());
       Get.put(ForumListService());
+      Get.put(PostHistoryService());
       Get.put(PostDraftsService());
       Get.put(XdnmbClientService());
     });

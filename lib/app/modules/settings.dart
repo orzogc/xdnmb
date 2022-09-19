@@ -76,9 +76,9 @@ class SettingsView extends GetView<SettingsController> {
       ),
       body: ListView(
         children: [
-          ListTile(
-            title: const Text('管理饼干'),
-            onTap: () => Get.toNamed(AppRoutes.userPath),
+          const ListTile(
+            title: Text('管理饼干'),
+            onTap: AppRoutes.toUser,
           ),
           ValueListenableBuilder<Box>(
             valueListenable: settings.showImageListenable,
@@ -93,10 +93,40 @@ class SettingsView extends GetView<SettingsController> {
           ValueListenableBuilder<Box>(
             valueListenable: settings.isWatermarkListenable,
             builder: (context, value, child) => ListTile(
-              title: const Text('发送的图片默认附带水印'),
+              title: const Text('发送图片默认附带水印'),
               trailing: Switch(
                 value: settings.isWatermark,
                 onChanged: (value) => settings.isWatermark = value,
+              ),
+            ),
+          ),
+          ValueListenableBuilder<Box>(
+            valueListenable: settings.isJumpToLastBrowsePageListenable,
+            builder: (context, value, child) => ListTile(
+              title: const Text('打开串时自动跳转到上一次浏览到的页数'),
+              trailing: Switch(
+                value: settings.isJumpToLastBrowsePage,
+                onChanged: (value) => settings.isJumpToLastBrowsePage = value,
+              ),
+            ),
+          ),
+          ValueListenableBuilder<Box>(
+            valueListenable: settings.isJumpToLastBrowsePageListenable,
+            builder: (context, value, child) => ValueListenableBuilder(
+              valueListenable: settings.isJumpToLastBrowsePositionListenable,
+              builder: (context, value, child) => ListTile(
+                title: Text(
+                  '自动跳转页数时跳转到上一次浏览到的位置',
+                  style: TextStyle(
+                      color:
+                          settings.isJumpToLastBrowsePage ? null : Colors.grey),
+                ),
+                trailing: Switch(
+                  value: settings.isJumpToLastBrowsePosition,
+                  onChanged: settings.isJumpToLastBrowsePage
+                      ? (value) => settings.isJumpToLastBrowsePosition = value
+                      : null,
+                ),
               ),
             ),
           ),

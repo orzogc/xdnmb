@@ -12,4 +12,10 @@ abstract class HiveBoxName {
   static const String data = 'data';
 
   static const String draft = 'draft';
+
+  static const String browseHistory = 'browseHistory';
+
+  static const String postHistory = 'postHistory';
+
+  static const String replyHistory = 'replyHistory';
 }

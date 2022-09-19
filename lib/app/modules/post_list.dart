@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:get/get.dart';
-import 'package:xdnmb/app/widgets/post.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/draft.dart';
@@ -9,12 +8,14 @@ import '../data/models/forum.dart';
 import '../data/services/drafts.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
+import '../data/services/history.dart';
 import '../data/services/settings.dart';
 import '../data/services/user.dart';
 import '../modules/edit_post.dart';
 import '../routes/routes.dart';
 import '../utils/navigation.dart';
 import '../utils/toast.dart';
+import '../widgets/button.dart';
 import '../widgets/drawer.dart';
 import '../widgets/edit_post.dart';
 import '../widgets/end_drawer.dart';
@@ -100,6 +101,8 @@ class PostListController extends GetxController {
 
   final RxInt page;
 
+  final RxInt currentPage;
+
   final Rxn<PostBase> post;
 
   int? get forumOrTimelineId => postListType.value.isThreadType()
@@ -115,22 +118,26 @@ class PostListController extends GetxController {
       {required PostListType postListType,
       int? id,
       int page = 1,
+      int? currentPage,
       PostBase? post})
       : postListType = postListType.obs,
         id = RxnInt(id),
         page = page.obs,
+        currentPage = currentPage != null ? currentPage.obs : page.obs,
         post = Rxn(post);
 
   PostListController.fromPostList({required PostList postList, PostBase? post})
       : postListType = postList.postListType.obs,
         id = RxnInt(postList.id),
         page = postList.page.obs,
+        currentPage = postList.page.obs,
         post = Rxn(post);
 
   PostListController.fromPost({required PostBase post, int page = 1})
       : postListType = PostListType.thread.obs,
         id = RxnInt(post.id),
         page = page.obs,
+        currentPage = page.obs,
         post = Rxn(post);
 
   PostListController.fromThread(
@@ -139,6 +146,7 @@ class PostListController extends GetxController {
             isThread ? PostListType.thread.obs : PostListType.onlyPoThread.obs,
         id = RxnInt(thread.mainPost.id),
         page = page.obs,
+        currentPage = page.obs,
         post = Rxn(thread.mainPost);
 
   PostListController.fromForumData({required ForumData forum, int page = 1})
@@ -146,26 +154,26 @@ class PostListController extends GetxController {
             (forum.isTimeline ? PostListType.timeline : PostListType.forum).obs,
         id = RxnInt(forum.id),
         page = page.obs,
+        currentPage = page.obs,
         post = Rxn(null);
 
-  void toThread({required int mainPostId, int page = 1, PostBase? post}) {
+  void onlyPoThreadToThread({int page = 1}) {
     postListType.value = PostListType.thread;
-    id.value = mainPostId;
     this.page.value = page;
-    this.post.value = post;
+    currentPage.value = page;
   }
 
-  void toOnlyPoThread({required int mainPostId, int page = 1, PostBase? post}) {
+  void threadToOnlyPoThread({int page = 1}) {
     postListType.value = PostListType.onlyPoThread;
-    id.value = mainPostId;
     this.page.value = page;
-    this.post.value = post;
+    currentPage.value = page;
   }
 
-  void toForum({required int forumId, int page = 1}) {
+  /* void toForum({required int forumId, int page = 1}) {
     postListType.value = PostListType.forum;
     id.value = forumId;
     this.page.value = page;
+    currentPage.value = page;
     post.value = null;
   }
 
@@ -173,20 +181,23 @@ class PostListController extends GetxController {
     postListType.value = PostListType.timeline;
     id.value = timelineId;
     this.page.value = page;
+    currentPage.value = page;
     post.value = null;
-  }
+  } */
 
   void fromPostList({required PostList postList, PostBase? post}) {
     postListType.value = postList.postListType;
     id.value = postList.id;
     page.value = postList.page;
+    currentPage.value = postList.page;
     this.post.value = post;
   }
 
-  PostListController copy() => PostListController(
+  PostListController copyKeepingPage() => PostListController(
       postListType: postListType.value,
       id: id.value,
-      page: page.value,
+      page: currentPage.value,
+      currentPage: currentPage.value,
       post: post.value);
 }
 
@@ -214,7 +225,6 @@ class PostListBinding implements Bindings {
   }
 }
 
-// TODO: 显示页数、支持跳页
 class _PostListAppBar extends StatefulWidget implements PreferredSizeWidget {
   static final GlobalKey<_PostListAppBarState> _appBarKey =
       GlobalKey<_PostListAppBarState>();
@@ -260,11 +270,19 @@ class _PostListAppBarState extends State<_PostListAppBar> {
 
     return Obx(
       () {
+        final post = controller.post.value;
+
         late final Widget title;
+        int? maxPage;
         switch (postListType.value) {
           case PostListType.thread:
           case PostListType.onlyPoThread:
             title = ThreadAppBarTitle(controller);
+            maxPage = post?.replyCount != null
+                ? post!.replyCount! != 0
+                    ? (post.replyCount! / 19).ceil()
+                    : 1
+                : null;
             break;
           case PostListType.forum:
           case PostListType.timeline:
@@ -279,13 +297,11 @@ class _PostListAppBarState extends State<_PostListAppBar> {
           leading: button,
           title: title,
           actions: [
-            if (postListType.value.isThread()) OnlyPoThreadButton(controller),
-            if (postListType.value.isThreadType() &&
-                controller.post.value != null)
+            PageButton(controller: controller, maxPage: maxPage),
+            if (postListType.value.isThreadType())
               ThreadAppBarPopupMenuButton(controller),
             if (postListType.value.isForumType())
               ForumAppBarPopupMenuButton(controller),
-            if (postListType.value.isFeed()) const SizedBox.shrink(),
           ],
         );
       },
@@ -670,6 +686,7 @@ class PostListView extends StackCacheView<PostListController> {
     final data = PersistentDataService.to;
     final drafts = PostDraftsService.to;
     final forums = ForumListService.to;
+    final history = PostHistoryService.to;
     final settings = SettingsService.to;
     final user = UserService.to;
 
@@ -679,6 +696,7 @@ class PostListView extends StackCacheView<PostListController> {
         () => (data.isReady.value &&
                 drafts.isReady.value &&
                 forums.isReady.value &&
+                history.isReady.value &&
                 settings.isReady.value &&
                 user.isReady.value)
             ? Scaffold(
@@ -687,17 +705,10 @@ class PostListView extends StackCacheView<PostListController> {
                   children: [
                     Expanded(child: PostListPage(key: PostListPage.pageKey)),
                     Obx(
-                      () => /* _bottomSheetController.value != null
-                          ? (data.isKeyboardVisible.value
-                              ? SizedBox(
-                                  height:
-                                      bottomSheetHeight + data.keyboardHeight!)
-                              : SizedBox(height: bottomSheetHeight))
-                          : const SizedBox.shrink(), */
-                          (_bottomSheetController.value != null &&
-                                  !data.isKeyboardVisible.value)
-                              ? SizedBox(height: bottomSheetHeight)
-                              : const SizedBox.shrink(),
+                      () => (_bottomSheetController.value != null &&
+                              !data.isKeyboardVisible.value)
+                          ? SizedBox(height: bottomSheetHeight)
+                          : const SizedBox.shrink(),
                     ),
                   ],
                 ),

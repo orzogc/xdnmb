@@ -62,7 +62,9 @@ class InputDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        contentPadding: const EdgeInsets.only(left: 10.0, right: 10.0),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+        actionsPadding: const EdgeInsets.only(bottom: 10.0),
         actionsAlignment: MainAxisAlignment.spaceAround,
         title: title,
         content: SingleChildScrollViewWithScrollbar(child: content),
@@ -331,7 +333,7 @@ class CopyPostContent extends StatelessWidget {
           postListBack();
         },
         child: Text(
-          '复制串内容',
+          '复制串的内容',
           style: TextStyle(
               fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
         ),
@@ -356,9 +358,71 @@ class AddFeed extends StatelessWidget {
           }
         },
         child: Text(
-          '订阅该串',
+          '订阅',
           style: TextStyle(
               fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
         ),
       );
+}
+
+class JumpPageDialog extends StatelessWidget {
+  final int currentPage;
+
+  final int? maxPage;
+
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  JumpPageDialog({super.key, required this.currentPage, this.maxPage});
+
+  @override
+  Widget build(BuildContext context) {
+    String? page;
+
+    return InputDialog(
+      title: const Text('跳页'),
+      content: Form(
+        key: _formKey,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            SizedBox(
+              width: 80,
+              child: TextFormField(
+                initialValue: '$currentPage',
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                onSaved: (newValue) => page = newValue,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '请输入页数';
+                  }
+
+                  final num = int.tryParse(value);
+                  if (num == null || (maxPage != null && num > maxPage!)) {
+                    return '请输入页数';
+                  }
+
+                  return null;
+                },
+              ),
+            ),
+            if (maxPage != null) const Text('/'),
+            if (maxPage != null) Text('$maxPage'),
+          ],
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              postListBack<int>(result: int.tryParse(page!));
+            }
+          },
+          child: const Text('确定'),
+        )
+      ],
+    );
+  }
 }

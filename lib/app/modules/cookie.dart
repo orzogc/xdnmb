@@ -31,14 +31,16 @@ class _VerifyImage extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData) {
             return Image.memory(snapshot.data!);
-          } else if (snapshot.connectionState == ConnectionState.done &&
+          }
+
+          if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasError) {
             showToast('加载验证码失败：${exceptionMessage(snapshot.error!)}');
 
             return const Text('点击重新加载验证码', style: TextStyle(color: Colors.red));
-          } else {
-            return const CircularProgressIndicator();
           }
+
+          return const CircularProgressIndicator();
         },
       ),
     );
@@ -86,7 +88,6 @@ class _LoginForm extends StatelessWidget {
               ),
               const SizedBox(height: 10.0),
               const _VerifyImage(),
-              //const SizedBox(height: 10.0),
             ],
           ),
         ),
@@ -444,14 +445,11 @@ class _Cookie extends StatelessWidget {
             const SizedBox(width: 10.0),
           IconButton(
             onPressed: _editNote,
-            icon: const Icon(
-              Icons.edit,
-              size: 20.0,
-            ),
+            icon: const Icon(Icons.edit),
           ),
           IconButton(
             onPressed: _deleteCookie,
-            icon: const Icon(Icons.delete_outline, size: 20.0),
+            icon: const Icon(Icons.delete_outline),
           ),
         ],
       ),

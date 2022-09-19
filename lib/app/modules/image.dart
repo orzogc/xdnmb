@@ -384,15 +384,15 @@ class ImageView extends GetView<ImageController> {
                   progress,
                   quotation,
                   () => Obx(
-                    () => isLoaded.value
-                        ? const SizedBox.shrink()
-                        : Hero(
+                    () => !isLoaded.value
+                        ? Hero(
                             tag: controller.tag,
                             child: CachedNetworkImage(
                               imageUrl: controller.post.thumbImageUrl()!,
                               cacheManager: XdnmbImageCacheManager(),
                             ),
-                          ),
+                          )
+                        : const SizedBox.shrink(),
                   ),
                 ),
                 errorWidget: loadingImageErrorBuilder,

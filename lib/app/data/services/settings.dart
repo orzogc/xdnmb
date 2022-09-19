@@ -40,6 +40,19 @@ class SettingsService extends GetxService {
   set isWatermark(bool isWatermark) =>
       _settingsBox.put(Settings.isWatermark, isWatermark);
 
+  bool get isJumpToLastBrowsePage =>
+      _settingsBox.get(Settings.isJumpToLastBrowsePage, defaultValue: true);
+
+  set isJumpToLastBrowsePage(bool isJumpToLastBrowseHistory) => _settingsBox
+      .put(Settings.isJumpToLastBrowsePage, isJumpToLastBrowseHistory);
+
+  bool get isJumpToLastBrowsePosition =>
+      _settingsBox.get(Settings.isJumpToLastBrowsePosition, defaultValue: true);
+
+  set isJumpToLastBrowsePosition(bool isJumpToLastBrowsePosition) =>
+      _settingsBox.put(
+          Settings.isJumpToLastBrowsePosition, isJumpToLastBrowsePosition);
+
   String get feedUuid => _settingsBox.get(Settings.feedUuid);
 
   set feedUuid(String uuid) => _settingsBox.put(Settings.feedUuid, uuid);
@@ -47,6 +60,10 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> showImageListenable;
 
   late final ValueListenable<Box> isWatermarkListenable;
+
+  late final ValueListenable<Box> isJumpToLastBrowsePageListenable;
+
+  late final ValueListenable<Box> isJumpToLastBrowsePositionListenable;
 
   late final ValueListenable<Box> feedUuidListenable;
 
@@ -79,6 +96,10 @@ class SettingsService extends GetxService {
     showImageListenable = _settingsBox.listenable(keys: [Settings.showImage]);
     isWatermarkListenable =
         _settingsBox.listenable(keys: [Settings.isWatermark]);
+    isJumpToLastBrowsePageListenable =
+        _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePage]);
+    isJumpToLastBrowsePositionListenable =
+        _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePosition]);
     feedUuidListenable = _settingsBox.listenable(keys: [Settings.feedUuid]);
 
     isReady.value = true;

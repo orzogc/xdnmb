@@ -57,7 +57,7 @@ class _DrawerHeader extends StatelessWidget {
               icon: Icon(Icons.search, color: theme.colorScheme.onPrimary),
             ),
             IconButton(
-              onPressed: () => Get.toNamed(AppRoutes.settings),
+              onPressed: AppRoutes.toSettings,
               tooltip: '设置',
               icon: Icon(Icons.settings, color: theme.colorScheme.onPrimary),
             ),
@@ -170,10 +170,6 @@ class _DrawerBottom extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = TextButton.styleFrom(
-        textStyle:
-            (theme.appBarTheme.titleTextStyle ?? theme.textTheme.headline6)
-                ?.merge(const TextStyle(fontWeight: FontWeight.bold)));
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0),
@@ -181,28 +177,24 @@ class _DrawerBottom extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           TextButton(
-            style: style,
-            onPressed: null,
+            //style: style,
+            onPressed: () {},
             child: Text(
               '赞助',
-              style: TextStyle(color: theme.primaryColor),
+              style: (theme.appBarTheme.titleTextStyle ??
+                      theme.textTheme.headline6)
+                  ?.merge(TextStyle(
+                      color: theme.primaryColor, fontWeight: FontWeight.bold)),
             ),
           ),
-          TextButton(
-            style: style,
+          IconButton(onPressed: () {}, icon: const Icon(Icons.event_note)),
+          IconButton(
             onPressed: () {
-              Get.toNamed(
-                AppRoutes.feed,
-                id: StackCacheView.getKeyId(),
-                parameters: {'page': '1'},
-              );
+              AppRoutes.toFeed();
               Get.back();
             },
-            child: Text(
-              '订阅',
-              style: TextStyle(color: theme.textTheme.bodyText2?.color),
-            ),
-          ),
+            icon: const Icon(Icons.feed),
+          )
         ],
       ),
     );

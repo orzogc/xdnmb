@@ -123,21 +123,22 @@ class UserService extends GetxService {
     totalCookiesNum = list.totalCookiesNum;
 
     final normal = <CookieData>[];
-    for (final cookie in list.cookiesList) {
-      if (!xdnmbCookies.any((c) {
-        if (c.userHash == cookie.userHash) {
-          normal.add(CookieData.fromXdnmbCookie(cookie: cookie, note: c.note));
+    for (final cookieId in list.cookiesIdList) {
+      if (!xdnmbCookies.any((cookie) {
+        if (cookie.id == cookieId) {
+          normal.add(cookie);
           return true;
         }
         return false;
       })) {
-        normal.add(CookieData.fromXdnmbCookie(cookie: cookie));
+        normal.add(CookieData.fromXdnmbCookie(
+            cookie: await client.getCookie(cookieId)));
       }
     }
 
     final deprecated = <CookieData>[];
     for (final cookie in xdnmbCookies) {
-      if (!list.cookiesList.any((c) => c.userHash == cookie.userHash)) {
+      if (!list.cookiesIdList.any((cookieId) => cookieId == cookie.id)) {
         deprecated.add(cookie.deprecate());
       }
     }

@@ -1,3 +1,10 @@
+import 'package:get/get.dart';
+import 'package:xdnmb_api/xdnmb_api.dart';
+
+import '../modules/image.dart';
+import '../modules/post_list.dart';
+import '../modules/stack_cache.dart';
+
 abstract class AppRoutes {
   /// 参数：forumId和page
   static const String forum = '/${PathNames.forum}';
@@ -5,7 +12,7 @@ abstract class AppRoutes {
   /// 参数：timelineId和page
   static const String timeline = '/${PathNames.timeline}';
 
-  /// 参数：mainPostId和page
+  /// 参数：mainPostId和page，arguments为主串Post
   static const String thread = '/${PathNames.thread}';
 
   /// 参数：mainPostId和page
@@ -50,6 +57,90 @@ abstract class AppRoutes {
   static String referenceUrl(int postId) => '$reference?postId=$postId';
 
   static String feedUrl({int page = 1}) => '$feed?page=$page';
+
+  static Future<T?>? toForum<T>({required int forumId, int page = 1}) =>
+      Get.toNamed(
+        forum,
+        id: StackCacheView.getKeyId(),
+        parameters: {
+          'forumId': '$forumId',
+          'page': '$page',
+        },
+      );
+
+  static Future<T?>? toTimeline<T>({required int timelineId, int page = 1}) =>
+      Get.toNamed(
+        timeline,
+        id: StackCacheView.getKeyId(),
+        parameters: {
+          'timelineId': '$timelineId',
+          'page': '$page',
+        },
+      );
+
+  static Future<T?>? toThread<T>(
+          {required int mainPostId, int page = 1, PostBase? mainPost}) =>
+      Get.toNamed(
+        thread,
+        id: StackCacheView.getKeyId(),
+        arguments: mainPost,
+        parameters: {
+          'mainPostId': '$mainPostId',
+          'page': '$page',
+        },
+      );
+
+  static Future<T?>? toOnlyPoThread<T>(
+          {required int mainPostId, int page = 1, PostBase? mainPost}) =>
+      Get.toNamed(
+        onlyPoThread,
+        id: StackCacheView.getKeyId(),
+        arguments: mainPost,
+        parameters: {
+          'mainPostId': '$mainPostId',
+          'page': '$page',
+        },
+      );
+
+  static Future<T?>? toFeed<T>({int page = 1}) => Get.toNamed(
+        feed,
+        id: StackCacheView.getKeyId(),
+        parameters: {'page': '$page'},
+      );
+
+  static Future<T?>? toImage<T>(ImageController controller) =>
+      Get.toNamed(image, arguments: controller);
+
+  static Future<T?>? toSettings<T>() => Get.toNamed(settings);
+
+  static Future<T?>? toUser<T>() => Get.toNamed(userPath);
+
+  static Future<T?>? toReorderForums<T>() => Get.toNamed(reorderForums);
+
+  static Future<T?>? toEditPost<T>(
+          {required PostListType postListType,
+          required int id,
+          required String title,
+          required String name,
+          required String content,
+          int? forumId,
+          String? imagePath,
+          required bool isWatermark}) =>
+      Get.toNamed(
+        editPost,
+        parameters: {
+          'postListType': '${postListType.index}',
+          'id': '$id',
+          if (title.isNotEmpty) 'title': title,
+          if (name.isNotEmpty) 'name': name,
+          if (content.isNotEmpty) 'content': content,
+          if (forumId != null) 'forumId': '$forumId',
+          if (imagePath != null) 'imagePath': imagePath,
+          if (isWatermark) 'isWatermark': '',
+        },
+      );
+
+  static Future<T?>? toPostDrafts<T>() => Get.toNamed(postDrafts);
 }
 
 abstract class PathNames {

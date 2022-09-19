@@ -15,10 +15,16 @@ class PostDraftData extends HiveObject {
   @HiveField(2, defaultValue: null)
   final String? content;
 
-  PostDraftData({this.title, this.name, this.content});
+  PostDraftData({this.title, this.name, this.content})
+      : assert(
+            (title?.isNotEmpty ?? false) ||
+                (name?.isNotEmpty ?? false) ||
+                (content?.isNotEmpty ?? false),
+            'text can\'t be all empty');
 
   PostDraftData.fromController(EditPostController controller)
-      : title = controller.title,
+      : assert(controller.hasText(), 'text can\'t be all empty'),
+        title = controller.title,
         name = controller.name,
         content = controller.content;
 

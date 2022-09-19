@@ -47,9 +47,9 @@ class _DrawerHeader extends StatelessWidget {
               ),
             ),
             Obx(
-              () => (client.isReady.value)
+              () => client.isReady.value
                   ? IconButton(
-                      onPressed: () => Get.toNamed(AppRoutes.reorderForums),
+                      onPressed: AppRoutes.toReorderForums,
                       icon: Icon(Icons.swap_vert,
                           color: theme.colorScheme.onPrimary),
                     )
@@ -167,23 +167,9 @@ class _ForumList extends StatelessWidget {
                   onTap: () {
                     if (forumId != forum.id) {
                       if (forum.isTimeline) {
-                        Get.toNamed(
-                          AppRoutes.timeline,
-                          id: StackCacheView.getKeyId(),
-                          parameters: {
-                            'timelineId': '${forum.id}',
-                            'page': '1',
-                          },
-                        );
+                        AppRoutes.toTimeline(timelineId: forum.id);
                       } else {
-                        Get.toNamed(
-                          AppRoutes.forum,
-                          id: StackCacheView.getKeyId(),
-                          parameters: {
-                            'forumId': '${forum.id}',
-                            'page': '1',
-                          },
-                        );
+                        AppRoutes.toForum(forumId: forum.id);
                       }
                     }
                     Get.back();

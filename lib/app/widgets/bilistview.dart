@@ -10,6 +10,8 @@ import '../utils/toast.dart';
 typedef FetchPage<T> = Future<List<T>> Function(int page);
 
 class BiListView<T> extends StatefulWidget {
+  final ScrollController? controller;
+
   final int initialPage;
 
   final int firstPage;
@@ -24,15 +26,19 @@ class BiListView<T> extends StatefulWidget {
 
   final WidgetBuilder? noItemsFoundBuilder;
 
+  final bool canRefreshAtBottom;
+
   const BiListView(
       {super.key,
+      this.controller,
       required this.initialPage,
       this.firstPage = 1,
       this.lastPage,
       required this.fetch,
       required this.itemBuilder,
       this.separator = const Divider(height: 10.0, thickness: 1.0),
-      this.noItemsFoundBuilder});
+      this.noItemsFoundBuilder,
+      this.canRefreshAtBottom = true});
 
   @override
   State<BiListView<T>> createState() => _BiListViewState<T>();
@@ -107,8 +113,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
           _itemListLength = _pagingDownController?.itemList?.length ?? 0;
         }
 
-        (lastPage != null && page != lastPage) ||
-                (lastPage == null && list.isNotEmpty)
+        list.isNotEmpty &&
+                ((lastPage != null && page != lastPage) || lastPage == null)
             ? _pagingDownController?.appendPage(list, page + 1)
             : _pagingDownController?.appendLastPage(list);
       } catch (e) {
@@ -189,6 +195,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
   @override
   void dispose() {
+    widget.controller?.dispose();
+
     _pagingUpController?.dispose();
     _pagingUpController = null;
     _pagingDownController?.dispose();
@@ -228,6 +236,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
         noMoreRefresh: true,
         noMoreLoad: widget.lastPage == null ? true : false,
         child: Scrollable(
+          controller: widget.controller,
           viewportBuilder: (context, position) => Viewport(
             offset: position,
             center: _downKey,
@@ -247,8 +256,6 @@ class _BiListViewState<T> extends State<BiListView<T>>
                     newPageProgressIndicatorBuilder: (context) =>
                         const Quotation(),
                     noItemsFoundIndicatorBuilder: (context) =>
-                        const SizedBox.shrink(),
-                    noMoreItemsIndicatorBuilder: (context) =>
                         const SizedBox.shrink(),
                   ),
                 ),
@@ -270,7 +277,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
                       const Quotation(),
                   noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
                   noMoreItemsIndicatorBuilder: (context) =>
-                      widget.lastPage == null
+                      widget.lastPage == null && widget.canRefreshAtBottom
                           ? GestureDetector(
                               onTap: _loadMore,
                               child: Center(

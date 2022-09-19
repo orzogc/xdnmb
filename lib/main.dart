@@ -8,6 +8,7 @@ import 'package:hive/hive.dart';
 import 'app/data/services/services.dart';
 import 'app/routes/pages.dart';
 import 'app/routes/routes.dart';
+import 'app/utils/directory.dart';
 import 'app/utils/hive.dart';
 import 'app/utils/theme.dart';
 
@@ -15,6 +16,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   HttpOverrides.global = CustomHttpOverrides();
+
+  await getDatabasePath();
 
   // TODO: 错误页面和404页面
   try {

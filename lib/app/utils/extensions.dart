@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+const int _int32Max = 4294967295;
+
 extension ParseStringExtension on String? {
   int? tryParseInt() => this != null ? int.tryParse(this!) : null;
 }
@@ -25,6 +27,12 @@ extension IntExtension on int {
   String toPostNumber() => 'No.$this';
 
   String toPostReference() => '>>${toPostNumber()}';
+
+  int toIndex(int page) => page << 32 | this;
+
+  int getPageFromIndex() => this >>> 32;
+
+  int getIdFromIndex() => this & _int32Max;
 }
 
 extension PostExtension on PostBase {
@@ -32,5 +40,7 @@ extension PostExtension on PostBase {
 
   String toPostReference() => id.toPostReference();
 
-  ValueKey<int> toValueKey(int index) => ValueKey<int>(index << 32 | id);
+  int toIndex(int page) => id.toIndex(page);
+
+  ValueKey<int> toValueKey(int page) => ValueKey<int>(toIndex(page));
 }

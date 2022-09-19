@@ -60,29 +60,24 @@ class ReferenceCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: TextButton(
-                        onPressed: () => Get.toNamed(
-                          AppRoutes.thread,
-                          id: StackCacheView.getKeyId(),
-                          // 如果能拿到非主串的主串串号，这里可能会有问题
-                          arguments: snapshot.data!,
-                          parameters: {
-                            'mainPostId': '$mainPostId',
-                            'page': '1',
-                          },
-                        ),
+                        // 如果能拿到非主串的主串串号，这里可能会有问题
+                        onPressed: () => AppRoutes.toThread(
+                            mainPostId: mainPostId, mainPost: snapshot.data!),
                         child: const Text('跳转原串'),
                       ),
                     ),
                 ],
               );
-            } else if (snapshot.connectionState == ConnectionState.done &&
+            }
+
+            if (snapshot.connectionState == ConnectionState.done &&
                 snapshot.hasError) {
               showToast(exceptionMessage(snapshot.error!));
 
               return child!;
-            } else {
-              return const CircularProgressIndicator();
             }
+
+            return const CircularProgressIndicator();
           },
         ),
         tapped: const Text(

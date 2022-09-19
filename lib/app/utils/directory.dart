@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:external_path/external_path.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -9,28 +8,24 @@ import 'package:xdg_directories/xdg_directories.dart';
 
 const String directoryName = 'xdnmb';
 
-Future<String> hivePath() async {
-  late final String path;
+late final String databasePath;
 
+Future<void> getDatabasePath() async {
   if (GetPlatform.isAndroid || GetPlatform.isIOS || GetPlatform.isMacOS) {
     final directory = await getApplicationSupportDirectory();
-    path = directory.path;
+    databasePath = directory.path;
   } else if (GetPlatform.isLinux) {
-    path = join(dataHome.path, directoryName);
+    databasePath = join(dataHome.path, directoryName);
   } else if (GetPlatform.isWindows) {
     final directory = await getApplicationSupportDirectory();
-    path = join(directory.path, directoryName);
+    databasePath = join(directory.path, directoryName);
   } else {
     throw 'Unsupported platform: ${Platform.operatingSystem}';
   }
 
-  final directory = Directory(path);
-  if (await directory.exists()) {
-    return path;
-  } else {
-    final created = await directory.create(recursive: true);
-
-    return created.path;
+  final directory = Directory(databasePath);
+  if (!await directory.exists()) {
+    await directory.create(recursive: true);
   }
 }
 

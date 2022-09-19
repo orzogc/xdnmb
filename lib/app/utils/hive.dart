@@ -7,7 +7,7 @@ import 'directory.dart';
 
 // TODO: Compaction
 Future<void> initHive() async {
-  Hive.init(await hivePath());
+  Hive.init(databasePath);
 
   Hive.registerAdapter(CookieDataAdapter());
   Hive.registerAdapter(ForumDataAdapter());

@@ -1,7 +1,11 @@
+import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/history.dart';
+import '../data/models/page.dart';
+import '../data/services/history.dart';
 import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/edit_post.dart';
@@ -100,7 +104,6 @@ class _ThreadDialog extends StatelessWidget {
       );
 }
 
-// TODO: 取消只看Po
 class ThreadAppBarPopupMenuButton extends StatelessWidget {
   final PostListController controller;
 
@@ -108,7 +111,8 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final post = controller.post.value!;
+    final postId = controller.id.value!;
+    final postListType = controller.postListType.value;
 
     return PopupMenuButton(
       tooltip: '菜单',
@@ -117,131 +121,256 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
           onTap: () async {
             try {
               await XdnmbClientService.to.client
-                  .addFeed(SettingsService.to.feedUuid, post.id);
-              showToast('订阅 ${post.id.toPostNumber()} 成功');
+                  .addFeed(SettingsService.to.feedUuid, postId);
+              showToast('订阅 ${postId.toPostNumber()} 成功');
             } catch (e) {
-              showToast('订阅 ${post.id.toPostNumber()} 失败：$e');
+              showToast('订阅 ${postId.toPostNumber()} 失败：$e');
             }
           },
-          child: const Text('订阅本串'),
+          child: const Text('订阅'),
+        ),
+        if (postListType.isThread())
+          PopupMenuItem(
+            onTap: () => AppRoutes.toOnlyPoThread(
+                mainPostId: controller.id.value!,
+                mainPost: controller.post.value),
+            child: const Text('只看Po'),
+          ),
+        if (postListType.isOnlyPoThread())
+          PopupMenuItem(
+            onTap: () => AppRoutes.toThread(
+                mainPostId: controller.id.value!,
+                mainPost: controller.post.value),
+            child: const Text('取消只看Po'),
+          ),
+        PopupMenuItem(
+          onTap: () {
+            openNewTab(controller.copyKeepingPage());
+
+            showToast('已在新标签页打开 ${postId.toPostNumber()}');
+          },
+          child: const Text('在新标签页打开'),
         ),
         PopupMenuItem(
           onTap: () {
-            openNewTab(controller.copy());
+            openNewTabBackground(controller.copyKeepingPage());
 
-            showToast('已在新标签页打开 ${post.id.toPostNumber()}');
+            showToast('已在新标签页后台打开 ${postId.toPostNumber()}');
           },
-          child: const Text('在新标签页打开本串'),
-        ),
-        PopupMenuItem(
-          onTap: () {
-            openNewTabBackground(controller.copy());
-
-            showToast('已在新标签页后台打开 ${post.id.toPostNumber()}');
-          },
-          child: const Text('在新标签页后台打开本串'),
+          child: const Text('在新标签页后台打开'),
         ),
       ],
     );
   }
 }
 
-class OnlyPoThreadButton extends StatelessWidget {
-  final PostListController controller;
+//typedef _OnPageCallback = void Function(int page);
 
-  const OnlyPoThreadButton(this.controller, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return TextButton(
-      onPressed: () {
-        Get.toNamed(
-          AppRoutes.onlyPoThread,
-          id: StackCacheView.getKeyId(),
-          arguments: controller.post.value,
-          parameters: {
-            'mainPostId': '${controller.id.value!}',
-            'page': '1',
-          },
-        );
-      },
-      child: Text(
-        'Po',
-        style: TextStyle(
-            color: theme.colorScheme.onPrimary,
-            fontSize: theme.textTheme.subtitle1?.fontSize),
-      ),
-    );
-  }
-}
-
-class ThreadBody extends StatelessWidget {
+class ThreadBody extends StatefulWidget {
   final PostListController controller;
 
   const ThreadBody(this.controller, {super.key});
 
   @override
+  State<ThreadBody> createState() => _ThreadBodyState();
+}
+
+class _ThreadBodyState extends State<ThreadBody> {
+  late int _browsePostId;
+
+  bool _isSavingBrowseHistory = false;
+
+  BrowseHistory? _history;
+
+  late AnchorScrollController _anchorController;
+
+  /// 是否第一次跳转
+  bool _isJumped = false;
+
+  Future<void> _saveBrowseHistory() async {
+    _isSavingBrowseHistory = true;
+    await Future.delayed(const Duration(seconds: 5), () async {
+      _history!.update(
+          mainPost: widget.controller.post.value as Post,
+          browsePage: widget.controller.currentPage.value,
+          browsePostId: _browsePostId,
+          isOnlyPo: widget.controller.postListType.value.isOnlyPoThread());
+      await PostHistoryService.to.saveBrowseHistory(_history!);
+    });
+    _isSavingBrowseHistory = false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _browsePostId = widget.controller.id.value!;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final client = XdnmbClientService.to.client;
+    final settings = SettingsService.to;
+    final history = PostHistoryService.to;
+    final postListType = widget.controller.postListType;
+    final postId = widget.controller.id;
+    final postPage = widget.controller.page;
+    final currentPage = widget.controller.currentPage;
+    final mainPost = widget.controller.post;
 
-    return Obx(
-      () => BiListView<PostBase>(
-        key: ValueKey<PostList>(PostList.fromController(controller)),
-        initialPage: controller.page.value,
-        fetch: (page) async {
-          final thread = controller.postListType.value.isThread()
-              ? await client.getThread(controller.id.value!, page: page)
-              : await client.getOnlyPoThread(controller.id.value!, page: page);
+    return FutureBuilder(
+      future: Future(() async {
+        _history = await PostHistoryService.to.getBrowseHistory(postId.value!);
 
-          controller.post.value ??= thread.mainPost;
-          if (controller.post.value is ReferenceBase) {
-            controller.post.value = thread.mainPost;
+        if (settings.isJumpToLastBrowsePage && _history != null) {
+          final page = postListType.value.isThread()
+              ? _history!.browsePage
+              : _history!.onlyPoBrowsePage;
+          if (page != null) {
+            _isJumped = true;
+            postPage.value = page;
+            currentPage.value = page;
           }
+        }
+      }),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasError) {
+          showToast('读取数据库出错：${snapshot.error!}');
+        }
 
-          if (page != 1 && thread.replies.isEmpty) {
-            return [];
-          }
+        if (snapshot.connectionState == ConnectionState.done) {
+          return Obx(
+            () {
+              _anchorController = AnchorScrollController(
+                onIndexChanged: (index, userScroll) {
+                  currentPage.value = index.getPageFromIndex();
+                  _browsePostId = index.getIdFromIndex();
 
-          final List<PostBase> posts = [];
-          if (page == 1) {
-            posts.add(thread.mainPost);
-          }
-          // TODO: 提示tip是官方信息
-          if (thread.tip != null) {
-            posts.add(thread.tip!);
-          }
-          if (thread.replies.isNotEmpty) {
-            posts.addAll(thread.replies);
-          }
+                  if (!_isSavingBrowseHistory) {
+                    _saveBrowseHistory();
+                  }
+                },
+              );
 
-          return posts;
-        },
-        itemBuilder: (context, post, index) => PostCard(
-          key: post.toValueKey(index),
-          post: post,
-          showForumName: false,
-          showReplyCount: false,
-          poUserHash: controller.post.value?.userHash,
-          onTap: (post) {},
-          onLongPress: (post) =>
-              postListDialog(_ThreadDialog(controller: controller, post: post)),
-          onLinkTap: (context, link) =>
-              parseUrl(url: link, poUserHash: controller.post.value?.userHash),
-          onHiddenText: (context, element, textStyle) => onHiddenText(
-              context: context,
-              element: element,
-              textStyle: textStyle,
-              canTap: true,
-              poUserHash: controller.post.value?.userHash),
-          mouseCursor: SystemMouseCursors.basic,
-          hoverColor:
-              Get.isDarkMode ? theme.cardColor : theme.scaffoldBackgroundColor,
-          onPostIdTap: (postId) => _replyPost(controller, postId),
-        ),
-      ),
+              return BiListView<PostWithPage>(
+                key: ValueKey<PostList>(
+                    PostList.fromController(widget.controller)),
+                controller: _anchorController,
+                initialPage: postPage.value,
+                fetch: (page) async {
+                  final thread = postListType.value.isThread()
+                      ? await client.getThread(postId.value!, page: page)
+                      : await client.getOnlyPoThread(postId.value!, page: page);
+
+                  mainPost.value = thread.mainPost;
+
+                  if (page != 1 && thread.replies.isEmpty) {
+                    return [];
+                  }
+
+                  if (postPage.value == page) {
+                    final post = page == 1
+                        ? thread.mainPost
+                        : (thread.replies.isNotEmpty
+                            ? thread.replies.first
+                            : thread.mainPost);
+                    if (_history == null) {
+                      _history = BrowseHistory.fromPost(
+                          mainPost: thread.mainPost,
+                          browsePage: page,
+                          browsePostId: post.id,
+                          isOnlyPo: postListType.value.isOnlyPoThread());
+                      history.saveBrowseHistory(_history!);
+                    } else if (!_isJumped) {
+                      // 除了第一次跳转，其他跳转都更新
+                      _history!.update(
+                          mainPost: thread.mainPost,
+                          browsePage: page,
+                          browsePostId: post.id,
+                          isOnlyPo: postListType.value.isOnlyPoThread());
+                      history.saveBrowseHistory(_history!);
+                    } else if (settings.isJumpToLastBrowsePage &&
+                        settings.isJumpToLastBrowsePosition) {
+                      final index = _history!.toIndex(
+                          isOnlyPo: postListType.value.isOnlyPoThread());
+                      if (index != null) {
+                        Future.delayed(const Duration(milliseconds: 500),
+                            () async {
+                          try {
+                            await _anchorController.scrollToIndex(index: index);
+                            await Future.delayed(
+                                const Duration(milliseconds: 100),
+                                () => _anchorController.scrollToIndex(
+                                    index: index));
+                          } catch (e) {
+                            showToast('跳到串号 ${index.getIdFromIndex()} 失败：$e');
+                          }
+                        });
+                      }
+                    }
+
+                    _isJumped = false;
+                  }
+
+                  final List<PostWithPage> posts = [];
+                  if (page == 1) {
+                    posts.add(PostWithPage(thread.mainPost, page));
+                  }
+                  // TODO: 提示tip是官方信息
+                  if (thread.tip != null) {
+                    posts.add(PostWithPage(thread.tip!, page));
+                  }
+                  if (thread.replies.isNotEmpty) {
+                    posts.addAll(
+                        thread.replies.map((post) => PostWithPage(post, page)));
+                  }
+
+                  return posts;
+                },
+                itemBuilder: (context, post, index) {
+                  final postCard = PostCard(
+                    key: post.post is Tip ? post.toValueKey() : null,
+                    post: post.post,
+                    showForumName: false,
+                    showReplyCount: false,
+                    poUserHash: mainPost.value?.userHash,
+                    onTap: (post) {},
+                    onLongPress: (post) => postListDialog(_ThreadDialog(
+                        controller: widget.controller, post: post)),
+                    onLinkTap: (context, link) => parseUrl(
+                        url: link, poUserHash: mainPost.value?.userHash),
+                    onHiddenText: (context, element, textStyle) => onHiddenText(
+                        context: context,
+                        element: element,
+                        textStyle: textStyle,
+                        canTap: true,
+                        poUserHash: mainPost.value?.userHash),
+                    mouseCursor: SystemMouseCursors.basic,
+                    hoverColor: Get.isDarkMode
+                        ? theme.cardColor
+                        : theme.scaffoldBackgroundColor,
+                    onPostIdTap: (postId) =>
+                        _replyPost(widget.controller, postId),
+                  );
+
+                  return post.post is! Tip
+                      ? AnchorItemWrapper(
+                          key: post.toValueKey(),
+                          controller: _anchorController,
+                          index: post.toIndex(),
+                          child: postCard,
+                        )
+                      : postCard;
+                },
+              );
+            },
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
     );
   }
 }

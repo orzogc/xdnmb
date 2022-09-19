@@ -26,11 +26,8 @@ class ThumbImage extends StatelessWidget {
         ? GestureDetector(
             onTap: () {
               if (image != null) {
-                Get.toNamed(
-                  AppRoutes.image,
-                  arguments: ImageController(
-                      tag: _tag, post: post, poUserHash: poUserHash),
-                );
+                AppRoutes.toImage(ImageController(
+                    tag: _tag, post: post, poUserHash: poUserHash));
               }
             },
             child: Hero(

@@ -47,11 +47,10 @@ Widget loadingImageIndicatorBuilder(BuildContext context, String url,
         child: const Align(alignment: Alignment.topCenter, child: Quotation()),
       ),
       Center(child: builder()),
-      progress.progress != null
-          ? Center(
-              child: CircularProgressIndicator(value: progress.progress),
-            )
-          : const SizedBox.shrink(),
+      if (progress.progress != null)
+        Center(
+          child: CircularProgressIndicator(value: progress.progress),
+        ),
     ],
   );
 }

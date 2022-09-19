@@ -761,7 +761,7 @@ class EditPostState extends State<EditPost> {
                 Flexible(
                   child: IconButton(
                     onPressed: () async {
-                      final draft = await Get.toNamed(AppRoutes.postDrafts);
+                      final draft = await AppRoutes.toPostDrafts();
 
                       if (draft is PostDraftData) {
                         _titleController.text = draft.title ?? '';
@@ -776,25 +776,15 @@ class EditPostState extends State<EditPost> {
                   Flexible(
                     child: IconButton(
                       onPressed: () async {
-                        final result = await Get.toNamed(
-                          AppRoutes.editPost,
-                          parameters: {
-                            'postListType':
-                                '${widget.postList.postListType.index}',
-                            'id': '${widget.postList.id!}',
-                            if (_titleController.text.isNotEmpty)
-                              'title': _titleController.text,
-                            if (_nameController.text.isNotEmpty)
-                              'name': _nameController.text,
-                            if (_contentController.text.isNotEmpty)
-                              'content': _contentController.text,
-                            if (_forumId.value != null)
-                              'forumId': '${_forumId.value}',
-                            if (_imagePath.value != null)
-                              'imagePath': _imagePath.value!,
-                            if (_isWatermark.value) 'isWatermark': '',
-                          },
-                        );
+                        final result = await AppRoutes.toEditPost(
+                            postListType: widget.postList.postListType,
+                            id: widget.postList.id!,
+                            title: _titleController.text,
+                            name: _nameController.text,
+                            content: _contentController.text,
+                            forumId: _forumId.value,
+                            imagePath: _imagePath.value,
+                            isWatermark: _isWatermark.value);
 
                         if (result is EditPostController && mounted) {
                           _forumId.value = result.forumId;
@@ -819,71 +809,75 @@ class EditPostState extends State<EditPost> {
             Expanded(
               child: Center(
                 child: LayoutBuilder(
-                  builder: (context, constraints) =>
-                      SingleChildScrollViewWithScrollbar(
-                    child: Column(
-                      children: [
-                        Obx(() => _isExpanded.value
-                            ? TextField(
-                                controller: _titleController,
-                                style: textStyle,
-                                decoration: const InputDecoration(
-                                  isDense: true,
-                                  hintText: '标题',
-                                ),
-                              )
-                            : const SizedBox.shrink()),
-                        Obx(() => _isExpanded.value
-                            ? TextField(
-                                controller: _nameController,
-                                style: textStyle,
-                                decoration: const InputDecoration(
-                                  isDense: true,
-                                  hintText: '名称',
-                                ),
-                              )
-                            : const SizedBox.shrink()),
-                        Obx(() => _isExpanded.value
-                            ? const SizedBox(height: 10.0)
-                            : const SizedBox.shrink()),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Obx(() => _imagePath.value != null
-                                ? _Image(
-                                    maxHeight: constraints.maxHeight,
-                                    path: _imagePath.value!,
-                                    isWatermark: _isWatermark.value,
-                                    onCancel: () => _imagePath.value = null,
-                                    onWatermark: (isWatermark) =>
-                                        _isWatermark.value = isWatermark)
-                                : const SizedBox.shrink()),
-                            Obx(() => _imagePath.value != null
-                                ? const SizedBox(width: 10.0)
-                                : const SizedBox.shrink()),
-                            Expanded(
-                              child: TextField(
-                                controller: _contentController,
-                                style: textStyle,
-                                maxLines: null,
-                                minLines: 8,
-                                //expands: true,
-                                textAlignVertical: TextAlignVertical.top,
-                                //autofocus: true,
-                                decoration: InputDecoration(
-                                  hintText: '正文',
-                                  filled: true,
-                                  fillColor: color,
-                                  enabledBorder: border,
-                                  focusedBorder: border,
+                  builder: (context, constraints) {
+                    final textSize = _textSize(context, 'a啊', textStyle);
+
+                    return SingleChildScrollViewWithScrollbar(
+                      child: Column(
+                        children: [
+                          Obx(() => _isExpanded.value
+                              ? TextField(
+                                  controller: _titleController,
+                                  style: textStyle,
+                                  decoration: const InputDecoration(
+                                    isDense: true,
+                                    hintText: '标题',
+                                  ),
+                                )
+                              : const SizedBox.shrink()),
+                          Obx(() => _isExpanded.value
+                              ? TextField(
+                                  controller: _nameController,
+                                  style: textStyle,
+                                  decoration: const InputDecoration(
+                                    isDense: true,
+                                    hintText: '名称',
+                                  ),
+                                )
+                              : const SizedBox.shrink()),
+                          Obx(() => _isExpanded.value
+                              ? const SizedBox(height: 10.0)
+                              : const SizedBox.shrink()),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Obx(() => _imagePath.value != null
+                                  ? _Image(
+                                      maxHeight: constraints.maxHeight,
+                                      path: _imagePath.value!,
+                                      isWatermark: _isWatermark.value,
+                                      onCancel: () => _imagePath.value = null,
+                                      onWatermark: (isWatermark) =>
+                                          _isWatermark.value = isWatermark)
+                                  : const SizedBox.shrink()),
+                              Obx(() => _imagePath.value != null
+                                  ? const SizedBox(width: 10.0)
+                                  : const SizedBox.shrink()),
+                              Expanded(
+                                child: TextField(
+                                  controller: _contentController,
+                                  style: textStyle,
+                                  maxLines: null,
+                                  minLines:
+                                      constraints.maxHeight ~/ textSize.height,
+                                  //expands: widget.height != null ? false : true,
+                                  textAlignVertical: TextAlignVertical.top,
+                                  //autofocus: true,
+                                  decoration: InputDecoration(
+                                    hintText: '正文',
+                                    filled: true,
+                                    fillColor: color,
+                                    enabledBorder: border,
+                                    focusedBorder: border,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -1002,4 +996,15 @@ TextEditingController _initController(String? text) {
   }
 
   return controller;
+}
+
+Size _textSize(BuildContext context, String text, TextStyle? style) {
+  final TextPainter textPainter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      maxLines: 1,
+      textScaleFactor: MediaQuery.of(context).textScaleFactor,
+      textDirection: TextDirection.ltr)
+    ..layout();
+
+  return textPainter.size;
 }
