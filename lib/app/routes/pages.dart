@@ -41,6 +41,12 @@ abstract class AppPages {
       binding: PostListBinding(),
       transition: Transition.rightToLeft);
 
+  static final GetPage history = GetPage(
+      name: AppRoutes.history,
+      page: () => PostListView(),
+      binding: PostListBinding(),
+      transition: Transition.rightToLeft);
+
   static final GetPage image = GetPage(
       name: AppRoutes.image,
       page: () => ImageView(),
@@ -85,6 +91,7 @@ List<GetPage> getPages = [
   AppPages.thread,
   AppPages.onlyPoThread,
   AppPages.feed,
+  AppPages.history,
   AppPages.image,
   AppPages.settings,
   AppPages.reorderForumList,

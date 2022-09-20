@@ -8,7 +8,6 @@ import '../data/models/page.dart';
 import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
-import '../modules/stack_cache.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
@@ -51,9 +50,7 @@ PostListController feedController(Map<String, String?> parameters) =>
         page: int.tryParse(parameters['page'] ?? '1') ?? 1);
 
 class FeedAppBarTitle extends StatelessWidget {
-  final PostListController controller;
-
-  const FeedAppBarTitle(this.controller, {super.key});
+  const FeedAppBarTitle({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +82,7 @@ class _FeedDialog extends StatelessWidget {
               }
             },
             child: Text(
-              '取消订阅该串',
+              '取消订阅',
               style: TextStyle(
                   fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
             ),
@@ -93,6 +90,8 @@ class _FeedDialog extends StatelessWidget {
           CopyPostId(post),
           CopyPostNumber(post),
           CopyPostContent(post),
+          NewTab(post),
+          NewTabBackground(post),
         ],
       );
 }
@@ -142,19 +141,17 @@ class FeedBody extends StatelessWidget {
                             poUserHash: feed.post.userHash,
                             onTap: (post) => AppRoutes.toThread(
                                 mainPostId: feed.post.id, mainPost: feed.post),
-                            onLongPress: (post) => postListDialog<bool>(
+                            onLongPress: (post) => postListDialog(
                               _FeedDialog(
                                 post: post,
                                 onDelete: () => isVisible.value = false,
                               ),
                             ),
-                            onLinkTap: null,
                             onHiddenText: (context, element, textStyle) =>
                                 onHiddenText(
                                     context: context,
                                     element: element,
-                                    textStyle: textStyle,
-                                    poUserHash: feed.post.userHash),
+                                    textStyle: textStyle),
                           ),
                         ),
                       )

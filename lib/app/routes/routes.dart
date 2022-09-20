@@ -24,6 +24,9 @@ abstract class AppRoutes {
   /// 参数：page
   static const String feed = '/${PathNames.feed}';
 
+  /// 参数：index（0到2）
+  static const String history = '/${PathNames.history}';
+
   static const String image = '/${PathNames.image}';
 
   static const String settings = '/${PathNames.settings}';
@@ -57,6 +60,8 @@ abstract class AppRoutes {
   static String referenceUrl(int postId) => '$reference?postId=$postId';
 
   static String feedUrl({int page = 1}) => '$feed?page=$page';
+
+  static String historyUrl({int index = 0}) => '$history?index=$index';
 
   static Future<T?>? toForum<T>({required int forumId, int page = 1}) =>
       Get.toNamed(
@@ -108,6 +113,12 @@ abstract class AppRoutes {
         parameters: {'page': '$page'},
       );
 
+  static Future<T?>? toHistory<T>({int index = 0}) => Get.toNamed(
+        history,
+        id: StackCacheView.getKeyId(),
+        parameters: {'index': '$index'},
+      );
+
   static Future<T?>? toImage<T>(ImageController controller) =>
       Get.toNamed(image, arguments: controller);
 
@@ -155,6 +166,8 @@ abstract class PathNames {
   static const String reference = 'reference';
 
   static const String feed = 'feed';
+
+  static const String history = 'history';
 
   static const String image = 'image';
 

@@ -221,7 +221,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
             _refreshController?.finishRefresh();
           }
         },
-        onLoad: widget.lastPage == null
+        onLoad: widget.lastPage == null && widget.canRefreshAtBottom
             ? () async {
                 if (!_isLoading) {
                   await _loadMore();
@@ -277,19 +277,21 @@ class _BiListViewState<T> extends State<BiListView<T>>
                       const Quotation(),
                   noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
                   noMoreItemsIndicatorBuilder: (context) =>
-                      widget.lastPage == null && widget.canRefreshAtBottom
-                          ? GestureDetector(
-                              onTap: _loadMore,
-                              child: Center(
-                                child: Text(
-                                  '上拉或点击刷新',
-                                  style: TextStyle(
-                                    color: specialTextColor(),
-                                    fontWeight: FontWeight.bold,
+                      widget.lastPage == null
+                          ? (widget.canRefreshAtBottom
+                              ? GestureDetector(
+                                  onTap: _loadMore,
+                                  child: Center(
+                                    child: Text(
+                                      '上拉或点击刷新',
+                                      style: TextStyle(
+                                        color: specialTextColor(),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            )
+                                )
+                              : const SizedBox.shrink())
                           : Center(
                               child: Text(
                                 '已经抵达X岛的尽头',

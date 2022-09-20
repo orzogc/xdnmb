@@ -103,7 +103,7 @@ class SettingsView extends GetView<SettingsController> {
           ValueListenableBuilder<Box>(
             valueListenable: settings.isJumpToLastBrowsePageListenable,
             builder: (context, value, child) => ListTile(
-              title: const Text('打开串时自动跳转到上一次浏览到的页数'),
+              title: const Text('打开串时自动跳转到最近浏览的页数'),
               trailing: Switch(
                 value: settings.isJumpToLastBrowsePage,
                 onChanged: (value) => settings.isJumpToLastBrowsePage = value,
@@ -116,10 +116,13 @@ class SettingsView extends GetView<SettingsController> {
               valueListenable: settings.isJumpToLastBrowsePositionListenable,
               builder: (context, value, child) => ListTile(
                 title: Text(
-                  '自动跳转页数时跳转到上一次浏览到的位置',
+                  '自动跳转页数时滚动到最近浏览的位置',
                   style: TextStyle(
-                      color:
-                          settings.isJumpToLastBrowsePage ? null : Colors.grey),
+                      color: settings.isJumpToLastBrowsePage
+                          ? null
+                          : Get.isDarkMode
+                              ? Theme.of(context).primaryColor
+                              : null),
                 ),
                 trailing: Switch(
                   value: settings.isJumpToLastBrowsePosition,
@@ -140,7 +143,7 @@ class SettingsView extends GetView<SettingsController> {
                 child: const Text('编辑'),
               ),
             ),
-          )
+          ),
         ],
       ),
     );

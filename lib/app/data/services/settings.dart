@@ -70,6 +70,7 @@ class SettingsService extends GetxService {
   Future<void> checkDarkMode() async {
     // 等待生效
     while (isDarkMode != Get.isDarkMode) {
+      debugPrint('waiting for light or dark mode');
       await Future.delayed(const Duration(milliseconds: 500));
     }
 

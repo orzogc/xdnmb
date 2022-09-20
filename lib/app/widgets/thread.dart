@@ -1,5 +1,6 @@
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
@@ -10,7 +11,6 @@ import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/edit_post.dart';
 import '../modules/post_list.dart';
-import '../modules/stack_cache.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
@@ -21,6 +21,7 @@ import 'bilistview.dart';
 import 'dialog.dart';
 import 'edit_post.dart';
 import 'forum_name.dart';
+import 'loading.dart';
 import 'post.dart';
 
 PostListController threadController(
@@ -185,7 +186,7 @@ class _ThreadBodyState extends State<ThreadBody> {
   late AnchorScrollController _anchorController;
 
   /// 是否第一次跳转
-  bool _isJumped = false;
+  final RxBool _isJumped = false.obs;
 
   Future<void> _saveBrowseHistory() async {
     _isSavingBrowseHistory = true;
@@ -228,7 +229,7 @@ class _ThreadBodyState extends State<ThreadBody> {
               ? _history!.browsePage
               : _history!.onlyPoBrowsePage;
           if (page != null) {
-            _isJumped = true;
+            _isJumped.value = true;
             postPage.value = page;
             currentPage.value = page;
           }
@@ -254,116 +255,166 @@ class _ThreadBodyState extends State<ThreadBody> {
                 },
               );
 
-              return BiListView<PostWithPage>(
-                key: ValueKey<PostList>(
-                    PostList.fromController(widget.controller)),
-                controller: _anchorController,
-                initialPage: postPage.value,
-                fetch: (page) async {
-                  final thread = postListType.value.isThread()
-                      ? await client.getThread(postId.value!, page: page)
-                      : await client.getOnlyPoThread(postId.value!, page: page);
+              return Stack(
+                children: [
+                  if (_isJumped.value) const QuotationLoadingIndicator(),
+                  Visibility(
+                    visible: !_isJumped.value,
+                    maintainState: true,
+                    maintainAnimation: true,
+                    maintainSize: true,
+                    child: BiListView<PostWithPage>(
+                      key: ValueKey<PostList>(
+                          PostList.fromController(widget.controller)),
+                      controller: _anchorController,
+                      initialPage: postPage.value,
+                      fetch: (page) async {
+                        final thread = postListType.value.isThread()
+                            ? await client.getThread(postId.value!, page: page)
+                            : await client.getOnlyPoThread(postId.value!,
+                                page: page);
 
-                  mainPost.value = thread.mainPost;
+                        mainPost.value = thread.mainPost;
 
-                  if (page != 1 && thread.replies.isEmpty) {
-                    return [];
-                  }
+                        if (page != 1 && thread.replies.isEmpty) {
+                          return [];
+                        }
 
-                  if (postPage.value == page) {
-                    final post = page == 1
-                        ? thread.mainPost
-                        : (thread.replies.isNotEmpty
-                            ? thread.replies.first
-                            : thread.mainPost);
-                    if (_history == null) {
-                      _history = BrowseHistory.fromPost(
-                          mainPost: thread.mainPost,
-                          browsePage: page,
-                          browsePostId: post.id,
-                          isOnlyPo: postListType.value.isOnlyPoThread());
-                      history.saveBrowseHistory(_history!);
-                    } else if (!_isJumped) {
-                      // 除了第一次跳转，其他跳转都更新
-                      _history!.update(
-                          mainPost: thread.mainPost,
-                          browsePage: page,
-                          browsePostId: post.id,
-                          isOnlyPo: postListType.value.isOnlyPoThread());
-                      history.saveBrowseHistory(_history!);
-                    } else if (settings.isJumpToLastBrowsePage &&
-                        settings.isJumpToLastBrowsePosition) {
-                      final index = _history!.toIndex(
-                          isOnlyPo: postListType.value.isOnlyPoThread());
-                      if (index != null) {
-                        Future.delayed(const Duration(milliseconds: 500),
-                            () async {
-                          try {
-                            await _anchorController.scrollToIndex(index: index);
-                            await Future.delayed(
-                                const Duration(milliseconds: 100),
-                                () => _anchorController.scrollToIndex(
-                                    index: index));
-                          } catch (e) {
-                            showToast('跳到串号 ${index.getIdFromIndex()} 失败：$e');
+                        if (postPage.value == page) {
+                          final firstPost = page == 1
+                              ? thread.mainPost
+                              : (thread.replies.isNotEmpty
+                                  ? thread.replies.first
+                                  : thread.mainPost);
+                          if (_history == null) {
+                            _history = BrowseHistory.fromPost(
+                                mainPost: thread.mainPost,
+                                browsePage: page,
+                                browsePostId: firstPost.id,
+                                isOnlyPo: postListType.value.isOnlyPoThread());
+                            history.saveBrowseHistory(_history!);
+                            _isJumped.value = false;
+                          } else if (!_isJumped.value) {
+                            // 除了第一次跳转，其他跳转都更新
+                            _history!.update(
+                                mainPost: thread.mainPost,
+                                browsePage: page,
+                                browsePostId: firstPost.id,
+                                isOnlyPo: postListType.value.isOnlyPoThread());
+                            history.saveBrowseHistory(_history!);
+                          } else if (settings.isJumpToLastBrowsePage &&
+                              settings.isJumpToLastBrowsePosition) {
+                            final index = _history!.toIndex(
+                                isOnlyPo: postListType.value.isOnlyPoThread());
+                            if (index != null) {
+                              final postIds =
+                                  thread.replies.map((post) => post.id);
+                              final id = index.getIdFromIndex();
+                              if (postIds.contains(id)) {
+                                SchedulerBinding.instance
+                                    .addPostFrameCallback((timeStamp) {
+                                  Future.delayed(
+                                      const Duration(milliseconds: 50),
+                                      () async {
+                                    try {
+                                      await _anchorController.scrollToIndex(
+                                          index: index, scrollSpeed: 10.0);
+
+                                      if (firstPost.id != id) {
+                                        var scrollIndex = _browsePostId;
+                                        do {
+                                          scrollIndex = _browsePostId;
+                                          await Future.delayed(
+                                              // TODO: 200毫秒只是估算，需要更好的方法
+                                              const Duration(milliseconds: 200),
+                                              () => _anchorController
+                                                  .scrollToIndex(
+                                                      index: index,
+                                                      scrollSpeed: 10.0));
+                                        } while (scrollIndex != _browsePostId);
+                                      }
+                                    } catch (e) {
+                                      showToast(
+                                          '跳转到串号 ${id.toPostNumber()} 失败：$e');
+                                    } finally {
+                                      _isJumped.value = false;
+                                    }
+                                  }).timeout(
+                                    const Duration(seconds: 2),
+                                    onTimeout: () {
+                                      showToast(
+                                          '跳转到串号 ${id.toPostNumber()} 超时');
+                                      _isJumped.value = false;
+                                    },
+                                  );
+                                });
+                              } else {
+                                _isJumped.value = false;
+                              }
+                            } else {
+                              _isJumped.value = false;
+                            }
+                          } else {
+                            _isJumped.value = false;
                           }
-                        });
-                      }
-                    }
+                        }
 
-                    _isJumped = false;
-                  }
+                        final List<PostWithPage> posts = [];
+                        if (page == 1) {
+                          posts.add(PostWithPage(thread.mainPost, page));
+                        }
+                        // TODO: 提示tip是官方信息
+                        if (thread.tip != null) {
+                          posts.add(PostWithPage(thread.tip!, page));
+                        }
+                        if (thread.replies.isNotEmpty) {
+                          posts.addAll(thread.replies
+                              .map((post) => PostWithPage(post, page)));
+                        }
 
-                  final List<PostWithPage> posts = [];
-                  if (page == 1) {
-                    posts.add(PostWithPage(thread.mainPost, page));
-                  }
-                  // TODO: 提示tip是官方信息
-                  if (thread.tip != null) {
-                    posts.add(PostWithPage(thread.tip!, page));
-                  }
-                  if (thread.replies.isNotEmpty) {
-                    posts.addAll(
-                        thread.replies.map((post) => PostWithPage(post, page)));
-                  }
+                        return posts;
+                      },
+                      itemBuilder: (context, post, index) {
+                        final postCard = PostCard(
+                          key: post.post is Tip ? post.toValueKey() : null,
+                          post: post.post,
+                          showForumName: false,
+                          showReplyCount: false,
+                          poUserHash: mainPost.value?.userHash,
+                          onTap: (post) {},
+                          onLongPress: (post) => postListDialog(_ThreadDialog(
+                              controller: widget.controller, post: post)),
+                          onLinkTap: (context, link) => parseUrl(
+                              url: link, poUserHash: mainPost.value?.userHash),
+                          onHiddenText: (context, element, textStyle) =>
+                              onHiddenText(
+                                  context: context,
+                                  element: element,
+                                  textStyle: textStyle,
+                                  canTap: true,
+                                  poUserHash: mainPost.value?.userHash),
+                          mouseCursor: SystemMouseCursors.basic,
+                          hoverColor: Get.isDarkMode
+                              ? theme.cardColor
+                              : theme.scaffoldBackgroundColor,
+                          onPostIdTap: (postId) =>
+                              _replyPost(widget.controller, postId),
+                        );
 
-                  return posts;
-                },
-                itemBuilder: (context, post, index) {
-                  final postCard = PostCard(
-                    key: post.post is Tip ? post.toValueKey() : null,
-                    post: post.post,
-                    showForumName: false,
-                    showReplyCount: false,
-                    poUserHash: mainPost.value?.userHash,
-                    onTap: (post) {},
-                    onLongPress: (post) => postListDialog(_ThreadDialog(
-                        controller: widget.controller, post: post)),
-                    onLinkTap: (context, link) => parseUrl(
-                        url: link, poUserHash: mainPost.value?.userHash),
-                    onHiddenText: (context, element, textStyle) => onHiddenText(
-                        context: context,
-                        element: element,
-                        textStyle: textStyle,
-                        canTap: true,
-                        poUserHash: mainPost.value?.userHash),
-                    mouseCursor: SystemMouseCursors.basic,
-                    hoverColor: Get.isDarkMode
-                        ? theme.cardColor
-                        : theme.scaffoldBackgroundColor,
-                    onPostIdTap: (postId) =>
-                        _replyPost(widget.controller, postId),
-                  );
-
-                  return post.post is! Tip
-                      ? AnchorItemWrapper(
-                          key: post.toValueKey(),
-                          controller: _anchorController,
-                          index: post.toIndex(),
-                          child: postCard,
-                        )
-                      : postCard;
-                },
+                        return post.post is! Tip
+                            ? AnchorItemWrapper(
+                                key: ValueKey(_PostKey(
+                                    index: post.toIndex(),
+                                    isVisible: !_isJumped.value)),
+                                controller: _anchorController,
+                                index: post.toIndex(),
+                                child: postCard,
+                              )
+                            : postCard;
+                      },
+                    ),
+                  ),
+                ],
               );
             },
           );
@@ -373,6 +424,24 @@ class _ThreadBodyState extends State<ThreadBody> {
       },
     );
   }
+}
+
+class _PostKey {
+  final int index;
+
+  final bool isVisible;
+
+  const _PostKey({required this.index, required this.isVisible});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is _PostKey &&
+          index == other.index &&
+          isVisible == other.isVisible);
+
+  @override
+  int get hashCode => Object.hash(index, isVisible);
 }
 
 void _replyPost(PostListController controller, int postId) {

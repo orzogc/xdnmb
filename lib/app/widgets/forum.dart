@@ -7,7 +7,6 @@ import '../data/models/page.dart';
 import '../data/services/forum.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
-import '../modules/stack_cache.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
@@ -150,13 +149,8 @@ class ForumBody extends StatelessWidget {
                     mainPostId: thread.thread.mainPost.id,
                     mainPost: thread.thread.mainPost),
                 onLongPress: (post) => postListDialog(_ForumDialog(post)),
-                onLinkTap: null,
                 onHiddenText: (context, element, textStyle) => onHiddenText(
-                  context: context,
-                  element: element,
-                  textStyle: textStyle,
-                  poUserHash: thread.thread.mainPost.userHash,
-                ),
+                    context: context, element: element, textStyle: textStyle),
               ),
             ),
           ),

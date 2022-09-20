@@ -65,6 +65,12 @@ abstract class AppTheme {
         fillColor: _CheckboxFillColor(primaryColorLight),
         checkColor: MaterialStateColor.resolveWith((states) => Colors.white)),
     toggleableActiveColor: AppTheme.primaryColorLight,
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        selectedItemColor: primaryColorLight,
+        unselectedItemColor: Colors.grey,
+        selectedLabelStyle:
+            const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+        unselectedLabelStyle: const TextStyle(fontSize: 14.0)),
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -107,6 +113,12 @@ abstract class AppTheme {
         fillColor: _CheckboxFillColor(Colors.white),
         checkColor: MaterialStateColor.resolveWith((states) => Colors.black)),
     toggleableActiveColor: AppTheme.primaryColorLight,
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        selectedItemColor: Colors.grey,
+        unselectedItemColor: primaryColorDark,
+        selectedLabelStyle:
+            const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+        unselectedLabelStyle: const TextStyle(fontSize: 14.0)),
     textTheme: const TextTheme(
       //headlineLarge: TextStyle(),
       //labelMedium: TextStyle(),

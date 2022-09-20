@@ -16,11 +16,25 @@ class PostHistoryService extends GetxService {
 
   IsarCollection<BrowseHistory> get _browseHistorys => _isar.browseHistorys;
 
-  Future<void> saveBrowseHistory(BrowseHistory history) =>
+  Future<int> saveBrowseHistory(BrowseHistory history) =>
       _isar.writeTxn(() => _browseHistorys.put(history));
+
+  Future<bool> deleteBrowseHistory(int postId) =>
+      _isar.writeTxn(() => _browseHistorys.delete(postId));
 
   Future<BrowseHistory?> getBrowseHistory(int postId) =>
       _browseHistorys.get(postId);
+
+  Future<List<BrowseHistory>> browseHistory(int start, int end) {
+    assert(start <= end);
+
+    return _browseHistorys
+        .where(sort: Sort.desc)
+        .anyBrowseTime()
+        .offset(start)
+        .limit(end - start)
+        .findAll();
+  }
 
   @override
   void onInit() async {

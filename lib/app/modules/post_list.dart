@@ -21,6 +21,7 @@ import '../widgets/edit_post.dart';
 import '../widgets/end_drawer.dart';
 import '../widgets/feed.dart';
 import '../widgets/forum.dart';
+import '../widgets/history.dart';
 import '../widgets/scroll.dart';
 import '../widgets/thread.dart';
 import 'stack_cache.dart';
@@ -30,7 +31,8 @@ enum PostListType {
   onlyPoThread,
   forum,
   timeline,
-  feed;
+  feed,
+  history;
 
   bool isThread() => this == thread;
 
@@ -42,6 +44,8 @@ enum PostListType {
 
   bool isFeed() => this == feed;
 
+  bool isHistory() => this == history;
+
   bool isThreadType() => isThread() || isOnlyPoThread();
 
   bool isForumType() => isForum() || isTimeline();
@@ -49,6 +53,8 @@ enum PostListType {
   bool hasForumId() => isThreadType() || isForum();
 
   bool canPost() => isThreadType() || isForumType();
+
+  bool isXdnmbApi() => isThreadType() || isForumType() || isFeed();
 }
 
 class PostList {
@@ -103,6 +109,8 @@ class PostListController extends GetxController {
 
   final RxInt currentPage;
 
+  final RxnInt bottomBarIndex;
+
   final Rxn<PostBase> post;
 
   int? get forumOrTimelineId => postListType.value.isThreadType()
@@ -119,11 +127,13 @@ class PostListController extends GetxController {
       int? id,
       int page = 1,
       int? currentPage,
+      int? bottomBarIndex,
       PostBase? post})
       : postListType = postListType.obs,
         id = RxnInt(id),
         page = page.obs,
         currentPage = currentPage != null ? currentPage.obs : page.obs,
+        bottomBarIndex = RxnInt(bottomBarIndex),
         post = Rxn(post);
 
   PostListController.fromPostList({required PostList postList, PostBase? post})
@@ -131,6 +141,7 @@ class PostListController extends GetxController {
         id = RxnInt(postList.id),
         page = postList.page.obs,
         currentPage = postList.page.obs,
+        bottomBarIndex = RxnInt(null),
         post = Rxn(post);
 
   PostListController.fromPost({required PostBase post, int page = 1})
@@ -138,15 +149,17 @@ class PostListController extends GetxController {
         id = RxnInt(post.id),
         page = page.obs,
         currentPage = page.obs,
+        bottomBarIndex = RxnInt(null),
         post = Rxn(post);
 
   PostListController.fromThread(
       {required Thread thread, bool isThread = true, int page = 1})
       : postListType =
-            isThread ? PostListType.thread.obs : PostListType.onlyPoThread.obs,
+            (isThread ? PostListType.thread : PostListType.onlyPoThread).obs,
         id = RxnInt(thread.mainPost.id),
         page = page.obs,
         currentPage = page.obs,
+        bottomBarIndex = RxnInt(null),
         post = Rxn(thread.mainPost);
 
   PostListController.fromForumData({required ForumData forum, int page = 1})
@@ -155,9 +168,10 @@ class PostListController extends GetxController {
         id = RxnInt(forum.id),
         page = page.obs,
         currentPage = page.obs,
+        bottomBarIndex = RxnInt(null),
         post = Rxn(null);
 
-  void onlyPoThreadToThread({int page = 1}) {
+  /* void onlyPoThreadToThread({int page = 1}) {
     postListType.value = PostListType.thread;
     this.page.value = page;
     currentPage.value = page;
@@ -167,7 +181,7 @@ class PostListController extends GetxController {
     postListType.value = PostListType.onlyPoThread;
     this.page.value = page;
     currentPage.value = page;
-  }
+  } */
 
   /* void toForum({required int forumId, int page = 1}) {
     postListType.value = PostListType.forum;
@@ -185,13 +199,13 @@ class PostListController extends GetxController {
     post.value = null;
   } */
 
-  void fromPostList({required PostList postList, PostBase? post}) {
+  /* void fromPostList({required PostList postList, PostBase? post}) {
     postListType.value = postList.postListType;
     id.value = postList.id;
     page.value = postList.page;
     currentPage.value = postList.page;
     this.post.value = post;
-  }
+  } */
 
   PostListController copyKeepingPage() => PostListController(
       postListType: postListType.value,
@@ -218,6 +232,8 @@ class PostListBinding implements Bindings {
           return timelineController(Get.parameters);
         case AppRoutes.feed:
           return feedController(Get.parameters);
+        case AppRoutes.history:
+          return historyController(Get.parameters);
         default:
           throw '未知URI: $uri';
       }
@@ -261,6 +277,7 @@ class _PostListAppBarState extends State<_PostListAppBar> {
         button = BackButton(onPressed: () {
           popOnce();
           FloatingButton.buttonKey.currentState!.refresh();
+          _BottomBar._bottomBarKey.currentState!.refresh();
           if (mounted) {
             setState(() {});
           }
@@ -289,7 +306,10 @@ class _PostListAppBarState extends State<_PostListAppBar> {
             title = ForumAppBarTitle(controller);
             break;
           case PostListType.feed:
-            title = FeedAppBarTitle(controller);
+            title = const FeedAppBarTitle();
+            break;
+          case PostListType.history:
+            title = const HistoryAppBarTitle();
             break;
         }
 
@@ -297,7 +317,8 @@ class _PostListAppBarState extends State<_PostListAppBar> {
           leading: button,
           title: title,
           actions: [
-            PageButton(controller: controller, maxPage: maxPage),
+            if (postListType.value.isXdnmbApi())
+              PageButton(controller: controller, maxPage: maxPage),
             if (postListType.value.isThreadType())
               ThreadAppBarPopupMenuButton(controller),
             if (postListType.value.isForumType())
@@ -330,6 +351,9 @@ Route buildRoute(PostListController controller) => GetPageRoute(
                 break;
               case PostListType.feed:
                 body = FeedBody(controller);
+                break;
+              case PostListType.history:
+                body = HistoryBody(controller);
                 break;
             }
 
@@ -374,6 +398,10 @@ Widget buildNavigator(int index) {
     case PostListType.feed:
       initialRoute = AppRoutes.feedUrl(page: controller.page.value);
       break;
+    case PostListType.history:
+      initialRoute =
+          AppRoutes.historyUrl(index: controller.bottomBarIndex.value ?? 0);
+      break;
   }
 
   return Navigator(
@@ -406,6 +434,9 @@ Widget buildNavigator(int index) {
         case AppRoutes.feed:
           controller = feedController(parameters);
           break;
+        case AppRoutes.history:
+          controller = historyController(parameters);
+          break;
         default:
           throw '未知PostList';
       }
@@ -413,6 +444,7 @@ Widget buildNavigator(int index) {
       StackCacheView.pushController(controller, index);
       _PostListAppBar._appBarKey.currentState!.refresh();
       FloatingButton.buttonKey.currentState!.refresh();
+      _BottomBar._bottomBarKey.currentState!.refresh();
 
       return buildRoute(controller);
     },
@@ -440,6 +472,7 @@ class PostListPageState extends State<PostListPage> {
 
     _PostListAppBar._appBarKey.currentState!.refresh();
     FloatingButton.buttonKey.currentState!.refresh();
+    _BottomBar._bottomBarKey.currentState!.refresh();
   }
 
   void jumpToLast() => jumpToPage(StackCacheView.length.value - 1);
@@ -583,7 +616,14 @@ class FloatingButtonState extends State<FloatingButton> {
 
   void refresh() {
     if (mounted) {
-      setState(() {});
+      final controller = StackCacheView.getController() as PostListController;
+
+      setState(() {
+        if (!controller.postListType.value.canPost() &&
+            widget.bottomSheetController.value != null) {
+          widget.bottomSheetController.value!.close();
+        }
+      });
     }
   }
 
@@ -612,6 +652,17 @@ class FloatingButtonState extends State<FloatingButton> {
           if (controller.hasText() &&
               !(await Get.dialog<bool>(_SaveDraftDialog(controller)) ??
                   false)) {
+            final controller_ =
+                StackCacheView.getController() as PostListController;
+            if (!controller_.postListType.value.canPost()) {
+              popOnce();
+              _PostListAppBar._appBarKey.currentState!.refresh();
+              _BottomBar._bottomBarKey.currentState!.refresh();
+              if (mounted) {
+                setState(() {});
+              }
+            }
+
             bottomSheet(controller);
           }
         }
@@ -627,8 +678,7 @@ class FloatingButtonState extends State<FloatingButton> {
     final postListType = controller.postListType;
 
     return Obx(
-      () => (postListType.value.isThreadType() ||
-              postListType.value.isForumType())
+      () => postListType.value.canPost()
           ? Padding(
               padding: EdgeInsets.only(bottom: hasBottomSheet ? 56.0 : 0.0),
               child: FloatingActionButton(
@@ -641,6 +691,34 @@ class FloatingButtonState extends State<FloatingButton> {
             )
           : const SizedBox.shrink(),
     );
+  }
+}
+
+class _BottomBar extends StatefulWidget {
+  static final GlobalKey<_BottomBarState> _bottomBarKey =
+      GlobalKey<_BottomBarState>();
+
+  const _BottomBar({super.key});
+
+  @override
+  State<_BottomBar> createState() => _BottomBarState();
+}
+
+class _BottomBarState extends State<_BottomBar> {
+  void refresh() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = StackCacheView.getController() as PostListController;
+    final postListType = controller.postListType;
+
+    return Obx(() => postListType.value.isHistory()
+        ? HistoryBottomBar(controller)
+        : const SizedBox.shrink());
   }
 }
 
@@ -661,6 +739,7 @@ class PostListView extends StackCacheView<PostListController> {
       popOnce();
       _PostListAppBar._appBarKey.currentState!.refresh();
       FloatingButton.buttonKey.currentState!.refresh();
+      _BottomBar._bottomBarKey.currentState!.refresh();
 
       return false;
     }
@@ -720,6 +799,7 @@ class PostListView extends StackCacheView<PostListController> {
                   bottomSheetController: _bottomSheetController,
                   bottomSheetHeight: bottomSheetHeight,
                 ),
+                bottomNavigationBar: _BottomBar(key: _BottomBar._bottomBarKey),
               )
             : const SizedBox.shrink(),
       ),

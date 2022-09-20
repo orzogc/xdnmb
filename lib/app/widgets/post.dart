@@ -1,13 +1,12 @@
-import 'package:date_format/date_format.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:html_to_text/html_to_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
-import '../data/services/time.dart';
 import '../utils/extensions.dart';
 import '../utils/theme.dart';
+import '../utils/time.dart';
 import 'content.dart';
 import 'forum_name.dart';
 import 'scroll.dart';
@@ -51,29 +50,12 @@ class _PostUser extends StatelessWidget {
 }
 
 class _PostTime extends StatelessWidget {
-  static const List<String> _fullFormat = [yy, '/', m, '/', d, ' ', H, ':', nn];
-
-  static const List<String> _sameYearFormat = [m, '/', d, ' ', H, ':', nn];
-
-  static const List<String> _sameDayFormat = [H, ':', nn];
-
   final DateTime postTime;
 
   const _PostTime(this.postTime, {super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final now = TimeService.to.now;
-    final localPostTime = postTime.toLocal();
-
-    return Text(formatDate(
-        localPostTime,
-        localPostTime.year != now.year
-            ? _fullFormat
-            : localPostTime.month != now.month || localPostTime.day != now.day
-                ? _sameYearFormat
-                : _sameDayFormat));
-  }
+  Widget build(BuildContext context) => Text(formatTime(postTime));
 }
 
 typedef OnPostIdCallback = void Function(int postId);

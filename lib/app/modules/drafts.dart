@@ -59,6 +59,8 @@ class PostDraftsView extends GetView<PostDraftsController> {
             () => isVisible.value
                 ? Card(
                     key: UniqueKey(),
+                    margin: const EdgeInsets.symmetric(vertical: 4.0),
+                    elevation: 1.5,
                     child: InkWell(
                       onTap: () => Get.back<PostDraftData>(result: draft),
                       child: Row(

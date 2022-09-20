@@ -105,6 +105,9 @@ class _TabTitle extends StatelessWidget {
         case PostListType.feed:
           title = const Text('订阅');
           break;
+        case PostListType.history:
+          title = const Text('历史记录');
+          break;
       }
 
       return title;
@@ -187,7 +190,12 @@ class _DrawerBottom extends StatelessWidget {
                       color: theme.primaryColor, fontWeight: FontWeight.bold)),
             ),
           ),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.event_note)),
+          IconButton(
+              onPressed: () {
+                AppRoutes.toHistory();
+                Get.back();
+              },
+              icon: const Icon(Icons.event_note)),
           IconButton(
             onPressed: () {
               AppRoutes.toFeed();

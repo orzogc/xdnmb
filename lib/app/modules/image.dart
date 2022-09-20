@@ -67,12 +67,8 @@ class _TopOverlay extends StatelessWidget {
                 showReplyCount: false,
                 contentMaxLines: 5,
                 poUserHash: poUserHash,
-                onLinkTap: null,
                 onHiddenText: (context, element, textStyle) => onHiddenText(
-                    context: context,
-                    element: element,
-                    textStyle: textStyle,
-                    poUserHash: poUserHash),
+                    context: context, element: element, textStyle: textStyle),
                 displayImage: false,
               ),
             )
