@@ -102,7 +102,91 @@ class _ForumDialog extends StatelessWidget {
       );
 }
 
-class ForumBody extends StatelessWidget {
+class ForumBody extends StatefulWidget {
+  final PostListController controller;
+
+  const ForumBody(this.controller, {super.key});
+
+  @override
+  State<ForumBody> createState() => _ForumBodyState();
+}
+
+class _ForumBodyState extends State<ForumBody> {
+  late final AnchorScrollController _anchorController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _anchorController = AnchorScrollController(
+      onIndexChanged: (index, userScroll) =>
+          widget.controller.currentPage.value = index.getPageFromIndex(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _anchorController.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final client = XdnmbClientService.to.client;
+    final forums = ForumListService.to;
+    final postListType = widget.controller.postListType;
+    final id = widget.controller.id;
+
+    return Obx(
+      () => BiListView<ThreadWithPage>(
+        key: ValueKey<PostList>(PostList.fromController(widget.controller)),
+        controller: _anchorController,
+        initialPage: widget.controller.page.value,
+        lastPage: forums.maxPage(id.value!,
+                isTimeline: postListType.value.isTimeline()) ??
+            100,
+        fetch: (page) async => postListType.value.isTimeline()
+            ? (await client.getTimeline(id.value!, page: page))
+                .map((thread) => ThreadWithPage(thread, page))
+                .toList()
+            : (await client.getForum(id.value!, page: page))
+                .map((thread) => ThreadWithPage(thread, page))
+                .toList(),
+        itemBuilder: (context, thread, index) => AnchorItemWrapper(
+          key: thread.toValueKey(),
+          controller: _anchorController,
+          index: thread.toIndex(),
+          child: Card(
+            margin: const EdgeInsets.symmetric(vertical: 4.0),
+            elevation: 1.5,
+            child: PostCard(
+              post: thread.thread.mainPost,
+              showForumName: postListType.value.isTimeline(),
+              contentMaxLines: 8,
+              poUserHash: thread.thread.mainPost.userHash,
+              onTap: (post) => AppRoutes.toThread(
+                  mainPostId: thread.thread.mainPost.id,
+                  mainPost: thread.thread.mainPost),
+              onLongPress: (post) => postListDialog(_ForumDialog(post)),
+              onHiddenText: (context, element, textStyle) => onHiddenText(
+                  context: context, element: element, textStyle: textStyle),
+            ),
+          ),
+        ),
+        separator: const SizedBox.shrink(),
+        noItemsFoundBuilder: (context) => const Center(
+          child: Text(
+            '这里没有串',
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/* class ForumBody extends StatelessWidget {
   final PostListController controller;
 
   const ForumBody(this.controller, {super.key});
@@ -165,4 +249,4 @@ class ForumBody extends StatelessWidget {
       },
     );
   }
-}
+} */

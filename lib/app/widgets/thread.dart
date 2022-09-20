@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -183,10 +185,12 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   BrowseHistory? _history;
 
-  late AnchorScrollController _anchorController;
+  AnchorScrollController? _anchorController;
 
   /// 是否第一次跳转
   final RxBool _isJumped = false.obs;
+
+  StreamSubscription<int>? _listener;
 
   Future<void> _saveBrowseHistory() async {
     _isSavingBrowseHistory = true;
@@ -206,6 +210,16 @@ class _ThreadBodyState extends State<ThreadBody> {
     super.initState();
 
     _browsePostId = widget.controller.id.value!;
+  }
+
+  @override
+  void dispose() {
+    _isJumped.value = false;
+    _anchorController?.dispose();
+    _anchorController = null;
+    _listener?.cancel();
+
+    super.dispose();
   }
 
   @override
@@ -232,6 +246,9 @@ class _ThreadBodyState extends State<ThreadBody> {
             _isJumped.value = true;
             postPage.value = page;
             currentPage.value = page;
+
+            _listener = widget.controller.page
+                .listen((page) => _isJumped.value = false);
           }
         }
       }),
@@ -244,9 +261,11 @@ class _ThreadBodyState extends State<ThreadBody> {
         if (snapshot.connectionState == ConnectionState.done) {
           return Obx(
             () {
+              _anchorController?.dispose();
               _anchorController = AnchorScrollController(
                 onIndexChanged: (index, userScroll) {
-                  currentPage.value = index.getPageFromIndex();
+                  widget.controller.currentPage.value =
+                      index.getPageFromIndex();
                   _browsePostId = index.getIdFromIndex();
 
                   if (!_isSavingBrowseHistory) {
@@ -317,21 +336,28 @@ class _ThreadBodyState extends State<ThreadBody> {
                                       const Duration(milliseconds: 50),
                                       () async {
                                     try {
-                                      await _anchorController.scrollToIndex(
-                                          index: index, scrollSpeed: 10.0);
+                                      if (_isJumped.value) {
+                                        await _anchorController?.scrollToIndex(
+                                            index: index, scrollSpeed: 10.0);
 
-                                      if (firstPost.id != id) {
-                                        var scrollIndex = _browsePostId;
-                                        do {
-                                          scrollIndex = _browsePostId;
-                                          await Future.delayed(
-                                              // TODO: 200毫秒只是估算，需要更好的方法
-                                              const Duration(milliseconds: 200),
-                                              () => _anchorController
-                                                  .scrollToIndex(
-                                                      index: index,
-                                                      scrollSpeed: 10.0));
-                                        } while (scrollIndex != _browsePostId);
+                                        if (firstPost.id != id) {
+                                          while (id != _browsePostId) {
+                                            if (_isJumped.value) {
+                                              await Future.delayed(
+                                                  const Duration(
+                                                      milliseconds: 50), () {
+                                                if (_isJumped.value) {
+                                                  _anchorController
+                                                      ?.scrollToIndex(
+                                                          index: index,
+                                                          scrollSpeed: 10.0);
+                                                }
+                                              });
+                                            } else {
+                                              break;
+                                            }
+                                          }
+                                        }
                                       }
                                     } catch (e) {
                                       showToast(

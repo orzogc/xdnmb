@@ -96,7 +96,101 @@ class _FeedDialog extends StatelessWidget {
       );
 }
 
-class FeedBody extends StatelessWidget {
+class FeedBody extends StatefulWidget {
+  final PostListController controller;
+
+  const FeedBody(this.controller, {super.key});
+
+  @override
+  State<FeedBody> createState() => _FeedBodyState();
+}
+
+class _FeedBodyState extends State<FeedBody> {
+  late final AnchorScrollController _anchorController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _anchorController = AnchorScrollController(
+      onIndexChanged: (index, userScroll) =>
+          widget.controller.currentPage.value = index.getPageFromIndex(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _anchorController.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final client = XdnmbClientService.to.client;
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.feedUuidListenable,
+      builder: (context, value, child) => Obx(
+        () => BiListView<PostWithPage>(
+          key: ValueKey<_FeedKey>(_FeedKey.fromController(widget.controller)),
+          controller: _anchorController,
+          initialPage: widget.controller.page.value,
+          fetch: (page) async =>
+              (await client.getFeed(settings.feedUuid, page: page))
+                  .map((feed) => PostWithPage(feed, page))
+                  .toList(),
+          itemBuilder: (context, feed, index) {
+            final isVisible = true.obs;
+
+            return Obx(
+              () => isVisible.value
+                  ? AnchorItemWrapper(
+                      key: feed.toValueKey(),
+                      controller: _anchorController,
+                      index: feed.toIndex(),
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(vertical: 4.0),
+                        elevation: 1.5,
+                        child: PostCard(
+                          post: feed.post,
+                          contentMaxLines: 8,
+                          poUserHash: feed.post.userHash,
+                          onTap: (post) => AppRoutes.toThread(
+                              mainPostId: feed.post.id, mainPost: feed.post),
+                          onLongPress: (post) => postListDialog(
+                            _FeedDialog(
+                              post: post,
+                              onDelete: () => isVisible.value = false,
+                            ),
+                          ),
+                          onHiddenText: (context, element, textStyle) =>
+                              onHiddenText(
+                                  context: context,
+                                  element: element,
+                                  textStyle: textStyle),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            );
+          },
+          separator: const SizedBox.shrink(),
+          noItemsFoundBuilder: (context) => const Center(
+            child: Text(
+              '这里没有订阅',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+          canRefreshAtBottom: false,
+        ),
+      ),
+    );
+  }
+}
+
+/* class FeedBody extends StatelessWidget {
   final PostListController controller;
 
   const FeedBody(this.controller, {super.key});
@@ -172,4 +266,4 @@ class FeedBody extends StatelessWidget {
       ),
     );
   }
-}
+} */

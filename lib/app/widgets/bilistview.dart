@@ -195,8 +195,6 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
   @override
   void dispose() {
-    widget.controller?.dispose();
-
     _pagingUpController?.dispose();
     _pagingUpController = null;
     _pagingDownController?.dispose();

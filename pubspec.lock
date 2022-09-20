@@ -25,9 +25,11 @@ packages:
   anchor_scroll_controller:
     dependency: "direct main"
     description:
-      name: anchor_scroll_controller
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "."
+      ref: fix
+      resolved-ref: "7fe6b8efa9051ab9ac9c7f9aeef7251e454b74bb"
+      url: "https://github.com/orzogc/anchor_scroll_controller.git"
+    source: git
     version: "0.4.1"
   args:
     dependency: transitive
@@ -259,7 +261,7 @@ packages:
       name: file_picker
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "5.1.0"
+    version: "5.2.0"
   fixnum:
     dependency: transitive
     description:
@@ -841,14 +843,14 @@ packages:
       name: sqflite
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.3+1"
+    version: "2.1.0"
   sqflite_common:
     dependency: transitive
     description:
       name: sqflite_common
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.2.1+1"
+    version: "2.3.0"
   stack_trace:
     dependency: transitive
     description:

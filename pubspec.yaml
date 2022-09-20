@@ -20,7 +20,10 @@ environment:
 
 dependencies:
   align_positioned: ^3.0.0
-  anchor_scroll_controller: ^0.4.1
+  anchor_scroll_controller:
+    git:
+      url: https://github.com/orzogc/anchor_scroll_controller.git
+      ref: fix
   cached_network_image: ^3.2.2
   date_format: ^2.0.6
   easy_refresh: ^3.0.4+2
