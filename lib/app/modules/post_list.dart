@@ -14,6 +14,7 @@ import '../data/services/user.dart';
 import '../modules/edit_post.dart';
 import '../routes/routes.dart';
 import '../utils/navigation.dart';
+import '../utils/stack.dart';
 import '../utils/toast.dart';
 import '../widgets/button.dart';
 import '../widgets/drawer.dart';
@@ -24,7 +25,6 @@ import '../widgets/forum.dart';
 import '../widgets/history.dart';
 import '../widgets/scroll.dart';
 import '../widgets/thread.dart';
-import 'stack_cache.dart';
 
 enum PostListType {
   thread,
@@ -100,7 +100,7 @@ class PostList {
   int get hashCode => Object.hash(postListType, id, page);
 }
 
-class PostListController extends GetxController {
+class PostListController {
   final Rx<PostListType> postListType;
 
   final RxnInt id;
@@ -186,6 +186,11 @@ class PostListController extends GetxController {
         dateRange = Rxn(null),
         jumpToId = null;
 
+  static PostListController get([int? index]) =>
+      ControllerStack.getController(index);
+
+  void refreshPage([int page = 1]) => this.page.trigger(page);
+
   PostListController copy() => PostListController(
       postListType: postListType.value,
       id: id.value,
@@ -210,26 +215,32 @@ class PostListController extends GetxController {
 class PostListBinding implements Bindings {
   @override
   void dependencies() {
-    Get.create<PostListController>(() {
-      final uri = Uri.parse(Get.currentRoute);
+    late final PostListController controller;
+    final uri = Uri.parse(Get.currentRoute);
+    switch (uri.path) {
+      case AppRoutes.thread:
+        controller = threadController(Get.parameters, Get.arguments);
+        break;
+      case AppRoutes.onlyPoThread:
+        controller = onlyPoThreadController(Get.parameters, Get.arguments);
+        break;
+      case AppRoutes.forum:
+        controller = forumController(Get.parameters);
+        break;
+      case AppRoutes.timeline:
+        controller = timelineController(Get.parameters);
+        break;
+      case AppRoutes.feed:
+        controller = feedController(Get.parameters);
+        break;
+      case AppRoutes.history:
+        controller = historyController(Get.parameters);
+        break;
+      default:
+        throw '未知URI: $uri';
+    }
 
-      switch (uri.path) {
-        case AppRoutes.thread:
-          return threadController(Get.parameters, Get.arguments);
-        case AppRoutes.onlyPoThread:
-          return onlyPoThreadController(Get.parameters, Get.arguments);
-        case AppRoutes.forum:
-          return forumController(Get.parameters);
-        case AppRoutes.timeline:
-          return timelineController(Get.parameters);
-        case AppRoutes.feed:
-          return feedController(Get.parameters);
-        case AppRoutes.history:
-          return historyController(Get.parameters);
-        default:
-          throw '未知URI: $uri';
-      }
-    }, permanent: false);
+    ControllerStack.pushController(controller);
   }
 }
 
@@ -262,7 +273,7 @@ class _PostListAppBarState extends State<_PostListAppBar> {
   @override
   Widget build(BuildContext context) {
     final scaffold = Scaffold.of(context);
-    final controller = StackCacheView.getController() as PostListController;
+    final controller = PostListController.get();
     final postListType = controller.postListType;
 
     Widget button = IconButton(
@@ -271,7 +282,7 @@ class _PostListAppBarState extends State<_PostListAppBar> {
       tooltip: '标签',
     );
     if (PostListPage.pageKey.currentState?._isBuilt == true) {
-      if (StackCacheView.controllersCount() > 1) {
+      if (ControllerStack.controllersCount() > 1) {
         button = BackButton(onPressed: () {
           popOnce();
           _refresh();
@@ -307,21 +318,28 @@ class _PostListAppBarState extends State<_PostListAppBar> {
             break;
         }
 
-        return AppBar(
-          leading: button,
-          title: title,
-          actions: [
-            if (postListType.value.isXdnmbApi())
-              PageButton(controller: controller, maxPage: maxPage),
-            if (postListType.value.isThreadType())
-              ThreadAppBarPopupMenuButton(controller),
-            if (postListType.value.isForumType())
-              ForumAppBarPopupMenuButton(controller),
-            if (postListType.value.isHistory())
-              HistoryDateRangePicker(controller),
-            if (postListType.value.isHistory())
-              HistoryAppBarPopupMenuButton(controller),
-          ],
+        return GestureDetector(
+          onTap: () {
+            if (!postListType.value.isThreadType()) {
+              controller.refreshPage();
+            }
+          },
+          child: AppBar(
+            leading: button,
+            title: title,
+            actions: [
+              if (postListType.value.isXdnmbApi())
+                PageButton(controller: controller, maxPage: maxPage),
+              if (postListType.value.isThreadType())
+                ThreadAppBarPopupMenuButton(controller),
+              if (postListType.value.isForumType())
+                ForumAppBarPopupMenuButton(controller),
+              if (postListType.value.isHistory())
+                HistoryDateRangePicker(controller),
+              if (postListType.value.isHistory())
+                HistoryAppBarPopupMenuButton(controller),
+            ],
+          ),
         );
       },
     );
@@ -371,7 +389,7 @@ Route buildRoute(PostListController controller) => GetPageRoute(
 
 Widget buildNavigator(int index) {
   final controller =
-      StackCacheView.getFirstController(index) as PostListController;
+      ControllerStack.getFirstController(index) as PostListController;
 
   debugPrint('build navigator: $index');
 
@@ -404,11 +422,10 @@ Widget buildNavigator(int index) {
   }
 
   return Navigator(
-    key: Get.nestedKey(StackCacheView.getKeyId(index)),
+    key: Get.nestedKey(ControllerStack.getKeyId(index)),
     initialRoute: initialRoute,
     onGenerateInitialRoutes: (navigator, initialRoute) {
-      final controller =
-          StackCacheView.getController(index) as PostListController;
+      final controller = PostListController.get(index);
 
       return [buildRoute(controller)];
     },
@@ -440,7 +457,7 @@ Widget buildNavigator(int index) {
           throw '未知PostList';
       }
 
-      StackCacheView.pushController(controller, index);
+      ControllerStack.pushController(controller, index);
       _refresh();
 
       return buildRoute(controller);
@@ -465,12 +482,12 @@ class PostListPageState extends State<PostListPage> {
 
   void jumpToPage(int page) {
     _pageController.jumpToPage(page);
-    StackCacheView.index = page;
+    ControllerStack.index = page;
 
     _refresh();
   }
 
-  void jumpToLast() => jumpToPage(StackCacheView.length.value - 1);
+  void jumpToLast() => jumpToPage(ControllerStack.length.value - 1);
 
   @override
   void initState() {
@@ -497,7 +514,7 @@ class PostListPageState extends State<PostListPage> {
       () => PageView.builder(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: StackCacheView.length.value,
+        itemCount: ControllerStack.length.value,
         itemBuilder: (context, index) => buildNavigator(index),
       ),
     );
@@ -575,7 +592,7 @@ class _PostListBottomSheet extends StatelessWidget {
         ),
       );
     } else {
-      final controller = StackCacheView.getController() as PostListController;
+      final controller = PostListController.get();
 
       return SingleChildScrollViewWithScrollbar(
         child: EditPost(
@@ -611,7 +628,7 @@ class FloatingButtonState extends State<FloatingButton> {
 
   void refresh() {
     if (mounted) {
-      final controller = StackCacheView.getController() as PostListController;
+      final controller = PostListController.get();
 
       setState(() {
         if (!controller.postListType.value.canPost() &&
@@ -647,8 +664,7 @@ class FloatingButtonState extends State<FloatingButton> {
           if (controller.hasText() &&
               !(await Get.dialog<bool>(_SaveDraftDialog(controller)) ??
                   false)) {
-            final controller_ =
-                StackCacheView.getController() as PostListController;
+            final controller_ = PostListController.get();
             if (!controller_.postListType.value.canPost()) {
               popOnce();
               _refresh();
@@ -665,7 +681,7 @@ class FloatingButtonState extends State<FloatingButton> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = StackCacheView.getController() as PostListController;
+    final controller = PostListController.get();
     final postListType = controller.postListType;
 
     return Obx(
@@ -704,7 +720,7 @@ class _BottomBarState extends State<_BottomBar> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = StackCacheView.getController() as PostListController;
+    final controller = PostListController.get();
     final postListType = controller.postListType;
 
     return Obx(() => postListType.value.isHistory()
@@ -713,7 +729,7 @@ class _BottomBarState extends State<_BottomBar> {
   }
 }
 
-class PostListView extends StackCacheView<PostListController> {
+class PostListView extends StatelessWidget {
   final Rxn<DateTime> _lastPressBackTime = Rxn(null);
 
   final Rxn<PersistentBottomSheetController> _bottomSheetController = Rxn(null);

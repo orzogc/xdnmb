@@ -3,10 +3,10 @@ import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
 import '../modules/post_list.dart';
-import '../modules/stack_cache.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
+import '../utils/stack.dart';
 import 'content.dart';
 import 'forum_name.dart';
 
@@ -76,8 +76,7 @@ class _TabTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller =
-        StackCacheView.getController(index) as PostListController;
+    final controller = PostListController.get(index);
 
     return Obx(() {
       final postListType = controller.postListType.value;
@@ -128,21 +127,20 @@ class _TabList extends StatelessWidget {
         () => ListView.separated(
           key: const PageStorageKey<String>('tabList'),
           shrinkWrap: true,
-          itemCount: StackCacheView.length.value,
+          itemCount: ControllerStack.length.value,
           itemBuilder: (context, index) {
-            final controller =
-                StackCacheView.getController(index) as PostListController;
+            final controller = PostListController.get(index);
             final post = controller.post;
 
             return Obx(
               () => ListTile(
-                key: ValueKey<int>(StackCacheView.getKeyId(index)),
+                key: ValueKey<int>(ControllerStack.getKeyId(index)),
                 onTap: () {
                   PostListPage.pageKey.currentState!.jumpToPage(index);
                   Get.back();
                 },
                 tileColor:
-                    index == StackCacheView.index ? theme.focusColor : null,
+                    index == ControllerStack.index ? theme.focusColor : null,
                 title: _TabTitle(index),
                 subtitle: post.value != null
                     ? Content(
@@ -155,12 +153,12 @@ class _TabList extends StatelessWidget {
                                 textStyle: textStyle),
                         displayImage: false)
                     : null,
-                trailing: StackCacheView.length.value > 1
+                trailing: ControllerStack.length.value > 1
                     ? IconButton(
                         onPressed: () {
-                          StackCacheView.removeControllerAt(index);
+                          ControllerStack.removeControllerAt(index);
                           PostListPage.pageKey.currentState!
-                              .jumpToPage(StackCacheView.index);
+                              .jumpToPage(ControllerStack.index);
                         },
                         icon: const Icon(Icons.close))
                     : null,

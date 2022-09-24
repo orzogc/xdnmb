@@ -60,7 +60,7 @@ class HistoryDateRangePicker extends StatelessWidget {
 
         if (range != null) {
           controller.dateRange.value = range;
-          controller.page.trigger(1);
+          controller.refreshPage();
         }
       },
       icon: const Icon(Icons.calendar_month),
@@ -76,7 +76,6 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
-    final page = controller.page;
 
     return PopupMenuButton(
       tooltip: '菜单',
@@ -86,17 +85,17 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
             switch (controller.bottomBarIndex.value) {
               case _BrowseHistoryBody._index:
                 await history.clearBrowseHistory();
-                page.trigger(1);
+                controller.refreshPage();
                 showToast('清空浏览记录');
                 return;
               case _PostHistoryBody._index:
                 await history.clearPostData();
-                page.trigger(1);
+                controller.refreshPage();
                 showToast('清空主题记录');
                 return;
               case _ReplyHistoryBody._index:
                 await history.clearReplyData();
-                page.trigger(1);
+                controller.refreshPage();
                 showToast('清空回复记录');
                 return;
               default:
@@ -271,7 +270,7 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
 
     _pageSubscription = widget.controller.page.listen((page) {
       if (widget.controller.bottomBarIndex.value == _BrowseHistoryBody._index) {
-        _controller.page.trigger(page);
+        _controller.refreshPage(page);
         _refresh++;
       }
     });
@@ -427,7 +426,7 @@ class _PostHistoryBodyState extends State<_PostHistoryBody> {
 
     _pageSubscription = widget.controller.page.listen((page) {
       if (widget.controller.bottomBarIndex.value == _PostHistoryBody._index) {
-        _controller.page.trigger(page);
+        _controller.refreshPage(page);
         _refresh++;
       }
     });
@@ -546,7 +545,7 @@ class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
 
     _pageSubscription = widget.controller.page.listen((page) {
       if (widget.controller.bottomBarIndex.value == _ReplyHistoryBody._index) {
-        _controller.page.trigger(page);
+        _controller.refreshPage(page);
         _refresh++;
       }
     });

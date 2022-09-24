@@ -3,7 +3,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../modules/image.dart';
 import '../modules/post_list.dart';
-import '../modules/stack_cache.dart';
+import '../utils/stack.dart';
 
 abstract class AppRoutes {
   /// 参数：forumId和page
@@ -69,7 +69,7 @@ abstract class AppRoutes {
   static Future<T?>? toForum<T>({required int forumId, int page = 1}) =>
       Get.toNamed(
         forum,
-        id: StackCacheView.getKeyId(),
+        id: ControllerStack.getKeyId(),
         parameters: {
           'forumId': '$forumId',
           'page': '$page',
@@ -79,7 +79,7 @@ abstract class AppRoutes {
   static Future<T?>? toTimeline<T>({required int timelineId, int page = 1}) =>
       Get.toNamed(
         timeline,
-        id: StackCacheView.getKeyId(),
+        id: ControllerStack.getKeyId(),
         parameters: {
           'timelineId': '$timelineId',
           'page': '$page',
@@ -93,7 +93,7 @@ abstract class AppRoutes {
           PostBase? mainPost}) =>
       Get.toNamed(
         thread,
-        id: StackCacheView.getKeyId(),
+        id: ControllerStack.getKeyId(),
         arguments: mainPost,
         parameters: {
           'mainPostId': '$mainPostId',
@@ -106,7 +106,7 @@ abstract class AppRoutes {
           {required int mainPostId, int page = 1, PostBase? mainPost}) =>
       Get.toNamed(
         onlyPoThread,
-        id: StackCacheView.getKeyId(),
+        id: ControllerStack.getKeyId(),
         arguments: mainPost,
         parameters: {
           'mainPostId': '$mainPostId',
@@ -116,13 +116,13 @@ abstract class AppRoutes {
 
   static Future<T?>? toFeed<T>({int page = 1}) => Get.toNamed(
         feed,
-        id: StackCacheView.getKeyId(),
+        id: ControllerStack.getKeyId(),
         parameters: {'page': '$page'},
       );
 
   static Future<T?>? toHistory<T>({int index = 0, int page = 1}) => Get.toNamed(
         history,
-        id: StackCacheView.getKeyId(),
+        id: ControllerStack.getKeyId(),
         parameters: {
           'index': '$index',
           'page': '$page',

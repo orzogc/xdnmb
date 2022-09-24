@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../modules/post_list.dart';
-import '../modules/stack_cache.dart';
+import 'stack.dart';
 
 GlobalKey<NavigatorState>? postListkey([int? index]) =>
-    Get.nestedKey(StackCacheView.getKeyId(index));
+    Get.nestedKey(ControllerStack.getKeyId(index));
 
 void postListBack<T>({
   T? result,
@@ -17,20 +17,20 @@ void postListBack<T>({
         result: result,
         closeOverlays: closeOverlays,
         canPop: canPop,
-        id: StackCacheView.getKeyId(index));
+        id: ControllerStack.getKeyId(index));
 
 void popOnce([int? index]) {
   bool hasPopped = false;
   Get.until((route) {
     if (!hasPopped) {
       if (route is! PopupRoute) {
-        StackCacheView.popController(index);
+        ControllerStack.popController(index);
       }
       hasPopped = true;
       return false;
     }
     return true;
-  }, id: StackCacheView.getKeyId(index));
+  }, id: ControllerStack.getKeyId(index));
 }
 
 void popAllPopup([int? index]) {
@@ -39,11 +39,11 @@ void popAllPopup([int? index]) {
       return false;
     }
     return true;
-  }, id: StackCacheView.getKeyId(index));
+  }, id: ControllerStack.getKeyId(index));
 }
 
 void openNewTabBackground(PostListController controller) =>
-    StackCacheView.addController(controller);
+    ControllerStack.addController(controller);
 
 void openNewTab(PostListController controller) {
   openNewTabBackground(controller);

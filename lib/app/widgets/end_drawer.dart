@@ -9,7 +9,6 @@ import '../data/models/forum.dart';
 import '../data/services/forum.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
-import '../modules/stack_cache.dart';
 import '../routes/routes.dart';
 import '../utils/navigation.dart';
 import '../utils/toast.dart';
@@ -22,7 +21,6 @@ class _DrawerHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final client = XdnmbClientService.to;
-    final forums = ForumListService.to;
 
     return SizedBox(
       height: (theme.appBarTheme.toolbarHeight ?? kToolbarHeight) +
@@ -156,8 +154,7 @@ class _ForumList extends StatelessWidget {
         itemCount: forums.displayedLength,
         itemBuilder: (context, index) {
           final forum = forums.displayedForum(index);
-          final controller =
-              StackCacheView.getController() as PostListController;
+          final controller = PostListController.get();
           final forumId = controller.forumOrTimelineId;
           final isTimeline = controller.postListType.value.isTimeline();
 
