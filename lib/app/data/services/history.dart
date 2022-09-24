@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 
@@ -35,15 +35,23 @@ class PostHistoryService extends GetxService {
       _isar.writeTxn(() => _browseHistory.clear());
 
   /// 包括start，不包括end
-  Future<List<BrowseHistory>> browseHistoryList(int start, int end) {
+  Future<List<BrowseHistory>> browseHistoryList(int start, int end,
+      [DateTimeRange? range]) {
     assert(start <= end);
 
-    return _browseHistory
-        .where(sort: Sort.desc)
-        .anyBrowseTime()
-        .offset(start)
-        .limit(end - start)
-        .findAll();
+    return range != null
+        ? _browseHistory
+            .where(sort: Sort.desc)
+            .browseTimeBetween(range.start, range.end, includeUpper: false)
+            .offset(start)
+            .limit(end - start)
+            .findAll()
+        : _browseHistory
+            .where(sort: Sort.desc)
+            .anyBrowseTime()
+            .offset(start)
+            .limit(end - start)
+            .findAll();
   }
 
   Future<PostData?> getPostData(int id) => _postData.get(id);
@@ -57,15 +65,23 @@ class PostHistoryService extends GetxService {
   Future<void> clearPostData() => _isar.writeTxn(() => _postData.clear());
 
   /// 包括start，不包括end
-  Future<List<PostData>> postDataList(int start, int end) {
+  Future<List<PostData>> postDataList(int start, int end,
+      [DateTimeRange? range]) {
     assert(start <= end);
 
-    return _postData
-        .where(sort: Sort.desc)
-        .anyPostTime()
-        .offset(start)
-        .limit(end - start)
-        .findAll();
+    return range != null
+        ? _postData
+            .where(sort: Sort.desc)
+            .postTimeBetween(range.start, range.end, includeUpper: false)
+            .offset(start)
+            .limit(end - start)
+            .findAll()
+        : _postData
+            .where(sort: Sort.desc)
+            .anyPostTime()
+            .offset(start)
+            .limit(end - start)
+            .findAll();
   }
 
   Future<ReplyData?> getReplyData(int id) => _replyData.get(id);
@@ -79,15 +95,23 @@ class PostHistoryService extends GetxService {
   Future<void> clearReplyData() => _isar.writeTxn(() => _replyData.clear());
 
   /// 包括start，不包括end
-  Future<List<ReplyData>> replyDataList(int start, int end) {
+  Future<List<ReplyData>> replyDataList(int start, int end,
+      [DateTimeRange? range]) {
     assert(start <= end);
 
-    return _replyData
-        .where(sort: Sort.desc)
-        .anyPostTime()
-        .offset(start)
-        .limit(end - start)
-        .findAll();
+    return range != null
+        ? _replyData
+            .where(sort: Sort.desc)
+            .postTimeBetween(range.start, range.end, includeUpper: false)
+            .offset(start)
+            .limit(end - start)
+            .findAll()
+        : _replyData
+            .where(sort: Sort.desc)
+            .anyPostTime()
+            .offset(start)
+            .limit(end - start)
+            .findAll();
   }
 
   @override

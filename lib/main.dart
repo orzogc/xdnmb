@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
@@ -45,6 +46,24 @@ class XdnmbApp extends StatelessWidget {
       theme: AppTheme.theme,
       darkTheme: AppTheme.darkTheme,
       builder: EasyLoading.init(),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', ''),
+        Locale('en', 'US'),
+        Locale.fromSubtags(languageCode: 'zh'),
+        Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'),
+        Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+        Locale.fromSubtags(
+            languageCode: 'zh', scriptCode: 'Hans', countryCode: 'CN'),
+        Locale.fromSubtags(
+            languageCode: 'zh', scriptCode: 'Hant', countryCode: 'TW'),
+        Locale.fromSubtags(
+            languageCode: 'zh', scriptCode: 'Hant', countryCode: 'HK'),
+      ],
       debugShowCheckedModeBanner: false,
     );
   }

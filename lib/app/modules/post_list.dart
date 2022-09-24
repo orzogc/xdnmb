@@ -109,9 +109,11 @@ class PostListController extends GetxController {
 
   final RxInt currentPage;
 
+  final Rxn<PostBase> post;
+
   final RxnInt bottomBarIndex;
 
-  final Rxn<PostBase> post;
+  final Rxn<DateTimeRange> dateRange;
 
   final int? jumpToId;
 
@@ -129,23 +131,26 @@ class PostListController extends GetxController {
       int? id,
       int page = 1,
       int? currentPage,
-      int? bottomBarIndex,
       PostBase? post,
+      int? bottomBarIndex,
+      DateTimeRange? dateRange,
       this.jumpToId})
       : postListType = postListType.obs,
         id = RxnInt(id),
         page = page.obs,
         currentPage = currentPage != null ? currentPage.obs : page.obs,
+        post = Rxn(post),
         bottomBarIndex = RxnInt(bottomBarIndex),
-        post = Rxn(post);
+        dateRange = Rxn(dateRange);
 
   PostListController.fromPostList({required PostList postList, PostBase? post})
       : postListType = postList.postListType.obs,
         id = RxnInt(postList.id),
         page = postList.page.obs,
         currentPage = postList.page.obs,
-        bottomBarIndex = RxnInt(null),
         post = Rxn(post),
+        bottomBarIndex = RxnInt(null),
+        dateRange = Rxn(null),
         jumpToId = null;
 
   PostListController.fromPost({required PostBase post, int page = 1})
@@ -153,8 +158,9 @@ class PostListController extends GetxController {
         id = RxnInt(post.id),
         page = page.obs,
         currentPage = page.obs,
-        bottomBarIndex = RxnInt(null),
         post = Rxn(post),
+        bottomBarIndex = RxnInt(null),
+        dateRange = Rxn(null),
         jumpToId = null;
 
   PostListController.fromThread(
@@ -164,8 +170,9 @@ class PostListController extends GetxController {
         id = RxnInt(thread.mainPost.id),
         page = page.obs,
         currentPage = page.obs,
-        bottomBarIndex = RxnInt(null),
         post = Rxn(thread.mainPost),
+        bottomBarIndex = RxnInt(null),
+        dateRange = Rxn(null),
         jumpToId = null;
 
   PostListController.fromForumData({required ForumData forum, int page = 1})
@@ -174,52 +181,30 @@ class PostListController extends GetxController {
         id = RxnInt(forum.id),
         page = page.obs,
         currentPage = page.obs,
-        bottomBarIndex = RxnInt(null),
         post = Rxn(null),
+        bottomBarIndex = RxnInt(null),
+        dateRange = Rxn(null),
         jumpToId = null;
 
-  /* void onlyPoThreadToThread({int page = 1}) {
-    postListType.value = PostListType.thread;
-    this.page.value = page;
-    currentPage.value = page;
-  }
-
-  void threadToOnlyPoThread({int page = 1}) {
-    postListType.value = PostListType.onlyPoThread;
-    this.page.value = page;
-    currentPage.value = page;
-  } */
-
-  /* void toForum({required int forumId, int page = 1}) {
-    postListType.value = PostListType.forum;
-    id.value = forumId;
-    this.page.value = page;
-    currentPage.value = page;
-    post.value = null;
-  }
-
-  void toTimeline({required int timelineId, int page = 1}) {
-    postListType.value = PostListType.timeline;
-    id.value = timelineId;
-    this.page.value = page;
-    currentPage.value = page;
-    post.value = null;
-  } */
-
-  /* void fromPostList({required PostList postList, PostBase? post}) {
-    postListType.value = postList.postListType;
-    id.value = postList.id;
-    page.value = postList.page;
-    currentPage.value = postList.page;
-    this.post.value = post;
-  } */
+  PostListController copy() => PostListController(
+      postListType: postListType.value,
+      id: id.value,
+      page: page.value,
+      currentPage: currentPage.value,
+      post: post.value,
+      bottomBarIndex: bottomBarIndex.value,
+      dateRange: dateRange.value,
+      jumpToId: jumpToId);
 
   PostListController copyKeepingPage() => PostListController(
       postListType: postListType.value,
       id: id.value,
       page: currentPage.value,
       currentPage: currentPage.value,
-      post: post.value);
+      post: post.value,
+      bottomBarIndex: bottomBarIndex.value,
+      dateRange: dateRange.value,
+      jumpToId: jumpToId);
 }
 
 class PostListBinding implements Bindings {
@@ -333,6 +318,8 @@ class _PostListAppBarState extends State<_PostListAppBar> {
             if (postListType.value.isForumType())
               ForumAppBarPopupMenuButton(controller),
             if (postListType.value.isHistory())
+              HistoryDateRangePicker(controller),
+            if (postListType.value.isHistory())
               HistoryAppBarPopupMenuButton(controller),
           ],
         );
@@ -410,8 +397,9 @@ Widget buildNavigator(int index) {
       initialRoute = AppRoutes.feedUrl(page: controller.page.value);
       break;
     case PostListType.history:
-      initialRoute =
-          AppRoutes.historyUrl(index: controller.bottomBarIndex.value ?? 0);
+      initialRoute = AppRoutes.historyUrl(
+          index: controller.bottomBarIndex.value ?? 0,
+          page: controller.page.value);
       break;
   }
 

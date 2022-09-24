@@ -642,6 +642,7 @@ class _Emoticon extends StatefulWidget {
   State<_Emoticon> createState() => _EmoticonState();
 }
 
+// TODO: 防剧透
 class _EmoticonState extends State<_Emoticon> {
   static final Iterable<xdnmb_api.Emoticon> _list =
       xdnmb_api.Emoticon.list.getRange(0, xdnmb_api.Emoticon.list.length - 3);

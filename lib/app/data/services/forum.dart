@@ -29,7 +29,6 @@ class ForumListService extends GetxService {
 
   late final ValueListenable<Box<ForumData>> displayedForumListenable;
 
-  // TODO: 改进效率
   ForumData? forum(int forumId, {bool isTimeline = false}) {
     try {
       return forums.firstWhere(
@@ -50,11 +49,8 @@ class ForumListService extends GetxService {
           .followedBy(client.forumList!.forumList
               .map((forum) => ForumData.fromForum(forum))));
     } else {
-      final displayed = _displayedBox.values;
-      final hidden = _hiddenBox.values;
-
       final newDisplayed = <ForumData>[];
-      for (final forum in displayed) {
+      for (final forum in displayedForums) {
         if (forum.isTimeline) {
           if (client.timelineMap.containsKey(forum.id)) {
             newDisplayed.add(ForumData.fromTimeline(
@@ -73,7 +69,7 @@ class ForumListService extends GetxService {
       }
 
       final newHidden = <ForumData>[];
-      for (final forum in hidden) {
+      for (final forum in hiddenForums) {
         if (forum.isTimeline) {
           if (client.timelineMap.containsKey(forum.id)) {
             newHidden.add(ForumData.fromTimeline(
@@ -92,7 +88,7 @@ class ForumListService extends GetxService {
       }
 
       final newForums = <ForumData>[];
-      final allForums = displayed.followedBy(hidden);
+      final allForums = forums;
       for (final timeline in client.timelineList!) {
         if (!allForums
             .any((forum) => forum.isTimeline && forum.id == timeline.id)) {
