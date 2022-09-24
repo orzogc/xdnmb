@@ -12,7 +12,7 @@ abstract class AppRoutes {
   /// 参数：timelineId和page
   static const String timeline = '/${PathNames.timeline}';
 
-  /// 参数：mainPostId和page，arguments为主串Post
+  /// 参数：mainPostId、page和jumpToId，arguments为主串Post
   static const String thread = '/${PathNames.thread}';
 
   /// 参数：mainPostId和page
@@ -51,8 +51,10 @@ abstract class AppRoutes {
   static String timelineUrl(int timelineId, {int page = 1}) =>
       '$timeline?timelineId=$timelineId&page=$page';
 
-  static String threadUrl(int mainPostId, {int page = 1}) =>
-      '$thread?mainPostId=$mainPostId&page=$page';
+  static String threadUrl(int mainPostId, {int page = 1, int? jumpToId}) =>
+      jumpToId != null
+          ? '$thread?mainPostId=$mainPostId&page=$page&jumpToId=$jumpToId'
+          : '$thread?mainPostId=$mainPostId&page=$page';
 
   static String onlyPoThreadUrl(int mainPostId, {int page = 1}) =>
       '$onlyPoThread?mainPostId=$mainPostId&page=$page';
@@ -84,7 +86,10 @@ abstract class AppRoutes {
       );
 
   static Future<T?>? toThread<T>(
-          {required int mainPostId, int page = 1, PostBase? mainPost}) =>
+          {required int mainPostId,
+          int page = 1,
+          int? jumpToId,
+          PostBase? mainPost}) =>
       Get.toNamed(
         thread,
         id: StackCacheView.getKeyId(),
@@ -92,6 +97,7 @@ abstract class AppRoutes {
         parameters: {
           'mainPostId': '$mainPostId',
           'page': '$page',
+          if (jumpToId != null) 'jumpToId': '$jumpToId',
         },
       );
 

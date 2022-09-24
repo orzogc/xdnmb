@@ -22,9 +22,11 @@ class BiListView<T> extends StatefulWidget {
 
   final ItemWidgetBuilder<T> itemBuilder;
 
-  final Widget separator;
+  final Widget? separator;
 
   final WidgetBuilder? noItemsFoundBuilder;
+
+  final VoidCallback? onNoMoreItems;
 
   final bool canRefreshAtBottom;
 
@@ -36,8 +38,9 @@ class BiListView<T> extends StatefulWidget {
       this.lastPage,
       required this.fetch,
       required this.itemBuilder,
-      this.separator = const Divider(height: 10.0, thickness: 1.0),
+      this.separator,
       this.noItemsFoundBuilder,
+      this.onNoMoreItems,
       this.canRefreshAtBottom = true});
 
   @override
@@ -209,6 +212,60 @@ class _BiListViewState<T> extends State<BiListView<T>>
   Widget build(BuildContext context) {
     super.build(context);
 
+    final pagingUpDelegate = PagedChildBuilderDelegate<T>(
+      itemBuilder: widget.itemBuilder,
+      firstPageErrorIndicatorBuilder: (context) =>
+          _errorWidgetBuilder(_pagingUpController!),
+      newPageErrorIndicatorBuilder: (context) =>
+          _errorWidgetBuilder(_pagingUpController!),
+      firstPageProgressIndicatorBuilder: (context) =>
+          const QuotationLoadingIndicator(),
+      newPageProgressIndicatorBuilder: (context) => const Quotation(),
+      noItemsFoundIndicatorBuilder: (context) => const SizedBox.shrink(),
+    );
+
+    final pagingDownDelegate = PagedChildBuilderDelegate<T>(
+      itemBuilder: widget.itemBuilder,
+      firstPageErrorIndicatorBuilder: (context) =>
+          _errorWidgetBuilder(_pagingDownController!),
+      newPageErrorIndicatorBuilder: (context) =>
+          _errorWidgetBuilder(_pagingDownController!),
+      firstPageProgressIndicatorBuilder: (context) =>
+          const QuotationLoadingIndicator(),
+      newPageProgressIndicatorBuilder: (context) => const Quotation(),
+      noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
+      noMoreItemsIndicatorBuilder: (context) {
+        if (widget.onNoMoreItems != null) {
+          widget.onNoMoreItems!();
+        }
+
+        return widget.lastPage == null
+            ? (widget.canRefreshAtBottom
+                ? GestureDetector(
+                    onTap: _loadMore,
+                    child: Center(
+                      child: Text(
+                        '上拉或点击刷新',
+                        style: TextStyle(
+                          color: specialTextColor(),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink())
+            : Center(
+                child: Text(
+                  '已经抵达X岛的尽头',
+                  style: TextStyle(
+                    color: specialTextColor(),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+      },
+    );
+
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: EasyRefresh(
@@ -240,67 +297,26 @@ class _BiListViewState<T> extends State<BiListView<T>>
             center: _downKey,
             slivers: [
               if (widget.initialPage > 1)
-                PagedSliverList.separated(
-                  pagingController: _pagingUpController!,
-                  separatorBuilder: (context, index) => widget.separator,
-                  builderDelegate: PagedChildBuilderDelegate<T>(
-                    itemBuilder: widget.itemBuilder,
-                    firstPageErrorIndicatorBuilder: (context) =>
-                        _errorWidgetBuilder(_pagingUpController!),
-                    newPageErrorIndicatorBuilder: (context) =>
-                        _errorWidgetBuilder(_pagingUpController!),
-                    firstPageProgressIndicatorBuilder: (context) =>
-                        const QuotationLoadingIndicator(),
-                    newPageProgressIndicatorBuilder: (context) =>
-                        const Quotation(),
-                    noItemsFoundIndicatorBuilder: (context) =>
-                        const SizedBox.shrink(),
-                  ),
-                ),
+                widget.separator != null
+                    ? PagedSliverList.separated(
+                        pagingController: _pagingUpController!,
+                        separatorBuilder: (context, index) => widget.separator!,
+                        builderDelegate: pagingUpDelegate)
+                    : PagedSliverList(
+                        pagingController: _pagingUpController!,
+                        builderDelegate: pagingUpDelegate),
               if (widget.initialPage > 1)
                 SliverToBoxAdapter(child: widget.separator),
-              PagedSliverList.separated(
-                key: _downKey,
-                pagingController: _pagingDownController!,
-                separatorBuilder: (context, index) => widget.separator,
-                builderDelegate: PagedChildBuilderDelegate<T>(
-                  itemBuilder: widget.itemBuilder,
-                  firstPageErrorIndicatorBuilder: (context) =>
-                      _errorWidgetBuilder(_pagingDownController!),
-                  newPageErrorIndicatorBuilder: (context) =>
-                      _errorWidgetBuilder(_pagingDownController!),
-                  firstPageProgressIndicatorBuilder: (context) =>
-                      const QuotationLoadingIndicator(),
-                  newPageProgressIndicatorBuilder: (context) =>
-                      const Quotation(),
-                  noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
-                  noMoreItemsIndicatorBuilder: (context) =>
-                      widget.lastPage == null
-                          ? (widget.canRefreshAtBottom
-                              ? GestureDetector(
-                                  onTap: _loadMore,
-                                  child: Center(
-                                    child: Text(
-                                      '上拉或点击刷新',
-                                      style: TextStyle(
-                                        color: specialTextColor(),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox.shrink())
-                          : Center(
-                              child: Text(
-                                '已经抵达X岛的尽头',
-                                style: TextStyle(
-                                  color: specialTextColor(),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                ),
-              ),
+              widget.separator != null
+                  ? PagedSliverList.separated(
+                      key: _downKey,
+                      pagingController: _pagingDownController!,
+                      separatorBuilder: (context, index) => widget.separator!,
+                      builderDelegate: pagingDownDelegate)
+                  : PagedSliverList(
+                      key: _downKey,
+                      pagingController: _pagingDownController!,
+                      builderDelegate: pagingDownDelegate),
             ],
           ),
         ),

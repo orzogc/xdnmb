@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,6 +12,7 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
+import '../utils/key.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
@@ -94,7 +97,7 @@ class _ForumDialog extends StatelessWidget {
         children: [
           AddFeed(post),
           CopyPostId(post),
-          CopyPostNumber(post),
+          CopyPostReference(post),
           CopyPostContent(post),
           NewTab(post),
           NewTabBackground(post),
@@ -114,6 +117,10 @@ class ForumBody extends StatefulWidget {
 class _ForumBodyState extends State<ForumBody> {
   late final AnchorScrollController _anchorController;
 
+  late final StreamSubscription<int> _subscription;
+
+  int _refresh = 0;
+
   @override
   void initState() {
     super.initState();
@@ -122,11 +129,13 @@ class _ForumBodyState extends State<ForumBody> {
       onIndexChanged: (index, userScroll) =>
           widget.controller.currentPage.value = index.getPageFromIndex(),
     );
+    _subscription = widget.controller.page.listen((page) => _refresh++);
   }
 
   @override
   void dispose() {
     _anchorController.dispose();
+    _subscription.cancel();
 
     super.dispose();
   }
@@ -140,7 +149,8 @@ class _ForumBodyState extends State<ForumBody> {
 
     return Obx(
       () => BiListView<ThreadWithPage>(
-        key: ValueKey<PostList>(PostList.fromController(widget.controller)),
+        key: getPostListKey(
+            PostList.fromController(widget.controller), _refresh),
         controller: _anchorController,
         initialPage: widget.controller.page.value,
         lastPage: forums.maxPage(id.value!,
@@ -174,10 +184,9 @@ class _ForumBodyState extends State<ForumBody> {
             ),
           ),
         ),
-        separator: const SizedBox.shrink(),
         noItemsFoundBuilder: (context) => const Center(
           child: Text(
-            '这里没有串',
+            '没有串',
             style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
           ),
         ),
@@ -185,68 +194,3 @@ class _ForumBodyState extends State<ForumBody> {
     );
   }
 }
-
-/* class ForumBody extends StatelessWidget {
-  final PostListController controller;
-
-  const ForumBody(this.controller, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final client = XdnmbClientService.to.client;
-    final forums = ForumListService.to;
-
-    return Obx(
-      () {
-        final anchorController = AnchorScrollController(
-          onIndexChanged: (index, userScroll) =>
-              controller.currentPage.value = index.getPageFromIndex(),
-        );
-
-        return BiListView<ThreadWithPage>(
-          key: ValueKey<PostList>(PostList.fromController(controller)),
-          controller: anchorController,
-          initialPage: controller.page.value,
-          lastPage: forums.maxPage(controller.id.value!,
-                  isTimeline: controller.postListType.value.isTimeline()) ??
-              100,
-          fetch: (page) async => controller.postListType.value.isTimeline()
-              ? (await client.getTimeline(controller.id.value!, page: page))
-                  .map((thread) => ThreadWithPage(thread, page))
-                  .toList()
-              : (await client.getForum(controller.id.value!, page: page))
-                  .map((thread) => ThreadWithPage(thread, page))
-                  .toList(),
-          itemBuilder: (context, thread, index) => AnchorItemWrapper(
-            key: thread.toValueKey(),
-            controller: anchorController,
-            index: thread.toIndex(),
-            child: Card(
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
-              elevation: 1.5,
-              child: PostCard(
-                post: thread.thread.mainPost,
-                showForumName: controller.postListType.value.isTimeline(),
-                contentMaxLines: 8,
-                poUserHash: thread.thread.mainPost.userHash,
-                onTap: (post) => AppRoutes.toThread(
-                    mainPostId: thread.thread.mainPost.id,
-                    mainPost: thread.thread.mainPost),
-                onLongPress: (post) => postListDialog(_ForumDialog(post)),
-                onHiddenText: (context, element, textStyle) => onHiddenText(
-                    context: context, element: element, textStyle: textStyle),
-              ),
-            ),
-          ),
-          separator: const SizedBox.shrink(),
-          noItemsFoundBuilder: (context) => const Center(
-            child: Text(
-              '这里没有串',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-            ),
-          ),
-        );
-      },
-    );
-  }
-} */

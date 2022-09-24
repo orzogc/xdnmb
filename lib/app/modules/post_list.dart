@@ -113,6 +113,8 @@ class PostListController extends GetxController {
 
   final Rxn<PostBase> post;
 
+  final int? jumpToId;
+
   int? get forumOrTimelineId => postListType.value.isThreadType()
       ? post.value?.forumId
       : postListType.value.isForumType()
@@ -128,7 +130,8 @@ class PostListController extends GetxController {
       int page = 1,
       int? currentPage,
       int? bottomBarIndex,
-      PostBase? post})
+      PostBase? post,
+      this.jumpToId})
       : postListType = postListType.obs,
         id = RxnInt(id),
         page = page.obs,
@@ -142,7 +145,8 @@ class PostListController extends GetxController {
         page = postList.page.obs,
         currentPage = postList.page.obs,
         bottomBarIndex = RxnInt(null),
-        post = Rxn(post);
+        post = Rxn(post),
+        jumpToId = null;
 
   PostListController.fromPost({required PostBase post, int page = 1})
       : postListType = PostListType.thread.obs,
@@ -150,7 +154,8 @@ class PostListController extends GetxController {
         page = page.obs,
         currentPage = page.obs,
         bottomBarIndex = RxnInt(null),
-        post = Rxn(post);
+        post = Rxn(post),
+        jumpToId = null;
 
   PostListController.fromThread(
       {required Thread thread, bool isThread = true, int page = 1})
@@ -160,7 +165,8 @@ class PostListController extends GetxController {
         page = page.obs,
         currentPage = page.obs,
         bottomBarIndex = RxnInt(null),
-        post = Rxn(thread.mainPost);
+        post = Rxn(thread.mainPost),
+        jumpToId = null;
 
   PostListController.fromForumData({required ForumData forum, int page = 1})
       : postListType =
@@ -169,7 +175,8 @@ class PostListController extends GetxController {
         page = page.obs,
         currentPage = page.obs,
         bottomBarIndex = RxnInt(null),
-        post = Rxn(null);
+        post = Rxn(null),
+        jumpToId = null;
 
   /* void onlyPoThreadToThread({int page = 1}) {
     postListType.value = PostListType.thread;
@@ -241,6 +248,12 @@ class PostListBinding implements Bindings {
   }
 }
 
+void _refresh() {
+  _PostListAppBar._appBarKey.currentState!.refresh();
+  FloatingButton.buttonKey.currentState!.refresh();
+  _BottomBar._bottomBarKey.currentState!.refresh();
+}
+
 class _PostListAppBar extends StatefulWidget implements PreferredSizeWidget {
   static final GlobalKey<_PostListAppBarState> _appBarKey =
       GlobalKey<_PostListAppBarState>();
@@ -276,11 +289,7 @@ class _PostListAppBarState extends State<_PostListAppBar> {
       if (StackCacheView.controllersCount() > 1) {
         button = BackButton(onPressed: () {
           popOnce();
-          FloatingButton.buttonKey.currentState!.refresh();
-          _BottomBar._bottomBarKey.currentState!.refresh();
-          if (mounted) {
-            setState(() {});
-          }
+          _refresh();
         });
       }
     }
@@ -323,6 +332,8 @@ class _PostListAppBarState extends State<_PostListAppBar> {
               ThreadAppBarPopupMenuButton(controller),
             if (postListType.value.isForumType())
               ForumAppBarPopupMenuButton(controller),
+            if (postListType.value.isHistory())
+              HistoryAppBarPopupMenuButton(controller),
           ],
         );
       },
@@ -381,7 +392,7 @@ Widget buildNavigator(int index) {
   switch (controller.postListType.value) {
     case PostListType.thread:
       initialRoute = AppRoutes.threadUrl(controller.id.value!,
-          page: controller.page.value);
+          page: controller.page.value, jumpToId: controller.jumpToId);
       break;
     case PostListType.onlyPoThread:
       initialRoute = AppRoutes.onlyPoThreadUrl(controller.id.value!,
@@ -442,9 +453,7 @@ Widget buildNavigator(int index) {
       }
 
       StackCacheView.pushController(controller, index);
-      _PostListAppBar._appBarKey.currentState!.refresh();
-      FloatingButton.buttonKey.currentState!.refresh();
-      _BottomBar._bottomBarKey.currentState!.refresh();
+      _refresh();
 
       return buildRoute(controller);
     },
@@ -470,9 +479,7 @@ class PostListPageState extends State<PostListPage> {
     _pageController.jumpToPage(page);
     StackCacheView.index = page;
 
-    _PostListAppBar._appBarKey.currentState!.refresh();
-    FloatingButton.buttonKey.currentState!.refresh();
-    _BottomBar._bottomBarKey.currentState!.refresh();
+    _refresh();
   }
 
   void jumpToLast() => jumpToPage(StackCacheView.length.value - 1);
@@ -656,11 +663,7 @@ class FloatingButtonState extends State<FloatingButton> {
                 StackCacheView.getController() as PostListController;
             if (!controller_.postListType.value.canPost()) {
               popOnce();
-              _PostListAppBar._appBarKey.currentState!.refresh();
-              _BottomBar._bottomBarKey.currentState!.refresh();
-              if (mounted) {
-                setState(() {});
-              }
+              _refresh();
             }
 
             bottomSheet(controller);
@@ -737,9 +740,7 @@ class PostListView extends StackCacheView<PostListController> {
     }
     if (postListkey()?.currentState?.canPop() ?? false) {
       popOnce();
-      _PostListAppBar._appBarKey.currentState!.refresh();
-      FloatingButton.buttonKey.currentState!.refresh();
-      _BottomBar._bottomBarKey.currentState!.refresh();
+      _refresh();
 
       return false;
     }

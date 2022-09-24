@@ -174,7 +174,6 @@ class NoticeDialog extends StatelessWidget {
   }
 }
 
-// TODO: 显示图片
 class ForumRuleDialog extends StatelessWidget {
   final PostListController controller;
 
@@ -184,63 +183,67 @@ class ForumRuleDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final textStyle = Theme.of(context).textTheme.headline6;
 
-    return Obx(() {
-      final forum = ForumListService.to.forum(controller.id.value!);
+    return Obx(
+      () {
+        final forum = ForumListService.to.forum(controller.id.value!);
 
-      return AlertDialog(
-        actionsPadding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
-        title: forum != null
-            ? RichText(
-                text: TextSpan(
-                  children: [
-                    htmlToTextSpan(context, forum.forumName,
-                        textStyle: textStyle),
-                    const TextSpan(text: ' 版规'),
-                  ],
-                  style: textStyle,
-                ),
-              )
-            : const Text('版规'),
-        content: SingleChildScrollViewWithScrollbar(
-            child: TextContent(
-          text: forum?.message ?? '',
-          onLinkTap: (context, link) => parseUrl(url: link),
-          onImage: (context, image, element) => image != null
-              ? TextSpan(
-                  children: [
-                    WidgetSpan(
-                      child: CachedNetworkImage(
-                        imageUrl: image,
-                        cacheManager: XdnmbImageCacheManager(),
-                        progressIndicatorBuilder:
-                            loadingThumbImageIndicatorBuilder,
-                        errorWidget: loadingImageErrorBuilder,
-                      ),
-                    ),
-                    const TextSpan(text: '\n'),
-                  ],
+        return AlertDialog(
+          actionsPadding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
+          title: forum != null
+              ? RichText(
+                  text: TextSpan(
+                    children: [
+                      htmlToTextSpan(context, forum.forumName,
+                          textStyle: textStyle),
+                      const TextSpan(text: ' 版规'),
+                    ],
+                    style: textStyle,
+                  ),
                 )
-              : const TextSpan(),
-        )),
-        actions: [
-          TextButton(
-            onPressed: () => postListBack(),
-            child: Text(
-              '确定',
-              style: TextStyle(
-                  fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
-            ),
-          )
-        ],
-      );
-    });
+              : const Text('版规'),
+          content: SingleChildScrollViewWithScrollbar(
+              child: TextContent(
+            text: forum?.message ?? '',
+            onLinkTap: (context, link) => parseUrl(url: link),
+            onImage: (context, image, element) => image != null
+                ? TextSpan(
+                    children: [
+                      WidgetSpan(
+                        child: CachedNetworkImage(
+                          imageUrl: image,
+                          cacheManager: XdnmbImageCacheManager(),
+                          progressIndicatorBuilder:
+                              loadingThumbImageIndicatorBuilder,
+                          errorWidget: loadingImageErrorBuilder,
+                        ),
+                      ),
+                      const TextSpan(text: '\n'),
+                    ],
+                  )
+                : const TextSpan(),
+          )),
+          actions: [
+            TextButton(
+              onPressed: () => postListBack(),
+              child: Text(
+                '确定',
+                style: TextStyle(
+                    fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
+              ),
+            )
+          ],
+        );
+      },
+    );
   }
 }
 
 class NewTab extends StatelessWidget {
   final PostBase post;
 
-  const NewTab(this.post, {super.key});
+  final String? text;
+
+  const NewTab(this.post, {super.key, this.text});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
@@ -251,7 +254,7 @@ class NewTab extends StatelessWidget {
           showToast('已在新标签页打开 ${post.toPostNumber()}');
         },
         child: Text(
-          '在新标签页打开',
+          text ?? '在新标签页打开',
           style: TextStyle(
               fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
         ),
@@ -261,7 +264,9 @@ class NewTab extends StatelessWidget {
 class NewTabBackground extends StatelessWidget {
   final PostBase post;
 
-  const NewTabBackground(this.post, {super.key});
+  final String? text;
+
+  const NewTabBackground(this.post, {super.key, this.text});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
@@ -272,7 +277,7 @@ class NewTabBackground extends StatelessWidget {
           postListBack();
         },
         child: Text(
-          '在新标签页后台打开',
+          text ?? '在新标签页后台打开',
           style: TextStyle(
               fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
         ),
@@ -282,7 +287,9 @@ class NewTabBackground extends StatelessWidget {
 class CopyPostId extends StatelessWidget {
   final PostBase post;
 
-  const CopyPostId(this.post, {super.key});
+  final String? text;
+
+  const CopyPostId(this.post, {super.key, this.text});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
@@ -292,17 +299,19 @@ class CopyPostId extends StatelessWidget {
           postListBack();
         },
         child: Text(
-          '复制串号',
+          text ?? '复制串号',
           style: TextStyle(
               fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
         ),
       );
 }
 
-class CopyPostNumber extends StatelessWidget {
+class CopyPostReference extends StatelessWidget {
   final PostBase post;
 
-  const CopyPostNumber(this.post, {super.key});
+  final String? text;
+
+  const CopyPostReference(this.post, {super.key, this.text});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
@@ -312,7 +321,7 @@ class CopyPostNumber extends StatelessWidget {
           postListBack();
         },
         child: Text(
-          '复制串号引用',
+          text ?? '复制串号引用',
           style: TextStyle(
               fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
         ),
@@ -343,7 +352,9 @@ class CopyPostContent extends StatelessWidget {
 class AddFeed extends StatelessWidget {
   final PostBase post;
 
-  const AddFeed(this.post, {super.key});
+  final String? text;
+
+  const AddFeed(this.post, {super.key, this.text});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
@@ -358,7 +369,7 @@ class AddFeed extends StatelessWidget {
           }
         },
         child: Text(
-          '订阅',
+          text ?? '订阅',
           style: TextStyle(
               fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
         ),

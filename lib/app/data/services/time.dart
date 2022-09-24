@@ -9,14 +9,14 @@ class TimeService extends GetxService {
 
   late final Timer _timer;
 
-  DateTime now = DateTime.now();
+  DateTime now = DateTime.now().toLocal();
 
   @override
   void onInit() {
     super.onInit();
 
-    _timer =
-        Timer.periodic(const Duration(minutes: 1), (_) => now = DateTime.now());
+    _timer = Timer.periodic(
+        const Duration(minutes: 1), (_) => now = DateTime.now().toLocal());
 
     debugPrint('设置时间成功');
   }

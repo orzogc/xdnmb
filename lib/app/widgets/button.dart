@@ -20,7 +20,7 @@ class PageButton extends StatelessWidget {
               currentPage: controller.currentPage.value, maxPage: maxPage))
           .then((page) {
         if (page != null) {
-          controller.page.value = page;
+          controller.page.trigger(page);
           controller.currentPage.value = page;
         }
       }),

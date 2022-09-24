@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -24,10 +26,13 @@ class _FeedKey {
 
   String uuid;
 
-  _FeedKey({required this.postListType, required this.page})
+  int refresh;
+
+  _FeedKey(
+      {required this.postListType, required this.page, required this.refresh})
       : uuid = SettingsService.to.feedUuid;
 
-  _FeedKey.fromController(PostListController controller)
+  _FeedKey.fromController(PostListController controller, this.refresh)
       : postListType = controller.postListType.value,
         page = controller.page.value,
         uuid = SettingsService.to.feedUuid;
@@ -38,10 +43,11 @@ class _FeedKey {
       (other is _FeedKey &&
           postListType == other.postListType &&
           page == other.page &&
-          uuid == other.uuid);
+          uuid == other.uuid &&
+          refresh == other.refresh);
 
   @override
-  int get hashCode => Object.hash(postListType, page, uuid);
+  int get hashCode => Object.hash(postListType, page, uuid, refresh);
 }
 
 PostListController feedController(Map<String, String?> parameters) =>
@@ -88,7 +94,7 @@ class _FeedDialog extends StatelessWidget {
             ),
           ),
           CopyPostId(post),
-          CopyPostNumber(post),
+          CopyPostReference(post),
           CopyPostContent(post),
           NewTab(post),
           NewTabBackground(post),
@@ -108,6 +114,10 @@ class FeedBody extends StatefulWidget {
 class _FeedBodyState extends State<FeedBody> {
   late final AnchorScrollController _anchorController;
 
+  late final StreamSubscription<int> _subscription;
+
+  int _refresh = 0;
+
   @override
   void initState() {
     super.initState();
@@ -116,11 +126,13 @@ class _FeedBodyState extends State<FeedBody> {
       onIndexChanged: (index, userScroll) =>
           widget.controller.currentPage.value = index.getPageFromIndex(),
     );
+    _subscription = widget.controller.page.listen((page) => _refresh++);
   }
 
   @override
   void dispose() {
     _anchorController.dispose();
+    _subscription.cancel();
 
     super.dispose();
   }
@@ -134,7 +146,8 @@ class _FeedBodyState extends State<FeedBody> {
       valueListenable: settings.feedUuidListenable,
       builder: (context, value, child) => Obx(
         () => BiListView<PostWithPage>(
-          key: ValueKey<_FeedKey>(_FeedKey.fromController(widget.controller)),
+          key: ValueKey<_FeedKey>(
+              _FeedKey.fromController(widget.controller, _refresh)),
           controller: _anchorController,
           initialPage: widget.controller.page.value,
           fetch: (page) async =>
@@ -176,10 +189,9 @@ class _FeedBodyState extends State<FeedBody> {
                   : const SizedBox.shrink(),
             );
           },
-          separator: const SizedBox.shrink(),
           noItemsFoundBuilder: (context) => const Center(
             child: Text(
-              '这里没有订阅',
+              '没有订阅',
               style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
           ),
@@ -189,81 +201,3 @@ class _FeedBodyState extends State<FeedBody> {
     );
   }
 }
-
-/* class FeedBody extends StatelessWidget {
-  final PostListController controller;
-
-  const FeedBody(this.controller, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final client = XdnmbClientService.to.client;
-    final settings = SettingsService.to;
-
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.feedUuidListenable,
-      builder: (context, value, child) => Obx(
-        () {
-          final anchorController = AnchorScrollController(
-            onIndexChanged: (index, userScroll) =>
-                controller.currentPage.value = index.getPageFromIndex(),
-          );
-
-          return BiListView<PostWithPage>(
-            key: ValueKey<_FeedKey>(_FeedKey.fromController(controller)),
-            controller: anchorController,
-            initialPage: controller.page.value,
-            fetch: (page) async =>
-                (await client.getFeed(settings.feedUuid, page: page))
-                    .map((feed) => PostWithPage(feed, page))
-                    .toList(),
-            itemBuilder: (context, feed, index) {
-              final isVisible = true.obs;
-
-              return Obx(
-                () => isVisible.value
-                    ? AnchorItemWrapper(
-                        key: feed.toValueKey(),
-                        controller: anchorController,
-                        index: feed.toIndex(),
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(vertical: 4.0),
-                          elevation: 1.5,
-                          child: PostCard(
-                            post: feed.post,
-                            contentMaxLines: 8,
-                            poUserHash: feed.post.userHash,
-                            onTap: (post) => AppRoutes.toThread(
-                                mainPostId: feed.post.id, mainPost: feed.post),
-                            onLongPress: (post) => postListDialog(
-                              _FeedDialog(
-                                post: post,
-                                onDelete: () => isVisible.value = false,
-                              ),
-                            ),
-                            onHiddenText: (context, element, textStyle) =>
-                                onHiddenText(
-                                    context: context,
-                                    element: element,
-                                    textStyle: textStyle),
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              );
-            },
-            separator: const SizedBox.shrink(),
-            noItemsFoundBuilder: (context) => const Center(
-              child: Text(
-                '这里没有订阅',
-                style:
-                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-              ),
-            ),
-            canRefreshAtBottom: false,
-          );
-        },
-      ),
-    );
-  }
-} */

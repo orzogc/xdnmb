@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/xdnmb_client.dart';
-import '../modules/stack_cache.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/hidden_text.dart';

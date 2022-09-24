@@ -98,7 +98,6 @@ class PostDraftsView extends GetView<PostDraftsController> {
                 : const SizedBox.shrink(),
           );
         },
-        separator: const SizedBox.shrink(),
         noItemsFoundBuilder: (context) => const Center(
           child: Text(
             '没有草稿',

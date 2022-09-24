@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart' hide Element;
 import 'package:get/get.dart';
 import 'package:html_to_text/html_to_text.dart';
@@ -6,26 +8,18 @@ import 'regex.dart';
 import 'theme.dart';
 import 'url.dart';
 
-class _Key {
-  final String text;
+Map<String, OnTagCallback> onHiddenTag(OnTagCallback onHiddenText) =>
+    HashMap.fromEntries([MapEntry('h', onHiddenText)]);
 
-  final bool isVisible;
-
-  const _Key(this.text, this.isVisible);
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is _Key && text == other.text && isVisible == other.isVisible);
-
-  @override
-  int get hashCode => Object.hash(text, isVisible);
-}
+/* Map<String, OnTagCallback> onHiddenTextTag() =>
+    onHiddenTag((context, element, textStyle) =>
+        onHiddenText(context: context, element: element, textStyle: textStyle)); */
 
 InlineSpan onHiddenText(
     {required BuildContext context,
     required Element element,
     required TextStyle textStyle,
+    Color? hiddenColor,
     bool canTap = false,
     String? poUserHash}) {
   final isVisible = false.obs;
@@ -54,21 +48,22 @@ InlineSpan onHiddenText(
                         ? null
                         : TextStyle(
                             foreground: Paint()
-                              ..color = Get.isDarkMode
-                                  ? AppTheme.colorDark
-                                  : Colors.black,
+                              ..color = hiddenColor ??
+                                  (Get.isDarkMode
+                                      ? AppTheme.colorDark
+                                      : Colors.black),
                           ),
                   ),
                 );
 
                 return DecoratedBox(
-                  key: ValueKey(_Key(text, isVisible.value)),
                   decoration: BoxDecoration(
                     color: isVisible.value
                         ? null
-                        : Get.isDarkMode
-                            ? AppTheme.colorDark
-                            : Colors.black,
+                        : hiddenColor ??
+                            (Get.isDarkMode
+                                ? AppTheme.colorDark
+                                : Colors.black),
                   ),
                   child: canTap
                       ? MouseRegion(

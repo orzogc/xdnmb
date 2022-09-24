@@ -196,6 +196,8 @@ class PostContent extends StatelessWidget {
 
   final PostBase post;
 
+  final bool showPostId;
+
   final bool showForumName;
 
   final bool showReplyCount;
@@ -217,6 +219,7 @@ class PostContent extends StatelessWidget {
   const PostContent(
       {super.key,
       required this.post,
+      this.showPostId = true,
       this.showForumName = true,
       this.showReplyCount = true,
       this.contentMaxLines,
@@ -230,6 +233,7 @@ class PostContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final defaultStyle = DefaultTextStyle.of(context);
+    final theme = Theme.of(context);
     final forumId = post.forumId;
     final replyCount = post.replyCount;
     final isSage = post.isSage;
@@ -250,9 +254,7 @@ class PostContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DefaultTextStyle.merge(
-              style: TextStyle(
-                  color: _headerColor,
-                  fontSize: defaultStyle.style.fontSize! - 2.0),
+              style: theme.textTheme.caption?.apply(color: _headerColor),
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -266,9 +268,10 @@ class PostContent extends StatelessWidget {
                       ),
                     ),
                     Flexible(child: _PostTime(post.postTime)),
-                    Flexible(
-                        child:
-                            _PostId(postId: post.id, onPostIdTap: onPostIdTap)),
+                    if (showPostId)
+                      Flexible(
+                          child: _PostId(
+                              postId: post.id, onPostIdTap: onPostIdTap)),
                     if (showForumName && forumId != null)
                       Flexible(child: ForumName(forumId: forumId)),
                     if (showReplyCount && replyCount != null)
@@ -294,6 +297,8 @@ class PostContent extends StatelessWidget {
 
 class PostCard extends StatelessWidget {
   final PostBase post;
+
+  final bool showPostId;
 
   final bool showForumName;
 
@@ -325,6 +330,7 @@ class PostCard extends StatelessWidget {
   const PostCard(
       {super.key,
       required this.post,
+      this.showPostId = true,
       this.showForumName = true,
       this.showReplyCount = true,
       this.contentMaxLines,
@@ -348,6 +354,7 @@ class PostCard extends StatelessWidget {
       hoverColor: hoverColor,
       child: PostContent(
         post: post,
+        showPostId: showPostId,
         showForumName: showForumName,
         showReplyCount: showReplyCount,
         contentMaxLines: contentMaxLines,

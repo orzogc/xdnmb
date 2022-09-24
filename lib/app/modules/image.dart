@@ -68,10 +68,13 @@ class _TopOverlay extends StatelessWidget {
                 contentMaxLines: 5,
                 poUserHash: poUserHash,
                 onHiddenText: (context, element, textStyle) => onHiddenText(
-                    context: context, element: element, textStyle: textStyle),
+                    context: context,
+                    element: element,
+                    textStyle: textStyle,
+                    hiddenColor: AppTheme.colorDark),
                 displayImage: false,
               ),
-            )
+            ),
           ],
         ),
       ),

@@ -34,9 +34,11 @@ class QuotationLoadingIndicator extends StatelessWidget {
 
 Widget loadingThumbImageIndicatorBuilder(
         BuildContext context, String url, DownloadProgress progress) =>
-    progress.progress != null
-        ? CircularProgressIndicator(value: progress.progress)
-        : const SizedBox.shrink();
+    Center(
+      child: progress.progress != null
+          ? CircularProgressIndicator(value: progress.progress)
+          : const SizedBox.shrink(),
+    );
 
 Widget loadingImageIndicatorBuilder(BuildContext context, String url,
     DownloadProgress progress, Quotation quotation, ThumbImageBuilder builder) {

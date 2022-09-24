@@ -1,10 +1,10 @@
-import 'dart:collection';
 import 'dart:math';
 
 import 'package:float_column/float_column.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:html_to_text/html_to_text.dart';
+import 'package:xdnmb/app/utils/hidden_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/services/settings.dart';
@@ -21,12 +21,6 @@ class TextContent extends StatefulWidget {
   final OnTagCallback? onHiddenText;
 
   final OnImageCallback? onImage;
-
-  /* final BuildTextCallback? buildText;
-
-  final TextStyle? textStyle;
-
-  final TextStyle? overrideTextStyle; */
 
   const TextContent(
       {super.key,
@@ -55,7 +49,7 @@ class _TextContentState extends State<TextContent> {
       onText: (context, text) => Regex.onReference(text),
       onTextRecursiveParse: true,
       onTags: widget.onHiddenText != null
-          ? HashMap.fromEntries([MapEntry('h', widget.onHiddenText!)])
+          ? onHiddenTag(widget.onHiddenText!)
           : null,
       onImage: widget.onImage,
     );
@@ -123,7 +117,7 @@ class _ContentState extends State<Content> {
       onText: (context, text) => Regex.onReference(text),
       onTextRecursiveParse: true,
       onTags: widget.onHiddenText != null
-          ? HashMap.fromEntries([MapEntry('h', widget.onHiddenText!)])
+          ? onHiddenTag(widget.onHiddenText!)
           : null,
     );
   }
@@ -160,7 +154,6 @@ class _ContentState extends State<Content> {
                           constraints: BoxConstraints(
                               maxWidth: min(constraints.maxWidth / 3.0, 250.0),
                               maxHeight: 250.0),
-                          // TODO: gif显示大图
                           child: ThumbImage(
                               post: widget.post, poUserHash: widget.poUserHash),
                         ),

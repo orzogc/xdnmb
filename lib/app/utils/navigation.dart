@@ -33,6 +33,15 @@ void popOnce([int? index]) {
   }, id: StackCacheView.getKeyId(index));
 }
 
+void popAllPopup([int? index]) {
+  Get.until((route) {
+    if (route is PopupRoute) {
+      return false;
+    }
+    return true;
+  }, id: StackCacheView.getKeyId(index));
+}
+
 void openNewTabBackground(PostListController controller) =>
     StackCacheView.addController(controller);
 

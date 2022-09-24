@@ -6,6 +6,7 @@ import '../modules/post_list.dart';
 import '../modules/stack_cache.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
+import '../utils/hidden_text.dart';
 import 'content.dart';
 import 'forum_name.dart';
 
@@ -145,7 +146,14 @@ class _TabList extends StatelessWidget {
                 title: _TabTitle(index),
                 subtitle: post.value != null
                     ? Content(
-                        post: post.value!, maxLines: 2, displayImage: false)
+                        post: post.value!,
+                        maxLines: 2,
+                        onHiddenText: (context, element, textStyle) =>
+                            onHiddenText(
+                                context: context,
+                                element: element,
+                                textStyle: textStyle),
+                        displayImage: false)
                     : null,
                 trailing: StackCacheView.length.value > 1
                     ? IconButton(
@@ -195,13 +203,13 @@ class _DrawerBottom extends StatelessWidget {
                 AppRoutes.toHistory();
                 Get.back();
               },
-              icon: const Icon(Icons.event_note)),
+              icon: const Icon(Icons.history)),
           IconButton(
             onPressed: () {
               AppRoutes.toFeed();
               Get.back();
             },
-            icon: const Icon(Icons.feed),
+            icon: const Icon(Icons.rss_feed),
           )
         ],
       ),

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
@@ -16,6 +15,7 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
+import '../utils/key.dart';
 import '../utils/navigation.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
@@ -32,7 +32,8 @@ PostListController threadController(
         postListType: PostListType.thread,
         id: int.tryParse(parameters['mainPostId'] ?? '0') ?? 0,
         page: int.tryParse(parameters['page'] ?? '1') ?? 1,
-        post: arguments is PostBase ? arguments : null);
+        post: arguments is PostBase ? arguments : null,
+        jumpToId: int.tryParse(parameters['jumpToId'] ?? ''));
 
 PostListController onlyPoThreadController(
         Map<String, String?> parameters, Object? arguments) =>
@@ -101,7 +102,7 @@ class _ThreadDialog extends StatelessWidget {
             ),
           ),
           CopyPostId(post),
-          CopyPostNumber(post),
+          CopyPostReference(post),
           CopyPostContent(post),
         ],
       );
@@ -187,10 +188,14 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   AnchorScrollController? _anchorController;
 
-  /// 是否第一次跳转
-  final RxBool _isJumped = false.obs;
+  /// 第一次加载是否要跳转
+  final RxBool _isToJump = false.obs;
 
-  StreamSubscription<int>? _listener;
+  int _refresh = 0;
+
+  StreamSubscription<int>? _subscription;
+
+  bool _isNoMoreItems = false;
 
   Future<void> _saveBrowseHistory() async {
     _isSavingBrowseHistory = true;
@@ -205,6 +210,212 @@ class _ThreadBodyState extends State<ThreadBody> {
     _isSavingBrowseHistory = false;
   }
 
+  void _saveHistoryAndJumpToIndex(Thread thread, int page) {
+    final settings = SettingsService.to;
+    final history = PostHistoryService.to;
+    final postListType = widget.controller.postListType;
+    final postPage = widget.controller.page;
+    final jumpToId = widget.controller.jumpToId;
+
+    if (postPage.value == page) {
+      final firstPost = page == 1
+          ? thread.mainPost
+          : (thread.replies.isNotEmpty
+              ? thread.replies.first
+              : thread.mainPost);
+      if (_history == null) {
+        _history = BrowseHistory.fromPost(
+            mainPost: thread.mainPost,
+            browsePage: page,
+            browsePostId: firstPost.id,
+            isOnlyPo: postListType.value.isOnlyPoThread());
+        history.saveBrowseHistory(_history!);
+        _isToJump.value = false;
+      } else if (!_isToJump.value) {
+        // 除了第一次跳转，其他跳转都更新
+        _history!.update(
+            mainPost: thread.mainPost,
+            browsePage: page,
+            browsePostId: firstPost.id,
+            isOnlyPo: postListType.value.isOnlyPoThread());
+        history.saveBrowseHistory(_history!);
+      } else if (jumpToId != null ||
+          (settings.isJumpToLastBrowsePage &&
+              settings.isJumpToLastBrowsePosition)) {
+        final index = jumpToId?.toIndex(page) ??
+            _history!.toIndex(isOnlyPo: postListType.value.isOnlyPoThread());
+        if (index != null) {
+          final postIds = thread.replies.map((post) => post.id);
+          final id = index.getIdFromIndex();
+          if (postIds.contains(id)) {
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+              Future.delayed(const Duration(milliseconds: 50), () async {
+                try {
+                  if (_isToJump.value) {
+                    await _anchorController?.scrollToIndex(
+                        index: index, scrollSpeed: 10.0);
+
+                    if (firstPost.id != id) {
+                      while (id != _browsePostId && !_isNoMoreItems) {
+                        if (_isToJump.value) {
+                          await Future.delayed(const Duration(milliseconds: 50),
+                              () async {
+                            if (_isToJump.value) {
+                              await _anchorController?.scrollToIndex(
+                                  index: index, scrollSpeed: 10.0);
+                            }
+                          });
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                  }
+                } catch (e) {
+                  showToast('跳转到串号 $id 失败：$e');
+                } finally {
+                  _isToJump.value = false;
+                }
+              }).timeout(
+                const Duration(seconds: 2),
+                onTimeout: () {
+                  showToast('跳转到串号 $id 超时');
+                  _isToJump.value = false;
+                },
+              );
+            });
+          } else {
+            _isToJump.value = false;
+          }
+        } else {
+          _isToJump.value = false;
+        }
+      } else {
+        _isToJump.value = false;
+      }
+    }
+  }
+
+  Widget _body() {
+    final theme = Theme.of(context);
+    final client = XdnmbClientService.to.client;
+    final postListType = widget.controller.postListType;
+    final postId = widget.controller.id;
+    final postPage = widget.controller.page;
+    final mainPost = widget.controller.post;
+
+    return Obx(
+      () {
+        _anchorController?.dispose();
+        _anchorController = AnchorScrollController(
+          onIndexChanged: (index, userScroll) {
+            widget.controller.currentPage.value = index.getPageFromIndex();
+            _browsePostId = index.getIdFromIndex();
+
+            if (!_isSavingBrowseHistory) {
+              _saveBrowseHistory();
+            }
+          },
+        );
+
+        return Stack(
+          children: [
+            if (_isToJump.value) const QuotationLoadingIndicator(),
+            Visibility(
+              visible: !_isToJump.value,
+              maintainState: true,
+              maintainAnimation: true,
+              maintainSize: true,
+              child: BiListView<PostWithPage>(
+                key: getPostListKey(
+                    PostList.fromController(widget.controller), _refresh),
+                controller: _anchorController,
+                initialPage: postPage.value,
+                fetch: (page) async {
+                  final thread = postListType.value.isThread()
+                      ? await client.getThread(postId.value!, page: page)
+                      : await client.getOnlyPoThread(postId.value!, page: page);
+
+                  mainPost.value = thread.mainPost;
+
+                  if (page != 1 && thread.replies.isEmpty) {
+                    return [];
+                  }
+
+                  _saveHistoryAndJumpToIndex(thread, page);
+
+                  final List<PostWithPage> posts = [];
+                  if (page == 1) {
+                    posts.add(PostWithPage(thread.mainPost, page));
+                  }
+                  // TODO: 提示tip是官方信息
+                  if (thread.tip != null) {
+                    posts.add(PostWithPage(thread.tip!, page));
+                  }
+                  if (thread.replies.isNotEmpty) {
+                    posts.addAll(
+                        thread.replies.map((post) => PostWithPage(post, page)));
+                  }
+
+                  return posts;
+                },
+                itemBuilder: (context, post, index) {
+                  final postCard = PostCard(
+                    key: post.post is Tip ? post.toValueKey() : null,
+                    post: post.post,
+                    showForumName: false,
+                    showReplyCount: false,
+                    poUserHash: mainPost.value?.userHash,
+                    onTap: (post) {},
+                    onLongPress: (post) => postListDialog(_ThreadDialog(
+                        controller: widget.controller, post: post)),
+                    onLinkTap: (context, link) => parseUrl(
+                        url: link, poUserHash: mainPost.value?.userHash),
+                    onHiddenText: (context, element, textStyle) => onHiddenText(
+                        context: context,
+                        element: element,
+                        textStyle: textStyle,
+                        canTap: true,
+                        poUserHash: mainPost.value?.userHash),
+                    mouseCursor: SystemMouseCursors.basic,
+                    hoverColor: Get.isDarkMode
+                        ? theme.cardColor
+                        : theme.scaffoldBackgroundColor,
+                    onPostIdTap: (postId) =>
+                        _replyPost(widget.controller, postId),
+                  );
+
+                  return post.post is! Tip
+                      ? AnchorItemWrapper(
+                          key: ValueKey(_PostKey(
+                              index: post.toIndex(),
+                              isVisible: !_isToJump.value)),
+                          controller: _anchorController,
+                          index: post.toIndex(),
+                          child: postCard,
+                        )
+                      : postCard;
+                },
+                separator: const Divider(height: 10.0, thickness: 1.0),
+                onNoMoreItems: () => _isNoMoreItems = true,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _setToJump() {
+    _isToJump.value = true;
+    _subscription?.cancel();
+    _subscription = widget.controller.page.listen((page) {
+      _isToJump.value = false;
+      _isNoMoreItems = false;
+      _refresh++;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -214,236 +425,55 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   @override
   void dispose() {
-    _isJumped.value = false;
+    _isToJump.value = false;
     _anchorController?.dispose();
     _anchorController = null;
-    _listener?.cancel();
+    _subscription?.cancel();
 
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final client = XdnmbClientService.to.client;
     final settings = SettingsService.to;
-    final history = PostHistoryService.to;
     final postListType = widget.controller.postListType;
     final postId = widget.controller.id;
     final postPage = widget.controller.page;
     final currentPage = widget.controller.currentPage;
-    final mainPost = widget.controller.post;
+    final jumpToId = widget.controller.jumpToId;
 
     return FutureBuilder(
-      future: Future(() async {
-        _history = await PostHistoryService.to.getBrowseHistory(postId.value!);
+      future: _history == null
+          ? Future(() async {
+              _history =
+                  await PostHistoryService.to.getBrowseHistory(postId.value!);
 
-        if (settings.isJumpToLastBrowsePage && _history != null) {
-          final page = postListType.value.isThread()
-              ? _history!.browsePage
-              : _history!.onlyPoBrowsePage;
-          if (page != null) {
-            _isJumped.value = true;
-            postPage.value = page;
-            currentPage.value = page;
+              if (jumpToId == null) {
+                if (settings.isJumpToLastBrowsePage && _history != null) {
+                  final page = postListType.value.isThread()
+                      ? _history!.browsePage
+                      : _history!.onlyPoBrowsePage;
+                  if (page != null) {
+                    postPage.value = page;
+                    currentPage.value = page;
 
-            _listener = widget.controller.page
-                .listen((page) => _isJumped.value = false);
-          }
-        }
-      }),
+                    _setToJump();
+                  }
+                }
+              } else {
+                _setToJump();
+              }
+            })
+          : null,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasError) {
           showToast('读取数据库出错：${snapshot.error!}');
         }
 
-        if (snapshot.connectionState == ConnectionState.done) {
-          return Obx(
-            () {
-              _anchorController?.dispose();
-              _anchorController = AnchorScrollController(
-                onIndexChanged: (index, userScroll) {
-                  widget.controller.currentPage.value =
-                      index.getPageFromIndex();
-                  _browsePostId = index.getIdFromIndex();
-
-                  if (!_isSavingBrowseHistory) {
-                    _saveBrowseHistory();
-                  }
-                },
-              );
-
-              return Stack(
-                children: [
-                  if (_isJumped.value) const QuotationLoadingIndicator(),
-                  Visibility(
-                    visible: !_isJumped.value,
-                    maintainState: true,
-                    maintainAnimation: true,
-                    maintainSize: true,
-                    child: BiListView<PostWithPage>(
-                      key: ValueKey<PostList>(
-                          PostList.fromController(widget.controller)),
-                      controller: _anchorController,
-                      initialPage: postPage.value,
-                      fetch: (page) async {
-                        final thread = postListType.value.isThread()
-                            ? await client.getThread(postId.value!, page: page)
-                            : await client.getOnlyPoThread(postId.value!,
-                                page: page);
-
-                        mainPost.value = thread.mainPost;
-
-                        if (page != 1 && thread.replies.isEmpty) {
-                          return [];
-                        }
-
-                        if (postPage.value == page) {
-                          final firstPost = page == 1
-                              ? thread.mainPost
-                              : (thread.replies.isNotEmpty
-                                  ? thread.replies.first
-                                  : thread.mainPost);
-                          if (_history == null) {
-                            _history = BrowseHistory.fromPost(
-                                mainPost: thread.mainPost,
-                                browsePage: page,
-                                browsePostId: firstPost.id,
-                                isOnlyPo: postListType.value.isOnlyPoThread());
-                            history.saveBrowseHistory(_history!);
-                            _isJumped.value = false;
-                          } else if (!_isJumped.value) {
-                            // 除了第一次跳转，其他跳转都更新
-                            _history!.update(
-                                mainPost: thread.mainPost,
-                                browsePage: page,
-                                browsePostId: firstPost.id,
-                                isOnlyPo: postListType.value.isOnlyPoThread());
-                            history.saveBrowseHistory(_history!);
-                          } else if (settings.isJumpToLastBrowsePage &&
-                              settings.isJumpToLastBrowsePosition) {
-                            final index = _history!.toIndex(
-                                isOnlyPo: postListType.value.isOnlyPoThread());
-                            if (index != null) {
-                              final postIds =
-                                  thread.replies.map((post) => post.id);
-                              final id = index.getIdFromIndex();
-                              if (postIds.contains(id)) {
-                                SchedulerBinding.instance
-                                    .addPostFrameCallback((timeStamp) {
-                                  Future.delayed(
-                                      const Duration(milliseconds: 50),
-                                      () async {
-                                    try {
-                                      if (_isJumped.value) {
-                                        await _anchorController?.scrollToIndex(
-                                            index: index, scrollSpeed: 10.0);
-
-                                        if (firstPost.id != id) {
-                                          while (id != _browsePostId) {
-                                            if (_isJumped.value) {
-                                              await Future.delayed(
-                                                  const Duration(
-                                                      milliseconds: 50), () {
-                                                if (_isJumped.value) {
-                                                  _anchorController
-                                                      ?.scrollToIndex(
-                                                          index: index,
-                                                          scrollSpeed: 10.0);
-                                                }
-                                              });
-                                            } else {
-                                              break;
-                                            }
-                                          }
-                                        }
-                                      }
-                                    } catch (e) {
-                                      showToast(
-                                          '跳转到串号 ${id.toPostNumber()} 失败：$e');
-                                    } finally {
-                                      _isJumped.value = false;
-                                    }
-                                  }).timeout(
-                                    const Duration(seconds: 2),
-                                    onTimeout: () {
-                                      showToast(
-                                          '跳转到串号 ${id.toPostNumber()} 超时');
-                                      _isJumped.value = false;
-                                    },
-                                  );
-                                });
-                              } else {
-                                _isJumped.value = false;
-                              }
-                            } else {
-                              _isJumped.value = false;
-                            }
-                          } else {
-                            _isJumped.value = false;
-                          }
-                        }
-
-                        final List<PostWithPage> posts = [];
-                        if (page == 1) {
-                          posts.add(PostWithPage(thread.mainPost, page));
-                        }
-                        // TODO: 提示tip是官方信息
-                        if (thread.tip != null) {
-                          posts.add(PostWithPage(thread.tip!, page));
-                        }
-                        if (thread.replies.isNotEmpty) {
-                          posts.addAll(thread.replies
-                              .map((post) => PostWithPage(post, page)));
-                        }
-
-                        return posts;
-                      },
-                      itemBuilder: (context, post, index) {
-                        final postCard = PostCard(
-                          key: post.post is Tip ? post.toValueKey() : null,
-                          post: post.post,
-                          showForumName: false,
-                          showReplyCount: false,
-                          poUserHash: mainPost.value?.userHash,
-                          onTap: (post) {},
-                          onLongPress: (post) => postListDialog(_ThreadDialog(
-                              controller: widget.controller, post: post)),
-                          onLinkTap: (context, link) => parseUrl(
-                              url: link, poUserHash: mainPost.value?.userHash),
-                          onHiddenText: (context, element, textStyle) =>
-                              onHiddenText(
-                                  context: context,
-                                  element: element,
-                                  textStyle: textStyle,
-                                  canTap: true,
-                                  poUserHash: mainPost.value?.userHash),
-                          mouseCursor: SystemMouseCursors.basic,
-                          hoverColor: Get.isDarkMode
-                              ? theme.cardColor
-                              : theme.scaffoldBackgroundColor,
-                          onPostIdTap: (postId) =>
-                              _replyPost(widget.controller, postId),
-                        );
-
-                        return post.post is! Tip
-                            ? AnchorItemWrapper(
-                                key: ValueKey(_PostKey(
-                                    index: post.toIndex(),
-                                    isVisible: !_isJumped.value)),
-                                controller: _anchorController,
-                                index: post.toIndex(),
-                                child: postCard,
-                              )
-                            : postCard;
-                      },
-                    ),
-                  ),
-                ],
-              );
-            },
-          );
+        if (snapshot.connectionState == ConnectionState.none ||
+            snapshot.connectionState == ConnectionState.done) {
+          return _body();
         }
 
         return const SizedBox.shrink();

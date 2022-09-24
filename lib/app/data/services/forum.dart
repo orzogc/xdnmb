@@ -25,11 +25,14 @@ class ForumListService extends GetxService {
 
   Iterable<ForumData> get hiddenForums => _hiddenBox.values;
 
+  Iterable<ForumData> get forums => displayedForums.followedBy(hiddenForums);
+
   late final ValueListenable<Box<ForumData>> displayedForumListenable;
 
+  // TODO: 改进效率
   ForumData? forum(int forumId, {bool isTimeline = false}) {
     try {
-      return _displayedBox.values.followedBy(_hiddenBox.values).firstWhere(
+      return forums.firstWhere(
           (forum) => forum.isTimeline == isTimeline && forum.id == forumId);
     } catch (e) {
       debugPrint('ForumListService里没有ID为$forumId的板块/时间线');

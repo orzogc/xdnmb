@@ -22,6 +22,7 @@ class BrowseHistory implements PostBase {
   @override
   String imageExtension;
 
+  // UTC
   @override
   DateTime postTime;
 
@@ -64,15 +65,15 @@ class BrowseHistory implements PostBase {
       required this.replyCount,
       this.image = '',
       this.imageExtension = '',
-      required this.postTime,
+      required DateTime postTime,
       required this.userHash,
-      this.name = '',
-      this.title = '',
-      required this.content,
+      String name = '',
+      String title = '',
+      required String content,
       this.isSage = false,
       this.isAdmin = false,
       this.isHidden = false,
-      required this.browseTime,
+      required DateTime browseTime,
       this.browsePage,
       this.browsePostId,
       this.onlyPoBrowsePage,
@@ -82,7 +83,12 @@ class BrowseHistory implements PostBase {
         assert((browsePage != null && browsePostId != null) ||
             (browsePage == null && browsePostId == null)),
         assert((onlyPoBrowsePage != null && onlyPoBrowsePostId != null) ||
-            (onlyPoBrowsePage == null && onlyPoBrowsePostId == null));
+            (onlyPoBrowsePage == null && onlyPoBrowsePostId == null)),
+        postTime = postTime.toUtc(),
+        name = name != '无名氏' ? name : '',
+        title = title != '无标题' ? title : '',
+        content = content.isNotEmpty ? content : '分享图片',
+        browseTime = browseTime.toUtc();
 
   BrowseHistory.fromPost(
       {required Post mainPost,
@@ -90,24 +96,25 @@ class BrowseHistory implements PostBase {
       required int browsePage,
       required int browsePostId,
       bool isOnlyPo = false})
-      : id = mainPost.id,
-        forumId = mainPost.forumId,
-        replyCount = mainPost.replyCount,
-        image = mainPost.image,
-        imageExtension = mainPost.imageExtension,
-        postTime = mainPost.postTime,
-        userHash = mainPost.userHash,
-        name = mainPost.name != '无名氏' ? mainPost.name : '',
-        title = mainPost.title != '无标题' ? mainPost.title : '',
-        content = mainPost.content,
-        isSage = mainPost.isSage,
-        isAdmin = mainPost.isAdmin,
-        isHidden = mainPost.isHidden,
-        browseTime = browseTime ?? DateTime.now().toUtc(),
-        browsePage = !isOnlyPo ? browsePage : null,
-        browsePostId = !isOnlyPo ? browsePostId : null,
-        onlyPoBrowsePage = isOnlyPo ? browsePage : null,
-        onlyPoBrowsePostId = isOnlyPo ? browsePostId : null;
+      : this(
+            id: mainPost.id,
+            forumId: mainPost.forumId,
+            replyCount: mainPost.replyCount,
+            image: mainPost.image,
+            imageExtension: mainPost.imageExtension,
+            postTime: mainPost.postTime,
+            userHash: mainPost.userHash,
+            name: mainPost.name,
+            title: mainPost.title,
+            content: mainPost.content,
+            isSage: mainPost.isSage,
+            isAdmin: mainPost.isAdmin,
+            isHidden: mainPost.isHidden,
+            browseTime: browseTime ?? DateTime.now(),
+            browsePage: !isOnlyPo ? browsePage : null,
+            browsePostId: !isOnlyPo ? browsePostId : null,
+            onlyPoBrowsePage: isOnlyPo ? browsePage : null,
+            onlyPoBrowsePostId: isOnlyPo ? browsePostId : null);
 
   void update(
       {required Post mainPost,
@@ -121,11 +128,11 @@ class BrowseHistory implements PostBase {
     replyCount = mainPost.replyCount;
     image = mainPost.image;
     imageExtension = mainPost.imageExtension;
-    postTime = mainPost.postTime;
+    postTime = mainPost.postTime.toUtc();
     userHash = mainPost.userHash;
     name = mainPost.name != '无名氏' ? mainPost.name : '';
     title = mainPost.title != '无标题' ? mainPost.title : '';
-    content = mainPost.content;
+    content = mainPost.content.isNotEmpty ? mainPost.content : '分享图片';
     isSage = mainPost.isSage;
     isAdmin = mainPost.isAdmin;
     isHidden = mainPost.isHidden;
@@ -175,6 +182,7 @@ class BrowseHistory implements PostBase {
           onlyPoBrowsePage == other.onlyPoBrowsePage &&
           onlyPoBrowsePostId == other.onlyPoBrowsePostId);
 
+  @ignore
   @override
   int get hashCode => Object.hash(
       id,

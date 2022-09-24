@@ -11,8 +11,11 @@ import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' as xdnmb_api;
 
 import '../data/models/draft.dart';
+import '../data/models/post.dart';
+import '../data/models/reply.dart';
 import '../data/services/drafts.dart';
 import '../data/services/forum.dart';
+import '../data/services/history.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../data/services/user.dart';
@@ -41,8 +44,8 @@ class _SelectForum extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SimpleDialog(
         children: [
-          for (final forum in ForumListService.to.displayedForums
-              .where((forum) => forum.isForum))
+          for (final forum
+              in ForumListService.to.forums.where((forum) => forum.isForum))
             SimpleDialogOption(
               onPressed: () {
                 onForumId(forum.id);
@@ -160,7 +163,7 @@ class _WatermarkDialog extends StatelessWidget {
               fontSize: Theme.of(context).textTheme.subtitle1?.fontSize,
             ),
           ),
-        )
+        ),
       ],
     );
   }
@@ -437,6 +440,8 @@ class _Cookie extends StatelessWidget {
 }
 
 class _Post extends StatelessWidget {
+  static const Duration _difference = Duration(seconds: 60);
+
   final PostList postList;
 
   final int? forumId;
@@ -464,88 +469,168 @@ class _Post extends StatelessWidget {
       required this.getContent,
       required this.onPost});
 
+  Future<void> savePost(PostData post) async {
+    final history = PostHistoryService.to;
+    final client = XdnmbClientService.to.client;
+
+    try {
+      final id = await history.savePostData(post);
+      final forum = await client.getForum(post.forumId);
+
+      final threads = forum.where((thread) =>
+          thread.mainPost.userHash == post.userHash &&
+          thread.mainPost.postTime.difference(post.postTime).abs() <
+              _difference);
+      if (threads.isNotEmpty) {
+        final postData = await history.getPostData(id);
+        if (postData != null) {
+          postData.update(threads.first.mainPost);
+          await history.savePostData(postData);
+        }
+      }
+    } catch (e) {
+      showToast('获取发布的新串数据出现错误：${exceptionMessage(e)}');
+    }
+  }
+
+  Future<bool> getPostId(
+      {required int id, required ReplyData reply, required int page}) async {
+    final history = PostHistoryService.to;
+    final client = XdnmbClientService.to.client;
+
+    final thread = await client.getThread(reply.mainPostId, page: page);
+    final posts = thread.replies.where((post) =>
+        post.userHash == reply.userHash &&
+        (post.postTime.difference(reply.postTime).abs() < _difference));
+    if (posts.isNotEmpty) {
+      final replyData = await history.getReplyData(id);
+      if (replyData != null) {
+        replyData.update(post: posts.last, page: page);
+        await history.saveReplyData(replyData);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  Future<void> saveReply(ReplyData reply) async {
+    final history = PostHistoryService.to;
+    final client = XdnmbClientService.to.client;
+
+    try {
+      final id = await history.saveReplyData(reply);
+      final thread = await client.getThread(reply.mainPostId);
+
+      final page = thread.mainPost.replyCount != 0
+          ? (thread.mainPost.replyCount / 19).ceil()
+          : 1;
+      if (!await getPostId(id: id, reply: reply, page: page) && page > 1) {
+        await getPostId(id: id, reply: reply, page: page - 1);
+      }
+    } catch (e) {
+      showToast('获取回串数据出现错误：${exceptionMessage(e)}');
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: () {
-        final user = UserService.to;
+  Widget build(BuildContext context) => IconButton(
+        onPressed: () {
+          final user = UserService.to;
 
-        if (user.hasPostCookie) {
-          if (forumId != null) {
-            final content = getContent();
+          if (user.hasPostCookie) {
+            if (forumId != null) {
+              final content = getContent();
 
-            if (content.isNotEmpty || imagePath != null) {
-              final client = XdnmbClientService.to.client;
+              if (content.isNotEmpty || imagePath != null) {
+                final client = XdnmbClientService.to.client;
 
-              final postListType = postList.postListType;
-              final title = getTitle();
-              final name = getName();
+                final postListType = postList.postListType;
+                final title = getTitle();
+                final name = getName();
+                final cookie = user.postCookie!;
 
-              Future(() async {
-                xdnmb_api.Image? image;
-                if (imagePath != null) {
-                  image = await xdnmb_api.Image.fromFile(imagePath!);
-                }
+                Future(() async {
+                  xdnmb_api.Image? image;
+                  if (imagePath != null) {
+                    image = await xdnmb_api.Image.fromFile(imagePath!);
+                  }
 
-                if (postListType.isForumType()) {
-                  await client.postNewThread(
-                    forumId: forumId!,
-                    content: content,
-                    name: name.isNotEmpty ? name : null,
-                    title: title.isNotEmpty ? title : null,
-                    watermark: isWatermark,
-                    image: image,
-                    cookie: user.postCookie!.cookie(),
-                  );
-                } else {
-                  await client.replyThread(
-                    mainPostId: postList.id!,
-                    content: content,
-                    name: name.isNotEmpty ? name : null,
-                    title: title.isNotEmpty ? title : null,
-                    watermark: isWatermark,
-                    image: image,
-                    cookie: user.postCookie!.cookie(),
-                  );
-                }
-              }).then(
-                (value) {
                   if (postListType.isForumType()) {
-                    showToast('发表新串成功');
+                    await client.postNewThread(
+                      forumId: forumId!,
+                      content: content,
+                      name: name.isNotEmpty ? name : null,
+                      title: title.isNotEmpty ? title : null,
+                      watermark: isWatermark,
+                      image: image,
+                      cookie: cookie.cookie(),
+                    );
                   } else {
-                    showToast('回串成功');
+                    await client.replyThread(
+                      mainPostId: postList.id!,
+                      content: content,
+                      name: name.isNotEmpty ? name : null,
+                      title: title.isNotEmpty ? title : null,
+                      watermark: isWatermark,
+                      image: image,
+                      cookie: cookie.cookie(),
+                    );
                   }
-                },
-                onError: (e) {
-                  if (title.isNotEmpty ||
-                      name.isNotEmpty ||
-                      content.isNotEmpty) {
-                    PostDraftsService.to.addDraft(PostDraftData(
-                        title: title.isNotEmpty ? title : null,
-                        name: name.isNotEmpty ? name : null,
-                        content: content.isNotEmpty ? content : null));
-                    showToast('发串失败，内容已保存为草稿：${exceptionMessage(e)}');
-                  } else {
-                    showToast('发串失败：${exceptionMessage(e)}');
-                  }
-                },
-              );
+                }).then(
+                  (value) {
+                    if (postListType.isForumType()) {
+                      showToast('发表新串成功');
+                      final post = PostData(
+                          forumId: forumId!,
+                          postTime: DateTime.now(),
+                          userHash: cookie.name,
+                          name: name,
+                          title: title,
+                          content: content);
+                      savePost(post);
+                    } else {
+                      showToast('回串成功');
+                      final reply = ReplyData(
+                          mainPostId: postList.id!,
+                          forumId: forumId!,
+                          postTime: DateTime.now(),
+                          userHash: cookie.name,
+                          name: name,
+                          title: title,
+                          content: content);
+                      saveReply(reply);
+                    }
+                  },
+                  onError: (e) {
+                    if (title.isNotEmpty ||
+                        name.isNotEmpty ||
+                        content.isNotEmpty) {
+                      PostDraftsService.to.addDraft(PostDraftData(
+                          title: title.isNotEmpty ? title : null,
+                          name: name.isNotEmpty ? name : null,
+                          content: content.isNotEmpty ? content : null));
+                      showToast('发串失败，内容已保存为草稿：${exceptionMessage(e)}');
+                    } else {
+                      showToast('发串失败：${exceptionMessage(e)}');
+                    }
+                  },
+                );
 
-              onPost();
-              Get.back<bool>(result: true);
+                onPost();
+                Get.back<bool>(result: true);
+              } else {
+                showToast('不发图时串的内容不能为空');
+              }
             } else {
-              showToast('不发图时串的内容不能为空');
+              showToast('请选择板块');
             }
           } else {
-            showToast('请选择板块');
+            showToast('发串需要饼干，请在设置里领取饼干');
           }
-        } else {
-          showToast('发串需要饼干，请在设置里领取饼干');
-        }
-      },
-      icon: const Icon(Icons.send),
-    );
-  }
+        },
+        icon: const Icon(Icons.send),
+      );
 }
 
 class _Emoticon extends StatefulWidget {

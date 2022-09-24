@@ -1,11 +1,13 @@
 import 'package:isar/isar.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
-part 'post.g.dart';
+part 'reply.g.dart';
 
 @Collection()
-class PostData {
+class ReplyData {
   Id id = Isar.autoIncrement;
+
+  int mainPostId;
 
   int? postId;
 
@@ -29,8 +31,11 @@ class PostData {
 
   bool isAdmin;
 
-  PostData(
-      {this.postId,
+  int? page;
+
+  ReplyData(
+      {required this.mainPostId,
+      this.postId,
       required this.forumId,
       String? image,
       String? imageExtension,
@@ -39,7 +44,8 @@ class PostData {
       String? name,
       String? title,
       required String content,
-      this.isAdmin = false})
+      this.isAdmin = false,
+      this.page})
       : image = image != null ? (image.isNotEmpty ? image : null) : null,
         imageExtension = imageExtension != null
             ? (imageExtension.isNotEmpty ? image : null)
@@ -53,8 +59,9 @@ class PostData {
             : null,
         content = content.isNotEmpty ? content : '分享图片';
 
-  PostData.fromPost(Post post)
+  ReplyData.fromPost({required Post post, required int mainPostId, int? page})
       : this(
+            mainPostId: mainPostId,
             postId: post.id,
             forumId: post.forumId,
             image: post.image,
@@ -64,7 +71,8 @@ class PostData {
             name: post.name,
             title: post.title,
             content: post.content,
-            isAdmin: post.isAdmin);
+            isAdmin: post.isAdmin,
+            page: page);
 
   Post toPost() => Post(
       id: postId ?? 0,
@@ -79,7 +87,22 @@ class PostData {
       content: content,
       isAdmin: isAdmin);
 
-  void update(Post post) {
+  Post toMainPost() => Post(
+      id: mainPostId,
+      forumId: forumId,
+      replyCount: 0,
+      postTime: postTime,
+      userHash: '',
+      content: content);
+
+  void update({required Post post, int? mainPostId, int? page}) {
+    if (mainPostId != null) {
+      this.mainPostId = mainPostId;
+    }
+    if (page != null) {
+      this.page = page;
+    }
+
     postId = post.id;
     forumId = post.forumId;
     image = post.image.isNotEmpty ? post.image : null;
@@ -96,8 +119,9 @@ class PostData {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is PostData &&
+      (other is ReplyData &&
           id == other.id &&
+          mainPostId == other.mainPostId &&
           postId == other.postId &&
           forumId == other.forumId &&
           image == other.image &&
@@ -107,10 +131,11 @@ class PostData {
           name == other.name &&
           title == other.title &&
           content == other.content &&
-          isAdmin == other.isAdmin);
+          isAdmin == other.isAdmin &&
+          page == other.page);
 
   @ignore
   @override
-  int get hashCode => Object.hash(id, postId, forumId, image, imageExtension,
-      postTime, userHash, name, title, content, isAdmin);
+  int get hashCode => Object.hash(id, mainPostId, postId, forumId, image,
+      imageExtension, postTime, userHash, name, title, content, isAdmin, page);
 }
