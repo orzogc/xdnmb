@@ -370,12 +370,15 @@ class _ThreadBodyState extends State<ThreadBody> {
                     onLongPress: (post) => postListDialog(_ThreadDialog(
                         controller: widget.controller, post: post)),
                     onLinkTap: (context, link) => parseUrl(
-                        url: link, poUserHash: mainPost.value?.userHash),
+                        url: link,
+                        mainPostId: mainPost.value?.id,
+                        poUserHash: mainPost.value?.userHash),
                     onHiddenText: (context, element, textStyle) => onHiddenText(
                         context: context,
                         element: element,
                         textStyle: textStyle,
                         canTap: true,
+                        mainPostId: mainPost.value?.id,
                         poUserHash: mainPost.value?.userHash),
                     mouseCursor: SystemMouseCursors.basic,
                     hoverColor: Get.isDarkMode

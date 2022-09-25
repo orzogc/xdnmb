@@ -11,9 +11,11 @@ import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' as xdnmb_api;
 
 import '../data/models/draft.dart';
+import '../data/models/emoticon.dart';
 import '../data/models/post.dart';
 import '../data/models/reply.dart';
 import '../data/services/drafts.dart';
+import '../data/services/emoticons.dart';
 import '../data/services/forum.dart';
 import '../data/services/history.dart';
 import '../data/services/persistent.dart';
@@ -280,7 +282,7 @@ class _PickImage extends StatelessWidget {
   }
 }
 
-typedef _InsertTextCallback = void Function(String text);
+typedef _InsertTextCallback = void Function(String text, [int? offset]);
 
 class _Dice extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -633,6 +635,148 @@ class _Post extends StatelessWidget {
       );
 }
 
+class _EditEmoticon extends StatefulWidget {
+  final EmoticonData? emoticon;
+
+  const _EditEmoticon({super.key, this.emoticon});
+
+  @override
+  State<_EditEmoticon> createState() => _EditEmoticonState();
+}
+
+class _EditEmoticonState extends State<_EditEmoticon> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = TextEditingController(text: widget.emoticon?.text);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Get.isDarkMode
+        ? AppTheme.editPostFilledColorDark
+        : AppTheme.editPostFilledColorLight;
+
+    final border = OutlineInputBorder(
+      borderSide: BorderSide(color: color),
+      borderRadius: BorderRadius.circular(10.0),
+    );
+
+    String? name;
+    String? text;
+
+    return InputDialog(
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              decoration: const InputDecoration(hintText: '名称'),
+              autofocus: widget.emoticon == null,
+              initialValue: widget.emoticon?.name,
+              onSaved: (newValue) => name = newValue,
+              validator: (value) =>
+                  (value == null || value.isEmpty) ? '请输入颜文字名称' : null,
+            ),
+            const SizedBox(height: 10.0),
+            TextFormField(
+              controller: _controller,
+              decoration: InputDecoration(
+                hintText: '颜文字',
+                filled: true,
+                fillColor: color,
+                enabledBorder: border,
+                focusedBorder: border,
+              ),
+              autofocus: widget.emoticon != null,
+              maxLines: null,
+              minLines: 8,
+              textAlignVertical: TextAlignVertical.top,
+              onSaved: (newValue) => text = newValue,
+              validator: (value) =>
+                  (value == null || value.isEmpty) ? '请输入颜文字' : null,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () => _controller.insertText('　'),
+          child: const Text('全角空格'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              if (widget.emoticon != null) {
+                widget.emoticon!.set(name: name!, text: text!);
+                await widget.emoticon!.save();
+
+                showToast('修改颜文字 $name 成功');
+              } else {
+                await EmoticonsService.to
+                    .addEmoticon(EmoticonData(name: name!, text: text!));
+
+                showToast('添加颜文字 $name 成功');
+              }
+
+              Get.back();
+            }
+          },
+          child: widget.emoticon != null ? const Text('修改') : const Text('添加'),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmoticonDialog extends StatelessWidget {
+  final EmoticonData emoticon;
+
+  const _EmoticonDialog(this.emoticon, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final fontSize = Theme.of(context).textTheme.subtitle1?.fontSize;
+
+    return SimpleDialog(
+      children: [
+        SimpleDialogOption(
+          onPressed: () {
+            Get.back();
+            Get.dialog(_EditEmoticon(emoticon: emoticon));
+          },
+          child:
+              Text('修改 ${emoticon.name}', style: TextStyle(fontSize: fontSize)),
+        ),
+        SimpleDialogOption(
+          onPressed: () async {
+            Get.back();
+            await emoticon.delete();
+            showToast('删除颜文字 ${emoticon.name} 成功');
+          },
+          child:
+              Text('删除 ${emoticon.name}', style: TextStyle(fontSize: fontSize)),
+        ),
+      ],
+    );
+  }
+}
+
 class _Emoticon extends StatefulWidget {
   final _InsertTextCallback onTap;
 
@@ -642,10 +786,14 @@ class _Emoticon extends StatefulWidget {
   State<_Emoticon> createState() => _EmoticonState();
 }
 
-// TODO: 防剧透
 class _EmoticonState extends State<_Emoticon> {
-  static final Iterable<xdnmb_api.Emoticon> _list =
-      xdnmb_api.Emoticon.list.getRange(0, xdnmb_api.Emoticon.list.length - 3);
+  static final Iterable<EmoticonData> _list = xdnmb_api.Emoticon.list
+      .getRange(0, xdnmb_api.Emoticon.list.length - 3)
+      .map((emoticon) => EmoticonData(name: emoticon.name, text: emoticon.text))
+      .followedBy([
+    EmoticonData(name: '防剧透', text: '[h][/h]', offset: 3),
+    EmoticonData(name: '全角空格', text: '　'),
+  ]);
 
   static double _offset = 0.0;
 
@@ -672,7 +820,12 @@ class _EmoticonState extends State<_Emoticon> {
   @override
   Widget build(BuildContext context) {
     final data = PersistentDataService.to;
+    final emoticons = EmoticonsService.to;
     final textStyle = Theme.of(context).textTheme.bodyText2;
+    final buttonStyle = TextButton.styleFrom(
+      padding: EdgeInsets.zero,
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
 
     return Obx(
       () => !data.isKeyboardVisible.value
@@ -686,25 +839,41 @@ class _EmoticonState extends State<_Emoticon> {
                 child: Scrollbar(
                   controller: _controller,
                   thumbVisibility: true,
-                  child: ResponsiveGridList(
-                    minItemWidth: 80.0,
-                    horizontalGridSpacing: 10.0,
-                    verticalGridSpacing: 10.0,
-                    listViewBuilderOptions: ListViewBuilderOptions(
-                      controller: _controller,
-                      shrinkWrap: true,
-                    ),
-                    children: [
-                      for (final emoticon in _list)
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  child: ValueListenableBuilder(
+                    valueListenable: emoticons.emoticonsListenable,
+                    // 这里可能有性能问题
+                    builder: (context, value, child) => ResponsiveGridList(
+                      minItemWidth: 80.0,
+                      horizontalGridSpacing: 10.0,
+                      verticalGridSpacing: 10.0,
+                      listViewBuilderOptions: ListViewBuilderOptions(
+                        controller: _controller,
+                        shrinkWrap: true,
+                      ),
+                      children: [
+                        for (final emoticon in _list)
+                          TextButton(
+                            style: buttonStyle,
+                            onPressed: () =>
+                                widget.onTap(emoticon.text, emoticon.offset),
+                            child: Text(emoticon.name, style: textStyle),
                           ),
-                          onPressed: () => widget.onTap(emoticon.text),
-                          child: Text(emoticon.name, style: textStyle),
+                        for (final emoticon in emoticons.emoticons)
+                          TextButton(
+                            style: buttonStyle,
+                            onPressed: () =>
+                                widget.onTap(emoticon.text, emoticon.offset),
+                            onLongPress: () =>
+                                Get.dialog(_EmoticonDialog(emoticon)),
+                            child: Text(emoticon.name, style: textStyle),
+                          ),
+                        TextButton(
+                          style: buttonStyle,
+                          onPressed: () => Get.dialog(_EditEmoticon()),
+                          child: Text('自定义', style: textStyle),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -789,22 +958,8 @@ class EditPostState extends State<EditPost> {
       imagePath: _imagePath.value,
       isWatermark: _isWatermark.value);
 
-  void insertText(String text) {
-    final oldText = _contentController.text;
-    final selection = _contentController.selection;
-    final cursor = selection.baseOffset;
-
-    if (cursor < 0) {
-      _contentController.value = TextEditingValue(
-          text: text, selection: TextSelection.collapsed(offset: text.length));
-    } else {
-      final newText =
-          oldText.replaceRange(selection.start, selection.end, text);
-      _contentController.value = TextEditingValue(
-          text: newText,
-          selection: TextSelection.collapsed(offset: cursor + text.length));
-    }
-  }
+  void insertText(String text, [int? offset]) =>
+      _contentController.insertText(text, offset);
 
   Widget _inputArea(BuildContext context, double height) {
     final textStyle = Theme.of(context).textTheme.bodyText2;
@@ -974,7 +1129,7 @@ class EditPostState extends State<EditPost> {
                   debugPrint('image path: $path');
                   _imagePath.value = path;
                 }),
-                _Dice(onDice: (text) => insertText(text)),
+                _Dice(onDice: insertText),
                 _SaveDraft(
                   getTitle: () => _titleController.text,
                   getName: () => _nameController.text,

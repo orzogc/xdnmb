@@ -56,8 +56,6 @@ class HistoryDateRangePicker extends StatelessWidget {
             initialEntryMode: DatePickerEntryMode.calendarOnly,
             locale: WidgetsBinding.instance.platformDispatcher.locale);
 
-        debugPrint('$range');
-
         if (range != null) {
           controller.dateRange.value = range;
           controller.refreshPage();

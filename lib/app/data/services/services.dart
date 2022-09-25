@@ -1,10 +1,11 @@
 import 'package:get/get.dart';
 
 import 'drafts.dart';
+import 'emoticons.dart';
 import 'forum.dart';
+import 'history.dart';
 import 'image.dart';
 import 'persistent.dart';
-import 'history.dart';
 import 'settings.dart';
 import 'time.dart';
 import 'user.dart';
@@ -19,5 +20,6 @@ Bindings servicesBindings() => BindingsBuilder(() {
       Get.put(ForumListService());
       Get.put(PostHistoryService());
       Get.put(PostDraftsService());
+      Get.put(EmoticonsService());
       Get.put(XdnmbClientService());
     });

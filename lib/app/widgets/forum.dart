@@ -31,7 +31,6 @@ PostListController timelineController(Map<String, String?> parameters) =>
         id: int.tryParse(parameters['timelineId'] ?? '0') ?? 0,
         page: int.tryParse(parameters['page'] ?? '1') ?? 1);
 
-// TODO: double tap
 class ForumAppBarTitle extends StatelessWidget {
   final PostListController controller;
 

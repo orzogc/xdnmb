@@ -6,7 +6,8 @@ import '../utils/extensions.dart';
 import '../utils/launch.dart';
 import '../widgets/reference.dart';
 
-Future<void> parseUrl({required String url, String? poUserHash}) async {
+Future<void> parseUrl(
+    {required String url, int? mainPostId, String? poUserHash}) async {
   final parsed = Uri.tryParse(url);
 
   if (parsed != null) {
@@ -17,7 +18,10 @@ Future<void> parseUrl({required String url, String? poUserHash}) async {
             final id = parsed.queryParameters['postId'].tryParseInt();
             if (id != null) {
               postListDialog(Center(
-                  child: ReferenceCard(postId: id, poUserHash: poUserHash)));
+                  child: ReferenceCard(
+                      postId: id,
+                      mainPostId: mainPostId,
+                      poUserHash: poUserHash)));
             } else {
               debugPrint('未知的引用链接：$url');
             }

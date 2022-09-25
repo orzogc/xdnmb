@@ -44,3 +44,22 @@ extension PostExtension on PostBase {
 
   ValueKey<int> toValueKey(int page) => ValueKey<int>(toIndex(page));
 }
+
+extension TextEditingControllerExtension on TextEditingController {
+  void insertText(String text, [int? offset]) {
+    final cursor = selection.baseOffset;
+
+    if (cursor < 0) {
+      value = TextEditingValue(
+          text: text,
+          selection: TextSelection.collapsed(offset: offset ?? text.length));
+    } else {
+      final newText =
+          this.text.replaceRange(selection.start, selection.end, text);
+      value = TextEditingValue(
+          text: newText,
+          selection: TextSelection.collapsed(
+              offset: cursor + (offset ?? text.length)));
+    }
+  }
+}

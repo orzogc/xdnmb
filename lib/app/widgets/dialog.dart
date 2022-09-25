@@ -338,7 +338,7 @@ class CopyPostContent extends StatelessWidget {
         onPressed: () async {
           await Clipboard.setData(ClipboardData(
               text: htmlToTextSpan(context, post.content).toPlainText()));
-          showToast('已复制串 ${post.id.toPostNumber()} 内容');
+          showToast('已复制串 ${post.id.toPostNumber()} 的内容');
           postListBack();
         },
         child: Text(

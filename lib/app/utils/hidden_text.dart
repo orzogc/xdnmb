@@ -21,6 +21,7 @@ InlineSpan onHiddenText(
     required TextStyle textStyle,
     Color? hiddenColor,
     bool canTap = false,
+    int? mainPostId,
     String? poUserHash}) {
   final isVisible = false.obs;
 
@@ -71,7 +72,10 @@ InlineSpan onHiddenText(
                           child: GestureDetector(
                             onTap: () {
                               if (isVisible.value && link != null) {
-                                parseUrl(url: link, poUserHash: poUserHash);
+                                parseUrl(
+                                    url: link,
+                                    mainPostId: mainPostId,
+                                    poUserHash: poUserHash);
                               } else {
                                 isVisible.value = !isVisible.value;
                               }
