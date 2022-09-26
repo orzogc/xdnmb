@@ -1,14 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../data/services/settings.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
+import '../utils/regex.dart';
 import '../utils/stack.dart';
+import '../utils/toast.dart';
 import 'content.dart';
+import 'dialog.dart';
 import 'forum_name.dart';
+import 'reference.dart';
+
+class _SearchDialog extends StatelessWidget {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  _SearchDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    String? content;
+
+    return InputDialog(
+      title: const Text('搜索'),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          autofocus: true,
+          onSaved: (newValue) => content = newValue,
+          validator: (value) =>
+              (value == null || value.isEmpty) ? '请输入搜索内容' : null,
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              final postId = Regex.getPostId(content!);
+              if (postId == null) {
+                showToast('请输入串号');
+                return;
+              }
+
+              Get.back<bool>(result: true);
+              postListDialog(Center(child: ReferenceCard(postId: postId)));
+            }
+          },
+          child: const Text('查串'),
+        ),
+        const ElevatedButton(
+          onPressed: null,
+          child: Text('搜索坏了', style: TextStyle(color: Colors.grey)),
+        ),
+      ],
+    );
+  }
+}
 
 class _DrawerHeader extends StatelessWidget {
   const _DrawerHeader({super.key});
@@ -53,7 +105,12 @@ class _DrawerHeader extends StatelessWidget {
                     icon: const Icon(Icons.brightness_3, color: Colors.black),
                   ),
             IconButton(
-              onPressed: () {},
+              onPressed: () async {
+                final result = await Get.dialog<bool>(_SearchDialog());
+                if (result ?? false) {
+                  Get.back();
+                }
+              },
               tooltip: '搜索',
               icon: Icon(Icons.search, color: theme.colorScheme.onPrimary),
             ),
@@ -173,6 +230,30 @@ class _TabList extends StatelessWidget {
   }
 }
 
+class _SponsorDialog extends StatelessWidget {
+  static const String _xdnmbSponsor = 'https://afdian.net/a/nmbxd';
+
+  const _SponsorDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme.subtitle1;
+
+    return SimpleDialog(
+      children: [
+        SimpleDialogOption(
+          onPressed: () {},
+          child: Text('赞助客户端作者', style: textStyle),
+        ),
+        SimpleDialogOption(
+          onPressed: () => launchUrl(Uri.parse(_xdnmbSponsor)),
+          child: Text('赞助X岛匿名版官方', style: textStyle),
+        ),
+      ],
+    );
+  }
+}
+
 class _DrawerBottom extends StatelessWidget {
   const _DrawerBottom({super.key});
 
@@ -186,8 +267,7 @@ class _DrawerBottom extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           TextButton(
-            //style: style,
-            onPressed: () {},
+            onPressed: () => Get.dialog(const _SponsorDialog()),
             child: Text(
               '赞助',
               style: (theme.appBarTheme.titleTextStyle ??

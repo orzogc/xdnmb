@@ -293,9 +293,7 @@ class _WatermarkDialog extends StatelessWidget {
           },
           child: Text(
             '确定',
-            style: TextStyle(
-              fontSize: Theme.of(context).textTheme.subtitle1?.fontSize,
-            ),
+            style: Theme.of(context).textTheme.subtitle1,
           ),
         ),
       ],
@@ -892,7 +890,7 @@ class _EmoticonDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fontSize = Theme.of(context).textTheme.subtitle1?.fontSize;
+    final textStyle = Theme.of(context).textTheme.subtitle1;
 
     return SimpleDialog(
       children: [
@@ -901,8 +899,7 @@ class _EmoticonDialog extends StatelessWidget {
             Get.back();
             Get.dialog(_EditEmoticon(emoticon: emoticon));
           },
-          child:
-              Text('修改 ${emoticon.name}', style: TextStyle(fontSize: fontSize)),
+          child: Text('修改 ${emoticon.name}', style: textStyle),
         ),
         SimpleDialogOption(
           onPressed: () async {
@@ -910,8 +907,7 @@ class _EmoticonDialog extends StatelessWidget {
             Get.back();
             showToast('删除颜文字 ${emoticon.name} 成功');
           },
-          child:
-              Text('删除 ${emoticon.name}', style: TextStyle(fontSize: fontSize)),
+          child: Text('删除 ${emoticon.name}', style: textStyle),
         ),
       ],
     );

@@ -98,11 +98,7 @@ class _ThreadDialog extends StatelessWidget {
                 _replyPost(controller, post.id);
                 postListBack();
               },
-              child: Text(
-                '回复该串',
-                style: TextStyle(
-                    fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
-              ),
+              child: Text('回复该串', style: Theme.of(context).textTheme.subtitle1),
             ),
           if (post is! Tip) CopyPostId(post),
           if (post is! Tip) CopyPostReference(post),
@@ -352,6 +348,9 @@ class _ThreadBodyState extends State<ThreadBody> {
                   mainPost.value = thread.mainPost;
 
                   if (page != 1 && thread.replies.isEmpty) {
+                    if (postPage.value == page) {
+                      _isToJump.value = false;
+                    }
                     return [];
                   }
 
@@ -374,7 +373,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                 },
                 itemBuilder: (context, post, index) {
                   final postCard = PostCard(
-                    key: post.post is Tip ? post.toValueKey() : null,
+                    key: post.post is Tip ? UniqueKey() : null,
                     post: post.post,
                     showForumName: false,
                     showReplyCount: false,
@@ -397,8 +396,9 @@ class _ThreadBodyState extends State<ThreadBody> {
                     hoverColor: Get.isDarkMode
                         ? theme.cardColor
                         : theme.scaffoldBackgroundColor,
-                    onPostIdTap: (postId) =>
-                        _replyPost(widget.controller, postId),
+                    onPostIdTap: post.post is! Tip
+                        ? (postId) => _replyPost(widget.controller, postId)
+                        : null,
                   );
 
                   return post.post is! Tip
@@ -413,6 +413,15 @@ class _ThreadBodyState extends State<ThreadBody> {
                       : postCard;
                 },
                 separator: const Divider(height: 10.0, thickness: 1.0),
+                noItemsFoundBuilder: (context) => const Center(
+                  child: Text(
+                    '没有串',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
                 onNoMoreItems: () => _isNoMoreItems = true,
               ),
             ),

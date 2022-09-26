@@ -89,11 +89,7 @@ class _FeedDialog extends StatelessWidget {
                     '取消订阅 ${post.id.toPostNumber()} 失败：${exceptionMessage(e)}');
               }
             },
-            child: Text(
-              '取消订阅',
-              style: TextStyle(
-                  fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
-            ),
+            child: Text('取消订阅', style: Theme.of(context).textTheme.subtitle1),
           ),
           CopyPostId(post),
           CopyPostReference(post),

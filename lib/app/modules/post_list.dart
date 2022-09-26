@@ -189,7 +189,10 @@ class PostListController {
   static PostListController get([int? index]) =>
       ControllerStack.getController(index);
 
-  void refreshPage([int page = 1]) => this.page.trigger(page);
+  void refreshPage([int page = 1]) {
+    this.page.trigger(page);
+    currentPage.value = page;
+  }
 
   PostListController copy() => PostListController(
       postListType: postListType.value,

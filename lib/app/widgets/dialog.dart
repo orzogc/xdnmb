@@ -87,7 +87,7 @@ class ConfirmCancelDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fontSize = Theme.of(context).textTheme.subtitle1?.fontSize;
+    final textStyle = Theme.of(context).textTheme.subtitle1;
 
     return AlertDialog(
       actionsPadding: const EdgeInsets.only(right: 10.0, bottom: 10.0),
@@ -100,12 +100,12 @@ class ConfirmCancelDialog extends StatelessWidget {
               if (onCancel != null)
                 TextButton(
                   onPressed: onCancel!,
-                  child: Text('取消', style: TextStyle(fontSize: fontSize)),
+                  child: Text('取消', style: textStyle),
                 ),
               if (onConfirm != null)
                 TextButton(
                   onPressed: onConfirm!,
-                  child: Text('确定', style: TextStyle(fontSize: fontSize)),
+                  child: Text('确定', style: textStyle),
                 ),
             ]
           : null,
@@ -121,7 +121,7 @@ class NoticeDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
-    final fontSize = Theme.of(context).textTheme.subtitle1?.fontSize;
+    final textStyle = Theme.of(context).textTheme.subtitle1;
     final isCheck = false.obs;
 
     return AlertDialog(
@@ -155,7 +155,7 @@ class NoticeDialog extends StatelessWidget {
                   ),
                 ),
               ),
-              Text('不再提示此条公告', style: TextStyle(fontSize: fontSize)),
+              Text('不再提示此条公告', style: textStyle),
             ],
           ),
         TextButton(
@@ -165,10 +165,7 @@ class NoticeDialog extends StatelessWidget {
             }
             postListBack();
           },
-          child: Text(
-            '确定',
-            style: TextStyle(fontSize: fontSize),
-          ),
+          child: Text('确定', style: textStyle),
         )
       ],
     );
@@ -226,11 +223,7 @@ class ForumRuleDialog extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => postListBack(),
-              child: Text(
-                '确定',
-                style: TextStyle(
-                    fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
-              ),
+              child: Text('确定', style: Theme.of(context).textTheme.subtitle1),
             )
           ],
         );
@@ -256,8 +249,7 @@ class NewTab extends StatelessWidget {
         },
         child: Text(
           text ?? '在新标签页打开',
-          style: TextStyle(
-              fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
+          style: Theme.of(context).textTheme.subtitle1,
         ),
       );
 }
@@ -279,8 +271,7 @@ class NewTabBackground extends StatelessWidget {
         },
         child: Text(
           text ?? '在新标签页后台打开',
-          style: TextStyle(
-              fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
+          style: Theme.of(context).textTheme.subtitle1,
         ),
       );
 }
@@ -299,11 +290,8 @@ class CopyPostId extends StatelessWidget {
           showToast('已复制 ${post.id}');
           postListBack();
         },
-        child: Text(
-          text ?? '复制串号',
-          style: TextStyle(
-              fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
-        ),
+        child:
+            Text(text ?? '复制串号', style: Theme.of(context).textTheme.subtitle1),
       );
 }
 
@@ -323,8 +311,7 @@ class CopyPostReference extends StatelessWidget {
         },
         child: Text(
           text ?? '复制串号引用',
-          style: TextStyle(
-              fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
+          style: Theme.of(context).textTheme.subtitle1,
         ),
       );
 }
@@ -342,11 +329,7 @@ class CopyPostContent extends StatelessWidget {
           showToast('已复制串 ${post.id.toPostNumber()} 的内容');
           postListBack();
         },
-        child: Text(
-          '复制串的内容',
-          style: TextStyle(
-              fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
-        ),
+        child: Text('复制串的内容', style: Theme.of(context).textTheme.subtitle1),
       );
 }
 
@@ -365,93 +348,6 @@ class Report extends StatelessWidget {
               content: '${post.toPostReference()}\n',
               forumId: EditPost.dutyRoomId);
         },
-        child: Text('举报',
-            style: TextStyle(
-                fontSize: Theme.of(context).textTheme.subtitle1?.fontSize)),
+        child: Text('举报', style: Theme.of(context).textTheme.subtitle1),
       );
-}
-
-/* class AddFeed extends StatelessWidget {
-  final PostBase post;
-
-  final String? text;
-
-  const AddFeed(this.post, {super.key, this.text});
-
-  @override
-  Widget build(BuildContext context) => SimpleDialogOption(
-        onPressed: () async {
-          postListBack();
-          try {
-            await XdnmbClientService.to.client
-                .addFeed(SettingsService.to.feedUuid, post.id);
-            showToast('订阅 ${post.id.toPostNumber()} 成功');
-          } catch (e) {
-            showToast('订阅 ${post.id.toPostNumber()} 失败：$e');
-          }
-        },
-        child: Text(
-          text ?? '订阅',
-          style: TextStyle(
-              fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
-        ),
-      );
-} */
-
-class JumpPageDialog extends StatelessWidget {
-  final int currentPage;
-
-  final int? maxPage;
-
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  JumpPageDialog({super.key, required this.currentPage, this.maxPage});
-
-  @override
-  Widget build(BuildContext context) {
-    String? page;
-
-    return InputDialog(
-      title: const Text('跳页'),
-      content: Form(
-        key: _formKey,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            SizedBox(
-              width: 80,
-              child: TextFormField(
-                initialValue: '$currentPage',
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
-                onSaved: (newValue) => page = newValue,
-                validator: (value) {
-                  final num = value.tryParseInt();
-                  if (num == null || (maxPage != null && num > maxPage!)) {
-                    return '请输入页数';
-                  }
-
-                  return null;
-                },
-              ),
-            ),
-            if (maxPage != null) const Text('/'),
-            if (maxPage != null) Text('$maxPage'),
-          ],
-        ),
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-
-              postListBack<int>(result: int.tryParse(page!));
-            }
-          },
-          child: const Text('确定'),
-        )
-      ],
-    );
-  }
 }

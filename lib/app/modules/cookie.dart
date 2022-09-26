@@ -378,7 +378,7 @@ class _Cookie extends StatelessWidget {
 
     return ListTile(
       onLongPress: () {
-        final fontSize = theme.textTheme.subtitle1?.fontSize;
+        final textStyle = theme.textTheme.subtitle1;
         Get.dialog(
           SimpleDialog(
             children: [
@@ -387,7 +387,7 @@ class _Cookie extends StatelessWidget {
                   user.browseCookie = cookie.copy();
                   Get.back();
                 },
-                child: Text('设为浏览用的饼干', style: TextStyle(fontSize: fontSize)),
+                child: Text('设为浏览用的饼干', style: textStyle),
               ),
               SimpleDialogOption(
                 onPressed: () async {
@@ -395,7 +395,7 @@ class _Cookie extends StatelessWidget {
                     Get.back();
                   }
                 },
-                child: Text('编辑饼干备注', style: TextStyle(fontSize: fontSize)),
+                child: Text('编辑饼干备注', style: textStyle),
               ),
               SimpleDialogOption(
                 onPressed: () async {
@@ -403,7 +403,7 @@ class _Cookie extends StatelessWidget {
                     Get.back();
                   }
                 },
-                child: Text('删除饼干', style: TextStyle(fontSize: fontSize)),
+                child: Text('删除饼干', style: textStyle),
               ),
             ],
           ),

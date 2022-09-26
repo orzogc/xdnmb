@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 
 import '../routes/routes.dart';
+import 'extensions.dart';
 
 abstract class Regex {
   static const _postReference1 = r'(?:&gt;)*No\.([0-9]+)';
 
   static const _postReference2 = r'(?:&gt;)+([0-9]+)';
 
+  static const _postId = r'(^[0-9]+$)';
+
+  static const _postReference3 = r'(?:>)*No\.([0-9]+)';
+
+  static const _postReference4 = r'(?:>)+([0-9]+)';
+
   static const _hasHiddenTag = r'\[h\].+\[\/h\]';
 
   static const _hiddenTag = r'(\[h\])|(\[\/h\])';
 
   static final RegExp _postRegex = RegExp('$_postReference1|$_postReference2');
+
+  static final RegExp _postIdRegex =
+      RegExp('$_postId|$_postReference3|$_postReference4');
 
   static final RegExp _hasHiddenTagRegex = RegExp(_hasHiddenTag, dotAll: true);
 
@@ -20,8 +30,6 @@ abstract class Regex {
   static String? replaceHiddenTag(String text) {
     if (text.contains(_hasHiddenTagRegex)) {
       try {
-        /* final result = _parseHiddenTag(text);
-        return result; */
         return _parseHiddenTag(text);
       } catch (e) {
         debugPrint('解析隐藏文字tag时出现错误：$e');
@@ -46,6 +54,17 @@ abstract class Regex {
 
     if (isReplaced) {
       return text;
+    }
+
+    return null;
+  }
+
+  static int? getPostId(String text) {
+    final match = _postIdRegex.firstMatch(text);
+    if (match != null) {
+      final postId = match[1] ?? match[2] ?? match[3];
+
+      return postId.tryParseInt();
     }
 
     return null;

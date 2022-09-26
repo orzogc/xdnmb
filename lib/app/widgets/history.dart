@@ -220,11 +220,7 @@ class _HistoryDialog extends StatelessWidget {
             postListBack();
             onDelete();
           },
-          child: Text(
-            '删除',
-            style: TextStyle(
-                fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
-          ),
+          child: Text('删除', style: Theme.of(context).textTheme.subtitle1),
         ),
         if (hasPostId) CopyPostId(postHistory),
         if (hasPostId) CopyPostReference(postHistory),
