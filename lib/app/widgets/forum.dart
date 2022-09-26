@@ -7,14 +7,19 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/page.dart';
 import '../data/services/forum.dart';
+import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
+import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
 import '../utils/key.dart';
+import '../utils/navigation.dart';
+import '../utils/toast.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
+import 'edit_post.dart';
 import 'forum_name.dart';
 import 'post.dart';
 import 'reference.dart';
@@ -22,14 +27,14 @@ import 'reference.dart';
 PostListController forumController(Map<String, String?> parameters) =>
     PostListController(
         postListType: PostListType.forum,
-        id: int.tryParse(parameters['forumId'] ?? '0') ?? 0,
-        page: int.tryParse(parameters['page'] ?? '1') ?? 1);
+        id: parameters['forumId'].tryParseInt() ?? 0,
+        page: parameters['page'].tryParseInt() ?? 1);
 
 PostListController timelineController(Map<String, String?> parameters) =>
     PostListController(
         postListType: PostListType.timeline,
-        id: int.tryParse(parameters['timelineId'] ?? '0') ?? 0,
-        page: int.tryParse(parameters['page'] ?? '1') ?? 1);
+        id: parameters['timelineId'].tryParseInt() ?? 0,
+        page: parameters['page'].tryParseInt() ?? 1);
 
 class ForumAppBarTitle extends StatelessWidget {
   final PostListController controller;
@@ -38,6 +43,7 @@ class ForumAppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final client = XdnmbClientService.to;
     final theme = Theme.of(context);
 
     return Column(
@@ -65,7 +71,6 @@ class ForumAppBarPopupMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => PopupMenuButton(
-        tooltip: '菜单',
         itemBuilder: (context) => [
           // TODO: 获取实时公告
           const PopupMenuItem(
@@ -94,7 +99,26 @@ class _ForumDialog extends StatelessWidget {
   Widget build(BuildContext context) => SimpleDialog(
         title: Text(post.toPostNumber()),
         children: [
-          AddFeed(post),
+          SimpleDialogOption(
+            onPressed: () async {
+              postListBack();
+              try {
+                await XdnmbClientService.to.client
+                    .addFeed(SettingsService.to.feedUuid, post.id);
+                showToast('订阅 ${post.id.toPostNumber()} 成功');
+              } catch (e) {
+                showToast(
+                    '订阅 ${post.id.toPostNumber()} 失败：${exceptionMessage(e)}');
+              }
+            },
+            child: Text(
+              '订阅',
+              style: TextStyle(
+                fontSize: Theme.of(context).textTheme.subtitle1?.fontSize,
+              ),
+            ),
+          ),
+          Report(post),
           CopyPostId(post),
           CopyPostReference(post),
           CopyPostContent(post),

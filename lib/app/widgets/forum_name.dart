@@ -15,11 +15,13 @@ class ForumName extends StatelessWidget {
   const ForumName({super.key, required this.forumId, this.isTimeline = false});
 
   @override
-  Widget build(BuildContext context) => ForumListService.to.forumNameWidget(
-        forumId,
-        builder: (name) => htmlToRichText(context, name),
-        isTimeline: isTimeline,
-      );
+  Widget build(BuildContext context) {
+    final name = ForumListService.to.forumName(forumId, isTimeline: isTimeline);
+
+    return name != null
+        ? htmlToRichText(context, name)
+        : const SizedBox.shrink();
+  }
 }
 
 class EditForumName extends StatefulWidget {

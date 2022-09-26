@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../utils/extensions.dart';
 import '../widgets/edit_post.dart';
 import 'post_list.dart';
 
@@ -21,6 +22,8 @@ class EditPostController extends GetxController {
 
   final bool? isWatermark;
 
+  final String? reportReason;
+
   EditPostController(
       {required this.postListType,
       required this.id,
@@ -29,7 +32,8 @@ class EditPostController extends GetxController {
       this.name,
       this.content,
       this.imagePath,
-      this.isWatermark});
+      this.isWatermark,
+      this.reportReason});
 
   bool hasText() =>
       (title?.isNotEmpty ?? false) ||
@@ -40,8 +44,7 @@ class EditPostController extends GetxController {
 class EditPostBinding implements Bindings {
   @override
   void dependencies() {
-    int index = int.tryParse(Get.parameters['postListType'] ??
-            '${PostListType.timeline.index}') ??
+    int index = Get.parameters['postListType'].tryParseInt() ??
         PostListType.timeline.index;
     if (index >= PostListType.values.length) {
       index = PostListType.timeline.index;
@@ -49,13 +52,14 @@ class EditPostBinding implements Bindings {
 
     Get.put(EditPostController(
       postListType: PostListType.values[index],
-      id: int.tryParse(Get.parameters['id'] ?? '0') ?? 0,
-      forumId: int.tryParse(Get.parameters['forumId'] ?? ''),
+      id: Get.parameters['id'].tryParseInt() ?? 0,
+      forumId: Get.parameters['forumId'].tryParseInt(),
       title: Get.parameters['title'],
       name: Get.parameters['name'],
       content: Get.parameters['content'],
       imagePath: Get.parameters['imagePath'],
-      isWatermark: Get.parameters['isWatermark'] != null ? true : false,
+      isWatermark: Get.parameters['isWatermark'].tryParseBool(),
+      reportReason: Get.parameters['reportReason'],
     ));
   }
 }

@@ -36,7 +36,6 @@ class _Dialog extends StatelessWidget {
     return SimpleDialog(
       title: Text(post.id.toPostNumber()),
       children: [
-        if (mainPost != null) AddFeed(mainPost, text: '订阅原串'),
         CopyPostId(post),
         CopyPostReference(post),
         CopyPostContent(post),

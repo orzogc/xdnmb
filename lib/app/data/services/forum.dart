@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -7,6 +9,44 @@ import '../models/forum.dart';
 import '../models/hive.dart';
 import '../../utils/toast.dart';
 import 'xdnmb_client.dart';
+
+class _ForumKey {
+  final int id;
+
+  final bool isTimeline;
+
+  bool get isForum => !isTimeline;
+
+  const _ForumKey(this.id, this.isTimeline);
+
+  _ForumKey.fromForum(ForumData forum) : this(forum.id, forum.isTimeline);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is _ForumKey && id == other.id && isTimeline == other.isTimeline);
+
+  @override
+  int get hashCode => Object.hash(id, isTimeline);
+}
+
+class _ForumValue {
+  final String name;
+
+  final int maxPage;
+
+  const _ForumValue(this.name, this.maxPage);
+
+  _ForumValue.fromForum(ForumData forum) : this(forum.forumName, forum.maxPage);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is _ForumValue && name == other.name && maxPage == other.maxPage);
+
+  @override
+  int get hashCode => Object.hash(name, maxPage);
+}
 
 typedef NameWidgetBuilder = Widget Function(String name);
 
@@ -29,6 +69,12 @@ class ForumListService extends GetxService {
 
   late final ValueListenable<Box<ForumData>> displayedForumListenable;
 
+  HashMap<_ForumKey, _ForumValue> _forumMap = HashMap();
+
+  void _updateForumMap() =>
+      _forumMap = HashMap.fromEntries(forums.map((forum) =>
+          MapEntry(_ForumKey.fromForum(forum), _ForumValue.fromForum(forum))));
+
   ForumData? forum(int forumId, {bool isTimeline = false}) {
     try {
       return forums.firstWhere(
@@ -44,9 +90,9 @@ class ForumListService extends GetxService {
     final client = XdnmbClientService.to;
 
     if (_displayedBox.isEmpty && _hiddenBox.isEmpty) {
-      await _displayedBox.addAll(client.timelineList!
+      await _displayedBox.addAll(client.timelineMap.values
           .map((timeline) => ForumData.fromTimeline(timeline))
-          .followedBy(client.forumList!.forumList
+          .followedBy(client.forumMap.values
               .map((forum) => ForumData.fromForum(forum))));
     } else {
       final newDisplayed = <ForumData>[];
@@ -89,13 +135,13 @@ class ForumListService extends GetxService {
 
       final newForums = <ForumData>[];
       final allForums = forums;
-      for (final timeline in client.timelineList!) {
+      for (final timeline in client.timelineMap.values) {
         if (!allForums
             .any((forum) => forum.isTimeline && forum.id == timeline.id)) {
           newForums.add(ForumData.fromTimeline(timeline));
         }
       }
-      for (final forum_ in client.forumList!.forumList) {
+      for (final forum_ in client.forumMap.values) {
         if (!allForums.any((forum) => forum.isForum && forum.id == forum_.id)) {
           newForums.add(ForumData.fromForum(forum_));
         }
@@ -116,8 +162,6 @@ class ForumListService extends GetxService {
 
   ForumData? displayedForum(int index) => _displayedBox.getAt(index);
 
-  //ForumData? hiddenForum(int index) => _hiddenBox.getAt(index);
-
   Future<void> saveForums(
       {required List<ForumData> displayedForums,
       required List<ForumData> hiddenForums}) async {
@@ -133,19 +177,10 @@ class ForumListService extends GetxService {
   }
 
   String? forumName(int forumId, {bool isTimeline = false}) =>
-      forum(forumId, isTimeline: isTimeline)?.forumName;
+      _forumMap[_ForumKey(forumId, isTimeline)]?.name;
 
   int? maxPage(int forumId, {bool isTimeline = false}) =>
-      forum(forumId, isTimeline: isTimeline)?.maxPage;
-
-  Widget forumNameWidget(int forumId,
-      {required NameWidgetBuilder builder,
-      Widget empty = const SizedBox.shrink(),
-      bool isTimeline = false}) {
-    final name = forumName(forumId, isTimeline: isTimeline);
-
-    return name == null ? empty : builder(name);
-  }
+      _forumMap[_ForumKey(forumId, isTimeline)]?.maxPage;
 
   Future<void> addForum(ForumData forum) => _displayedBox.add(forum);
 
@@ -155,6 +190,10 @@ class ForumListService extends GetxService {
 
     _displayedBox = await Hive.openBox<ForumData>(HiveBoxName.displayedForums);
     _hiddenBox = await Hive.openBox<ForumData>(HiveBoxName.hiddenForums);
+
+    _updateForumMap();
+    _displayedBox.watch().listen((event) => _updateForumMap());
+    _hiddenBox.watch().listen((event) => _updateForumMap());
 
     displayedForumListenable = _displayedBox.listenable();
 

@@ -25,8 +25,8 @@ const int _historyEachPage = 20;
 PostListController historyController(Map<String, String?> parameters) =>
     PostListController(
         postListType: PostListType.history,
-        page: int.tryParse(parameters['page'] ?? '1') ?? 1,
-        bottomBarIndex: int.tryParse(parameters['index'] ?? '0') ?? 0);
+        page: parameters['page'].tryParseInt() ?? 1,
+        bottomBarIndex: parameters['index'].tryParseInt() ?? 0);
 
 class HistoryAppBarTitle extends StatelessWidget {
   const HistoryAppBarTitle({super.key});
@@ -76,7 +76,6 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
     final history = PostHistoryService.to;
 
     return PopupMenuButton(
-      tooltip: '菜单',
       itemBuilder: (context) => [
         PopupMenuItem(
           onTap: () async {
@@ -217,15 +216,16 @@ class _HistoryDialog extends StatelessWidget {
       title: hasPostId ? Text(postHistory.toPostNumber()) : null,
       children: [
         SimpleDialogOption(
-          onPressed: onDelete,
+          onPressed: () {
+            postListBack();
+            onDelete();
+          },
           child: Text(
             '删除',
             style: TextStyle(
                 fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
           ),
         ),
-        if (mainPost.id > 0)
-          AddFeed(mainPost, text: post != null ? '订阅主串' : null),
         if (hasPostId) CopyPostId(postHistory),
         if (hasPostId) CopyPostReference(postHistory),
         CopyPostContent(postHistory),
@@ -331,7 +331,6 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
                         _HistoryDialog(
                           mainPost: browse,
                           onDelete: () async {
-                            postListBack();
                             await history.deleteBrowseHistory(browse.id);
                             showToast('删除 ${browse.id.toPostNumber()} 的浏览记录');
                             isVisible.value = false;
@@ -485,7 +484,6 @@ class _PostHistoryBodyState extends State<_PostHistoryBody> {
                       onLongPress: (post) => postListDialog(_HistoryDialog(
                           mainPost: post,
                           onDelete: () async {
-                            postListBack();
                             await history.deletePostData(mainPost.id);
                             mainPost.postId != null
                                 ? showToast(
@@ -604,7 +602,6 @@ class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
                             mainPost: reply.toMainPost(),
                             post: post,
                             onDelete: () async {
-                              postListBack();
                               await history.deletePostData(reply.id);
                               reply.postId != null
                                   ? showToast(

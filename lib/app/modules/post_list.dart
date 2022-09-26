@@ -279,7 +279,6 @@ class _PostListAppBarState extends State<_PostListAppBar> {
     Widget button = IconButton(
       icon: const Icon(Icons.menu),
       onPressed: () => scaffold.openDrawer(),
-      tooltip: '标签',
     );
     if (PostListPage.pageKey.currentState?._isBuilt == true) {
       if (ControllerStack.controllersCount() > 1) {

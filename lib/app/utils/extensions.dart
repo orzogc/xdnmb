@@ -5,6 +5,9 @@ const int _int32Max = 4294967295;
 
 extension ParseStringExtension on String? {
   int? tryParseInt() => this != null ? int.tryParse(this!) : null;
+
+  bool? tryParseBool() =>
+      this == 'true' ? true : (this == 'false' ? false : null);
 }
 
 extension WidgetListExtension on List<Widget> {

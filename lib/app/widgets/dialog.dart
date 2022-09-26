@@ -8,14 +8,15 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
-import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
+import '../routes/routes.dart';
 import '../utils/cache.dart';
 import '../utils/extensions.dart';
 import '../utils/navigation.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'content.dart';
+import 'edit_post.dart';
 import 'loading.dart';
 import 'scroll.dart';
 
@@ -349,7 +350,28 @@ class CopyPostContent extends StatelessWidget {
       );
 }
 
-class AddFeed extends StatelessWidget {
+class Report extends StatelessWidget {
+  final PostBase post;
+
+  const Report(this.post, {super.key});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () {
+          postListBack();
+          AppRoutes.toEditPost(
+              postListType: PostListType.forum,
+              id: EditPost.dutyRoomId,
+              content: '${post.toPostReference()}\n',
+              forumId: EditPost.dutyRoomId);
+        },
+        child: Text('举报',
+            style: TextStyle(
+                fontSize: Theme.of(context).textTheme.subtitle1?.fontSize)),
+      );
+}
+
+/* class AddFeed extends StatelessWidget {
   final PostBase post;
 
   final String? text;
@@ -374,7 +396,7 @@ class AddFeed extends StatelessWidget {
               fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
         ),
       );
-}
+} */
 
 class JumpPageDialog extends StatelessWidget {
   final int currentPage;
@@ -404,11 +426,7 @@ class JumpPageDialog extends StatelessWidget {
                 keyboardType: TextInputType.number,
                 onSaved: (newValue) => page = newValue,
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '请输入页数';
-                  }
-
-                  final num = int.tryParse(value);
+                  final num = value.tryParseInt();
                   if (num == null || (maxPage != null && num > maxPage!)) {
                     return '请输入页数';
                   }

@@ -35,7 +35,7 @@ class _ChildSizeNotifierState extends State<ChildSizeNotifier> {
   }
 
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder(
+  Widget build(BuildContext context) => ValueListenableBuilder<Size>(
         valueListenable: _notifier,
         builder: widget.builder,
         child: widget.child,

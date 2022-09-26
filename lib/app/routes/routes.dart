@@ -37,7 +37,7 @@ abstract class AppRoutes {
 
   static const String reorderForums = '/${PathNames.reorderForums}';
 
-  /// 参数：postListType id title name content forumId imagePath isWatermark
+  /// 参数：postListType id title name content forumId imagePath isWatermark reportReason
   static const String editPost = '/${PathNames.editPost}';
 
   static const String postDrafts = '/${PathNames.postDrafts}';
@@ -141,23 +141,26 @@ abstract class AppRoutes {
   static Future<T?>? toEditPost<T>(
           {required PostListType postListType,
           required int id,
-          required String title,
-          required String name,
-          required String content,
+          String? title,
+          String? name,
+          String? content,
           int? forumId,
           String? imagePath,
-          required bool isWatermark}) =>
+          bool? isWatermark,
+          String? reportReason}) =>
       Get.toNamed(
         editPost,
         parameters: {
           'postListType': '${postListType.index}',
           'id': '$id',
-          if (title.isNotEmpty) 'title': title,
-          if (name.isNotEmpty) 'name': name,
-          if (content.isNotEmpty) 'content': content,
+          if (title != null && title.isNotEmpty) 'title': title,
+          if (name != null && name.isNotEmpty) 'name': name,
+          if (content != null && content.isNotEmpty) 'content': content,
           if (forumId != null) 'forumId': '$forumId',
           if (imagePath != null) 'imagePath': imagePath,
-          if (isWatermark) 'isWatermark': '',
+          if (isWatermark != null) 'isWatermark': '$isWatermark',
+          if (reportReason != null && reportReason.isNotEmpty)
+            'reportReason': reportReason,
         },
       );
 

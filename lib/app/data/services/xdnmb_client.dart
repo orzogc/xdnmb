@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
@@ -17,32 +15,13 @@ class XdnmbClientService extends GetxService {
 
   Notice? notice;
 
-  List<Timeline>? timelineList;
+  late final Map<int, Timeline> timelineMap;
 
-  ForumList? forumList;
-
-  late final HashMap<int, Timeline> timelineMap;
-
-  late final HashMap<int, Forum> forumMap;
+  late final Map<int, Forum> forumMap;
 
   final RxBool isReady = false.obs;
 
   XdnmbClientService() : client = XdnmbApi();
-
-  String? forumName(int forumId, {bool isTimeline = false}) =>
-      isTimeline ? timelineMap[forumId]?.showName : forumMap[forumId]?.showName;
-
-  int? maxPage(int forumId, {bool isTimeline = false}) =>
-      isTimeline ? timelineMap[forumId]?.maxPage : forumMap[forumId]?.maxPage;
-
-  Widget forumNameWidget(int forumId,
-      {required NameWidgetBuilder builder,
-      Widget empty = const SizedBox.shrink(),
-      bool isTimeline = false}) {
-    final name = forumName(forumId, isTimeline: isTimeline);
-
-    return name == null ? empty : builder(name);
-  }
 
   @override
   void onReady() async {
@@ -63,18 +42,20 @@ class XdnmbClientService extends GetxService {
       showToast('获取X岛公告失败：${exceptionMessage(e)}');
     }
 
+    List<Timeline>? timelineList;
+    ForumList? forumList;
     try {
       debugPrint('开始更新X岛服务');
 
       await client.updateUrls();
 
       timelineList = await client.getTimelineList();
-      timelineMap = HashMap.fromEntries(
-          timelineList!.map((timeline) => MapEntry(timeline.id, timeline)));
+      timelineMap = {
+        for (final timeline in timelineList) timeline.id: timeline
+      };
 
       forumList = await client.getForumList();
-      forumMap = HashMap.fromEntries(
-          forumList!.forumList.map((forum) => MapEntry(forum.id, forum)));
+      forumMap = {for (final forum in forumList.forumList) forum.id: forum};
 
       final forums = ForumListService.to;
       if (forums.isReady.value) {
@@ -84,11 +65,12 @@ class XdnmbClientService extends GetxService {
       debugPrint('更新X岛服务成功');
     } catch (e) {
       if (timelineList == null) {
-        timelineMap = HashMap.fromIterable([]);
+        timelineMap = {};
       }
       if (forumList == null) {
-        forumMap = HashMap.fromIterable([]);
+        forumMap = {};
       }
+
       showToast('更新X岛服务失败：${exceptionMessage(e)}');
     }
 

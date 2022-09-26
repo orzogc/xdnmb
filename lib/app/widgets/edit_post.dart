@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:align_positioned/align_positioned.dart';
 import 'package:file_picker/file_picker.dart';
@@ -33,6 +34,7 @@ import '../utils/toast.dart';
 import 'dialog.dart';
 import 'loading.dart';
 import 'scroll.dart';
+import 'size.dart';
 
 const double _defaultHeight = 200.0;
 
@@ -100,6 +102,136 @@ class _ForumName extends StatelessWidget {
             ),
           )
         : htmlToRichText(context, forumName);
+  }
+}
+
+class _ReportReasonDialog extends StatelessWidget {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  final String? text;
+
+  _ReportReasonDialog({super.key, this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    String? reason;
+
+    return InputDialog(
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          decoration: const InputDecoration(labelText: '举报理由'),
+          initialValue: text,
+          autofocus: true,
+          onSaved: (newValue) => reason = newValue,
+          validator: (value) => (value == null || value.isEmpty)
+              ? '请输入举报理由'
+              : (xdnmb_api.ReportReason.list
+                      .any((reason) => reason.reason == value)
+                  ? '举报理由不能与已有的重复'
+                  : null),
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              Get.back<String>(result: reason);
+            }
+          },
+          child: const Text('确定'),
+        ),
+      ],
+    );
+  }
+}
+
+typedef _ReportReasonCallback = void Function(String? text);
+
+class _ReportReason extends StatelessWidget {
+  final String? reportReason;
+
+  final _ReportReasonCallback onReportReason;
+
+  late final RxnString _value = RxnString(reportReason);
+
+  late final RxnString _userDefined = RxnString(
+      xdnmb_api.ReportReason.list.any((reason) => reason.reason == reportReason)
+          ? null
+          : reportReason);
+
+  _ReportReason({super.key, this.reportReason, required this.onReportReason});
+
+  @override
+  Widget build(BuildContext context) {
+    final RxDouble width = 0.0.obs;
+
+    return LayoutBuilder(
+      builder: (context, constraints) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ChildSizeNotifier(
+              builder: (context, size, child) {
+                Future.delayed(const Duration(milliseconds: 100),
+                    () => width.value = size.width);
+
+                return child!;
+              },
+              child: const Text('举报理由：')),
+          Obx(
+            () => DropdownButton<String>(
+              value: _value.value,
+              style: Theme.of(context).textTheme.bodyText2,
+              onChanged: (value) {
+                if (value != null && value.isNotEmpty) {
+                  _value.value = value;
+                  onReportReason(value);
+                }
+              },
+              items: [
+                for (final reason in xdnmb_api.ReportReason.list)
+                  DropdownMenuItem<String>(
+                    value: reason.text,
+                    child: Text(reason.reason),
+                  ),
+                DropdownMenuItem(
+                  value: _userDefined.value ?? '',
+                  onTap: () {
+                    Future.delayed(const Duration(milliseconds: 100), () async {
+                      final reason = await Get.dialog<String>(
+                          _ReportReasonDialog(text: _userDefined.value));
+                      if (reason != null && reason.isNotEmpty) {
+                        _value.value = reason;
+                        _userDefined.value = reason;
+                        onReportReason(reason);
+                      }
+                    });
+                  },
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      // TODO: 这里应该更加精确
+                      maxWidth: max(
+                        width.value > 0
+                            ? constraints.maxWidth - width.value - 50
+                            : constraints.maxWidth - 120,
+                        0.0,
+                      ),
+                    ),
+                    child: Text(
+                      _userDefined.value ?? '自定义',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -314,11 +446,8 @@ class _Dice extends StatelessWidget {
                     textAlign: TextAlign.center,
                     keyboardType: TextInputType.number,
                     onSaved: (newValue) => lower = newValue,
-                    validator: (value) => (value == null ||
-                            value.isEmpty ||
-                            int.tryParse(value) == null)
-                        ? '请输入下限'
-                        : null,
+                    validator: (value) =>
+                        value.tryParseInt() == null ? '请输入下限' : null,
                   ),
                 ),
                 const Text('—'),
@@ -330,11 +459,8 @@ class _Dice extends StatelessWidget {
                     textAlign: TextAlign.center,
                     keyboardType: TextInputType.number,
                     onSaved: (newValue) => upper = newValue,
-                    validator: (value) => (value == null ||
-                            value.isEmpty ||
-                            int.tryParse(value) == null)
-                        ? '请输入上限'
-                        : null,
+                    validator: (value) =>
+                        value.tryParseInt() == null ? '请输入上限' : null,
                   ),
                 ),
               ],
@@ -452,6 +578,8 @@ class _Post extends StatelessWidget {
 
   final String? imagePath;
 
+  final String? reportReason;
+
   final _GetText getTitle;
 
   final _GetText getName;
@@ -466,6 +594,7 @@ class _Post extends StatelessWidget {
       this.forumId,
       this.isWatermark,
       this.imagePath,
+      this.reportReason,
       required this.getTitle,
       required this.getName,
       required this.getContent,
@@ -542,12 +671,20 @@ class _Post extends StatelessWidget {
 
           if (user.hasPostCookie) {
             if (forumId != null) {
-              final content = getContent();
+              final postListType = postList.postListType;
+
+              if (postListType.isForumType() &&
+                  forumId == EditPost.dutyRoomId &&
+                  (reportReason == null || reportReason!.isEmpty)) {
+                showToast('请选择举报理由');
+                return;
+              }
+
+              var content = getContent();
 
               if (content.isNotEmpty || imagePath != null) {
                 final client = XdnmbClientService.to.client;
 
-                final postListType = postList.postListType;
                 final title = getTitle();
                 final name = getName();
                 final cookie = user.postCookie!;
@@ -559,6 +696,10 @@ class _Post extends StatelessWidget {
                   }
 
                   if (postListType.isForumType()) {
+                    if (forumId == EditPost.dutyRoomId) {
+                      content = '举报理由：$reportReason\n$content';
+                    }
+
                     await client.postNewThread(
                       forumId: forumId!,
                       content: content,
@@ -765,8 +906,8 @@ class _EmoticonDialog extends StatelessWidget {
         ),
         SimpleDialogOption(
           onPressed: () async {
-            Get.back();
             await emoticon.delete();
+            Get.back();
             showToast('删除颜文字 ${emoticon.name} 成功');
           },
           child:
@@ -884,6 +1025,8 @@ class _EmoticonState extends State<_Emoticon> {
 }
 
 class EditPost extends StatefulWidget {
+  static const int dutyRoomId = 18;
+
   static final GlobalKey<EditPostState> bottomSheetkey =
       GlobalKey<EditPostState>();
 
@@ -903,6 +1046,8 @@ class EditPost extends StatefulWidget {
 
   final bool? isWatermark;
 
+  final String? reportReason;
+
   const EditPost(
       {super.key,
       required this.postList,
@@ -912,7 +1057,8 @@ class EditPost extends StatefulWidget {
       this.name,
       this.content,
       this.imagePath,
-      this.isWatermark});
+      this.isWatermark,
+      this.reportReason});
 
   EditPost.fromController(
       {super.key, required EditPostController controller, this.height})
@@ -923,7 +1069,8 @@ class EditPost extends StatefulWidget {
         name = controller.name,
         content = controller.content,
         imagePath = controller.imagePath,
-        isWatermark = controller.isWatermark;
+        isWatermark = controller.isWatermark,
+        reportReason = controller.reportReason;
 
   @override
   State<EditPost> createState() => EditPostState();
@@ -942,6 +1089,8 @@ class EditPostState extends State<EditPost> {
 
   late final RxBool _isWatermark;
 
+  late final RxnString _reportReason;
+
   late final RxBool _isExpanded;
 
   final RxBool _showEmoticon = false.obs;
@@ -956,17 +1105,20 @@ class EditPostState extends State<EditPost> {
       name: _nameController.text,
       content: _contentController.text,
       imagePath: _imagePath.value,
-      isWatermark: _isWatermark.value);
+      isWatermark: _isWatermark.value,
+      reportReason: _reportReason.value);
 
   void insertText(String text, [int? offset]) =>
       _contentController.insertText(text, offset);
 
   Widget _inputArea(BuildContext context, double height) {
     final textStyle = Theme.of(context).textTheme.bodyText2;
+    final postListType = widget.postList.postListType;
+    final id = widget.postList.id!;
+
     final color = Get.isDarkMode
         ? AppTheme.editPostFilledColorDark
         : AppTheme.editPostFilledColorLight;
-
     final border = OutlineInputBorder(
       borderSide: BorderSide(color: color),
       borderRadius: BorderRadius.circular(10.0),
@@ -991,14 +1143,12 @@ class EditPostState extends State<EditPost> {
                 Flexible(
                   child: Obx(
                     () => _ForumName(
-                        postListType: widget.postList.postListType,
+                        postListType: postListType,
                         forumId: _forumId.value,
                         onForumId: (forumId) => _forumId.value = forumId),
                   ),
                 ),
-                if (widget.postList.postListType.isThreadType())
-                  //Flexible(child: Text(widget.postList.id!.toPostNumber())),
-                  Text(widget.postList.id!.toPostNumber()),
+                if (postListType.isThreadType()) Text(id.toPostNumber()),
                 Flexible(
                   child: IconButton(
                     onPressed: () async {
@@ -1018,14 +1168,15 @@ class EditPostState extends State<EditPost> {
                     child: IconButton(
                       onPressed: () async {
                         final result = await AppRoutes.toEditPost(
-                            postListType: widget.postList.postListType,
-                            id: widget.postList.id!,
+                            postListType: postListType,
+                            id: id,
                             title: _titleController.text,
                             name: _nameController.text,
                             content: _contentController.text,
                             forumId: _forumId.value,
                             imagePath: _imagePath.value,
-                            isWatermark: _isWatermark.value);
+                            isWatermark: _isWatermark.value,
+                            reportReason: _reportReason.value);
 
                         if (result is EditPostController && mounted) {
                           _forumId.value = result.forumId;
@@ -1036,6 +1187,7 @@ class EditPostState extends State<EditPost> {
                             _titleController.text = result.title ?? '';
                             _nameController.text = result.name ?? '';
                             _contentController.text = result.content ?? '';
+                            _reportReason.value = result.reportReason;
                           });
                         } else if (result is bool && result) {
                           isPosted = true;
@@ -1052,70 +1204,78 @@ class EditPostState extends State<EditPost> {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final textSize = _textSize(context, 'a啊', textStyle);
+                    final reportReason = _reportReason.value;
 
                     return SingleChildScrollViewWithScrollbar(
-                      child: Column(
-                        children: [
-                          Obx(() => _isExpanded.value
-                              ? TextField(
-                                  controller: _titleController,
-                                  style: textStyle,
-                                  decoration: const InputDecoration(
-                                    isDense: true,
-                                    hintText: '标题',
-                                  ),
-                                )
-                              : const SizedBox.shrink()),
-                          Obx(() => _isExpanded.value
-                              ? TextField(
-                                  controller: _nameController,
-                                  style: textStyle,
-                                  decoration: const InputDecoration(
-                                    isDense: true,
-                                    hintText: '名称',
-                                  ),
-                                )
-                              : const SizedBox.shrink()),
-                          Obx(() => _isExpanded.value
-                              ? const SizedBox(height: 10.0)
-                              : const SizedBox.shrink()),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Obx(() => _imagePath.value != null
-                                  ? _Image(
+                      child: Obx(
+                        () => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_isExpanded.value)
+                              TextField(
+                                controller: _titleController,
+                                style: textStyle,
+                                decoration: const InputDecoration(
+                                  isDense: true,
+                                  hintText: '标题',
+                                ),
+                              ),
+                            if (_isExpanded.value)
+                              TextField(
+                                controller: _nameController,
+                                style: textStyle,
+                                decoration: const InputDecoration(
+                                  isDense: true,
+                                  hintText: '名称',
+                                ),
+                              ),
+                            if (_isExpanded.value) const SizedBox(height: 10.0),
+                            if (postListType.isForumType() &&
+                                _forumId.value == EditPost.dutyRoomId)
+                              _ReportReason(
+                                reportReason: reportReason,
+                                onReportReason: (text) {
+                                  if (text != null && text.isNotEmpty) {
+                                    _reportReason.value = text;
+                                  }
+                                },
+                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_imagePath.value != null)
+                                  _Image(
                                       maxHeight: constraints.maxHeight,
                                       path: _imagePath.value!,
                                       isWatermark: _isWatermark.value,
                                       onCancel: () => _imagePath.value = null,
                                       onWatermark: (isWatermark) =>
-                                          _isWatermark.value = isWatermark)
-                                  : const SizedBox.shrink()),
-                              Obx(() => _imagePath.value != null
-                                  ? const SizedBox(width: 10.0)
-                                  : const SizedBox.shrink()),
-                              Expanded(
-                                child: TextField(
-                                  controller: _contentController,
-                                  style: textStyle,
-                                  maxLines: null,
-                                  minLines:
-                                      constraints.maxHeight ~/ textSize.height,
-                                  //expands: widget.height != null ? false : true,
-                                  textAlignVertical: TextAlignVertical.top,
-                                  //autofocus: true,
-                                  decoration: InputDecoration(
-                                    hintText: '正文',
-                                    filled: true,
-                                    fillColor: color,
-                                    enabledBorder: border,
-                                    focusedBorder: border,
+                                          _isWatermark.value = isWatermark),
+                                if (_imagePath.value != null)
+                                  const SizedBox(width: 10.0),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _contentController,
+                                    style: textStyle,
+                                    maxLines: null,
+                                    minLines: constraints.maxHeight ~/
+                                        textSize.height,
+                                    //expands: widget.height != null ? false : true,
+                                    textAlignVertical: TextAlignVertical.top,
+                                    //autofocus: true,
+                                    decoration: InputDecoration(
+                                      hintText: '正文',
+                                      filled: true,
+                                      fillColor: color,
+                                      enabledBorder: border,
+                                      focusedBorder: border,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -1147,6 +1307,7 @@ class EditPostState extends State<EditPost> {
                     forumId: _forumId.value,
                     isWatermark: _isWatermark.value,
                     imagePath: _imagePath.value,
+                    reportReason: _reportReason.value,
                     getTitle: () => _titleController.text,
                     getName: () => _nameController.text,
                     getContent: () => _contentController.text,
@@ -1185,6 +1346,8 @@ class EditPostState extends State<EditPost> {
     } else {
       _isWatermark = SettingsService.to.isWatermark.obs;
     }
+
+    _reportReason = RxnString(widget.reportReason);
   }
 
   @override

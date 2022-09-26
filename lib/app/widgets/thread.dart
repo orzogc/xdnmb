@@ -13,6 +13,7 @@ import '../data/services/xdnmb_client.dart';
 import '../modules/edit_post.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
+import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
 import '../utils/key.dart';
@@ -30,17 +31,17 @@ PostListController threadController(
         Map<String, String?> parameters, Object? arguments) =>
     PostListController(
         postListType: PostListType.thread,
-        id: int.tryParse(parameters['mainPostId'] ?? '0') ?? 0,
-        page: int.tryParse(parameters['page'] ?? '1') ?? 1,
+        id: parameters['mainPostId'].tryParseInt() ?? 0,
+        page: parameters['page'].tryParseInt() ?? 1,
         post: arguments is PostBase ? arguments : null,
-        jumpToId: int.tryParse(parameters['jumpToId'] ?? ''));
+        jumpToId: parameters['jumpToId'].tryParseInt());
 
 PostListController onlyPoThreadController(
         Map<String, String?> parameters, Object? arguments) =>
     PostListController(
         postListType: PostListType.onlyPoThread,
-        id: int.tryParse(parameters['mainPostId'] ?? '0') ?? 0,
-        page: int.tryParse(parameters['page'] ?? '1') ?? 1,
+        id: parameters['mainPostId'].tryParseInt() ?? 0,
+        page: parameters['page'].tryParseInt() ?? 1,
         post: arguments is PostBase ? arguments : null);
 
 class ThreadAppBarTitle extends StatelessWidget {
@@ -90,19 +91,21 @@ class _ThreadDialog extends StatelessWidget {
   Widget build(BuildContext context) => SimpleDialog(
         title: Text(post.toPostNumber()),
         children: [
-          SimpleDialogOption(
-            onPressed: () {
-              _replyPost(controller, post.id);
-              postListBack();
-            },
-            child: Text(
-              '回复该串',
-              style: TextStyle(
-                  fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
+          if (post is! Tip) Report(post),
+          if (post is! Tip)
+            SimpleDialogOption(
+              onPressed: () {
+                _replyPost(controller, post.id);
+                postListBack();
+              },
+              child: Text(
+                '回复该串',
+                style: TextStyle(
+                    fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
+              ),
             ),
-          ),
-          CopyPostId(post),
-          CopyPostReference(post),
+          if (post is! Tip) CopyPostId(post),
+          if (post is! Tip) CopyPostReference(post),
           CopyPostContent(post),
         ],
       );
@@ -119,7 +122,6 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
     final postListType = controller.postListType.value;
 
     return PopupMenuButton(
-      tooltip: '菜单',
       itemBuilder: (context) => [
         PopupMenuItem(
           onTap: () async {
@@ -128,10 +130,21 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
                   .addFeed(SettingsService.to.feedUuid, postId);
               showToast('订阅 ${postId.toPostNumber()} 成功');
             } catch (e) {
-              showToast('订阅 ${postId.toPostNumber()} 失败：$e');
+              showToast(
+                  '订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');
             }
           },
           child: const Text('订阅'),
+        ),
+        PopupMenuItem(
+          onTap: () => Future.delayed(
+              const Duration(milliseconds: 100),
+              () => AppRoutes.toEditPost(
+                  postListType: PostListType.forum,
+                  id: EditPost.dutyRoomId,
+                  content: '${postId.toPostReference()}\n',
+                  forumId: EditPost.dutyRoomId)),
+          child: const Text('举报'),
         ),
         if (postListType.isThread())
           PopupMenuItem(

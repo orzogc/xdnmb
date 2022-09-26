@@ -11,6 +11,7 @@ import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
+import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
 import '../utils/navigation.dart';
@@ -53,7 +54,7 @@ class _FeedKey {
 PostListController feedController(Map<String, String?> parameters) =>
     PostListController(
         postListType: PostListType.feed,
-        page: int.tryParse(parameters['page'] ?? '1') ?? 1);
+        page: parameters['page'].tryParseInt() ?? 1);
 
 class FeedAppBarTitle extends StatelessWidget {
   const FeedAppBarTitle({super.key});
@@ -84,7 +85,8 @@ class _FeedDialog extends StatelessWidget {
                 showToast('取消订阅 ${post.id.toPostNumber()} 成功');
                 onDelete();
               } catch (e) {
-                showToast('取消订阅 ${post.id.toPostNumber()} 失败：$e');
+                showToast(
+                    '取消订阅 ${post.id.toPostNumber()} 失败：${exceptionMessage(e)}');
               }
             },
             child: Text(

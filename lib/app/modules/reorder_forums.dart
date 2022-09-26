@@ -8,6 +8,7 @@ import '../data/services/forum.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../utils/exception.dart';
+import '../utils/extensions.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
@@ -38,11 +39,9 @@ class _AddForum extends StatelessWidget {
                 autofocus: true,
                 keyboardType: TextInputType.number,
                 onSaved: (newValue) => id = newValue,
-                validator: (value) => (value == null ||
-                        value.isEmpty ||
-                        int.tryParse(value) == null)
+                validator: (value) => value.tryParseInt() == null
                     ? '请输入板块ID数字'
-                    : (forms.forum(int.parse(value)) != null
+                    : (forms.forum(int.parse(value!)) != null
                         ? '已有该板块ID'
                         : null),
               ),
