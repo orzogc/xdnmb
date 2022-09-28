@@ -5,6 +5,7 @@ import '../modules/cookie.dart';
 import '../modules/drafts.dart';
 import '../modules/edit_post.dart';
 import '../modules/image.dart';
+import '../modules/paint.dart';
 import '../modules/reorder_forums.dart';
 import '../modules/settings.dart';
 
@@ -83,6 +84,12 @@ abstract class AppPages {
       page: () => const PostDraftsView(),
       binding: PostDraftsBinding(),
       transition: Transition.rightToLeft);
+
+  static final GetPage paint = GetPage(
+      name: AppRoutes.paint,
+      page: () => PaintView(),
+      binding: PaintBinding(),
+      transition: Transition.rightToLeft);
 }
 
 List<GetPage> getPages = [
@@ -97,4 +104,5 @@ List<GetPage> getPages = [
   AppPages.reorderForumList,
   AppPages.editPost,
   AppPages.postDrafts,
+  AppPages.paint,
 ];

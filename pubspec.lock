@@ -261,7 +261,7 @@ packages:
       name: file_picker
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "5.2.0"
+    version: "5.2.0+1"
   fixnum:
     dependency: transitive
     description:
@@ -501,6 +501,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.0.1"
+  image_painter:
+    dependency: "direct main"
+    description:
+      name: image_painter
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.4.6"
   infinite_scroll_pagination:
     dependency: "direct main"
     description:
@@ -607,7 +614,7 @@ packages:
     source: hosted
     version: "1.8.0"
   mime:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: mime
       url: "https://pub.dartlang.org"

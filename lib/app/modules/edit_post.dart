@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -20,6 +22,8 @@ class EditPostController extends GetxController {
 
   final String? imagePath;
 
+  final Uint8List? imageData;
+
   final bool? isWatermark;
 
   final String? reportReason;
@@ -32,6 +36,7 @@ class EditPostController extends GetxController {
       this.name,
       this.content,
       this.imagePath,
+      this.imageData,
       this.isWatermark,
       this.reportReason});
 
@@ -58,6 +63,7 @@ class EditPostBinding implements Bindings {
       name: Get.parameters['name'],
       content: Get.parameters['content'],
       imagePath: Get.parameters['imagePath'],
+      imageData: Get.arguments != null ? Get.arguments as Uint8List : null,
       isWatermark: Get.parameters['isWatermark'].tryParseBool(),
       reportReason: Get.parameters['reportReason'],
     ));

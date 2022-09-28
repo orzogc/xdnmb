@@ -80,19 +80,17 @@ class _DrawerHeader extends StatelessWidget {
         margin: null,
         padding: const EdgeInsets.symmetric(horizontal: 10.0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Expanded(
-              child: Text(
-                'X岛匿名版',
-                style: (theme.appBarTheme.titleTextStyle ??
-                        theme.textTheme.headline6)
-                    ?.apply(
-                  color: theme.appBarTheme.foregroundColor ??
-                      theme.colorScheme.onPrimary,
-                ),
+            Text(
+              'X岛匿名版',
+              style: (theme.appBarTheme.titleTextStyle ??
+                      theme.textTheme.headline6)
+                  ?.apply(
+                color: theme.appBarTheme.foregroundColor ??
+                    theme.colorScheme.onPrimary,
               ),
             ),
+            const Spacer(),
             Get.isDarkMode
                 ? IconButton(
                     onPressed: () => settings.isDarkMode = false,

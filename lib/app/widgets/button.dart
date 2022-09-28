@@ -47,7 +47,7 @@ class _JumpPageDialogState extends State<_JumpPageDialog> {
           children: [
             IconButton(
                 onPressed: () => _controller.text = '1',
-                icon: const Icon(Icons.keyboard_double_arrow_left)),
+                icon: const Icon(Icons.first_page)),
             SizedBox(
               width: 80,
               child: TextFormField(
@@ -78,7 +78,7 @@ class _JumpPageDialogState extends State<_JumpPageDialog> {
                   }
                 }
               },
-              icon: const Icon(Icons.keyboard_double_arrow_right),
+              icon: const Icon(Icons.last_page),
             ),
           ],
         ),

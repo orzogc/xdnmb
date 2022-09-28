@@ -66,3 +66,16 @@ extension TextEditingControllerExtension on TextEditingController {
     }
   }
 }
+
+extension ImageTypeExtension on ImageType {
+  String extension() {
+    switch (this) {
+      case ImageType.jpeg:
+        return 'jpg';
+      case ImageType.png:
+        return 'png';
+      case ImageType.gif:
+        return 'gif';
+    }
+  }
+}

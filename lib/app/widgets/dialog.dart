@@ -87,7 +87,7 @@ class ConfirmCancelDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.subtitle1;
+    final fontSize = Theme.of(context).textTheme.subtitle1?.fontSize;
 
     return AlertDialog(
       actionsPadding: const EdgeInsets.only(right: 10.0, bottom: 10.0),
@@ -100,12 +100,12 @@ class ConfirmCancelDialog extends StatelessWidget {
               if (onCancel != null)
                 TextButton(
                   onPressed: onCancel!,
-                  child: Text('取消', style: textStyle),
+                  child: Text('取消', style: TextStyle(fontSize: fontSize)),
                 ),
               if (onConfirm != null)
                 TextButton(
                   onPressed: onConfirm!,
-                  child: Text('确定', style: textStyle),
+                  child: Text('确定', style: TextStyle(fontSize: fontSize)),
                 ),
             ]
           : null,
@@ -165,7 +165,7 @@ class NoticeDialog extends StatelessWidget {
             }
             postListBack();
           },
-          child: Text('确定', style: textStyle),
+          child: Text('确定', style: TextStyle(fontSize: textStyle?.fontSize)),
         )
       ],
     );
@@ -223,7 +223,12 @@ class ForumRuleDialog extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => postListBack(),
-              child: Text('确定', style: Theme.of(context).textTheme.subtitle1),
+              child: Text(
+                '确定',
+                style: TextStyle(
+                  fontSize: Theme.of(context).textTheme.subtitle1?.fontSize,
+                ),
+              ),
             )
           ],
         );

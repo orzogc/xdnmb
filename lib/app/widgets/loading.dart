@@ -56,8 +56,8 @@ Widget loadingImageIndicatorBuilder(BuildContext context, String url,
 }
 
 Widget loadingImageErrorBuilder(
-    BuildContext context, String url, dynamic error) {
-  debugPrint('图片 $url 加载失败: $error');
+    BuildContext context, String? url, dynamic error) {
+  debugPrint(url != null ? '图片 $url 加载失败: $error' : '图片加载失败: $error');
 
   return const Center(
     child: Text(

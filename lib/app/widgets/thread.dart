@@ -91,15 +91,15 @@ class _ThreadDialog extends StatelessWidget {
   Widget build(BuildContext context) => SimpleDialog(
         title: Text(post.toPostNumber()),
         children: [
-          if (post is! Tip) Report(post),
           if (post is! Tip)
             SimpleDialogOption(
               onPressed: () {
                 _replyPost(controller, post.id);
                 postListBack();
               },
-              child: Text('回复该串', style: Theme.of(context).textTheme.subtitle1),
+              child: Text('回复', style: Theme.of(context).textTheme.subtitle1),
             ),
+          if (post is! Tip) Report(post),
           if (post is! Tip) CopyPostId(post),
           if (post is! Tip) CopyPostReference(post),
           CopyPostContent(post),
@@ -133,13 +133,14 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
           child: const Text('订阅'),
         ),
         PopupMenuItem(
-          onTap: () => Future.delayed(
-              const Duration(milliseconds: 100),
-              () => AppRoutes.toEditPost(
-                  postListType: PostListType.forum,
-                  id: EditPost.dutyRoomId,
-                  content: '${postId.toPostReference()}\n',
-                  forumId: EditPost.dutyRoomId)),
+          onTap: () =>
+              WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+            AppRoutes.toEditPost(
+                postListType: PostListType.forum,
+                id: EditPost.dutyRoomId,
+                content: '${postId.toPostReference()}\n',
+                forumId: EditPost.dutyRoomId);
+          }),
           child: const Text('举报'),
         ),
         if (postListType.isThread())

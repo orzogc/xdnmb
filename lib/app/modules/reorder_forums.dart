@@ -201,7 +201,7 @@ class _ForumsState extends State<_Forums> {
                             _displayedForums.removeAt(index);
                           });
                         }
-                        showToast('删除板块 ${span.toPlainText()} 成功');
+                        showToast('删除板块 $forumName 成功');
                       },
                     ),
                   IconButton(
@@ -276,7 +276,7 @@ class _ForumsState extends State<_Forums> {
                               _hiddenForums.removeAt(index);
                             });
                           }
-                          showToast('删除板块 ${span.toPlainText()} 成功');
+                          showToast('删除板块 $forumName 成功');
                         },
                       ),
                     IconButton(

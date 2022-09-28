@@ -55,7 +55,7 @@ class _PostTime extends StatelessWidget {
   const _PostTime(this.postTime, {super.key});
 
   @override
-  Widget build(BuildContext context) => Text(formatTime(postTime));
+  Widget build(BuildContext context) => Text(postFormatTime(postTime));
 }
 
 typedef OnPostIdCallback = void Function(int postId);

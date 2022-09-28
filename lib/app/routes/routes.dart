@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../modules/image.dart';
+import '../modules/paint.dart';
 import '../modules/post_list.dart';
 import '../utils/stack.dart';
 
@@ -42,6 +45,8 @@ abstract class AppRoutes {
 
   static const String postDrafts = '/${PathNames.postDrafts}';
 
+  static const String paint = '/${PathNames.paint}';
+
   // TODO: 404
   static const String notFound = '/${PathNames.notFound}';
 
@@ -67,7 +72,7 @@ abstract class AppRoutes {
       '$history?index=$index&page=$page';
 
   static Future<T?>? toForum<T>({required int forumId, int page = 1}) =>
-      Get.toNamed(
+      Get.toNamed<T>(
         forum,
         id: ControllerStack.getKeyId(),
         parameters: {
@@ -77,7 +82,7 @@ abstract class AppRoutes {
       );
 
   static Future<T?>? toTimeline<T>({required int timelineId, int page = 1}) =>
-      Get.toNamed(
+      Get.toNamed<T>(
         timeline,
         id: ControllerStack.getKeyId(),
         parameters: {
@@ -91,7 +96,7 @@ abstract class AppRoutes {
           int page = 1,
           int? jumpToId,
           PostBase? mainPost}) =>
-      Get.toNamed(
+      Get.toNamed<T>(
         thread,
         id: ControllerStack.getKeyId(),
         arguments: mainPost,
@@ -104,7 +109,7 @@ abstract class AppRoutes {
 
   static Future<T?>? toOnlyPoThread<T>(
           {required int mainPostId, int page = 1, PostBase? mainPost}) =>
-      Get.toNamed(
+      Get.toNamed<T>(
         onlyPoThread,
         id: ControllerStack.getKeyId(),
         arguments: mainPost,
@@ -114,13 +119,14 @@ abstract class AppRoutes {
         },
       );
 
-  static Future<T?>? toFeed<T>({int page = 1}) => Get.toNamed(
+  static Future<T?>? toFeed<T>({int page = 1}) => Get.toNamed<T>(
         feed,
         id: ControllerStack.getKeyId(),
         parameters: {'page': '$page'},
       );
 
-  static Future<T?>? toHistory<T>({int index = 0, int page = 1}) => Get.toNamed(
+  static Future<T?>? toHistory<T>({int index = 0, int page = 1}) =>
+      Get.toNamed<T>(
         history,
         id: ControllerStack.getKeyId(),
         parameters: {
@@ -130,13 +136,13 @@ abstract class AppRoutes {
       );
 
   static Future<T?>? toImage<T>(ImageController controller) =>
-      Get.toNamed(image, arguments: controller);
+      Get.toNamed<T>(image, arguments: controller);
 
-  static Future<T?>? toSettings<T>() => Get.toNamed(settings);
+  static Future<T?>? toSettings<T>() => Get.toNamed<T>(settings);
 
-  static Future<T?>? toUser<T>() => Get.toNamed(userPath);
+  static Future<T?>? toUser<T>() => Get.toNamed<T>(userPath);
 
-  static Future<T?>? toReorderForums<T>() => Get.toNamed(reorderForums);
+  static Future<T?>? toReorderForums<T>() => Get.toNamed<T>(reorderForums);
 
   static Future<T?>? toEditPost<T>(
           {required PostListType postListType,
@@ -146,9 +152,10 @@ abstract class AppRoutes {
           String? content,
           int? forumId,
           String? imagePath,
+          Uint8List? imageData,
           bool? isWatermark,
           String? reportReason}) =>
-      Get.toNamed(
+      Get.toNamed<T>(
         editPost,
         parameters: {
           'postListType': '${postListType.index}',
@@ -162,9 +169,13 @@ abstract class AppRoutes {
           if (reportReason != null && reportReason.isNotEmpty)
             'reportReason': reportReason,
         },
+        arguments: imageData,
       );
 
-  static Future<T?>? toPostDrafts<T>() => Get.toNamed(postDrafts);
+  static Future<T?>? toPostDrafts<T>() => Get.toNamed<T>(postDrafts);
+
+  static Future<T?>? toPaint<T>([PaintController? controller]) =>
+      Get.toNamed<T>(paint, arguments: controller);
 }
 
 abstract class PathNames {
@@ -195,4 +206,6 @@ abstract class PathNames {
   static const String postDrafts = 'postDrafts';
 
   static const String notFound = 'notFound';
+
+  static const String paint = 'paint';
 }

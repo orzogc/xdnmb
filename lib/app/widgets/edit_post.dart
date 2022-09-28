@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:align_positioned/align_positioned.dart';
 import 'package:file_picker/file_picker.dart';
@@ -24,10 +25,12 @@ import '../data/services/settings.dart';
 import '../data/services/user.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/edit_post.dart';
+import '../modules/paint.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
+import '../utils/filename.dart';
 import '../utils/icons.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -155,14 +158,16 @@ class _ReportReason extends StatelessWidget {
 
   final _ReportReasonCallback onReportReason;
 
-  late final RxnString _value = RxnString(reportReason);
+  final RxnString _value;
 
-  late final RxnString _userDefined = RxnString(
-      xdnmb_api.ReportReason.list.any((reason) => reason.reason == reportReason)
-          ? null
-          : reportReason);
+  final RxnString _userDefined;
 
-  _ReportReason({super.key, this.reportReason, required this.onReportReason});
+  _ReportReason({super.key, this.reportReason, required this.onReportReason})
+      : _value = RxnString(reportReason),
+        _userDefined = RxnString(xdnmb_api.ReportReason.list
+                .any((reason) => reason.reason == reportReason)
+            ? null
+            : reportReason);
 
   @override
   Widget build(BuildContext context) {
@@ -174,8 +179,8 @@ class _ReportReason extends StatelessWidget {
         children: [
           ChildSizeNotifier(
               builder: (context, size, child) {
-                Future.delayed(const Duration(milliseconds: 100),
-                    () => width.value = size.width);
+                WidgetsBinding.instance.addPostFrameCallback(
+                    (timeStamp) => width.value = size.width);
 
                 return child!;
               },
@@ -199,7 +204,8 @@ class _ReportReason extends StatelessWidget {
                 DropdownMenuItem(
                   value: _userDefined.value ?? '',
                   onTap: () {
-                    Future.delayed(const Duration(milliseconds: 100), () async {
+                    WidgetsBinding.instance
+                        .addPostFrameCallback((timeStamp) async {
                       final reason = await Get.dialog<String>(
                           _ReportReasonDialog(text: _userDefined.value));
                       if (reason != null && reason.isNotEmpty) {
@@ -293,7 +299,8 @@ class _WatermarkDialog extends StatelessWidget {
           },
           child: Text(
             '确定',
-            style: Theme.of(context).textTheme.subtitle1,
+            style: TextStyle(
+                fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
           ),
         ),
       ],
@@ -301,10 +308,14 @@ class _WatermarkDialog extends StatelessWidget {
   }
 }
 
+typedef _ImageCallback = void Function(Uint8List imageData);
+
 class _Image extends StatelessWidget {
   final double maxHeight;
 
-  final String path;
+  final String? imagePath;
+
+  final Uint8List? imageData;
 
   final bool isWatermark;
 
@@ -312,13 +323,45 @@ class _Image extends StatelessWidget {
 
   final _WatermarkCallback onWatermark;
 
+  final _ImageCallback onImageFileLoaded;
+
   const _Image(
       {super.key,
       required this.maxHeight,
-      required this.path,
+      this.imagePath,
+      this.imageData,
       required this.isWatermark,
       required this.onCancel,
-      required this.onWatermark});
+      required this.onWatermark,
+      required this.onImageFileLoaded})
+      : assert(imagePath != null || imageData != null);
+
+  Widget _memoryImage(Uint8List imageData) => Image.memory(
+        imageData,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) =>
+            loadingImageErrorBuilder(context, imagePath, error),
+      );
+
+  Widget _fileImage() => FutureBuilder<Uint8List>(
+        future: Future(() => File(imagePath!).readAsBytes()),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasError) {
+            showToast('读取图片出错：${snapshot.error!}');
+          }
+
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasData) {
+            WidgetsBinding.instance.addPostFrameCallback(
+                (timeStamp) => onImageFileLoaded(snapshot.data!));
+
+            return _memoryImage(snapshot.data!);
+          }
+
+          return const SizedBox.shrink();
+        },
+      );
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
@@ -330,12 +373,7 @@ class _Image extends StatelessWidget {
           container: GestureDetector(
             onLongPress: () => Get.dialog(_WatermarkDialog(
                 isWatermark: isWatermark, onWatermark: onWatermark)),
-            child: Image.file(
-              File(path),
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  loadingImageErrorBuilder(context, path, error),
-            ),
+            child: imageData != null ? _memoryImage(imageData!) : _fileImage(),
           ),
           child: ElevatedButton(
             onPressed: onCancel,
@@ -487,6 +525,28 @@ class _Dice extends StatelessWidget {
   }
 }
 
+class _Paint extends StatelessWidget {
+  final Uint8List? imageData;
+
+  final _ImageCallback onImage;
+
+  const _Paint({super.key, this.imageData, required this.onImage});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: () async {
+        final data = await AppRoutes.toPaint(
+            imageData != null ? PaintController(image: imageData) : null);
+        if (data is Uint8List) {
+          onImage(data);
+        }
+      },
+      icon: const Icon(Icons.brush),
+    );
+  }
+}
+
 typedef _GetText = String Function();
 
 class _SaveDraft extends StatelessWidget {
@@ -557,10 +617,16 @@ class _Cookie extends StatelessWidget {
                   ],
                 ),
               ),
-              child: Text(user.postCookie!.name),
+              child: Text(
+                user.postCookie!.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           )
         : const Text('没有饼干',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold));
   }
 }
@@ -574,7 +640,7 @@ class _Post extends StatelessWidget {
 
   final bool? isWatermark;
 
-  final String? imagePath;
+  final Uint8List? imageData;
 
   final String? reportReason;
 
@@ -591,7 +657,8 @@ class _Post extends StatelessWidget {
       required this.postList,
       this.forumId,
       this.isWatermark,
-      this.imagePath,
+      //this.imagePath,
+      this.imageData,
       this.reportReason,
       required this.getTitle,
       required this.getName,
@@ -680,7 +747,7 @@ class _Post extends StatelessWidget {
 
               var content = getContent();
 
-              if (content.isNotEmpty || imagePath != null) {
+              if (content.isNotEmpty || imageData != null) {
                 final client = XdnmbClientService.to.client;
 
                 final title = getTitle();
@@ -689,8 +756,11 @@ class _Post extends StatelessWidget {
 
                 Future(() async {
                   xdnmb_api.Image? image;
-                  if (imagePath != null) {
-                    image = await xdnmb_api.Image.fromFile(imagePath!);
+                  if (imageData != null) {
+                    image = getImage(imageData!);
+                    if (image == null) {
+                      throw ('无效的图片格式');
+                    }
                   }
 
                   if (postListType.isForumType()) {
@@ -1006,7 +1076,7 @@ class _EmoticonState extends State<_Emoticon> {
                           ),
                         TextButton(
                           style: buttonStyle,
-                          onPressed: () => Get.dialog(_EditEmoticon()),
+                          onPressed: () => Get.dialog(const _EditEmoticon()),
                           child: Text('自定义', style: textStyle),
                         ),
                       ],
@@ -1040,6 +1110,8 @@ class EditPost extends StatefulWidget {
 
   final String? imagePath;
 
+  final Uint8List? imageData;
+
   final bool? isWatermark;
 
   final String? reportReason;
@@ -1053,20 +1125,25 @@ class EditPost extends StatefulWidget {
       this.name,
       this.content,
       this.imagePath,
+      this.imageData,
       this.isWatermark,
       this.reportReason});
 
   EditPost.fromController(
-      {super.key, required EditPostController controller, this.height})
-      : postList =
-            PostList(postListType: controller.postListType, id: controller.id),
-        forumId = controller.forumId,
-        title = controller.title,
-        name = controller.name,
-        content = controller.content,
-        imagePath = controller.imagePath,
-        isWatermark = controller.isWatermark,
-        reportReason = controller.reportReason;
+      {Key? key, required EditPostController controller, double? height})
+      : this(
+            key: key,
+            postList: PostList(
+                postListType: controller.postListType, id: controller.id),
+            height: height,
+            forumId: controller.forumId,
+            title: controller.title,
+            name: controller.name,
+            content: controller.content,
+            imagePath: controller.imagePath,
+            imageData: controller.imageData,
+            isWatermark: controller.isWatermark,
+            reportReason: controller.reportReason);
 
   @override
   State<EditPost> createState() => EditPostState();
@@ -1082,6 +1159,8 @@ class EditPostState extends State<EditPost> {
   late final TextEditingController _contentController;
 
   late final RxnString _imagePath;
+
+  late final Rxn<Uint8List> _imageData;
 
   late final RxBool _isWatermark;
 
@@ -1171,19 +1250,21 @@ class EditPostState extends State<EditPost> {
                             content: _contentController.text,
                             forumId: _forumId.value,
                             imagePath: _imagePath.value,
+                            imageData: _imageData.value,
                             isWatermark: _isWatermark.value,
                             reportReason: _reportReason.value);
 
                         if (result is EditPostController && mounted) {
                           _forumId.value = result.forumId;
                           _imagePath.value = result.imagePath;
+                          _imageData.value = result.imageData;
                           _isWatermark.value = result.isWatermark ??
                               SettingsService.to.isWatermark;
+                          _reportReason.value = result.reportReason;
                           setState(() {
                             _titleController.text = result.title ?? '';
                             _nameController.text = result.name ?? '';
                             _contentController.text = result.content ?? '';
-                            _reportReason.value = result.reportReason;
                           });
                         } else if (result is bool && result) {
                           isPosted = true;
@@ -1239,14 +1320,21 @@ class EditPostState extends State<EditPost> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (_imagePath.value != null)
+                                if (_imagePath.value != null ||
+                                    _imageData.value != null)
                                   _Image(
                                       maxHeight: constraints.maxHeight,
-                                      path: _imagePath.value!,
+                                      imagePath: _imagePath.value,
+                                      imageData: _imageData.value,
                                       isWatermark: _isWatermark.value,
-                                      onCancel: () => _imagePath.value = null,
+                                      onCancel: () {
+                                        _imagePath.value = null;
+                                        _imageData.value = null;
+                                      },
                                       onWatermark: (isWatermark) =>
-                                          _isWatermark.value = isWatermark),
+                                          _isWatermark.value = isWatermark,
+                                      onImageFileLoaded: (imageData) =>
+                                          _imageData.value = imageData),
                                 if (_imagePath.value != null)
                                   const SizedBox(width: 10.0),
                                 Expanded(
@@ -1286,6 +1374,15 @@ class EditPostState extends State<EditPost> {
                   _imagePath.value = path;
                 }),
                 _Dice(onDice: insertText),
+                Obx(
+                  () => _Paint(
+                    imageData: _imageData.value,
+                    onImage: (imageData) {
+                      _imagePath.value = null;
+                      _imageData.value = imageData;
+                    },
+                  ),
+                ),
                 _SaveDraft(
                   getTitle: () => _titleController.text,
                   getName: () => _nameController.text,
@@ -1302,14 +1399,14 @@ class EditPostState extends State<EditPost> {
                     postList: widget.postList,
                     forumId: _forumId.value,
                     isWatermark: _isWatermark.value,
-                    imagePath: _imagePath.value,
+                    imageData: _imageData.value,
                     reportReason: _reportReason.value,
                     getTitle: () => _titleController.text,
                     getName: () => _nameController.text,
                     getContent: () => _contentController.text,
                     onPost: () => isPosted = true,
                   ),
-                )
+                ),
               ],
             ),
           ],
@@ -1334,15 +1431,9 @@ class EditPostState extends State<EditPost> {
     }
 
     _forumId = RxnInt(widget.forumId);
-
     _imagePath = RxnString(widget.imagePath);
-
-    if (widget.isWatermark != null) {
-      _isWatermark = widget.isWatermark!.obs;
-    } else {
-      _isWatermark = SettingsService.to.isWatermark.obs;
-    }
-
+    _imageData = Rxn(widget.imageData);
+    _isWatermark = (widget.isWatermark ?? SettingsService.to.isWatermark).obs;
     _reportReason = RxnString(widget.reportReason);
   }
 

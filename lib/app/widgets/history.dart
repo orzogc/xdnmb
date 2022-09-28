@@ -347,7 +347,7 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
                                 children: [
                                   Flexible(
                                     child: Text(
-                                      '最后浏览时间：${formatTime(browse.browseTime)}',
+                                      '最后浏览时间：${postFormatTime(browse.browseTime)}',
                                     ),
                                   ),
                                   if (browsePage != null &&

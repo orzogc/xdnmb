@@ -8,7 +8,9 @@ const List<String> _sameYearFormat = [m, '/', d, ' ', H, ':', nn];
 
 const List<String> _sameDayFormat = [H, ':', nn];
 
-String formatTime(DateTime time) {
+const List<String> _imageFilenameFormat = [yyyy, mm, dd, HH, nn, ss];
+
+String postFormatTime(DateTime time) {
   final now = TimeService.to.now;
   final localTime = time.toLocal();
 
@@ -20,3 +22,5 @@ String formatTime(DateTime time) {
               ? _sameYearFormat
               : _sameDayFormat));
 }
+
+String imageFilenameTime() => formatDate(DateTime.now(), _imageFilenameFormat);
