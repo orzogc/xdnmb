@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -8,13 +9,19 @@ import 'package:path/path.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/services/image.dart';
+import '../routes/routes.dart';
 import '../utils/cache.dart';
+import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
+import '../utils/image.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
+import '../widgets/dialog.dart';
+import '../widgets/image.dart';
 import '../widgets/loading.dart';
 import '../widgets/post.dart';
 import '../widgets/size.dart';
+import 'paint.dart';
 
 const Duration _overlayDuration = Duration(milliseconds: 300);
 
@@ -85,50 +92,83 @@ class _TopOverlay extends StatelessWidget {
 class _BottomOverlay extends StatelessWidget {
   final GlobalKey<_ImageState> imageKey;
 
-  final PostBase post;
+  final PostBase? post;
 
-  final RxBool isLoaded;
+  final Uint8List? imageData;
+
+  final bool isPainted;
+
+  final bool canReturnImageData;
+
+  final ImageDataCallback onPaint;
 
   final RxBool _isShowed = false.obs;
 
   _BottomOverlay(
       {super.key,
       required this.imageKey,
-      required this.post,
-      required this.isLoaded});
+      this.post,
+      this.imageData,
+      required this.isPainted,
+      this.canReturnImageData = false,
+      required this.onPaint})
+      : assert((post != null && imageData == null) ||
+            (post == null && imageData != null));
 
   void toggle() => _isShowed.value = !_isShowed.value;
 
-  Future<void> saveImage() async {
-    if (isLoaded.value) {
+  Future<Uint8List?> _loadImage() async {
+    if (imageKey.currentState != null) {
+      if (post != null) {
+        final manager = XdnmbImageCacheManager();
+        final info = await manager.getFileFromCache(post!.imageUrl()!);
+        if (info != null) {
+          return await info.file.readAsBytes();
+        } else {
+          showToast('读取缓存图片数据失败');
+        }
+      } else {
+        return imageData!;
+      }
+    }
+
+    return null;
+  }
+
+  Future<void> _saveImage() async {
+    if (imageKey.currentState != null) {
       final image = ImageService.to;
       if (image.savePath != null) {
-        final fileName = post.imageFile()!.replaceAll('/', '-');
-        final path = join(image.savePath!, fileName);
-        final manager = XdnmbImageCacheManager();
-
         try {
-          final info = await manager.getFileFromCache(post.imageUrl()!);
+          if (post != null) {
+            final fileName = post!.imageFile()!.replaceAll('/', '-');
+            final path = join(image.savePath!, fileName);
+            final manager = XdnmbImageCacheManager();
 
-          final imageFile = File(path);
-          if (await imageFile.exists()) {
-            var isSame = true;
-            if (info != null) {
-              if (await info.file.length() != await imageFile.length()) {
-                isSame = false;
+            final info = await manager.getFileFromCache(post!.imageUrl()!);
+
+            final file = File(path);
+            if (await file.exists()) {
+              var isSame = true;
+              if (info != null) {
+                if (await info.file.length() != await file.length()) {
+                  isSame = false;
+                }
+              }
+              if (isSame) {
+                showToast('该图片已经保存在 ${image.savePath}');
+                return;
               }
             }
-            if (isSame) {
-              showToast('该图片已经保存在 ${image.savePath}');
-              return;
-            }
-          }
 
-          if (info != null) {
-            await info.file.copy(path);
-            showToast('图片保存在 ${image.savePath}');
+            if (info != null) {
+              await info.file.copy(path);
+              showToast('图片保存在 ${image.savePath}');
+            } else {
+              showToast('读取缓存图片数据失败');
+            }
           } else {
-            showToast('获取缓存图片失败');
+            saveImageData(imageData!);
           }
         } catch (e) {
           showToast('保存图片失败：$e');
@@ -163,37 +203,68 @@ class _BottomOverlay extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              BackButton(
-                  onPressed: () => Get.back(), color: AppTheme.colorDark),
-              IconButton(
-                  onPressed: () {
-                    final size = MediaQuery.of(context).size / 2.0;
-                    imageKey.currentState!
-                        ._animateScaleUp(size.width, size.height);
-                  },
-                  icon: Icon(Icons.zoom_in, color: AppTheme.colorDark)),
-              IconButton(
-                  onPressed: () {
-                    final size = MediaQuery.of(context).size / 2.0;
-                    imageKey.currentState!
-                        ._animateScaleDown(size.width, size.height);
-                  },
-                  icon: Icon(Icons.zoom_out, color: AppTheme.colorDark)),
-              IconButton(
-                  onPressed: () => imageKey.currentState!._rotate(context),
-                  icon: Icon(Icons.rotate_right, color: AppTheme.colorDark)),
-              IconButton(
-                onPressed: saveImage,
-                icon: Icon(Icons.save_alt, color: AppTheme.colorDark),
-              ),
+              Flexible(
+                  child: BackButton(
+                      onPressed: () => Get.maybePop(),
+                      color: AppTheme.colorDark)),
+              Flexible(
+                  child: IconButton(
+                      onPressed: () {
+                        final size = MediaQuery.of(context).size / 2.0;
+                        imageKey.currentState
+                            ?._animateScaleUp(size.width, size.height);
+                      },
+                      icon: Icon(Icons.zoom_in, color: AppTheme.colorDark))),
+              Flexible(
+                  child: IconButton(
+                      onPressed: () {
+                        final size = MediaQuery.of(context).size / 2.0;
+                        imageKey.currentState
+                            ?._animateScaleDown(size.width, size.height);
+                      },
+                      icon: Icon(Icons.zoom_out, color: AppTheme.colorDark))),
+              Flexible(
+                  child: IconButton(
+                      onPressed: () => imageKey.currentState?._rotate(context),
+                      icon:
+                          Icon(Icons.rotate_right, color: AppTheme.colorDark))),
+              Flexible(
+                  child: IconButton(
+                      onPressed: () async {
+                        final data = await _loadImage();
+                        if (data != null) {
+                          final result =
+                              await AppRoutes.toPaint(PaintController(data));
+                          if (result is Uint8List) {
+                            onPaint(result);
+                          }
+                        }
+                      },
+                      icon: Icon(Icons.brush, color: AppTheme.colorDark))),
+              Flexible(
+                  child: IconButton(
+                      onPressed: _saveImage,
+                      icon: Icon(Icons.save_alt, color: AppTheme.colorDark))),
+              if (isPainted && canReturnImageData)
+                Flexible(
+                  child: IconButton(
+                    onPressed: () {
+                      Get.back<Uint8List>(result: imageData);
+                    },
+                    icon: Icon(
+                      Icons.check,
+                      color: AppTheme.colorDark,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
       );
 }
 
-class _Image extends StatefulWidget {
-  final CachedNetworkImageProvider provider;
+class _Image<T extends Object> extends StatefulWidget {
+  final ImageProvider<T> provider;
 
   const _Image({super.key, required this.provider});
 
@@ -210,6 +281,8 @@ class _ImageState extends State<_Image>
 
   late final AnimationController _animationController;
 
+  int _rotationCount = 0;
+
   void _onAnimate() {
     _transformationController.value = _animation!.value;
 
@@ -220,25 +293,20 @@ class _ImageState extends State<_Image>
     }
   }
 
-  void _animateReset() {
-    if (!_animationController.isAnimating) {
-      _animationController.reset();
-      _animation = Matrix4Tween(
-              begin: _transformationController.value, end: Matrix4.identity())
-          .animate(_animationController);
-      _animation!.addListener(_onAnimate);
-      _animationController.forward();
-    }
-  }
-
   void _animateScaleUp(double x, double y) {
     if (!_animationController.isAnimating) {
       _animationController.reset();
+      final translation = _transformationController.value.getTranslation();
+      final scale = _transformationController.value.getMaxScaleOnAxis();
+
       _animation = Matrix4Tween(
         begin: _transformationController.value,
-        end: Matrix4.copy(_transformationController.value)
-          ..scale(2.0, 2.0, 2.0)
-          ..translate(-x / 2.0, -y / 2.0),
+        end: _transformationController.value.clone()
+          ..rotateZ(-pi / 2.0 * _rotationCount)
+          ..translate(
+              (-x + translation.x) / scale, (-y + translation.y) / scale)
+          ..scale(2.0, 2.0)
+          ..rotateZ(pi / 2.0 * _rotationCount),
       ).animate(_animationController);
       _animation!.addListener(_onAnimate);
       _animationController.forward();
@@ -248,18 +316,24 @@ class _ImageState extends State<_Image>
   void _animateScaleDown(double x, double y) {
     if (!_animationController.isAnimating) {
       _animationController.reset();
+      final translation = _transformationController.value.getTranslation();
+      final scale = _transformationController.value.getMaxScaleOnAxis();
+
       _animation = Matrix4Tween(
         begin: _transformationController.value,
-        end: Matrix4.copy(_transformationController.value)
-          ..scale(0.5, 0.5, 0.5)
-          ..translate(x, y),
+        end: _transformationController.value.clone()
+          ..rotateZ(-pi / 2.0 * _rotationCount)
+          ..translate((x - translation.x) / (scale * 2.0),
+              (y - translation.y) / (scale * 2.0))
+          ..scale(0.5, 0.5)
+          ..rotateZ(pi / 2.0 * _rotationCount),
       ).animate(_animationController);
       _animation!.addListener(_onAnimate);
       _animationController.forward();
     }
   }
 
-  void _animateStop() {
+  void _stopAnimate() {
     _animationController.stop();
     _animation?.removeListener(_onAnimate);
     _animation = null;
@@ -268,13 +342,20 @@ class _ImageState extends State<_Image>
 
   void _rotate(BuildContext context) {
     if (!_animationController.isAnimating) {
+      _animationController.reset();
       final size = MediaQuery.of(context).size / 2.0;
+      final translation = _transformationController.value.getTranslation();
+      final scale = _transformationController.value.getMaxScaleOnAxis();
 
-      _transformationController.value =
-          Matrix4.copy(_transformationController.value)
-            ..translate(size.width, size.height)
-            ..rotateZ(pi / 2.0)
-            ..translate(-size.width, -size.height);
+      _transformationController.value = _transformationController.value.clone()
+        ..rotateZ(-pi / 2.0 * _rotationCount)
+        ..translate((size.width - translation.x) / scale,
+            (size.height - translation.y) / scale)
+        ..rotateZ(pi / 2.0)
+        ..translate((-size.width + translation.x) / scale,
+            (-size.height + translation.y) / scale)
+        ..rotateZ(pi / 2.0 * _rotationCount);
+      _rotationCount++;
     }
   }
 
@@ -288,8 +369,7 @@ class _ImageState extends State<_Image>
 
   @override
   void dispose() {
-    _animation?.removeListener(_onAnimate);
-    _animation = null;
+    _stopAnimate();
 
     _transformationController.dispose();
     _animationController.dispose();
@@ -300,16 +380,19 @@ class _ImageState extends State<_Image>
   @override
   Widget build(BuildContext context) {
     Offset? position;
+    bool toScaleUp = true;
 
     return GestureDetector(
       onDoubleTapDown: (details) => position = details.globalPosition,
       onDoubleTap: () {
-        if (_transformationController.value == Matrix4.identity()) {
-          if (position != null) {
+        if (position != null) {
+          if (toScaleUp) {
             _animateScaleUp(position!.dx, position!.dy);
+            toScaleUp = false;
+          } else {
+            _animateScaleDown(position!.dx, position!.dy);
+            toScaleUp = true;
           }
-        } else {
-          _animateReset();
         }
       },
       child: SizedBox.expand(
@@ -317,9 +400,10 @@ class _ImageState extends State<_Image>
           transformationController: _transformationController,
           boundaryMargin: const EdgeInsets.all(double.infinity),
           maxScale: 10.0,
+          minScale: 1.0,
           onInteractionStart: (details) {
             if (_animationController.isAnimating) {
-              _animateStop();
+              _stopAnimate();
             }
           },
           child: Image(
@@ -334,11 +418,26 @@ class _ImageState extends State<_Image>
 class ImageController extends GetxController {
   final UniqueKey tag;
 
-  final PostBase post;
+  final Rxn<PostBase> post;
 
   final String? poUserHash;
 
-  ImageController({required this.tag, required this.post, this.poUserHash});
+  final Rxn<Uint8List> imageData;
+
+  final bool canReturnImageData;
+
+  bool _isPainted = false;
+
+  ImageController(
+      {required this.tag,
+      PostBase? post,
+      this.poUserHash,
+      Uint8List? imageData,
+      this.canReturnImageData = false})
+      : assert((post != null && imageData == null) ||
+            (post == null && imageData != null)),
+        post = Rxn(post),
+        imageData = Rxn(imageData);
 }
 
 class ImageBinding implements Bindings {
@@ -355,62 +454,113 @@ class ImageView extends GetView<ImageController> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoaded = false.obs;
     const quotation = Quotation();
-    final topOverlay =
-        _TopOverlay(post: controller.post, poUserHash: controller.poUserHash);
-    final bottomOverlay = _BottomOverlay(
-        imageKey: _imageKey, post: controller.post, isLoaded: isLoaded);
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          GestureDetector(
-            onTap: () {
-              topOverlay.toggle();
-              bottomOverlay.toggle();
+    return WillPopScope(
+      onWillPop: () async {
+        if (controller._isPainted) {
+          final result = await Get.dialog<bool>(SaveImageDialog(
+            onSave: () async {
+              await saveImageData(controller.imageData.value!);
+              Get.back(result: true);
             },
-            onSecondaryTap: () => Get.back(),
-            child: Center(
-              child: CachedNetworkImage(
-                imageUrl: controller.post.imageUrl()!,
-                cacheManager: XdnmbImageCacheManager(),
-                progressIndicatorBuilder: (context, url, progress) =>
-                    loadingImageIndicatorBuilder(
-                  context,
-                  url,
-                  progress,
-                  quotation,
-                  () => Obx(
-                    () => !isLoaded.value
-                        ? Hero(
-                            tag: controller.tag,
-                            child: CachedNetworkImage(
-                              imageUrl: controller.post.thumbImageUrl()!,
-                              cacheManager: XdnmbImageCacheManager(),
+            onNotSave: () => Get.back(result: true),
+          ));
+
+          return result ?? false;
+        }
+
+        return true;
+      },
+      child: Obx(
+        () {
+          final isLoaded = (controller.imageData.value != null).obs;
+
+          _TopOverlay? topOverlay;
+          if (controller.post.value != null) {
+            topOverlay = _TopOverlay(
+                post: controller.post.value!,
+                poUserHash: controller.poUserHash);
+          }
+
+          final bottomOverlay = _BottomOverlay(
+              imageKey: _imageKey,
+              post: controller.post.value,
+              imageData: controller.imageData.value,
+              isPainted: controller._isPainted,
+              canReturnImageData: controller.canReturnImageData,
+              onPaint: (imageData) {
+                controller.post.value = null;
+                controller.imageData.value = imageData;
+                controller._isPainted = true;
+              });
+
+          return Scaffold(
+            backgroundColor: Colors.black,
+            body: Stack(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    topOverlay?.toggle();
+                    bottomOverlay.toggle();
+                  },
+                  onSecondaryTap: () => Get.maybePop(),
+                  child: Center(
+                    child: controller.post.value != null
+                        ? CachedNetworkImage(
+                            imageUrl: controller.post.value!.imageUrl()!,
+                            cacheManager: XdnmbImageCacheManager(),
+                            progressIndicatorBuilder:
+                                (context, url, progress) =>
+                                    loadingImageIndicatorBuilder(
+                              context,
+                              url,
+                              progress,
+                              quotation,
+                              () => Obx(
+                                () => !isLoaded.value
+                                    ? Hero(
+                                        tag: controller.tag,
+                                        child: CachedNetworkImage(
+                                          imageUrl: controller.post.value!
+                                              .thumbImageUrl()!,
+                                          cacheManager:
+                                              XdnmbImageCacheManager(),
+                                        ),
+                                      )
+                                    : const SizedBox.shrink(),
+                              ),
                             ),
+                            errorWidget: loadingImageErrorBuilder,
+                            imageBuilder: (context, imageProvider) {
+                              isLoaded.value = true;
+
+                              return Hero(
+                                tag: controller.tag,
+                                child: _Image<CachedNetworkImageProvider>(
+                                  key: _imageKey,
+                                  provider: imageProvider
+                                      as CachedNetworkImageProvider,
+                                ),
+                              );
+                            },
                           )
-                        : const SizedBox.shrink(),
+                        : Hero(
+                            tag: controller.tag,
+                            child: _Image<MemoryImage>(
+                              key: _imageKey,
+                              provider:
+                                  MemoryImage(controller.imageData.value!),
+                            ),
+                          ),
                   ),
                 ),
-                errorWidget: loadingImageErrorBuilder,
-                imageBuilder: (context, imageProvider) {
-                  isLoaded.value = true;
-
-                  return Hero(
-                    tag: controller.tag,
-                    child: _Image(
-                        key: _imageKey,
-                        provider: imageProvider as CachedNetworkImageProvider),
-                  );
-                },
-              ),
+                if (controller.post.value != null) topOverlay!,
+                bottomOverlay,
+              ],
             ),
-          ),
-          topOverlay,
-          bottomOverlay,
-        ],
+          );
+        },
       ),
     );
   }

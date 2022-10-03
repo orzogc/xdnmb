@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../modules/post_list.dart';
+import 'extensions.dart';
 import 'stack.dart';
 
 GlobalKey<NavigatorState>? postListkey([int? index]) =>
@@ -13,7 +14,7 @@ void postListBack<T>({
   bool canPop = true,
   int? index,
 }) =>
-    Get.back(
+    Get.maybePop(
         result: result,
         closeOverlays: closeOverlays,
         canPop: canPop,

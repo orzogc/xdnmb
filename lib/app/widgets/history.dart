@@ -368,9 +368,10 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
                             poUserHash: browse.userHash,
                             onHiddenText: (context, element, textStyle) =>
                                 onHiddenText(
-                                    context: context,
-                                    element: element,
-                                    textStyle: textStyle),
+                              context: context,
+                              element: element,
+                              textStyle: textStyle,
+                            ),
                           ),
                         ],
                       ),
@@ -634,9 +635,10 @@ class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
                               contentMaxLines: 8,
                               onHiddenText: (context, element, textStyle) =>
                                   onHiddenText(
-                                      context: context,
-                                      element: element,
-                                      textStyle: textStyle),
+                                context: context,
+                                element: element,
+                                textStyle: textStyle,
+                              ),
                             ),
                           ],
                         ),

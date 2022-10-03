@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
@@ -5,7 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_painter/image_painter.dart';
 
+import '../utils/image.dart';
 import '../utils/toast.dart';
+import '../widgets/dialog.dart';
+import '../widgets/image.dart';
 
 class _Text implements TextDelegate {
   @override
@@ -53,10 +57,52 @@ class _Text implements TextDelegate {
   const _Text();
 }
 
-class PaintController extends GetxController {
-  final Uint8List? image;
+typedef _ExportImageCallback = Future<Uint8List?> Function();
 
-  PaintController({this.image});
+class _SaveImage extends StatelessWidget {
+  final _ExportImageCallback exportImage;
+
+  const _SaveImage({super.key, required this.exportImage});
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+        onPressed: () async {
+          final data = await exportImage();
+          if (data != null) {
+            await saveImageData(data);
+          } else {
+            showToast('导出图片数据失败');
+          }
+        },
+        icon: const Icon(Icons.save),
+      );
+}
+
+class _Confirm extends StatelessWidget {
+  final _ExportImageCallback exportImage;
+
+  const _Confirm({super.key, required this.exportImage});
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+        onPressed: () async {
+          final data = await exportImage();
+          if (data != null) {
+            Get.back<Uint8List>(result: data);
+          } else {
+            showToast('导出图片数据失败');
+          }
+        },
+        icon: const Icon(Icons.check),
+      );
+}
+
+class PaintController extends GetxController {
+  final Rxn<Uint8List> image;
+
+  late GlobalKey<ImagePainterState> _painterKey;
+
+  PaintController([Uint8List? image]) : image = Rxn(image);
 }
 
 class PaintBinding implements Bindings {
@@ -68,32 +114,16 @@ class PaintBinding implements Bindings {
   }
 }
 
-typedef _ExportImageCallback = Future<Uint8List?> Function();
-
-class _Confirm extends StatelessWidget {
-  final _ExportImageCallback exportImage;
-
-  const _Confirm({super.key, required this.exportImage});
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: () async => Get.back<Uint8List>(result: await exportImage()),
-      icon: const Icon(Icons.check),
-    );
-  }
-}
-
 class PaintView extends GetView<PaintController> {
-  final GlobalKey<ImagePainterState> _painterKey =
-      GlobalKey<ImagePainterState>();
+  const PaintView({super.key});
 
-  PaintView({super.key});
+  Future<Uint8List?> _exportImage() async =>
+      await controller._painterKey.currentState?.exportImage();
 
-  Widget _painter(Uint8List image) =>
-      ImagePainter.memory(image, key: _painterKey, textDelegate: const _Text());
+  Widget _painter(Uint8List image) => ImagePainter.memory(image,
+      key: controller._painterKey, textDelegate: const _Text());
 
-  Widget _imagePainter() => _painter(controller.image!);
+  Widget _imagePainter() => _painter(controller.image.value!);
 
   Widget _blankPainter() => LayoutBuilder(
         builder: (context, constraints) => FutureBuilder<Uint8List>(
@@ -126,15 +156,51 @@ class PaintView extends GetView<PaintController> {
       );
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('涂鸦'),
-        actions: [
-          _Confirm(exportImage: () => _painterKey.currentState!.exportImage()),
-        ],
-      ),
-      body: controller.image != null ? _imagePainter() : _blankPainter(),
-    );
-  }
+  Widget build(BuildContext context) => WillPopScope(
+        onWillPop: () async {
+          if (controller._painterKey.currentState?.isEdited ?? false) {
+            final result = await Get.dialog<bool>(SaveImageDialog(
+              onSave: () async {
+                final data = await _exportImage();
+                if (data != null) {
+                  await saveImageData(data);
+                  Get.back(result: true);
+                } else {
+                  showToast('导出图片数据失败');
+                }
+              },
+              onNotSave: () => Get.back(result: true),
+            ));
+
+            return result ?? false;
+          }
+
+          return true;
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('涂鸦'),
+            actions: [
+              _SaveImage(exportImage: _exportImage),
+              PickImage(onPickImage: (path) async {
+                try {
+                  controller.image.value = await File(path).readAsBytes();
+                } catch (e) {
+                  showToast('读取图片出错：$e');
+                }
+              }),
+              _Confirm(exportImage: _exportImage),
+            ],
+          ),
+          body: Obx(
+            () {
+              controller._painterKey = GlobalKey<ImagePainterState>();
+
+              return controller.image.value != null
+                  ? _imagePainter()
+                  : _blankPainter();
+            },
+          ),
+        ),
+      );
 }

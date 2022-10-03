@@ -82,15 +82,26 @@ class ConfirmCancelDialog extends StatelessWidget {
 
   final VoidCallback? onCancel;
 
+  final String? confirmText;
+
+  final String? cancelText;
+
   const ConfirmCancelDialog(
-      {super.key, this.title, this.content, this.onConfirm, this.onCancel});
+      {super.key,
+      this.title,
+      this.content,
+      this.onConfirm,
+      this.onCancel,
+      this.confirmText,
+      this.cancelText});
 
   @override
   Widget build(BuildContext context) {
     final fontSize = Theme.of(context).textTheme.subtitle1?.fontSize;
 
     return AlertDialog(
-      actionsPadding: const EdgeInsets.only(right: 10.0, bottom: 10.0),
+      actionsPadding:
+          const EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
       title: title != null ? Text(title!) : null,
       content: content != null
           ? SingleChildScrollViewWithScrollbar(child: Text(content!))
@@ -100,12 +111,14 @@ class ConfirmCancelDialog extends StatelessWidget {
               if (onCancel != null)
                 TextButton(
                   onPressed: onCancel!,
-                  child: Text('取消', style: TextStyle(fontSize: fontSize)),
+                  child: Text(cancelText ?? '取消',
+                      style: TextStyle(fontSize: fontSize)),
                 ),
               if (onConfirm != null)
                 TextButton(
                   onPressed: onConfirm!,
-                  child: Text('确定', style: TextStyle(fontSize: fontSize)),
+                  child: Text(confirmText ?? '确定',
+                      style: TextStyle(fontSize: fontSize)),
                 ),
             ]
           : null,
@@ -354,5 +367,23 @@ class Report extends StatelessWidget {
               forumId: EditPost.dutyRoomId);
         },
         child: Text('举报', style: Theme.of(context).textTheme.subtitle1),
+      );
+}
+
+class SaveImageDialog extends StatelessWidget {
+  final VoidCallback onSave;
+
+  final VoidCallback onNotSave;
+
+  const SaveImageDialog(
+      {super.key, required this.onSave, required this.onNotSave});
+
+  @override
+  Widget build(BuildContext context) => ConfirmCancelDialog(
+        content: '保存图片？',
+        onConfirm: onSave,
+        onCancel: onNotSave,
+        confirmText: '保存',
+        cancelText: '不保存',
       );
 }

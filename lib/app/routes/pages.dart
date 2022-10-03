@@ -87,7 +87,7 @@ abstract class AppPages {
 
   static final GetPage paint = GetPage(
       name: AppRoutes.paint,
-      page: () => PaintView(),
+      page: () => const PaintView(),
       binding: PaintBinding(),
       transition: Transition.rightToLeft);
 }

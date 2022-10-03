@@ -23,7 +23,7 @@ class PostDraftData extends HiveObject {
             'text can\'t be all empty');
 
   PostDraftData.fromController(EditPostController controller)
-      : assert(controller.hasText(), 'text can\'t be all empty'),
+      : assert(controller.hasText, 'text can\'t be all empty'),
         title = controller.title,
         name = controller.name,
         content = controller.content;

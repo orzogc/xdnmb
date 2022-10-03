@@ -133,7 +133,7 @@ const BrowseHistorySchema = CollectionSchema(
   getId: _browseHistoryGetId,
   getLinks: _browseHistoryGetLinks,
   attach: _browseHistoryAttach,
-  version: '3.0.1',
+  version: '3.0.2',
 );
 
 int _browseHistoryEstimateSize(

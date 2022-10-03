@@ -40,10 +40,12 @@ class EditPostController extends GetxController {
       this.isWatermark,
       this.reportReason});
 
-  bool hasText() =>
+  bool get hasText =>
       (title?.isNotEmpty ?? false) ||
       (name?.isNotEmpty ?? false) ||
       (content?.isNotEmpty ?? false);
+
+  bool get isImagePainted => imagePath == null && imageData != null;
 }
 
 class EditPostBinding implements Bindings {

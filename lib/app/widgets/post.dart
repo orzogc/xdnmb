@@ -9,6 +9,7 @@ import '../utils/theme.dart';
 import '../utils/time.dart';
 import 'content.dart';
 import 'forum_name.dart';
+import 'image.dart';
 import 'scroll.dart';
 
 typedef PostGestureCallback = void Function(PostBase post);
@@ -210,7 +211,11 @@ class PostContent extends StatelessWidget {
 
   final OnTagCallback? onHiddenText;
 
+  final ImageDataCallback? onImagePainted;
+
   final bool displayImage;
+
+  final bool canReturnImageData;
 
   final bool isContentScrollable;
 
@@ -226,9 +231,13 @@ class PostContent extends StatelessWidget {
       this.poUserHash,
       this.onLinkTap,
       this.onHiddenText,
+      this.onImagePainted,
       this.displayImage = true,
+      this.canReturnImageData = false,
       this.isContentScrollable = false,
-      this.onPostIdTap});
+      this.onPostIdTap})
+      : assert(onImagePainted == null || displayImage),
+        assert(!canReturnImageData || (displayImage && onImagePainted != null));
 
   @override
   Widget build(BuildContext context) {
@@ -244,7 +253,9 @@ class PostContent extends StatelessWidget {
       maxLines: contentMaxLines,
       onLinkTap: onLinkTap,
       onHiddenText: onHiddenText,
+      onImagePainted: onImagePainted,
       displayImage: displayImage,
+      canReturnImageData: canReturnImageData,
     );
 
     return Padding(
@@ -317,11 +328,15 @@ class PostCard extends StatelessWidget {
 
   final OnTagCallback? onHiddenText;
 
+  final ImageDataCallback? onImagePainted;
+
   final MouseCursor? mouseCursor;
 
   final Color? hoverColor;
 
   final bool displayImage;
+
+  final bool canReturnImageData;
 
   final bool isContentScrollable;
 
@@ -339,11 +354,15 @@ class PostCard extends StatelessWidget {
       this.onLongPress,
       this.onLinkTap,
       this.onHiddenText,
+      this.onImagePainted,
       this.mouseCursor,
       this.hoverColor,
       this.displayImage = true,
+      this.canReturnImageData = false,
       this.isContentScrollable = false,
-      this.onPostIdTap});
+      this.onPostIdTap})
+      : assert(onImagePainted == null || displayImage),
+        assert(!canReturnImageData || (displayImage && onImagePainted != null));
 
   @override
   Widget build(BuildContext context) {
@@ -361,7 +380,9 @@ class PostCard extends StatelessWidget {
         poUserHash: poUserHash,
         onLinkTap: onLinkTap,
         onHiddenText: onHiddenText,
+        onImagePainted: onImagePainted,
         displayImage: displayImage,
+        canReturnImageData: canReturnImageData,
         isContentScrollable: isContentScrollable,
         onPostIdTap: onPostIdTap,
       ),

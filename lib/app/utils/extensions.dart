@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 const int _int32Max = 4294967295;
@@ -76,6 +77,36 @@ extension ImageTypeExtension on ImageType {
         return 'png';
       case ImageType.gif:
         return 'gif';
+    }
+  }
+}
+
+extension GetExtension on GetInterface {
+  void maybePop<T>({
+    T? result,
+    bool closeOverlays = false,
+    bool canPop = true,
+    int? id,
+  }) {
+    if (isSnackbarOpen && !closeOverlays) {
+      closeCurrentSnackbar();
+      return;
+    }
+
+    if (closeOverlays && isOverlaysOpen) {
+      if (isSnackbarOpen) {
+        closeAllSnackbars();
+      }
+      navigator?.popUntil((route) {
+        return (!isDialogOpen! && !isBottomSheetOpen!);
+      });
+    }
+    if (canPop) {
+      if (global(id).currentState?.canPop() == true) {
+        global(id).currentState?.maybePop<T>(result);
+      }
+    } else {
+      global(id).currentState?.maybePop<T>(result);
     }
   }
 }

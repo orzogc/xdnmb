@@ -13,6 +13,7 @@ import '../data/services/settings.dart';
 import '../data/services/user.dart';
 import '../modules/edit_post.dart';
 import '../routes/routes.dart';
+import '../utils/image.dart';
 import '../utils/navigation.dart';
 import '../utils/stack.dart';
 import '../utils/toast.dart';
@@ -390,8 +391,7 @@ Route buildRoute(PostListController controller) => GetPageRoute(
     );
 
 Widget buildNavigator(int index) {
-  final controller =
-      ControllerStack.getFirstController(index) as PostListController;
+  final controller = ControllerStack.getFirstController(index);
 
   debugPrint('build navigator: $index');
 
@@ -537,37 +537,56 @@ class _SaveDraftDialog extends StatelessWidget {
   const _SaveDraftDialog(this.controller, {super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      actionsPadding:
-          const EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
-      actionsAlignment: MainAxisAlignment.spaceBetween,
-      content: const Text('保存为草稿？'),
-      actions: [
-        TextButton(
-            onPressed: () => Get.back<bool>(result: true),
-            child: const Text('不保存')),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextButton(
-                onPressed: () => Get.back<bool>(result: false),
-                child: const Text('返回')),
-            TextButton(
-                onPressed: () async {
-                  await PostDraftsService.to
-                      .addDraft(PostDraftData.fromController(controller));
+  Widget build(BuildContext context) => AlertDialog(
+        actionsPadding:
+            const EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        content: (controller.hasText && controller.isImagePainted)
+            ? const Text('保存草稿或图片？')
+            : (controller.hasText ? const Text('保存草稿？') : const Text('保存图片？')),
+        actions: [
+          TextButton(
+              onPressed: () => Get.back<bool>(result: true),
+              child: const Text('关闭')),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                  onPressed: () => Get.back<bool>(result: false),
+                  child: const Text('返回')),
+              if (controller.isImagePainted)
+                TextButton(
+                  onPressed: () async {
+                    await saveImageData(controller.imageData!);
 
-                  showToast('已保存为草稿');
-                  return Get.back<bool>(result: true);
-                },
-                child: const Text('保存')),
-          ],
-        )
-      ],
-    );
-  }
+                    if (!controller.hasText) {
+                      Get.back<bool>(result: true);
+                    }
+                  },
+                  child: controller.hasText
+                      ? const Text('保存图片')
+                      : const Text('保存'),
+                ),
+              if (controller.hasText)
+                TextButton(
+                  onPressed: () async {
+                    await PostDraftsService.to
+                        .addDraft(PostDraftData.fromController(controller));
+                    showToast('已保存为草稿');
+
+                    if (!controller.isImagePainted) {
+                      Get.back<bool>(result: true);
+                    }
+                  },
+                  child: controller.isImagePainted
+                      ? const Text('保存草稿')
+                      : const Text('保存'),
+                ),
+            ],
+          ),
+        ],
+      );
 }
 
 class _PostListBottomSheet extends StatelessWidget {
@@ -663,7 +682,7 @@ class FloatingButtonState extends State<FloatingButton> {
         final isPosted = state.isPosted;
         if (!isPosted) {
           final controller = state.toController();
-          if (controller.hasText() &&
+          if ((controller.hasText || controller.isImagePainted) &&
               !(await Get.dialog<bool>(_SaveDraftDialog(controller)) ??
                   false)) {
             final controller_ = PostListController.get();

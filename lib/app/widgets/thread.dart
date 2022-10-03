@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
@@ -393,10 +394,13 @@ class _ThreadBodyState extends State<ThreadBody> {
                         canTap: true,
                         mainPostId: mainPost.value?.id,
                         poUserHash: mainPost.value?.userHash),
+                    onImagePainted: (imageData) =>
+                        _replyWithImage(widget.controller, imageData),
                     mouseCursor: SystemMouseCursors.basic,
                     hoverColor: Get.isDarkMode
                         ? theme.cardColor
                         : theme.scaffoldBackgroundColor,
+                    canReturnImageData: true,
                     onPostIdTap: post.post is! Tip
                         ? (postId) => _replyPost(widget.controller, postId)
                         : null,
@@ -538,11 +542,28 @@ void _replyPost(PostListController controller, int postId) {
       }
     } else {
       button.bottomSheet(EditPostController(
-        postListType: controller.postListType.value,
-        id: controller.id.value!,
-        forumId: controller.forumId,
-        content: text,
-      ));
+          postListType: controller.postListType.value,
+          id: controller.id.value!,
+          forumId: controller.forumId,
+          content: text));
+    }
+  }
+}
+
+void _replyWithImage(PostListController controller, Uint8List imageData) {
+  final button = FloatingButton.buttonKey.currentState;
+  if (button != null && button.mounted) {
+    if (button.hasBottomSheet) {
+      final bottomSheet = EditPost.bottomSheetkey.currentState;
+      if (bottomSheet != null && bottomSheet.mounted) {
+        bottomSheet.insertImage(imageData);
+      }
+    } else {
+      button.bottomSheet(EditPostController(
+          postListType: controller.postListType.value,
+          id: controller.id.value!,
+          forumId: controller.forumId,
+          imageData: imageData));
     }
   }
 }

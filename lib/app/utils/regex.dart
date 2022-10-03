@@ -32,7 +32,7 @@ abstract class Regex {
       try {
         return _parseHiddenTag(text);
       } catch (e) {
-        debugPrint('解析隐藏文字tag时出现错误：$e');
+        debugPrint('解析隐藏文字tag时出错：$e');
       }
     }
 

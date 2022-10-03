@@ -82,7 +82,11 @@ class Content extends StatefulWidget {
 
   final OnTagCallback? onHiddenText;
 
+  final ImageDataCallback? onImagePainted;
+
   final bool displayImage;
+
+  final bool canReturnImageData;
 
   const Content(
       {super.key,
@@ -91,7 +95,11 @@ class Content extends StatefulWidget {
       this.maxLines,
       this.onLinkTap,
       this.onHiddenText,
-      this.displayImage = true});
+      this.onImagePainted,
+      this.displayImage = true,
+      this.canReturnImageData = false})
+      : assert(onImagePainted == null || displayImage),
+        assert(!canReturnImageData || (displayImage && onImagePainted != null));
 
   @override
   State<Content> createState() => _ContentState();
@@ -155,7 +163,11 @@ class _ContentState extends State<Content> {
                               maxWidth: min(constraints.maxWidth / 3.0, 250.0),
                               maxHeight: 250.0),
                           child: ThumbImage(
-                              post: widget.post, poUserHash: widget.poUserHash),
+                            post: widget.post,
+                            poUserHash: widget.poUserHash,
+                            onImagePainted: widget.onImagePainted,
+                            canReturnImageData: widget.canReturnImageData,
+                          ),
                         ),
                       ),
                     ),

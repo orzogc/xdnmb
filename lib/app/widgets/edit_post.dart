@@ -3,12 +3,10 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:align_positioned/align_positioned.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:html_to_text/html_to_text.dart';
-import 'package:path/path.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' as xdnmb_api;
 
@@ -25,16 +23,18 @@ import '../data/services/settings.dart';
 import '../data/services/user.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/edit_post.dart';
+import '../modules/image.dart';
 import '../modules/paint.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/filename.dart';
+import '../utils/image.dart';
 import '../utils/icons.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'dialog.dart';
+import 'image.dart';
 import 'loading.dart';
 import 'scroll.dart';
 import 'size.dart';
@@ -308,8 +308,6 @@ class _WatermarkDialog extends StatelessWidget {
   }
 }
 
-typedef _ImageCallback = void Function(Uint8List imageData);
-
 class _Image extends StatelessWidget {
   final double maxHeight;
 
@@ -323,9 +321,13 @@ class _Image extends StatelessWidget {
 
   final _WatermarkCallback onWatermark;
 
-  final _ImageCallback onImageFileLoaded;
+  final ImageDataCallback onImageFileLoaded;
 
-  const _Image(
+  final ImageDataCallback onImagePainted;
+
+  final UniqueKey _tag = UniqueKey();
+
+  _Image(
       {super.key,
       required this.maxHeight,
       this.imagePath,
@@ -333,7 +335,8 @@ class _Image extends StatelessWidget {
       required this.isWatermark,
       required this.onCancel,
       required this.onWatermark,
-      required this.onImageFileLoaded})
+      required this.onImageFileLoaded,
+      required this.onImagePainted})
       : assert(imagePath != null || imageData != null);
 
   Widget _memoryImage(Uint8List imageData) => Image.memory(
@@ -371,9 +374,24 @@ class _Image extends StatelessWidget {
         child: AlignPositioned.relative(
           alignment: Alignment.topRight,
           container: GestureDetector(
+            onTap: imageData != null
+                ? () async {
+                    final result = await AppRoutes.toImage(ImageController(
+                        tag: _tag,
+                        imageData: imageData,
+                        canReturnImageData: true));
+                    if (result is Uint8List) {
+                      onImagePainted(result);
+                    }
+                  }
+                : null,
             onLongPress: () => Get.dialog(_WatermarkDialog(
                 isWatermark: isWatermark, onWatermark: onWatermark)),
-            child: imageData != null ? _memoryImage(imageData!) : _fileImage(),
+            child: Hero(
+              tag: _tag,
+              child:
+                  imageData != null ? _memoryImage(imageData!) : _fileImage(),
+            ),
           ),
           child: ElevatedButton(
             onPressed: onCancel,
@@ -403,49 +421,6 @@ class _ShowEmoticon extends StatelessWidget {
         }
       },
       icon: const Icon(Icons.insert_emoticon),
-    );
-  }
-}
-
-typedef _PickImageCallback = void Function(String path);
-
-class _PickImage extends StatelessWidget {
-  final _PickImageCallback onPickImage;
-
-  const _PickImage({super.key, required this.onPickImage});
-
-  @override
-  Widget build(BuildContext context) {
-    final data = PersistentDataService.to;
-
-    return IconButton(
-      onPressed: () async {
-        try {
-          final result = await FilePicker.platform.pickFiles(
-            dialogTitle: 'xdnmb',
-            initialDirectory:
-                (GetPlatform.isDesktop) ? data.pictureDirectory : null,
-            type: FileType.custom,
-            allowedExtensions: ['jif', 'jpeg', 'jpg', 'png'],
-            lockParentWindow: true,
-          );
-
-          if (result != null) {
-            final path = result.files.single.path;
-            if (path != null) {
-              if (GetPlatform.isDesktop) {
-                data.pictureDirectory = dirname(path);
-              }
-              onPickImage(path);
-            } else {
-              showToast('无法获取图片具体路径');
-            }
-          }
-        } catch (e) {
-          showToast('选择图片失败：$e');
-        }
-      },
-      icon: const Icon(Icons.image),
     );
   }
 }
@@ -528,7 +503,7 @@ class _Dice extends StatelessWidget {
 class _Paint extends StatelessWidget {
   final Uint8List? imageData;
 
-  final _ImageCallback onImage;
+  final ImageDataCallback onImage;
 
   const _Paint({super.key, this.imageData, required this.onImage});
 
@@ -537,7 +512,7 @@ class _Paint extends StatelessWidget {
     return IconButton(
       onPressed: () async {
         final data = await AppRoutes.toPaint(
-            imageData != null ? PaintController(image: imageData) : null);
+            imageData != null ? PaintController(imageData) : null);
         if (data is Uint8List) {
           onImage(data);
         }
@@ -588,6 +563,8 @@ class _Cookie extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = UserService.to;
+    final size =
+        _textSize(context, '啊啊啊啊啊啊啊', Theme.of(context).textTheme.bodyText2);
 
     return user.hasPostCookie
         ? ValueListenableBuilder<Box>(
@@ -617,10 +594,13 @@ class _Cookie extends StatelessWidget {
                   ],
                 ),
               ),
-              child: Text(
-                user.postCookie!.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: size.width),
+                child: Text(
+                  user.postCookie!.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
           )
@@ -685,7 +665,7 @@ class _Post extends StatelessWidget {
         }
       }
     } catch (e) {
-      showToast('获取发布的新串数据出现错误：${exceptionMessage(e)}');
+      showToast('获取发布的新串数据出错：${exceptionMessage(e)}');
     }
   }
 
@@ -725,7 +705,7 @@ class _Post extends StatelessWidget {
         await getPostId(id: id, reply: reply, page: page - 1);
       }
     } catch (e) {
-      showToast('获取回串数据出现错误：${exceptionMessage(e)}');
+      showToast('获取回串数据出错：${exceptionMessage(e)}');
     }
   }
 
@@ -1180,11 +1160,17 @@ class EditPostState extends State<EditPost> {
       name: _nameController.text,
       content: _contentController.text,
       imagePath: _imagePath.value,
+      imageData: _imageData.value,
       isWatermark: _isWatermark.value,
       reportReason: _reportReason.value);
 
   void insertText(String text, [int? offset]) =>
       _contentController.insertText(text, offset);
+
+  void insertImage(Uint8List imageData) {
+    _imagePath.value = null;
+    _imageData.value = imageData;
+  }
 
   Widget _inputArea(BuildContext context, double height) {
     final textStyle = Theme.of(context).textTheme.bodyText2;
@@ -1280,7 +1266,7 @@ class EditPostState extends State<EditPost> {
               child: Center(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final textSize = _textSize(context, 'a啊', textStyle);
+                    final textSize = _textSize(context, 'A啊', textStyle);
                     final reportReason = _reportReason.value;
 
                     return SingleChildScrollViewWithScrollbar(
@@ -1323,18 +1309,23 @@ class EditPostState extends State<EditPost> {
                                 if (_imagePath.value != null ||
                                     _imageData.value != null)
                                   _Image(
-                                      maxHeight: constraints.maxHeight,
-                                      imagePath: _imagePath.value,
-                                      imageData: _imageData.value,
-                                      isWatermark: _isWatermark.value,
-                                      onCancel: () {
-                                        _imagePath.value = null;
-                                        _imageData.value = null;
-                                      },
-                                      onWatermark: (isWatermark) =>
-                                          _isWatermark.value = isWatermark,
-                                      onImageFileLoaded: (imageData) =>
-                                          _imageData.value = imageData),
+                                    maxHeight: constraints.maxHeight,
+                                    imagePath: _imagePath.value,
+                                    imageData: _imageData.value,
+                                    isWatermark: _isWatermark.value,
+                                    onCancel: () {
+                                      _imagePath.value = null;
+                                      _imageData.value = null;
+                                    },
+                                    onWatermark: (isWatermark) =>
+                                        _isWatermark.value = isWatermark,
+                                    onImageFileLoaded: (imageData) =>
+                                        _imageData.value = imageData,
+                                    onImagePainted: (imageData) {
+                                      _imagePath.value = null;
+                                      _imageData.value = imageData;
+                                    },
+                                  ),
                                 if (_imagePath.value != null)
                                   const SizedBox(width: 10.0),
                                 Expanded(
@@ -1342,12 +1333,13 @@ class EditPostState extends State<EditPost> {
                                     controller: _contentController,
                                     style: textStyle,
                                     maxLines: null,
-                                    minLines: constraints.maxHeight ~/
+                                    minLines: (constraints.maxHeight - 24.0) ~/
                                         textSize.height,
-                                    //expands: widget.height != null ? false : true,
                                     textAlignVertical: TextAlignVertical.top,
-                                    //autofocus: true,
                                     decoration: InputDecoration(
+                                      isDense: true,
+                                      contentPadding:
+                                          const EdgeInsets.all(12.0),
                                       hintText: '正文',
                                       filled: true,
                                       fillColor: color,
@@ -1367,44 +1359,47 @@ class EditPostState extends State<EditPost> {
               ),
             ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _ShowEmoticon(_showEmoticon),
-                _PickImage(onPickImage: (path) {
+                Flexible(child: _ShowEmoticon(_showEmoticon)),
+                Flexible(child: PickImage(onPickImage: (path) {
                   debugPrint('image path: $path');
                   _imagePath.value = path;
-                }),
-                _Dice(onDice: insertText),
-                Obx(
-                  () => _Paint(
-                    imageData: _imageData.value,
-                    onImage: (imageData) {
-                      _imagePath.value = null;
-                      _imageData.value = imageData;
-                    },
+                })),
+                Flexible(child: _Dice(onDice: insertText)),
+                Flexible(
+                  child: Obx(
+                    () => _Paint(
+                      imageData: _imageData.value,
+                      onImage: (imageData) {
+                        _imagePath.value = null;
+                        _imageData.value = imageData;
+                      },
+                    ),
                   ),
                 ),
-                _SaveDraft(
-                  getTitle: () => _titleController.text,
-                  getName: () => _nameController.text,
-                  getContent: () => _contentController.text,
-                ),
-                const Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: _Cookie(),
-                  ),
-                ),
-                Obx(
-                  () => _Post(
-                    postList: widget.postList,
-                    forumId: _forumId.value,
-                    isWatermark: _isWatermark.value,
-                    imageData: _imageData.value,
-                    reportReason: _reportReason.value,
+                Flexible(
+                  child: _SaveDraft(
                     getTitle: () => _titleController.text,
                     getName: () => _nameController.text,
                     getContent: () => _contentController.text,
-                    onPost: () => isPosted = true,
+                  ),
+                ),
+                const Spacer(),
+                const _Cookie(),
+                Flexible(
+                  child: Obx(
+                    () => _Post(
+                      postList: widget.postList,
+                      forumId: _forumId.value,
+                      isWatermark: _isWatermark.value,
+                      imageData: _imageData.value,
+                      reportReason: _reportReason.value,
+                      getTitle: () => _titleController.text,
+                      getName: () => _nameController.text,
+                      getContent: () => _contentController.text,
+                      onPost: () => isPosted = true,
+                    ),
                   ),
                 ),
               ],
@@ -1497,5 +1492,5 @@ Size _textSize(BuildContext context, String text, TextStyle? style) {
       textDirection: TextDirection.ltr)
     ..layout();
 
-  return textPainter.size;
+  return Size(textPainter.size.width, textPainter.preferredLineHeight);
 }
