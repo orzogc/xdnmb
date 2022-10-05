@@ -153,14 +153,17 @@ class PostDraft extends StatelessWidget {
 
   final String? content;
 
-  final int contentMaxLines;
+  final int? contentMaxLines;
+
+  final TextStyle? textStyle;
 
   PostDraft(
       {super.key,
       this.title,
       this.name,
       this.content,
-      required this.contentMaxLines})
+      this.contentMaxLines,
+      this.textStyle})
       : assert(
             (title?.isNotEmpty ?? false) ||
                 (name?.isNotEmpty ?? false) ||
@@ -171,22 +174,28 @@ class PostDraft extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title?.isNotEmpty ?? false) _PostTitle(title!),
-          if (name?.isNotEmpty ?? false) _PostName(name!),
-          if (content?.isNotEmpty ?? false)
-            ExpandableText(
-              content!,
-              expandText: '展开',
-              collapseText: '收起',
-              linkColor:
-                  Get.isDarkMode ? Colors.white : AppTheme.primaryColorLight,
-              maxLines: contentMaxLines,
-            ),
-        ],
+      child: DefaultTextStyle.merge(
+        style: textStyle,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (title?.isNotEmpty ?? false) _PostTitle(title!),
+            if (name?.isNotEmpty ?? false) _PostName(name!),
+            if (content?.isNotEmpty ?? false)
+              contentMaxLines != null
+                  ? ExpandableText(
+                      content!,
+                      expandText: '展开',
+                      collapseText: '收起',
+                      linkColor: Get.isDarkMode
+                          ? Colors.white
+                          : AppTheme.primaryColorLight,
+                      maxLines: contentMaxLines!,
+                    )
+                  : Text(content!),
+          ],
+        ),
       ),
     );
   }

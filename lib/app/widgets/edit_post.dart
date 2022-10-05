@@ -396,7 +396,12 @@ class _Image extends StatelessWidget {
           child: ElevatedButton(
             onPressed: onCancel,
             style: ElevatedButton.styleFrom(shape: const CircleBorder()),
-            child: const Icon(Icons.close),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Icon(Icons.close,
+                    size: min(constraints.maxHeight, 24.0));
+              },
+            ),
           ),
         ),
       );
@@ -1227,12 +1232,18 @@ class EditPostState extends State<EditPost> {
                   Flexible(
                     child: IconButton(
                       onPressed: () async {
-                        final draft = await AppRoutes.toPostDrafts();
+                        final result = await AppRoutes.toPostDrafts();
 
-                        if (draft is PostDraftData) {
-                          _titleController.text = draft.title ?? '';
-                          _nameController.text = draft.name ?? '';
-                          _contentController.text = draft.content ?? '';
+                        if (result is PostDraftData) {
+                          _titleController.text = result.title ?? '';
+                          _nameController.text = result.name ?? '';
+                          _contentController.text = result.content ?? '';
+                          _isExpanded.value =
+                              _titleController.text.isNotEmpty ||
+                                  _nameController.text.isNotEmpty;
+                        } else if (result is Uint8List) {
+                          _imagePath.value = null;
+                          _imageData.value = result;
                         }
                       },
                       icon: const Icon(Icons.edit_note),
@@ -1256,16 +1267,17 @@ class EditPostState extends State<EditPost> {
 
                           if (result is EditPostController && mounted) {
                             _forumId.value = result.forumId;
+                            _titleController.text = result.title ?? '';
+                            _nameController.text = result.name ?? '';
+                            _contentController.text = result.content ?? '';
                             _imagePath.value = result.imagePath;
                             _imageData.value = result.imageData;
                             _isWatermark.value = result.isWatermark ??
                                 SettingsService.to.isWatermark;
                             _reportReason.value = result.reportReason;
-                            setState(() {
-                              _titleController.text = result.title ?? '';
-                              _nameController.text = result.name ?? '';
-                              _contentController.text = result.content ?? '';
-                            });
+                            _isExpanded.value =
+                                _titleController.text.isNotEmpty ||
+                                    _nameController.text.isNotEmpty;
                           } else if (result is bool && result) {
                             isPosted = true;
                             Get.back();

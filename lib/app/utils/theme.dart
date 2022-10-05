@@ -106,8 +106,7 @@ abstract class AppTheme {
       floatingLabelStyle: TextStyle(color: AppTheme.colorDark),
     ),
     textSelectionTheme: const TextSelectionThemeData(
-        cursorColor: AppTheme.overlayBackgroundColor,
-        selectionColor: AppTheme.overlayBackgroundColor),
+        cursorColor: Colors.white, selectionColor: Colors.white),
     iconTheme: const IconThemeData(color: iconColor),
     checkboxTheme: CheckboxThemeData(
         fillColor: _CheckboxFillColor(Colors.white),
