@@ -10,6 +10,8 @@ const List<String> _sameDayFormat = [H, ':', nn];
 
 const List<String> _imageFilenameFormat = [yyyy, mm, dd, HH, nn, ss];
 
+const List<String> _dateRangeFormat = [yyyy, '/', mm, '/', dd];
+
 String postFormatTime(DateTime time) {
   final now = TimeService.to.now;
   final localTime = time.toLocal();
@@ -24,3 +26,5 @@ String postFormatTime(DateTime time) {
 }
 
 String imageFilenameTime() => formatDate(DateTime.now(), _imageFilenameFormat);
+
+String dateRangeFormatTime(DateTime time) => formatDate(time, _dateRangeFormat);

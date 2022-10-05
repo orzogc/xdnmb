@@ -458,16 +458,29 @@ class ImageView extends GetView<ImageController> {
 
     return WillPopScope(
       onWillPop: () async {
-        if (controller._isPainted) {
-          final result = await Get.dialog<bool>(SaveImageDialog(
-            onSave: () async {
-              await saveImageData(controller.imageData.value!);
-              Get.back(result: true);
-            },
+        if (controller._isPainted && controller.imageData.value != null) {
+          final result = await Get.dialog(ApplyImageDialog(
+            onApply: controller.canReturnImageData
+                ? () => Get.back(result: controller.imageData.value)
+                : null,
+            onSave: !controller.canReturnImageData
+                ? () async {
+                    await saveImageData(controller.imageData.value!);
+                    Get.back(result: true);
+                  }
+                : null,
+            onCancel: () => Get.back(result: false),
             onNotSave: () => Get.back(result: true),
           ));
 
-          return result ?? false;
+          if (result is bool) {
+            return result;
+          }
+          if (result is Uint8List) {
+            Get.back<Uint8List>(result: result);
+          }
+
+          return false;
         }
 
         return true;

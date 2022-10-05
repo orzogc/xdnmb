@@ -159,20 +159,27 @@ class PaintView extends GetView<PaintController> {
   Widget build(BuildContext context) => WillPopScope(
         onWillPop: () async {
           if (controller._painterKey.currentState?.isEdited ?? false) {
-            final result = await Get.dialog<bool>(SaveImageDialog(
-              onSave: () async {
+            final result = await Get.dialog(ApplyImageDialog(
+              onApply: () async {
                 final data = await _exportImage();
                 if (data != null) {
-                  await saveImageData(data);
-                  Get.back(result: true);
+                  Get.back(result: data);
                 } else {
                   showToast('导出图片数据失败');
                 }
               },
+              onCancel: () => Get.back(result: false),
               onNotSave: () => Get.back(result: true),
             ));
 
-            return result ?? false;
+            if (result is bool) {
+              return result;
+            }
+            if (result is Uint8List) {
+              Get.back<Uint8List>(result: result);
+            }
+
+            return false;
           }
 
           return true;
@@ -181,7 +188,7 @@ class PaintView extends GetView<PaintController> {
           appBar: AppBar(
             title: const Text('涂鸦'),
             actions: [
-              _SaveImage(exportImage: _exportImage),
+              // TODO: 旋转
               PickImage(onPickImage: (path) async {
                 try {
                   controller.image.value = await File(path).readAsBytes();
@@ -189,6 +196,7 @@ class PaintView extends GetView<PaintController> {
                   showToast('读取图片出错：$e');
                 }
               }),
+              _SaveImage(exportImage: _exportImage),
               _Confirm(exportImage: _exportImage),
             ],
           ),

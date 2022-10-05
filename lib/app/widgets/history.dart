@@ -22,18 +22,86 @@ import 'post.dart';
 
 const int _historyEachPage = 20;
 
+class HistoryBottomBarKey {
+  final int index;
+
+  final DateTimeRange? range;
+
+  const HistoryBottomBarKey(this.index, this.range);
+
+  HistoryBottomBarKey.fromController(PostListController controller)
+      : assert(controller.bottomBarIndex.value != null &&
+            controller.bottomBarIndex.value! < 3),
+        index = controller.bottomBarIndex.value!,
+        range = controller.getDateRange();
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HistoryBottomBarKey &&
+          index == other.index &&
+          range == other.range);
+
+  @override
+  int get hashCode => Object.hash(index, range);
+}
+
 PostListController historyController(Map<String, String?> parameters) =>
     PostListController(
         postListType: PostListType.history,
         page: parameters['page'].tryParseInt() ?? 1,
-        bottomBarIndex: parameters['index'].tryParseInt() ?? 0);
+        bottomBarIndex: parameters['index'].tryParseInt() ?? 0,
+        dateRange: List.filled(3, null));
 
 class HistoryAppBarTitle extends StatelessWidget {
-  const HistoryAppBarTitle({super.key});
+  final PostListController controller;
+
+  const HistoryAppBarTitle(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Text('历史记录');
+    final history = PostHistoryService.to;
+
+    return FutureBuilder<int?>(future: Future(() {
+      switch (controller.bottomBarIndex.value) {
+        case _BrowseHistoryBody._index:
+          return history.browseHistoryCount(controller.getDateRange());
+        case _PostHistoryBody._index:
+          return history.postDataCount(controller.getDateRange());
+        case _ReplyHistoryBody._index:
+          return history.replyDataCount(controller.getDateRange());
+        default:
+          debugPrint('未知bottomBarIndex：${controller.bottomBarIndex.value}');
+          return null;
+      }
+    }), builder: (context, snapshot) {
+      late final String text;
+      switch (controller.bottomBarIndex.value) {
+        case _BrowseHistoryBody._index:
+          text = '浏览历史记录';
+          break;
+        case _PostHistoryBody._index:
+          text = '主题历史记录';
+          break;
+        case _ReplyHistoryBody._index:
+          text = '回复历史记录';
+          break;
+        default:
+          text = '历史记录';
+      }
+
+      if (snapshot.connectionState == ConnectionState.done &&
+          snapshot.hasData) {
+        return Text('$text（${snapshot.data}）');
+      }
+
+      if (snapshot.connectionState == ConnectionState.done &&
+          snapshot.hasError) {
+        showToast('读取历史记录失败：${snapshot.error}');
+      }
+
+      return Text(text);
+    });
   }
 }
 
@@ -45,25 +113,23 @@ class HistoryDateRangePicker extends StatelessWidget {
   const HistoryDateRangePicker(this.controller, {super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: () async {
-        final range = await showDateRangePicker(
-            context: context,
-            initialDateRange: controller.dateRange.value,
-            firstDate: _firstDate,
-            lastDate: DateTime.now(),
-            initialEntryMode: DatePickerEntryMode.calendarOnly,
-            locale: WidgetsBinding.instance.platformDispatcher.locale);
+  Widget build(BuildContext context) => IconButton(
+        onPressed: () async {
+          final range = await showDateRangePicker(
+              context: context,
+              initialDateRange: controller.getDateRange(),
+              firstDate: _firstDate,
+              lastDate: DateTime.now(),
+              initialEntryMode: DatePickerEntryMode.calendarOnly,
+              locale: WidgetsBinding.instance.platformDispatcher.locale);
 
-        if (range != null) {
-          controller.dateRange.value = range;
-          controller.refreshPage();
-        }
-      },
-      icon: const Icon(Icons.calendar_month),
-    );
-  }
+          if (range != null) {
+            controller.setDateRange(range);
+            controller.refreshPage();
+          }
+        },
+        icon: const Icon(Icons.calendar_month),
+      );
 }
 
 class HistoryAppBarPopupMenuButton extends StatelessWidget {
@@ -78,23 +144,44 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
     return PopupMenuButton(
       itemBuilder: (context) => [
         PopupMenuItem(
-          onTap: () async {
+          onTap: () {
             switch (controller.bottomBarIndex.value) {
               case _BrowseHistoryBody._index:
-                await history.clearBrowseHistory();
-                controller.refreshPage();
-                showToast('清空浏览记录');
-                return;
+                postListDialog(ConfirmCancelDialog(
+                  content: '确定清空浏览记录？',
+                  onConfirm: () async {
+                    await history.clearBrowseHistory(controller.getDateRange());
+                    controller.refreshPage();
+                    showToast('清空浏览记录');
+                    postListBack();
+                  },
+                  onCancel: () => postListBack(),
+                ));
+                break;
               case _PostHistoryBody._index:
-                await history.clearPostData();
-                controller.refreshPage();
-                showToast('清空主题记录');
-                return;
+                postListDialog(ConfirmCancelDialog(
+                  content: '确定清空主题记录？',
+                  onConfirm: () async {
+                    await history.clearPostData(controller.getDateRange());
+                    controller.refreshPage();
+                    showToast('清空主题记录');
+                    postListBack();
+                  },
+                  onCancel: () => postListBack(),
+                ));
+                break;
               case _ReplyHistoryBody._index:
-                await history.clearReplyData();
-                controller.refreshPage();
-                showToast('清空回复记录');
-                return;
+                postListDialog(ConfirmCancelDialog(
+                  content: '确定清空回复记录？',
+                  onConfirm: () async {
+                    await history.clearReplyData(controller.getDateRange());
+                    controller.refreshPage();
+                    showToast('清空回复记录');
+                    postListBack();
+                  },
+                  onCancel: () => postListBack(),
+                ));
+                break;
               default:
                 debugPrint(
                     '未知bottomBarIndex：${controller.bottomBarIndex.value}');
@@ -171,28 +258,58 @@ class _HistoryBodyState extends State<HistoryBody> {
   }
 
   @override
-  Widget build(BuildContext context) => PageView.builder(
-        controller: _controller,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: 3,
-        itemBuilder: (context, index) {
-          switch (index) {
-            case _BrowseHistoryBody._index:
-              return _BrowseHistoryBody(widget.controller);
-            case _PostHistoryBody._index:
-              return _PostHistoryBody(widget.controller);
-            case _ReplyHistoryBody._index:
-              return _ReplyHistoryBody(widget.controller);
-            default:
-              return const Center(
-                child: Text(
-                  '未知记录',
-                  style:
-                      TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                ),
-              );
-          }
-        },
+  Widget build(BuildContext context) => Column(
+        children: [
+          Obx(
+            () {
+              final range = widget.controller.getDateRange();
+
+              return range != null
+                  ? ListTile(
+                      title: Center(
+                        child: range.start != range.end
+                            ? Text(
+                                '${dateRangeFormatTime(range.start)} - ${dateRangeFormatTime(range.end)}',
+                              )
+                            : Text(dateRangeFormatTime(range.start)),
+                      ),
+                      trailing: IconButton(
+                        onPressed: () {
+                          widget.controller.setDateRange(null);
+                          widget.controller.refreshPage();
+                        },
+                        icon: const Icon(Icons.close),
+                      ),
+                    )
+                  : const SizedBox.shrink();
+            },
+          ),
+          Expanded(
+            child: PageView.builder(
+              controller: _controller,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                switch (index) {
+                  case _BrowseHistoryBody._index:
+                    return _BrowseHistoryBody(widget.controller);
+                  case _PostHistoryBody._index:
+                    return _PostHistoryBody(widget.controller);
+                  case _ReplyHistoryBody._index:
+                    return _ReplyHistoryBody(widget.controller);
+                  default:
+                    return const Center(
+                      child: Text(
+                        '未知记录',
+                        style: TextStyle(
+                            color: Colors.red, fontWeight: FontWeight.bold),
+                      ),
+                    );
+                }
+              },
+            ),
+          )
+        ],
       );
 }
 
@@ -201,10 +318,16 @@ class _HistoryDialog extends StatelessWidget {
 
   final PostBase? post;
 
+  final bool confirmDelete;
+
   final VoidCallback onDelete;
 
   const _HistoryDialog(
-      {super.key, required this.mainPost, this.post, required this.onDelete});
+      {super.key,
+      required this.mainPost,
+      this.post,
+      this.confirmDelete = true,
+      required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -216,9 +339,24 @@ class _HistoryDialog extends StatelessWidget {
       title: hasPostId ? Text(postHistory.toPostNumber()) : null,
       children: [
         SimpleDialogOption(
-          onPressed: () {
-            postListBack();
-            onDelete();
+          onPressed: () async {
+            if (confirmDelete) {
+              final result = await postListDialog<bool>(ConfirmCancelDialog(
+                content: '确定删除？',
+                onConfirm: () {
+                  onDelete();
+                  postListBack<bool>(result: true);
+                },
+                onCancel: () => postListBack<bool>(result: false),
+              ));
+
+              if (result ?? false) {
+                postListBack();
+              }
+            } else {
+              onDelete();
+              postListBack();
+            }
           },
           child: Text('删除', style: Theme.of(context).textTheme.subtitle1),
         ),
@@ -248,11 +386,7 @@ class _BrowseHistoryBody extends StatefulWidget {
 }
 
 class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
-  late final PostListController _controller;
-
   late final StreamSubscription<int> _pageSubscription;
-
-  late final StreamSubscription<DateTimeRange?> _dateRangeSubscription;
 
   int _refresh = 0;
 
@@ -260,18 +394,9 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
   void initState() {
     super.initState();
 
-    _controller = widget.controller.copy();
-
     _pageSubscription = widget.controller.page.listen((page) {
       if (widget.controller.bottomBarIndex.value == _BrowseHistoryBody._index) {
-        _controller.refreshPage(page);
         _refresh++;
-      }
-    });
-
-    _dateRangeSubscription = widget.controller.dateRange.listen((dateRange) {
-      if (widget.controller.bottomBarIndex.value == _BrowseHistoryBody._index) {
-        _controller.dateRange.value = dateRange;
       }
     });
   }
@@ -279,7 +404,6 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
   @override
   void dispose() {
     _pageSubscription.cancel();
-    _dateRangeSubscription.cancel();
 
     super.dispose();
   }
@@ -287,20 +411,18 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
-    final dateRange = _controller.dateRange;
 
     return Obx(
       () => BiListView<BrowseHistory>(
-        key: getPostListKey(PostList.fromController(_controller), _refresh),
-        initialPage: _controller.page.value,
-        fetch: (page) => history.browseHistoryList(
-            (page - 1) * _historyEachPage,
-            page * _historyEachPage,
-            dateRange.value != null
-                ? DateTimeRange(
-                    start: dateRange.value!.start,
-                    end: dateRange.value!.end.add(const Duration(days: 1)))
-                : null),
+        key: getPostListKey(
+            PostList.fromController(widget.controller), _refresh),
+        initialPage: widget.controller.page.value,
+        fetch: (page) {
+          final range = widget.controller.getDateRange();
+
+          return history.browseHistoryList((page - 1) * _historyEachPage,
+              page * _historyEachPage, range.getRange());
+        },
         itemBuilder: (context, browse, index) {
           final isVisible = true.obs;
 
@@ -326,6 +448,7 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
                       onLongPress: () => postListDialog(
                         _HistoryDialog(
                           mainPost: browse,
+                          confirmDelete: false,
                           onDelete: () async {
                             await history.deleteBrowseHistory(browse.id);
                             showToast('删除 ${browse.id.toPostNumber()} 的浏览记录');
@@ -404,11 +527,7 @@ class _PostHistoryBody extends StatefulWidget {
 }
 
 class _PostHistoryBodyState extends State<_PostHistoryBody> {
-  late final PostListController _controller;
-
   late final StreamSubscription<int> _pageSubscription;
-
-  late final StreamSubscription<DateTimeRange?> _dateRangeSubscription;
 
   int _refresh = 0;
 
@@ -416,18 +535,9 @@ class _PostHistoryBodyState extends State<_PostHistoryBody> {
   void initState() {
     super.initState();
 
-    _controller = widget.controller.copy();
-
     _pageSubscription = widget.controller.page.listen((page) {
       if (widget.controller.bottomBarIndex.value == _PostHistoryBody._index) {
-        _controller.refreshPage(page);
         _refresh++;
-      }
-    });
-
-    _dateRangeSubscription = widget.controller.dateRange.listen((dateRange) {
-      if (widget.controller.bottomBarIndex.value == _PostHistoryBody._index) {
-        _controller.dateRange.value = dateRange;
       }
     });
   }
@@ -435,7 +545,6 @@ class _PostHistoryBodyState extends State<_PostHistoryBody> {
   @override
   void dispose() {
     _pageSubscription.cancel();
-    _dateRangeSubscription.cancel();
 
     super.dispose();
   }
@@ -443,20 +552,18 @@ class _PostHistoryBodyState extends State<_PostHistoryBody> {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
-    final dateRange = _controller.dateRange;
 
     return Obx(
       () => BiListView<PostData>(
-        key: getPostListKey(PostList.fromController(_controller), _refresh),
-        initialPage: _controller.page.value,
-        fetch: (page) => history.postDataList(
-            (page - 1) * _historyEachPage,
-            page * _historyEachPage,
-            dateRange.value != null
-                ? DateTimeRange(
-                    start: dateRange.value!.start,
-                    end: dateRange.value!.end.add(const Duration(days: 1)))
-                : null),
+        key: getPostListKey(
+            PostList.fromController(widget.controller), _refresh),
+        initialPage: widget.controller.page.value,
+        fetch: (page) {
+          final range = widget.controller.getDateRange();
+
+          return history.postDataList((page - 1) * _historyEachPage,
+              page * _historyEachPage, range.getRange());
+        },
         itemBuilder: (context, mainPost, index) {
           final isVisible = true.obs;
 
@@ -522,11 +629,7 @@ class _ReplyHistoryBody extends StatefulWidget {
 }
 
 class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
-  late final PostListController _controller;
-
   late final StreamSubscription<int> _pageSubscription;
-
-  late final StreamSubscription<DateTimeRange?> _dateRangeSubscription;
 
   int _refresh = 0;
 
@@ -534,18 +637,9 @@ class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
   void initState() {
     super.initState();
 
-    _controller = widget.controller.copy();
-
     _pageSubscription = widget.controller.page.listen((page) {
       if (widget.controller.bottomBarIndex.value == _ReplyHistoryBody._index) {
-        _controller.refreshPage(page);
         _refresh++;
-      }
-    });
-
-    _dateRangeSubscription = widget.controller.dateRange.listen((dateRange) {
-      if (widget.controller.bottomBarIndex.value == _ReplyHistoryBody._index) {
-        _controller.dateRange.value = dateRange;
       }
     });
   }
@@ -553,7 +647,6 @@ class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
   @override
   void dispose() {
     _pageSubscription.cancel();
-    _dateRangeSubscription.cancel();
 
     super.dispose();
   }
@@ -561,20 +654,18 @@ class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
-    final dateRange = _controller.dateRange;
 
     return Obx(
       () => BiListView<ReplyData>(
-        key: getPostListKey(PostList.fromController(_controller), _refresh),
-        initialPage: _controller.page.value,
-        fetch: (page) => history.replyDataList(
-            (page - 1) * _historyEachPage,
-            page * _historyEachPage,
-            dateRange.value != null
-                ? DateTimeRange(
-                    start: dateRange.value!.start,
-                    end: dateRange.value!.end.add(const Duration(days: 1)))
-                : null),
+        key: getPostListKey(
+            PostList.fromController(widget.controller), _refresh),
+        initialPage: widget.controller.page.value,
+        fetch: (page) {
+          final range = widget.controller.getDateRange();
+
+          return history.replyDataList((page - 1) * _historyEachPage,
+              page * _historyEachPage, range.getRange());
+        },
         itemBuilder: (context, reply, index) {
           final isVisible = true.obs;
 

@@ -19,7 +19,6 @@ import '../utils/navigation.dart';
 import '../utils/toast.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
-import 'edit_post.dart';
 import 'forum_name.dart';
 import 'post.dart';
 import 'reference.dart';
@@ -43,7 +42,6 @@ class ForumAppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final client = XdnmbClientService.to;
     final theme = Theme.of(context);
 
     return Column(

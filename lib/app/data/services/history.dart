@@ -25,14 +25,34 @@ class PostHistoryService extends GetxService {
   Future<BrowseHistory?> getBrowseHistory(int postId) =>
       _browseHistory.get(postId);
 
+  Future<int> browseHistoryCount([DateTimeRange? range]) {
+    if (range != null) {
+      return _browseHistory
+          .where()
+          .browseTimeBetween(range.start, range.end, includeUpper: false)
+          .count();
+    } else {
+      return _browseHistory.count();
+    }
+  }
+
   Future<int> saveBrowseHistory(BrowseHistory history) =>
       _isar.writeTxn(() => _browseHistory.put(history));
 
   Future<bool> deleteBrowseHistory(int postId) =>
       _isar.writeTxn(() => _browseHistory.delete(postId));
 
-  Future<void> clearBrowseHistory() =>
-      _isar.writeTxn(() => _browseHistory.clear());
+  Future<void> clearBrowseHistory([DateTimeRange? range]) =>
+      _isar.writeTxn(() async {
+        if (range != null) {
+          await _browseHistory
+              .where()
+              .browseTimeBetween(range.start, range.end, includeUpper: false)
+              .deleteAll();
+        } else {
+          await _browseHistory.clear();
+        }
+      });
 
   /// 包括start，不包括end
   Future<List<BrowseHistory>> browseHistoryList(int start, int end,
@@ -56,13 +76,34 @@ class PostHistoryService extends GetxService {
 
   Future<PostData?> getPostData(int id) => _postData.get(id);
 
+  Future<int> postDataCount([DateTimeRange? range]) {
+    if (range != null) {
+      return _postData
+          .where()
+          .postTimeBetween(range.start, range.end, includeUpper: false)
+          .count();
+    } else {
+      return _postData.count();
+    }
+  }
+
   Future<int> savePostData(PostData post) =>
       _isar.writeTxn(() => _postData.put(post));
 
   Future<bool> deletePostData(int id) =>
       _isar.writeTxn(() => _postData.delete(id));
 
-  Future<void> clearPostData() => _isar.writeTxn(() => _postData.clear());
+  Future<void> clearPostData([DateTimeRange? range]) =>
+      _isar.writeTxn(() async {
+        if (range != null) {
+          await _postData
+              .where()
+              .postTimeBetween(range.start, range.end, includeUpper: false)
+              .deleteAll();
+        } else {
+          await _postData.clear();
+        }
+      });
 
   /// 包括start，不包括end
   Future<List<PostData>> postDataList(int start, int end,
@@ -86,13 +127,34 @@ class PostHistoryService extends GetxService {
 
   Future<ReplyData?> getReplyData(int id) => _replyData.get(id);
 
+  Future<int> replyDataCount([DateTimeRange? range]) {
+    if (range != null) {
+      return _replyData
+          .where()
+          .postTimeBetween(range.start, range.end, includeUpper: false)
+          .count();
+    } else {
+      return _replyData.count();
+    }
+  }
+
   Future<int> saveReplyData(ReplyData reply) =>
       _isar.writeTxn(() => _replyData.put(reply));
 
   Future<bool> deleteReplyData(int id) =>
       _isar.writeTxn(() => _replyData.delete(id));
 
-  Future<void> clearReplyData() => _isar.writeTxn(() => _replyData.clear());
+  Future<void> clearReplyData([DateTimeRange? range]) =>
+      _isar.writeTxn(() async {
+        if (range != null) {
+          await _replyData
+              .where()
+              .postTimeBetween(range.start, range.end, includeUpper: false)
+              .deleteAll();
+        } else {
+          await _replyData.clear();
+        }
+      });
 
   /// 包括start，不包括end
   Future<List<ReplyData>> replyDataList(int start, int end,

@@ -86,10 +86,10 @@ class _ForumName extends StatelessWidget {
     }
     forumName ??= '选择板块';
 
-    return postListType.isForumType()
+    return postListType.isTimeline()
         ? TextButton(
             onPressed: () {
-              if (postListType.isForumType()) {
+              if (postListType.isTimeline()) {
                 Get.dialog(
                   _SelectForum(onForumId: onForumId),
                 );
@@ -637,7 +637,6 @@ class _Post extends StatelessWidget {
       required this.postList,
       this.forumId,
       this.isWatermark,
-      //this.imagePath,
       this.imageData,
       this.reportReason,
       required this.getTitle,
@@ -718,7 +717,7 @@ class _Post extends StatelessWidget {
             if (forumId != null) {
               final postListType = postList.postListType;
 
-              if (postListType.isForumType() &&
+              if (postListType.isForum() &&
                   forumId == EditPost.dutyRoomId &&
                   (reportReason == null || reportReason!.isEmpty)) {
                 showToast('请选择举报理由');
@@ -744,7 +743,8 @@ class _Post extends StatelessWidget {
                   }
 
                   if (postListType.isForumType()) {
-                    if (forumId == EditPost.dutyRoomId) {
+                    if (postListType.isForum() &&
+                        forumId == EditPost.dutyRoomId) {
                       content = '举报理由：$reportReason\n$content';
                     }
 
@@ -953,9 +953,16 @@ class _EmoticonDialog extends StatelessWidget {
         ),
         SimpleDialogOption(
           onPressed: () async {
-            await emoticon.delete();
+            await Get.dialog(ConfirmCancelDialog(
+              content: '是否删除颜文字 ${emoticon.name}？',
+              onConfirm: () async {
+                await emoticon.delete();
+                Get.back();
+                showToast('删除颜文字 ${emoticon.name} 成功');
+              },
+              onCancel: () => Get.back(),
+            ));
             Get.back();
-            showToast('删除颜文字 ${emoticon.name} 成功');
           },
           child: Text('删除 ${emoticon.name}', style: textStyle),
         ),
@@ -1130,6 +1137,8 @@ class EditPost extends StatefulWidget {
 }
 
 class EditPostState extends State<EditPost> {
+  late final Rx<PostList> _postList;
+
   late final RxnInt _forumId;
 
   late final TextEditingController _titleController;
@@ -1153,8 +1162,8 @@ class EditPostState extends State<EditPost> {
   bool isPosted = false;
 
   EditPostController toController() => EditPostController(
-      postListType: widget.postList.postListType,
-      id: widget.postList.id!,
+      postListType: _postList.value.postListType,
+      id: _postList.value.id!,
       forumId: _forumId.value,
       title: _titleController.text,
       name: _nameController.text,
@@ -1172,10 +1181,14 @@ class EditPostState extends State<EditPost> {
     _imageData.value = imageData;
   }
 
+  void setPostList(PostList postList, int? forumId) {
+    _postList.value = postList;
+    _forumId.value =
+        forumId ?? (postList.postListType.isForum() ? postList.id : null);
+  }
+
   Widget _inputArea(BuildContext context, double height) {
     final textStyle = Theme.of(context).textTheme.bodyText2;
-    final postListType = widget.postList.postListType;
-    final id = widget.postList.id!;
 
     final color = Get.isDarkMode
         ? AppTheme.editPostFilledColorDark
@@ -1192,75 +1205,77 @@ class EditPostState extends State<EditPost> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: IconButton(
-                    onPressed: () => _isExpanded.value = !_isExpanded.value,
-                    icon: const Icon(Icons.more_horiz, size: 20.0),
+            Obx(
+              () => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: IconButton(
+                      onPressed: () => _isExpanded.value = !_isExpanded.value,
+                      icon: const Icon(Icons.more_horiz, size: 20.0),
+                    ),
                   ),
-                ),
-                Flexible(
-                  child: Obx(
-                    () => _ForumName(
-                        postListType: postListType,
-                        forumId: _forumId.value,
-                        onForumId: (forumId) => _forumId.value = forumId),
+                  Flexible(
+                    child: _ForumName(
+                      postListType: _postList.value.postListType,
+                      forumId: _forumId.value,
+                      onForumId: (forumId) => _forumId.value = forumId,
+                    ),
                   ),
-                ),
-                if (postListType.isThreadType()) Text(id.toPostNumber()),
-                Flexible(
-                  child: IconButton(
-                    onPressed: () async {
-                      final draft = await AppRoutes.toPostDrafts();
-
-                      if (draft is PostDraftData) {
-                        _titleController.text = draft.title ?? '';
-                        _nameController.text = draft.name ?? '';
-                        _contentController.text = draft.content ?? '';
-                      }
-                    },
-                    icon: const Icon(Icons.edit_note),
-                  ),
-                ),
-                if (widget.height != null)
+                  if (_postList.value.postListType.isThreadType())
+                    Text(_postList.value.id!.toPostNumber()),
                   Flexible(
                     child: IconButton(
                       onPressed: () async {
-                        final result = await AppRoutes.toEditPost(
-                            postListType: postListType,
-                            id: id,
-                            title: _titleController.text,
-                            name: _nameController.text,
-                            content: _contentController.text,
-                            forumId: _forumId.value,
-                            imagePath: _imagePath.value,
-                            imageData: _imageData.value,
-                            isWatermark: _isWatermark.value,
-                            reportReason: _reportReason.value);
+                        final draft = await AppRoutes.toPostDrafts();
 
-                        if (result is EditPostController && mounted) {
-                          _forumId.value = result.forumId;
-                          _imagePath.value = result.imagePath;
-                          _imageData.value = result.imageData;
-                          _isWatermark.value = result.isWatermark ??
-                              SettingsService.to.isWatermark;
-                          _reportReason.value = result.reportReason;
-                          setState(() {
-                            _titleController.text = result.title ?? '';
-                            _nameController.text = result.name ?? '';
-                            _contentController.text = result.content ?? '';
-                          });
-                        } else if (result is bool && result) {
-                          isPosted = true;
-                          Get.back();
+                        if (draft is PostDraftData) {
+                          _titleController.text = draft.title ?? '';
+                          _nameController.text = draft.name ?? '';
+                          _contentController.text = draft.content ?? '';
                         }
                       },
-                      icon: const Icon(Icons.open_in_new, size: 20.0),
+                      icon: const Icon(Icons.edit_note),
                     ),
                   ),
-              ],
+                  if (widget.height != null)
+                    Flexible(
+                      child: IconButton(
+                        onPressed: () async {
+                          final result = await AppRoutes.toEditPost(
+                              postListType: _postList.value.postListType,
+                              id: _postList.value.id!,
+                              title: _titleController.text,
+                              name: _nameController.text,
+                              content: _contentController.text,
+                              forumId: _forumId.value,
+                              imagePath: _imagePath.value,
+                              imageData: _imageData.value,
+                              isWatermark: _isWatermark.value,
+                              reportReason: _reportReason.value);
+
+                          if (result is EditPostController && mounted) {
+                            _forumId.value = result.forumId;
+                            _imagePath.value = result.imagePath;
+                            _imageData.value = result.imageData;
+                            _isWatermark.value = result.isWatermark ??
+                                SettingsService.to.isWatermark;
+                            _reportReason.value = result.reportReason;
+                            setState(() {
+                              _titleController.text = result.title ?? '';
+                              _nameController.text = result.name ?? '';
+                              _contentController.text = result.content ?? '';
+                            });
+                          } else if (result is bool && result) {
+                            isPosted = true;
+                            Get.back();
+                          }
+                        },
+                        icon: const Icon(Icons.open_in_new, size: 20.0),
+                      ),
+                    ),
+                ],
+              ),
             ),
             Expanded(
               child: Center(
@@ -1293,7 +1308,7 @@ class EditPostState extends State<EditPost> {
                                 ),
                               ),
                             if (_isExpanded.value) const SizedBox(height: 10.0),
-                            if (postListType.isForumType() &&
+                            if (_postList.value.postListType.isForum() &&
                                 _forumId.value == EditPost.dutyRoomId)
                               _ReportReason(
                                 reportReason: reportReason,
@@ -1390,11 +1405,14 @@ class EditPostState extends State<EditPost> {
                 Flexible(
                   child: Obx(
                     () => _Post(
-                      postList: widget.postList,
+                      postList: _postList.value,
                       forumId: _forumId.value,
                       isWatermark: _isWatermark.value,
                       imageData: _imageData.value,
-                      reportReason: _reportReason.value,
+                      reportReason: (_postList.value.postListType.isForum() &&
+                              _forumId.value == EditPost.dutyRoomId)
+                          ? _reportReason.value
+                          : null,
                       getTitle: () => _titleController.text,
                       getName: () => _nameController.text,
                       getContent: () => _contentController.text,
@@ -1414,6 +1432,10 @@ class EditPostState extends State<EditPost> {
   void initState() {
     super.initState();
 
+    _postList = Rx(widget.postList);
+    _forumId = RxnInt(widget.forumId ??
+        (widget.postList.postListType.isForum() ? widget.postList.id : null));
+
     _titleController = _initController(widget.title);
     _nameController = _initController(widget.name);
     _contentController = _initController(widget.content);
@@ -1425,7 +1447,6 @@ class EditPostState extends State<EditPost> {
       _isExpanded = false.obs;
     }
 
-    _forumId = RxnInt(widget.forumId);
     _imagePath = RxnString(widget.imagePath);
     _imageData = Rxn(widget.imageData);
     _isWatermark = (widget.isWatermark ?? SettingsService.to.isWatermark).obs;

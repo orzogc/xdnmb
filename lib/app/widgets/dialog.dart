@@ -370,20 +370,45 @@ class Report extends StatelessWidget {
       );
 }
 
-class SaveImageDialog extends StatelessWidget {
-  final VoidCallback onSave;
+class ApplyImageDialog extends StatelessWidget {
+  final VoidCallback? onApply;
+
+  final VoidCallback? onSave;
+
+  final VoidCallback onCancel;
 
   final VoidCallback onNotSave;
 
-  const SaveImageDialog(
-      {super.key, required this.onSave, required this.onNotSave});
+  const ApplyImageDialog(
+      {super.key,
+      this.onApply,
+      this.onSave,
+      required this.onCancel,
+      required this.onNotSave})
+      : assert((onApply != null && onSave == null) ||
+            (onApply == null && onSave != null));
 
   @override
-  Widget build(BuildContext context) => ConfirmCancelDialog(
-        content: '保存图片？',
-        onConfirm: onSave,
-        onCancel: onNotSave,
-        confirmText: '保存',
-        cancelText: '不保存',
+  Widget build(BuildContext context) => AlertDialog(
+        actionsPadding:
+            const EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        content: onApply != null ? const Text('应用图片？') : const Text('保存图片？'),
+        actions: [
+          TextButton(
+              onPressed: onNotSave,
+              child: onApply != null ? const Text('不应用') : const Text('不保存')),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(onPressed: onCancel, child: const Text('取消')),
+              if (onSave != null)
+                TextButton(onPressed: onSave, child: const Text('保存')),
+              if (onApply != null)
+                TextButton(onPressed: onApply, child: const Text('应用')),
+            ],
+          ),
+        ],
       );
 }

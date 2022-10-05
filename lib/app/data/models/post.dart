@@ -42,7 +42,7 @@ class PostData {
       this.isAdmin = false})
       : image = image != null ? (image.isNotEmpty ? image : null) : null,
         imageExtension = imageExtension != null
-            ? (imageExtension.isNotEmpty ? image : null)
+            ? (imageExtension.isNotEmpty ? imageExtension : null)
             : null,
         postTime = postTime.toUtc(),
         name = name != null

@@ -114,7 +114,7 @@ class PostListController {
 
   final RxnInt bottomBarIndex;
 
-  final Rxn<DateTimeRange> dateRange;
+  final Rxn<List<DateTimeRange?>> dateRange;
 
   final int? jumpToId;
 
@@ -134,7 +134,7 @@ class PostListController {
       int? currentPage,
       PostBase? post,
       int? bottomBarIndex,
-      DateTimeRange? dateRange,
+      List<DateTimeRange?>? dateRange,
       this.jumpToId})
       : postListType = postListType.obs,
         id = RxnInt(id),
@@ -189,6 +189,23 @@ class PostListController {
 
   static PostListController get([int? index]) =>
       ControllerStack.getController(index);
+
+  DateTimeRange? getDateRange([int? index]) {
+    assert(index == null || index < 3);
+
+    return bottomBarIndex.value != null
+        ? (dateRange.value?[index ?? bottomBarIndex.value!])
+        : null;
+  }
+
+  void setDateRange(DateTimeRange? range, [int? index]) {
+    assert(index == null || index < 3);
+
+    if (bottomBarIndex.value != null) {
+      dateRange.value![index ?? bottomBarIndex.value!] = range;
+      dateRange.refresh();
+    }
+  }
 
   void refreshPage([int page = 1]) {
     this.page.trigger(page);
@@ -249,25 +266,25 @@ class PostListBinding implements Bindings {
 }
 
 void _refresh() {
-  _PostListAppBar._appBarKey.currentState!.refresh();
+  PostListAppBar.appBarKey.currentState!.refresh();
   FloatingButton.buttonKey.currentState!.refresh();
   _BottomBar._bottomBarKey.currentState!.refresh();
 }
 
-class _PostListAppBar extends StatefulWidget implements PreferredSizeWidget {
-  static final GlobalKey<_PostListAppBarState> _appBarKey =
-      GlobalKey<_PostListAppBarState>();
+class PostListAppBar extends StatefulWidget implements PreferredSizeWidget {
+  static final GlobalKey<PostListAppBarState> appBarKey =
+      GlobalKey<PostListAppBarState>();
 
-  const _PostListAppBar({super.key});
+  const PostListAppBar({super.key});
 
   @override
-  State<_PostListAppBar> createState() => _PostListAppBarState();
+  State<PostListAppBar> createState() => PostListAppBarState();
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
-class _PostListAppBarState extends State<_PostListAppBar> {
+class PostListAppBarState extends State<PostListAppBar> {
   void refresh() {
     if (mounted) {
       setState(() {});
@@ -317,7 +334,8 @@ class _PostListAppBarState extends State<_PostListAppBar> {
             title = const FeedAppBarTitle();
             break;
           case PostListType.history:
-            title = const HistoryAppBarTitle();
+            title = HistoryAppBarTitle(controller,
+                key: ValueKey(HistoryBottomBarKey.fromController(controller)));
             break;
         }
 
@@ -326,6 +344,7 @@ class _PostListAppBarState extends State<_PostListAppBar> {
             if (!postListType.value.isThreadType()) {
               controller.refreshPage();
             }
+            refresh();
           },
           child: AppBar(
             leading: button,
@@ -652,10 +671,17 @@ class FloatingButtonState extends State<FloatingButton> {
       final controller = PostListController.get();
 
       setState(() {
-        if (!controller.postListType.value.canPost() &&
-            widget.bottomSheetController.value != null) {
-          widget.bottomSheetController.value!.close();
+        if (hasBottomSheet) {
+          if (controller.postListType.value.canPost()) {
+            EditPost.bottomSheetkey.currentState!.setPostList(
+                PostList.fromController(controller), controller.forumId);
+          } else {
+            widget.bottomSheetController.value!.close();
+          }
         }
+        /* if (!controller.postListType.value.canPost() && hasBottomSheet) {
+          widget.bottomSheetController.value!.close();
+        } */
       });
     }
   }
@@ -805,7 +831,7 @@ class PostListView extends StatelessWidget {
                 settings.isReady.value &&
                 user.isReady.value)
             ? Scaffold(
-                appBar: _PostListAppBar(key: _PostListAppBar._appBarKey),
+                appBar: PostListAppBar(key: PostListAppBar.appBarKey),
                 body: Column(
                   children: [
                     Expanded(child: PostListPage(key: PostListPage.pageKey)),
