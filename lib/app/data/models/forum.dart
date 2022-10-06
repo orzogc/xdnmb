@@ -91,6 +91,17 @@ class ForumData extends HiveObject implements ForumBase {
     await save();
   }
 
+  ForumData copy() => ForumData(
+      id: id,
+      name: name,
+      displayName: displayName,
+      message: message,
+      maxPage: maxPage,
+      isTimeline: isTimeline,
+      forumGroupId: forumGroupId,
+      isDeprecated: isDeprecated,
+      userDefinedName: userDefinedName);
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

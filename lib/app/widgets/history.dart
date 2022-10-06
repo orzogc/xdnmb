@@ -417,12 +417,10 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
         key: getPostListKey(
             PostList.fromController(widget.controller), _refresh),
         initialPage: widget.controller.page.value,
-        fetch: (page) {
-          final range = widget.controller.getDateRange();
-
-          return history.browseHistoryList((page - 1) * _historyEachPage,
-              page * _historyEachPage, range.getRange());
-        },
+        fetch: (page) => history.browseHistoryList(
+            (page - 1) * _historyEachPage,
+            page * _historyEachPage,
+            widget.controller.getDateRange()),
         itemBuilder: (context, browse, index) {
           final isVisible = true.obs;
 
@@ -558,12 +556,8 @@ class _PostHistoryBodyState extends State<_PostHistoryBody> {
         key: getPostListKey(
             PostList.fromController(widget.controller), _refresh),
         initialPage: widget.controller.page.value,
-        fetch: (page) {
-          final range = widget.controller.getDateRange();
-
-          return history.postDataList((page - 1) * _historyEachPage,
-              page * _historyEachPage, range.getRange());
-        },
+        fetch: (page) => history.postDataList((page - 1) * _historyEachPage,
+            page * _historyEachPage, widget.controller.getDateRange()),
         itemBuilder: (context, mainPost, index) {
           final isVisible = true.obs;
 
@@ -660,12 +654,8 @@ class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
         key: getPostListKey(
             PostList.fromController(widget.controller), _refresh),
         initialPage: widget.controller.page.value,
-        fetch: (page) {
-          final range = widget.controller.getDateRange();
-
-          return history.replyDataList((page - 1) * _historyEachPage,
-              page * _historyEachPage, range.getRange());
-        },
+        fetch: (page) => history.replyDataList((page - 1) * _historyEachPage,
+            page * _historyEachPage, widget.controller.getDateRange()),
         itemBuilder: (context, reply, index) {
           final isVisible = true.obs;
 

@@ -190,6 +190,17 @@ class PostListController {
   static PostListController get([int? index]) =>
       ControllerStack.getController(index);
 
+  void setForumData({required ForumData forum, int page = 1}) {
+    postListType.value =
+        forum.isTimeline ? PostListType.timeline : PostListType.forum;
+    id.value = forum.id;
+    this.page.value = page;
+    currentPage.value = page;
+    post.value = null;
+    bottomBarIndex.value = null;
+    dateRange.value = null;
+  }
+
   DateTimeRange? getDateRange([int? index]) {
     assert(index == null || index < 3);
 
@@ -679,9 +690,6 @@ class FloatingButtonState extends State<FloatingButton> {
             widget.bottomSheetController.value!.close();
           }
         }
-        /* if (!controller.postListType.value.canPost() && hasBottomSheet) {
-          widget.bottomSheetController.value!.close();
-        } */
       });
     }
   }
@@ -824,36 +832,42 @@ class PostListView extends StatelessWidget {
     return WillPopScope(
       onWillPop: () => _onWillPop(context),
       child: Obx(
-        () => (data.isReady.value &&
-                drafts.isReady.value &&
-                forums.isReady.value &&
-                history.isReady.value &&
-                settings.isReady.value &&
-                user.isReady.value)
-            ? Scaffold(
-                appBar: PostListAppBar(key: PostListAppBar.appBarKey),
-                body: Column(
-                  children: [
-                    Expanded(child: PostListPage(key: PostListPage.pageKey)),
-                    Obx(
-                      () => (_bottomSheetController.value != null &&
-                              !data.isKeyboardVisible.value)
-                          ? SizedBox(height: bottomSheetHeight)
-                          : const SizedBox.shrink(),
-                    ),
-                  ],
-                ),
-                drawerEdgeDragWidth: media.size.width / 2.0,
-                drawer: const AppDrawer(),
-                endDrawer: const AppEndDrawer(),
-                floatingActionButton: FloatingButton(
-                  key: FloatingButton.buttonKey,
-                  bottomSheetController: _bottomSheetController,
-                  bottomSheetHeight: bottomSheetHeight,
-                ),
-                bottomNavigationBar: _BottomBar(key: _BottomBar._bottomBarKey),
-              )
-            : const SizedBox.shrink(),
+        () {
+          if (data.isReady.value &&
+              drafts.isReady.value &&
+              forums.isReady.value &&
+              history.isReady.value &&
+              settings.isReady.value &&
+              user.isReady.value) {
+            PostListController.get().setForumData(forum: settings.initialForum);
+
+            return Scaffold(
+              appBar: PostListAppBar(key: PostListAppBar.appBarKey),
+              body: Column(
+                children: [
+                  Expanded(child: PostListPage(key: PostListPage.pageKey)),
+                  Obx(
+                    () => (_bottomSheetController.value != null &&
+                            !data.isKeyboardVisible.value)
+                        ? SizedBox(height: bottomSheetHeight)
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+              drawerEdgeDragWidth: media.size.width / 2.0,
+              drawer: const AppDrawer(),
+              endDrawer: const AppEndDrawer(),
+              floatingActionButton: FloatingButton(
+                key: FloatingButton.buttonKey,
+                bottomSheetController: _bottomSheetController,
+                bottomSheetHeight: bottomSheetHeight,
+              ),
+              bottomNavigationBar: _BottomBar(key: _BottomBar._bottomBarKey),
+            );
+          } else {
+            return const SizedBox.shrink();
+          }
+        },
       ),
     );
   }

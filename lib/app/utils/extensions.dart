@@ -111,9 +111,6 @@ extension GetExtension on GetInterface {
   }
 }
 
-extension DateTimeRangeExtension on DateTimeRange? {
-  DateTimeRange? getRange() => this != null
-      ? DateTimeRange(
-          start: this!.start, end: this!.end.add(const Duration(days: 1)))
-      : null;
+extension DateTimeExtension on DateTime {
+  DateTime addOneDay() => add(const Duration(days: 1));
 }

@@ -3,6 +3,8 @@ abstract class Settings {
 
   static const String showNotice = 'showNotice';
 
+  static const String initialForum = 'initialForum';
+
   static const String showImage = 'showImage';
 
   static const String isWatermark = 'isWatermark';

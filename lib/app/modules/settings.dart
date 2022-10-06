@@ -5,7 +5,9 @@ import 'package:uuid/uuid.dart';
 
 import '../data/services/settings.dart';
 import '../routes/routes.dart';
+import '../utils/theme.dart';
 import '../widgets/dialog.dart';
+import '../widgets/forum_name.dart';
 
 class _EditFeedUuid extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -81,6 +83,30 @@ class SettingsView extends GetView<SettingsController> {
             onTap: AppRoutes.toUser,
           ),
           ValueListenableBuilder<Box>(
+            valueListenable: settings.initialForumListenable,
+            builder: (context, value, child) => ListTile(
+              title: const Text('应用启动时显示的板块'),
+              trailing: TextButton(
+                onPressed: () => Get.dialog(SelectForum(onSelect: (forum) {
+                  settings.initialForum = forum.copy();
+                  Get.back();
+                })),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 150),
+                  child: forumNameText(
+                    context,
+                    settings.initialForum.forumName,
+                    textStyle: TextStyle(
+                        color: Get.isDarkMode
+                            ? Colors.white
+                            : AppTheme.primaryColorLight),
+                    maxLines: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          ValueListenableBuilder<Box>(
             valueListenable: settings.showImageListenable,
             builder: (context, value, child) => ListTile(
               title: const Text('显示图片'),
@@ -118,11 +144,12 @@ class SettingsView extends GetView<SettingsController> {
                 title: Text(
                   '自动跳转页数时滚动到最近浏览的位置',
                   style: TextStyle(
-                      color: settings.isJumpToLastBrowsePage
-                          ? null
-                          : Get.isDarkMode
-                              ? Theme.of(context).primaryColor
-                              : null),
+                    color: settings.isJumpToLastBrowsePage
+                        ? null
+                        : Get.isDarkMode
+                            ? Theme.of(context).primaryColor
+                            : null,
+                  ),
                 ),
                 trailing: Switch(
                   value: settings.isJumpToLastBrowsePosition,

@@ -42,7 +42,7 @@ class XdnmbApp extends StatelessWidget {
       title: 'X岛匿名版',
       initialBinding: servicesBindings(),
       getPages: getPages,
-      initialRoute: AppRoutes.forumUrl(4, page: 1),
+      initialRoute: AppRoutes.timelineUrl(1),
       theme: AppTheme.theme,
       darkTheme: AppTheme.darkTheme,
       builder: EasyLoading.init(),
@@ -52,8 +52,6 @@ class XdnmbApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en', ''),
-        Locale('en', 'US'),
         Locale.fromSubtags(languageCode: 'zh'),
         Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'),
         Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
@@ -63,6 +61,8 @@ class XdnmbApp extends StatelessWidget {
             languageCode: 'zh', scriptCode: 'Hant', countryCode: 'TW'),
         Locale.fromSubtags(
             languageCode: 'zh', scriptCode: 'Hant', countryCode: 'HK'),
+        Locale('en', ''),
+        Locale('en', 'US'),
       ],
       debugShowCheckedModeBanner: false,
     );

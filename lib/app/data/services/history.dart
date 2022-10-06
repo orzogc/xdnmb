@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 
 import '../../utils/directory.dart';
+import '../../utils/extensions.dart';
 import '../models/history.dart';
 import '../models/post.dart';
 import '../models/reply.dart';
@@ -29,7 +30,8 @@ class PostHistoryService extends GetxService {
     if (range != null) {
       return _browseHistory
           .where()
-          .browseTimeBetween(range.start, range.end, includeUpper: false)
+          .browseTimeBetween(range.start, range.end.addOneDay(),
+              includeUpper: false)
           .count();
     } else {
       return _browseHistory.count();
@@ -47,7 +49,8 @@ class PostHistoryService extends GetxService {
         if (range != null) {
           await _browseHistory
               .where()
-              .browseTimeBetween(range.start, range.end, includeUpper: false)
+              .browseTimeBetween(range.start, range.end.addOneDay(),
+                  includeUpper: false)
               .deleteAll();
         } else {
           await _browseHistory.clear();
@@ -62,7 +65,8 @@ class PostHistoryService extends GetxService {
     return range != null
         ? _browseHistory
             .where(sort: Sort.desc)
-            .browseTimeBetween(range.start, range.end, includeUpper: false)
+            .browseTimeBetween(range.start, range.end.addOneDay(),
+                includeUpper: false)
             .offset(start)
             .limit(end - start)
             .findAll()
@@ -80,7 +84,8 @@ class PostHistoryService extends GetxService {
     if (range != null) {
       return _postData
           .where()
-          .postTimeBetween(range.start, range.end, includeUpper: false)
+          .postTimeBetween(range.start, range.end.addOneDay(),
+              includeUpper: false)
           .count();
     } else {
       return _postData.count();
@@ -98,7 +103,8 @@ class PostHistoryService extends GetxService {
         if (range != null) {
           await _postData
               .where()
-              .postTimeBetween(range.start, range.end, includeUpper: false)
+              .postTimeBetween(range.start, range.end.addOneDay(),
+                  includeUpper: false)
               .deleteAll();
         } else {
           await _postData.clear();
@@ -113,7 +119,8 @@ class PostHistoryService extends GetxService {
     return range != null
         ? _postData
             .where(sort: Sort.desc)
-            .postTimeBetween(range.start, range.end, includeUpper: false)
+            .postTimeBetween(range.start, range.end.addOneDay(),
+                includeUpper: false)
             .offset(start)
             .limit(end - start)
             .findAll()
@@ -131,7 +138,8 @@ class PostHistoryService extends GetxService {
     if (range != null) {
       return _replyData
           .where()
-          .postTimeBetween(range.start, range.end, includeUpper: false)
+          .postTimeBetween(range.start, range.end.addOneDay(),
+              includeUpper: false)
           .count();
     } else {
       return _replyData.count();
@@ -149,7 +157,8 @@ class PostHistoryService extends GetxService {
         if (range != null) {
           await _replyData
               .where()
-              .postTimeBetween(range.start, range.end, includeUpper: false)
+              .postTimeBetween(range.start, range.end.addOneDay(),
+                  includeUpper: false)
               .deleteAll();
         } else {
           await _replyData.clear();
@@ -164,7 +173,8 @@ class PostHistoryService extends GetxService {
     return range != null
         ? _replyData
             .where(sort: Sort.desc)
-            .postTimeBetween(range.start, range.end, includeUpper: false)
+            .postTimeBetween(range.start, range.end.addOneDay(),
+                includeUpper: false)
             .offset(start)
             .limit(end - start)
             .findAll()

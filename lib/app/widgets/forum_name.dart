@@ -7,19 +7,35 @@ import '../data/models/forum.dart';
 import '../data/services/forum.dart';
 import 'dialog.dart';
 
+Widget forumNameText(BuildContext context, String forumName,
+        {TextStyle? textStyle,
+        int? maxLines,
+        TextOverflow overflow = TextOverflow.ellipsis}) =>
+    RichText(
+      text: htmlToTextSpan(context, forumName, textStyle: textStyle),
+      overflow: overflow,
+      maxLines: maxLines,
+    );
+
 class ForumName extends StatelessWidget {
   final int forumId;
 
   final bool isTimeline;
 
-  const ForumName({super.key, required this.forumId, this.isTimeline = false});
+  final int? maxLines;
+
+  const ForumName(
+      {super.key,
+      required this.forumId,
+      this.isTimeline = false,
+      this.maxLines = 1});
 
   @override
   Widget build(BuildContext context) {
     final name = ForumListService.to.forumName(forumId, isTimeline: isTimeline);
 
     return name != null
-        ? htmlToRichText(context, name)
+        ? forumNameText(context, name, maxLines: maxLines)
         : const SizedBox.shrink();
   }
 }
@@ -91,6 +107,34 @@ class _EditForumNameState extends State<EditForumName> {
           },
           child: const Text('确定'),
         ),
+      ],
+    );
+  }
+}
+
+typedef ForumCallback = void Function(ForumData forum);
+
+class SelectForum extends StatelessWidget {
+  final bool isOnlyForum;
+
+  final ForumCallback onSelect;
+
+  const SelectForum(
+      {super.key, this.isOnlyForum = false, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    final forums = ForumListService.to.forums;
+
+    return SimpleDialog(
+      children: [
+        for (final forum
+            in isOnlyForum ? forums.where((forum) => forum.isForum) : forums)
+          SimpleDialogOption(
+            onPressed: () => onSelect(forum),
+            child: forumNameText(context, forum.forumName,
+                textStyle: Theme.of(context).textTheme.bodyText1, maxLines: 1),
+          ),
       ],
     );
   }

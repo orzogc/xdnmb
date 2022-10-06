@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../models/forum.dart';
 import '../models/hive.dart';
 import '../models/settings.dart';
 
@@ -27,6 +28,18 @@ class SettingsService extends GetxService {
 
   set showNotice(bool showNotice) =>
       _settingsBox.put(Settings.showNotice, showNotice);
+
+  ForumData get initialForum => _settingsBox.get(Settings.initialForum,
+      defaultValue: ForumData(
+          id: 1,
+          name: '综合线',
+          displayName: '综合线',
+          message: '主时间线',
+          maxPage: 20,
+          isTimeline: true));
+
+  set initialForum(ForumData forum) =>
+      _settingsBox.put(Settings.initialForum, forum);
 
   bool get showImage =>
       _settingsBox.get(Settings.showImage, defaultValue: true);
@@ -56,6 +69,8 @@ class SettingsService extends GetxService {
   String get feedUuid => _settingsBox.get(Settings.feedUuid);
 
   set feedUuid(String uuid) => _settingsBox.put(Settings.feedUuid, uuid);
+
+  late final ValueListenable<Box> initialForumListenable;
 
   late final ValueListenable<Box> showImageListenable;
 
@@ -94,6 +109,8 @@ class SettingsService extends GetxService {
       feedUuid = const Uuid().v4();
     }
 
+    initialForumListenable =
+        _settingsBox.listenable(keys: [Settings.initialForum]);
     showImageListenable = _settingsBox.listenable(keys: [Settings.showImage]);
     isWatermarkListenable =
         _settingsBox.listenable(keys: [Settings.isWatermark]);

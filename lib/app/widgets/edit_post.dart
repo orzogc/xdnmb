@@ -6,7 +6,6 @@ import 'package:align_positioned/align_positioned.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:html_to_text/html_to_text.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' as xdnmb_api;
 
@@ -34,6 +33,7 @@ import '../utils/icons.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'dialog.dart';
+import 'forum_name.dart';
 import 'image.dart';
 import 'loading.dart';
 import 'scroll.dart';
@@ -41,42 +41,18 @@ import 'size.dart';
 
 const double _defaultHeight = 200.0;
 
-typedef _ForumIdCallback = void Function(int forumId);
-
-class _SelectForum extends StatelessWidget {
-  final _ForumIdCallback onForumId;
-
-  const _SelectForum({super.key, required this.onForumId});
-
-  @override
-  Widget build(BuildContext context) => SimpleDialog(
-        children: [
-          for (final forum
-              in ForumListService.to.forums.where((forum) => forum.isForum))
-            SimpleDialogOption(
-              onPressed: () {
-                onForumId(forum.id);
-                Get.back();
-              },
-              child: htmlToRichText(context, forum.forumName,
-                  textStyle: Theme.of(context).textTheme.bodyText1),
-            )
-        ],
-      );
-}
-
 class _ForumName extends StatelessWidget {
   final PostListType postListType;
 
   final int? forumId;
 
-  final _ForumIdCallback onForumId;
+  final ForumCallback onForum;
 
   const _ForumName(
       {super.key,
       required this.postListType,
       required this.forumId,
-      required this.onForumId});
+      required this.onForum});
 
   @override
   Widget build(BuildContext context) {
@@ -91,20 +67,24 @@ class _ForumName extends StatelessWidget {
             onPressed: () {
               if (postListType.isTimeline()) {
                 Get.dialog(
-                  _SelectForum(onForumId: onForumId),
+                  SelectForum(
+                    isOnlyForum: true,
+                    onSelect: (forum) {
+                      onForum(forum);
+                      Get.back();
+                    },
+                  ),
                 );
               }
             },
-            child: htmlToRichText(
-              context,
-              forumName,
-              textStyle: TextStyle(
-                  color: Get.isDarkMode
-                      ? Colors.white
-                      : AppTheme.primaryColorLight),
-            ),
+            child: forumNameText(context, forumName,
+                textStyle: TextStyle(
+                    color: Get.isDarkMode
+                        ? Colors.white
+                        : AppTheme.primaryColorLight),
+                maxLines: 2),
           )
-        : htmlToRichText(context, forumName);
+        : forumNameText(context, forumName, maxLines: 2);
   }
 }
 
@@ -1224,7 +1204,7 @@ class EditPostState extends State<EditPost> {
                     child: _ForumName(
                       postListType: _postList.value.postListType,
                       forumId: _forumId.value,
-                      onForumId: (forumId) => _forumId.value = forumId,
+                      onForum: (forum) => _forumId.value = forum.id,
                     ),
                   ),
                   if (_postList.value.postListType.isThreadType())
@@ -1360,8 +1340,10 @@ class EditPostState extends State<EditPost> {
                                     controller: _contentController,
                                     style: textStyle,
                                     maxLines: null,
-                                    minLines: (constraints.maxHeight - 24.0) ~/
-                                        textSize.height,
+                                    minLines: max(
+                                        (constraints.maxHeight - 24.0) ~/
+                                            textSize.height,
+                                        1),
                                     textAlignVertical: TextAlignVertical.top,
                                     decoration: InputDecoration(
                                       isDense: true,
