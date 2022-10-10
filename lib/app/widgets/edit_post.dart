@@ -570,10 +570,7 @@ class _Cookie extends StatelessWidget {
                             : null,
                         trailing:
                             (user.isUserCookieValid && cookie.isDeprecated)
-                                ? const Text('非登陆帐号饼干',
-                                    style: TextStyle(
-                                        color: Colors.red,
-                                        fontWeight: FontWeight.bold))
+                                ? const Text('非登陆帐号饼干', style: AppTheme.boldRed)
                                 : null,
                       ),
                   ],
@@ -592,7 +589,7 @@ class _Cookie extends StatelessWidget {
         : const Text('没有饼干',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold));
+            style: AppTheme.boldRed);
   }
 }
 
@@ -939,7 +936,7 @@ class _EmoticonDialog extends StatelessWidget {
         SimpleDialogOption(
           onPressed: () async {
             await Get.dialog(ConfirmCancelDialog(
-              content: '是否删除颜文字 ${emoticon.name}？',
+              content: '确定删除颜文字 ${emoticon.name}？',
               onConfirm: () async {
                 await emoticon.delete();
                 Get.back();

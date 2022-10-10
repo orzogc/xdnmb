@@ -78,10 +78,8 @@ class SettingsView extends GetView<SettingsController> {
       ),
       body: ListView(
         children: [
-          const ListTile(
-            title: Text('管理饼干'),
-            onTap: AppRoutes.toUser,
-          ),
+          const ListTile(title: Text('管理饼干'), onTap: AppRoutes.toUser),
+          const ListTile(title: Text('黑名单'), onTap: AppRoutes.toBlacklist),
           ValueListenableBuilder<Box>(
             valueListenable: settings.initialForumListenable,
             builder: (context, value, child) => ListTile(
@@ -97,9 +95,10 @@ class SettingsView extends GetView<SettingsController> {
                     context,
                     settings.initialForum.forumName,
                     textStyle: TextStyle(
-                        color: Get.isDarkMode
-                            ? Colors.white
-                            : AppTheme.primaryColorLight),
+                      color: Get.isDarkMode
+                          ? Colors.white
+                          : AppTheme.primaryColorLight,
+                    ),
                     maxLines: 1,
                   ),
                 ),

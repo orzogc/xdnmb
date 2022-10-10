@@ -140,10 +140,8 @@ class _PostSage extends StatelessWidget {
   const _PostSage({super.key});
 
   @override
-  Widget build(BuildContext context) => const Text(
-        'SAGE',
-        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-      );
+  Widget build(BuildContext context) =>
+      const Text('SAGE', style: AppTheme.boldRed);
 }
 
 class PostDraft extends StatelessWidget {
@@ -293,7 +291,7 @@ class PostContent extends StatelessWidget {
                           child: _PostId(
                               postId: post.id, onPostIdTap: onPostIdTap)),
                     if (showForumName && forumId != null)
-                      Flexible(child: ForumName(forumId: forumId)),
+                      Flexible(child: ForumName(forumId: forumId, maxLines: 1)),
                     if (showReplyCount && replyCount != null)
                       _PostReplyCount(replyCount)
                   ])),

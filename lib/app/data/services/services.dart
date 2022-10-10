@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import 'blacklist.dart';
 import 'drafts.dart';
 import 'emoticons.dart';
 import 'forum.dart';
@@ -18,6 +19,7 @@ Bindings servicesBindings() => BindingsBuilder(() {
       Get.put(PersistentDataService());
       Get.put(ImageService());
       Get.put(ForumListService());
+      Get.put(BlacklistService());
       Get.put(PostHistoryService());
       Get.put(PostDraftsService());
       Get.put(EmoticonsService());

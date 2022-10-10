@@ -120,3 +120,24 @@ class ForumData extends HiveObject implements ForumBase {
   int get hashCode => Object.hash(id, name, displayName, message, maxPage,
       isTimeline, forumGroupId, isDeprecated, userDefinedName);
 }
+
+@HiveType(typeId: 5)
+class BlockForumData extends HiveObject {
+  @HiveField(0)
+  final int forumId;
+
+  @HiveField(1)
+  final int timelineId;
+
+  BlockForumData({required this.forumId, required this.timelineId});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BlockForumData &&
+          forumId == other.forumId &&
+          timelineId == other.timelineId);
+
+  @override
+  int get hashCode => Object.hash(forumId, timelineId);
+}

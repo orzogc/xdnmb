@@ -145,7 +145,8 @@ class _TabTitle extends StatelessWidget {
           title = Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (forumId != null) Flexible(child: ForumName(forumId: forumId)),
+              if (forumId != null)
+                Flexible(child: ForumName(forumId: forumId, maxLines: 1)),
               if (postId != null) Flexible(child: Text(postId.toPostNumber())),
             ],
           );
@@ -154,7 +155,9 @@ class _TabTitle extends StatelessWidget {
         case PostListType.timeline:
           title = (forumId != null
               ? ForumName(
-                  forumId: forumId, isTimeline: postListType.isTimeline())
+                  forumId: forumId,
+                  isTimeline: postListType.isTimeline(),
+                  maxLines: 1)
               : const SizedBox.shrink());
           break;
         case PostListType.feed:

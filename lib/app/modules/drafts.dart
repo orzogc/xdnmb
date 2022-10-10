@@ -9,6 +9,7 @@ import 'package:screenshot/screenshot.dart';
 import '../data/models/draft.dart';
 import '../data/services/drafts.dart';
 import '../utils/toast.dart';
+import '../utils/theme.dart';
 import '../widgets/bilistview.dart';
 import '../widgets/dialog.dart';
 import '../widgets/post.dart';
@@ -57,7 +58,7 @@ class PostDraftsView extends GetView<PostDraftsController> {
             return draftList;
           },
           itemBuilder: (context, draft, index) {
-            final isVisible = true.obs;
+            final RxBool isVisible = true.obs;
 
             return Obx(
               () => isVisible.value
@@ -129,10 +130,7 @@ class PostDraftsView extends GetView<PostDraftsController> {
             );
           },
           noItemsFoundBuilder: (context) => const Center(
-            child: Text(
-              '没有草稿',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-            ),
+            child: Text('没有草稿', style: AppTheme.boldRed),
           ),
           canRefreshAtBottom: false,
         ),

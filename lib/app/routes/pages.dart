@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:xdnmb/app/modules/post_list.dart';
 
+import '../modules/blacklist.dart';
 import '../modules/cookie.dart';
 import '../modules/drafts.dart';
 import '../modules/edit_post.dart';
@@ -64,7 +65,12 @@ abstract class AppPages {
             name: AppRoutes.user,
             page: () => const CookieView(),
             binding: CookieBinding(),
-            transition: Transition.rightToLeft)
+            transition: Transition.rightToLeft),
+        GetPage(
+            name: AppRoutes.blacklist,
+            page: () => BlacklistView(),
+            binding: BlacklistBinding(),
+            transition: Transition.rightToLeft),
       ]);
 
   static final GetPage reorderForumList = GetPage(

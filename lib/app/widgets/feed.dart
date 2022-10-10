@@ -15,6 +15,7 @@ import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
 import '../utils/navigation.dart';
+import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
@@ -91,8 +92,8 @@ class _FeedDialog extends StatelessWidget {
             },
             child: Text('取消订阅', style: Theme.of(context).textTheme.subtitle1),
           ),
-          CopyPostId(post),
-          CopyPostReference(post),
+          CopyPostId(post.id),
+          CopyPostReference(post.id),
           CopyPostContent(post),
           NewTab(post),
           NewTabBackground(post),
@@ -188,10 +189,7 @@ class _FeedBodyState extends State<FeedBody> {
             );
           },
           noItemsFoundBuilder: (context) => const Center(
-            child: Text(
-              '没有订阅',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-            ),
+            child: Text('没有订阅', style: AppTheme.boldRed),
           ),
           canRefreshAtBottom: false,
         ),

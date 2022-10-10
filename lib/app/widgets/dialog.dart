@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:html_to_text/html_to_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/services/blacklist.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
@@ -13,10 +14,12 @@ import '../routes/routes.dart';
 import '../utils/cache.dart';
 import '../utils/extensions.dart';
 import '../utils/navigation.dart';
+import '../utils/text.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'content.dart';
 import 'edit_post.dart';
+import 'forum_name.dart';
 import 'loading.dart';
 import 'scroll.dart';
 
@@ -76,7 +79,11 @@ class InputDialog extends StatelessWidget {
 class ConfirmCancelDialog extends StatelessWidget {
   final String? title;
 
+  final Widget? titleWidget;
+
   final String? content;
+
+  final Widget? contentWidget;
 
   final VoidCallback? onConfirm;
 
@@ -89,7 +96,9 @@ class ConfirmCancelDialog extends StatelessWidget {
   const ConfirmCancelDialog(
       {super.key,
       this.title,
+      this.titleWidget,
       this.content,
+      this.contentWidget,
       this.onConfirm,
       this.onCancel,
       this.confirmText,
@@ -102,9 +111,10 @@ class ConfirmCancelDialog extends StatelessWidget {
     return AlertDialog(
       actionsPadding:
           const EdgeInsets.only(left: 10.0, right: 10.0, bottom: 10.0),
-      title: title != null ? Text(title!) : null,
-      content: content != null
-          ? SingleChildScrollViewWithScrollbar(child: Text(content!))
+      title: titleWidget ?? (title != null ? Text(title!) : null),
+      content: (content != null || contentWidget != null)
+          ? SingleChildScrollViewWithScrollbar(
+              child: contentWidget ?? Text(content!))
           : null,
       actions: (onConfirm != null || onCancel != null)
           ? [
@@ -201,16 +211,8 @@ class ForumRuleDialog extends StatelessWidget {
         return AlertDialog(
           actionsPadding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
           title: forum != null
-              ? RichText(
-                  text: TextSpan(
-                    children: [
-                      htmlToTextSpan(context, forum.forumName,
-                          textStyle: textStyle),
-                      const TextSpan(text: ' 版规'),
-                    ],
-                    style: textStyle,
-                  ),
-                )
+              ? forumNameText(context, forum.forumName,
+                  trailing: ' 版规', textStyle: textStyle)
               : const Text('版规'),
           content: SingleChildScrollViewWithScrollbar(
               child: TextContent(
@@ -295,17 +297,17 @@ class NewTabBackground extends StatelessWidget {
 }
 
 class CopyPostId extends StatelessWidget {
-  final PostBase post;
+  final int postId;
 
   final String? text;
 
-  const CopyPostId(this.post, {super.key, this.text});
+  const CopyPostId(this.postId, {super.key, this.text});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () async {
-          await Clipboard.setData(ClipboardData(text: '${post.id}'));
-          showToast('已复制 ${post.id}');
+          await Clipboard.setData(ClipboardData(text: '$postId'));
+          showToast('已复制 $postId');
           postListBack();
         },
         child:
@@ -314,17 +316,18 @@ class CopyPostId extends StatelessWidget {
 }
 
 class CopyPostReference extends StatelessWidget {
-  final PostBase post;
+  final int postId;
 
   final String? text;
 
-  const CopyPostReference(this.post, {super.key, this.text});
+  const CopyPostReference(this.postId, {super.key, this.text});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () async {
-          await Clipboard.setData(ClipboardData(text: post.toPostReference()));
-          showToast('已复制 ${post.toPostReference()}');
+          await Clipboard.setData(
+              ClipboardData(text: postId.toPostReference()));
+          showToast('已复制 ${postId.toPostReference()}');
           postListBack();
         },
         child: Text(
@@ -342,9 +345,9 @@ class CopyPostContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () async {
-          await Clipboard.setData(ClipboardData(
-              text: htmlToTextSpan(context, post.content).toPlainText()));
-          showToast('已复制串 ${post.id.toPostNumber()} 的内容');
+          await Clipboard.setData(
+              ClipboardData(text: htmlToPlainText(context, post.content)));
+          showToast('已复制串 ${post.toPostNumber()} 的内容');
           postListBack();
         },
         child: Text('复制串的内容', style: Theme.of(context).textTheme.subtitle1),
@@ -352,9 +355,9 @@ class CopyPostContent extends StatelessWidget {
 }
 
 class Report extends StatelessWidget {
-  final PostBase post;
+  final int postId;
 
-  const Report(this.post, {super.key});
+  const Report(this.postId, {super.key});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
@@ -363,11 +366,67 @@ class Report extends StatelessWidget {
           AppRoutes.toEditPost(
               postListType: PostListType.forum,
               id: EditPost.dutyRoomId,
-              content: '${post.toPostReference()}\n',
+              content: '${postId.toPostReference()}\n',
               forumId: EditPost.dutyRoomId);
         },
         child: Text('举报', style: Theme.of(context).textTheme.subtitle1),
       );
+}
+
+class BlockPost extends StatelessWidget {
+  final int postId;
+
+  final VoidCallback onBlock;
+
+  const BlockPost({super.key, required this.postId, required this.onBlock});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          final result = await postListDialog<bool>(ConfirmCancelDialog(
+            content: '确定屏蔽串号 ${postId.toPostNumber()} ？',
+            onConfirm: () => postListBack<bool>(result: true),
+            onCancel: () => postListBack<bool>(result: false),
+          ));
+
+          if (result ?? false) {
+            await BlacklistService.to.blockPost(postId);
+            onBlock();
+            showToast('屏蔽串号 ${postId.toPostNumber()}');
+            postListBack();
+          }
+        },
+        child: Text('屏蔽串号', style: Theme.of(context).textTheme.subtitle1),
+      );
+}
+
+class BlockUser extends StatelessWidget {
+  final String userHash;
+
+  final VoidCallback onBlock;
+
+  const BlockUser({super.key, required this.userHash, required this.onBlock});
+
+  @override
+  Widget build(BuildContext context) {
+    return SimpleDialogOption(
+      onPressed: () async {
+        final result = await postListDialog<bool>(ConfirmCancelDialog(
+          content: '确定屏蔽饼干 $userHash ？',
+          onConfirm: () => postListBack<bool>(result: true),
+          onCancel: () => postListBack<bool>(result: false),
+        ));
+
+        if (result ?? false) {
+          await BlacklistService.to.blockUser(userHash);
+          onBlock();
+          showToast('屏蔽饼干 $userHash');
+          postListBack();
+        }
+      },
+      child: Text('屏蔽饼干', style: Theme.of(context).textTheme.subtitle1),
+    );
+  }
 }
 
 class ApplyImageDialog extends StatelessWidget {

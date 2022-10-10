@@ -37,7 +37,7 @@ class _VerifyImage extends StatelessWidget {
               snapshot.hasError) {
             showToast('加载验证码失败：${exceptionMessage(snapshot.error!)}');
 
-            return const Text('点击重新加载验证码', style: TextStyle(color: Colors.red));
+            return const Text('点击重新加载验证码', style: AppTheme.boldRed);
           }
 
           return const CircularProgressIndicator();
@@ -419,7 +419,7 @@ class _Cookie extends StatelessWidget {
           if (user.isUserCookieValid && cookie.isDeprecated)
             const Text(
               '非登陆帐号饼干',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: AppTheme.boldRed,
             ),
           if (user.isUserCookieValid &&
               cookie.isDeprecated &&
@@ -527,12 +527,8 @@ class CookieView extends GetView<CookieController> {
                                                 color: Colors.blue,
                                                 fontWeight: FontWeight.bold),
                                           )
-                                        : const Text(
-                                            '不可领取饼干',
-                                            style: TextStyle(
-                                                color: Colors.red,
-                                                fontWeight: FontWeight.bold),
-                                          ),
+                                        : const Text('不可领取饼干',
+                                            style: AppTheme.boldRed),
                                     const SizedBox(width: 10.0),
                                     Text(
                                       '${user.currentCookiesNum}/${user.totalCookiesNum}',

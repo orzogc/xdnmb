@@ -6,6 +6,7 @@ import '../utils/extensions.dart';
 import '../utils/launch.dart';
 import '../widgets/reference.dart';
 
+/// [mainPostId]为引用串的主串ID（非被引用串）
 Future<void> parseUrl(
     {required String url, int? mainPostId, String? poUserHash}) async {
   final parsed = Uri.tryParse(url);

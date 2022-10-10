@@ -25,6 +25,9 @@ abstract class AppTheme {
 
   static const Color editPostFilledColorDark = Color(0xff4d4d4d);
 
+  static const TextStyle boldRed =
+      TextStyle(color: Colors.red, fontWeight: FontWeight.bold);
+
   static final ThemeData theme = ThemeData(
     brightness: Brightness.light,
     primaryColor: primaryColorLight,

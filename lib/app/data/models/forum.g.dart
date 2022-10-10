@@ -63,3 +63,40 @@ class ForumDataAdapter extends TypeAdapter<ForumData> {
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
+
+class BlockForumDataAdapter extends TypeAdapter<BlockForumData> {
+  @override
+  final int typeId = 5;
+
+  @override
+  BlockForumData read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return BlockForumData(
+      forumId: fields[0] as int,
+      timelineId: fields[1] as int,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, BlockForumData obj) {
+    writer
+      ..writeByte(2)
+      ..writeByte(0)
+      ..write(obj.forumId)
+      ..writeByte(1)
+      ..write(obj.timelineId);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BlockForumDataAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}

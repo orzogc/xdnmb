@@ -172,10 +172,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
         }
       },
       child: DefaultTextStyle.merge(
-        style: const TextStyle(
-          color: Colors.red,
-          fontWeight: FontWeight.bold,
-        ),
+        style: AppTheme.boldRed,
         child: const Center(child: Text('出现错误，点击重新尝试')),
       ),
     );
@@ -276,7 +273,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
             _refreshController?.finishRefresh();
           }
         },
-        onLoad: widget.lastPage == null && widget.canRefreshAtBottom
+        onLoad: (widget.lastPage == null && widget.canRefreshAtBottom)
             ? () async {
                 if (!_isLoading) {
                   await _loadMore();

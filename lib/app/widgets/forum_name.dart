@@ -8,14 +8,30 @@ import '../data/services/forum.dart';
 import 'dialog.dart';
 
 Widget forumNameText(BuildContext context, String forumName,
-        {TextStyle? textStyle,
+        {String? leading,
+        String? trailing,
+        TextStyle? textStyle,
         int? maxLines,
         TextOverflow overflow = TextOverflow.ellipsis}) =>
-    RichText(
-      text: htmlToTextSpan(context, forumName, textStyle: textStyle),
-      overflow: overflow,
-      maxLines: maxLines,
-    );
+    (leading != null || trailing != null)
+        ? RichText(
+            text: TextSpan(
+              children: [
+                if (leading != null) TextSpan(text: leading, style: textStyle),
+                htmlToTextSpan(context, forumName, textStyle: textStyle),
+                if (trailing != null)
+                  TextSpan(text: trailing, style: textStyle),
+              ],
+              style: textStyle,
+            ),
+            overflow: overflow,
+            maxLines: maxLines,
+          )
+        : RichText(
+            text: htmlToTextSpan(context, forumName, textStyle: textStyle),
+            overflow: overflow,
+            maxLines: maxLines,
+          );
 
 class ForumName extends StatelessWidget {
   final int forumId;
@@ -28,7 +44,7 @@ class ForumName extends StatelessWidget {
       {super.key,
       required this.forumId,
       this.isTimeline = false,
-      this.maxLines = 1});
+      this.maxLines});
 
   @override
   Widget build(BuildContext context) {
@@ -132,8 +148,12 @@ class SelectForum extends StatelessWidget {
             in isOnlyForum ? forums.where((forum) => forum.isForum) : forums)
           SimpleDialogOption(
             onPressed: () => onSelect(forum),
-            child: forumNameText(context, forum.forumName,
-                textStyle: Theme.of(context).textTheme.bodyText1, maxLines: 1),
+            child: forumNameText(
+              context,
+              forum.forumName,
+              textStyle: Theme.of(context).textTheme.bodyText1,
+              maxLines: 1,
+            ),
           ),
       ],
     );

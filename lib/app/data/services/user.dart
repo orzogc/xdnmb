@@ -207,6 +207,7 @@ class UserService extends GetxService {
     updateClient();
 
     _userBox.watch(key: User.userCookie).listen((event) {
+      debugPrint('userCookie change');
       final cookie = event.value as String?;
       final client = XdnmbClientService.to.client;
       if (cookie != null) {
@@ -217,6 +218,7 @@ class UserService extends GetxService {
     });
 
     _userBox.watch(key: User.browseCookie).listen((event) {
+      debugPrint('browseCookie change');
       final cookie = event.value as CookieData?;
       final client = XdnmbClientService.to.client;
       if (cookie != null) {
@@ -230,6 +232,7 @@ class UserService extends GetxService {
     updateBrowseCookie();
     updatePostCookie();
     _cookiesBox.watch().listen((event) {
+      debugPrint('_cookiesBox change');
       updateBrowseCookie();
       updatePostCookie();
     });

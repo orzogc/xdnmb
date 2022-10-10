@@ -50,6 +50,7 @@ class _ForumValue {
 
 typedef NameWidgetBuilder = Widget Function(String name);
 
+// TODO: 获取隐藏板块信息
 class ForumListService extends GetxService {
   static ForumListService get to => Get.find<ForumListService>();
 
@@ -192,8 +193,14 @@ class ForumListService extends GetxService {
     _hiddenBox = await Hive.openBox<ForumData>(HiveBoxName.hiddenForums);
 
     _updateForumMap();
-    _displayedBox.watch().listen((event) => _updateForumMap());
-    _hiddenBox.watch().listen((event) => _updateForumMap());
+    _displayedBox.watch().listen((event) {
+      debugPrint('_displayedBox change');
+      _updateForumMap();
+    });
+    _hiddenBox.watch().listen((event) {
+      debugPrint('_hiddenBox change');
+      _updateForumMap();
+    });
 
     displayedForumListenable = _displayedBox.listenable();
 

@@ -5,6 +5,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/draft.dart';
 import '../data/models/forum.dart';
+import '../data/services/blacklist.dart';
 import '../data/services/drafts.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
@@ -17,7 +18,7 @@ import '../utils/image.dart';
 import '../utils/navigation.dart';
 import '../utils/stack.dart';
 import '../utils/toast.dart';
-import '../widgets/button.dart';
+import '../widgets/page.dart';
 import '../widgets/drawer.dart';
 import '../widgets/edit_post.dart';
 import '../widgets/end_drawer.dart';
@@ -223,6 +224,8 @@ class PostListController {
     currentPage.value = page;
   }
 
+  void refreshCurrentPage() => page.trigger(currentPage.value);
+
   PostListController copy() => PostListController(
       postListType: postListType.value,
       id: id.value,
@@ -364,7 +367,8 @@ class PostListAppBarState extends State<PostListAppBar> {
               if (postListType.value.isXdnmbApi())
                 PageButton(controller: controller, maxPage: maxPage),
               if (postListType.value.isThreadType())
-                ThreadAppBarPopupMenuButton(controller),
+                ThreadAppBarPopupMenuButton(
+                    controller: controller, refresh: () => _refresh()),
               if (postListType.value.isForumType())
                 ForumAppBarPopupMenuButton(controller),
               if (postListType.value.isHistory())
@@ -785,6 +789,8 @@ class _BottomBarState extends State<_BottomBar> {
 }
 
 class PostListView extends StatelessWidget {
+  static bool _isInitial = true;
+
   final Rxn<DateTime> _lastPressBackTime = Rxn(null);
 
   final Rxn<PersistentBottomSheetController> _bottomSheetController = Rxn(null);
@@ -822,6 +828,7 @@ class PostListView extends StatelessWidget {
     final media = MediaQuery.of(context);
     final bottomSheetHeight = media.size.height * 0.4;
 
+    final blacklist = BlacklistService.to;
     final data = PersistentDataService.to;
     final drafts = PostDraftsService.to;
     final forums = ForumListService.to;
@@ -833,13 +840,18 @@ class PostListView extends StatelessWidget {
       onWillPop: () => _onWillPop(context),
       child: Obx(
         () {
-          if (data.isReady.value &&
+          if (blacklist.isReady.value &&
+              data.isReady.value &&
               drafts.isReady.value &&
               forums.isReady.value &&
               history.isReady.value &&
               settings.isReady.value &&
               user.isReady.value) {
-            PostListController.get().setForumData(forum: settings.initialForum);
+            if (_isInitial) {
+              PostListController.get()
+                  .setForumData(forum: settings.initialForum);
+              _isInitial = false;
+            }
 
             return Scaffold(
               appBar: PostListAppBar(key: PostListAppBar.appBarKey),

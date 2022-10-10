@@ -14,4 +14,10 @@ abstract class HiveBoxName {
   static const String draft = 'draft';
 
   static const String emoticon = 'emoticon';
+
+  static const String forumBlacklist = 'forumBlacklist';
+
+  static const String postBlacklist = 'postBlacklist';
+
+  static const String userBlacklist = 'userBlacklist';
 }

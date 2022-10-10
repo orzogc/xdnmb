@@ -11,6 +11,7 @@ import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/navigation.dart';
+import '../utils/text.dart';
 import '../utils/toast.dart';
 import 'forum_name.dart';
 
@@ -70,8 +71,7 @@ class _Dialog extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme.subtitle1;
     final client = XdnmbClientService.to;
     final forums = ForumListService.to;
-    final span = htmlToTextSpan(context, forum.forumName, textStyle: textStyle);
-    final forumName = span.toPlainText();
+    final forumName = htmlToPlainText(context, forum.forumName);
 
     return SimpleDialog(
       children: [
@@ -83,9 +83,12 @@ class _Dialog extends StatelessWidget {
             showToast('已在新标签页打开 $forumName');
             Get.back(result: true);
           },
-          child: RichText(
-            text:
-                TextSpan(text: '在新标签页打开 ', children: [span], style: textStyle),
+          child: forumNameText(
+            context,
+            forum.forumName,
+            leading: '在新标签页打开 ',
+            textStyle: textStyle,
+            maxLines: 1,
           ),
         ),
         SimpleDialogOption(
@@ -96,9 +99,12 @@ class _Dialog extends StatelessWidget {
             showToast('已在新标签页后台打开 $forumName');
             Get.back(result: true);
           },
-          child: RichText(
-            text: TextSpan(
-                text: '在新标签页后台打开 ', children: [span], style: textStyle),
+          child: forumNameText(
+            context,
+            forum.forumName,
+            leading: '在新标签页后台打开 ',
+            textStyle: textStyle,
+            maxLines: 1,
           ),
         ),
         if (client.isReady.value)
@@ -109,12 +115,13 @@ class _Dialog extends StatelessWidget {
               showToast('已隐藏板块 $forumName');
               Get.back(result: false);
             },
-            child: RichText(
-              text: TextSpan(
-                text: '隐藏 ',
-                children: [span, const TextSpan(text: ' 板块')],
-                style: textStyle,
-              ),
+            child: forumNameText(
+              context,
+              forum.forumName,
+              leading: '隐藏 ',
+              trailing: ' 板块',
+              textStyle: textStyle,
+              maxLines: 1,
             ),
           ),
         if (client.isReady.value)
@@ -125,12 +132,13 @@ class _Dialog extends StatelessWidget {
                 Get.back(result: false);
               }
             },
-            child: RichText(
-              text: TextSpan(
-                text: '修改 ',
-                children: [span, const TextSpan(text: ' 板块的名字')],
-                style: textStyle,
-              ),
+            child: forumNameText(
+              context,
+              forum.forumName,
+              leading: '修改 ',
+              trailing: ' 板块的名字',
+              textStyle: textStyle,
+              maxLines: 1,
             ),
           ),
       ],
@@ -181,8 +189,12 @@ class _ForumList extends StatelessWidget {
                       (forumId == forum.id && isTimeline == forum.isTimeline)
                           ? theme.focusColor
                           : null,
-                  title: htmlToRichText(context, forum.forumName,
-                      textStyle: theme.textTheme.bodyText1),
+                  title: forumNameText(
+                    context,
+                    forum.forumName,
+                    textStyle: theme.textTheme.bodyText1,
+                    maxLines: 1,
+                  ),
                 )
               : const SizedBox.shrink();
         },

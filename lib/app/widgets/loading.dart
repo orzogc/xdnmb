@@ -60,9 +60,6 @@ Widget loadingImageErrorBuilder(
   debugPrint(url != null ? '图片 $url 加载失败: $error' : '图片加载失败: $error');
 
   return const Center(
-    child: Text(
-      '图片加载失败',
-      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-    ),
+    child: Text('图片加载失败', style: AppTheme.boldRed),
   );
 }

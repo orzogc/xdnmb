@@ -14,6 +14,7 @@ import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
 import '../utils/key.dart';
 import '../utils/navigation.dart';
+import '../utils/theme.dart';
 import '../utils/time.dart';
 import '../utils/toast.dart';
 import 'bilistview.dart';
@@ -144,43 +145,54 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
     return PopupMenuButton(
       itemBuilder: (context) => [
         PopupMenuItem(
-          onTap: () {
+          onTap: () async {
+            final range = controller.getDateRange();
+
             switch (controller.bottomBarIndex.value) {
               case _BrowseHistoryBody._index:
-                postListDialog(ConfirmCancelDialog(
-                  content: '确定清空浏览记录？',
-                  onConfirm: () async {
-                    await history.clearBrowseHistory(controller.getDateRange());
-                    controller.refreshPage();
-                    showToast('清空浏览记录');
-                    postListBack();
-                  },
-                  onCancel: () => postListBack(),
-                ));
+                if (await history.browseHistoryCount(range) > 0) {
+                  postListDialog(ConfirmCancelDialog(
+                    content: '确定清空浏览记录？',
+                    onConfirm: () async {
+                      await history.clearBrowseHistory(range);
+                      controller.refreshPage();
+                      showToast('清空浏览记录');
+                      postListBack();
+                    },
+                    onCancel: () => postListBack(),
+                  ));
+                }
+
                 break;
               case _PostHistoryBody._index:
-                postListDialog(ConfirmCancelDialog(
-                  content: '确定清空主题记录？',
-                  onConfirm: () async {
-                    await history.clearPostData(controller.getDateRange());
-                    controller.refreshPage();
-                    showToast('清空主题记录');
-                    postListBack();
-                  },
-                  onCancel: () => postListBack(),
-                ));
+                if (await history.postDataCount(range) > 0) {
+                  postListDialog(ConfirmCancelDialog(
+                    content: '确定清空主题记录？',
+                    onConfirm: () async {
+                      await history.clearPostData(range);
+                      controller.refreshPage();
+                      showToast('清空主题记录');
+                      postListBack();
+                    },
+                    onCancel: () => postListBack(),
+                  ));
+                }
+
                 break;
               case _ReplyHistoryBody._index:
-                postListDialog(ConfirmCancelDialog(
-                  content: '确定清空回复记录？',
-                  onConfirm: () async {
-                    await history.clearReplyData(controller.getDateRange());
-                    controller.refreshPage();
-                    showToast('清空回复记录');
-                    postListBack();
-                  },
-                  onCancel: () => postListBack(),
-                ));
+                if (await history.replyDataCount(range) > 0) {
+                  postListDialog(ConfirmCancelDialog(
+                    content: '确定清空回复记录？',
+                    onConfirm: () async {
+                      await history.clearReplyData(range);
+                      controller.refreshPage();
+                      showToast('清空回复记录');
+                      postListBack();
+                    },
+                    onCancel: () => postListBack(),
+                  ));
+                }
+
                 break;
               default:
                 debugPrint(
@@ -192,125 +204,6 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
       ],
     );
   }
-}
-
-class HistoryBottomBar extends StatelessWidget {
-  final PostListController controller;
-
-  const HistoryBottomBar(this.controller, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final index = controller.bottomBarIndex;
-
-    return Obx(
-      () => BottomNavigationBar(
-        currentIndex: index.value ?? 0,
-        onTap: (value) {
-          if (index.value != value) {
-            popAllPopup();
-            index.value = value;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '浏览'),
-          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '主题'),
-          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '回复'),
-        ],
-      ),
-    );
-  }
-}
-
-class HistoryBody extends StatefulWidget {
-  final PostListController controller;
-
-  const HistoryBody(this.controller, {super.key});
-
-  @override
-  State<HistoryBody> createState() => _HistoryBodyState();
-}
-
-class _HistoryBodyState extends State<HistoryBody> {
-  late final PageController _controller;
-
-  late final StreamSubscription<int?> _subscription;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = PageController(
-        initialPage: widget.controller.bottomBarIndex.value ?? 0);
-    _subscription = widget.controller.bottomBarIndex.listen((index) {
-      if (index != null) {
-        _controller.jumpToPage(index);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    _controller.dispose();
-
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          Obx(
-            () {
-              final range = widget.controller.getDateRange();
-
-              return range != null
-                  ? ListTile(
-                      title: Center(
-                        child: range.start != range.end
-                            ? Text(
-                                '${dateRangeFormatTime(range.start)} - ${dateRangeFormatTime(range.end)}',
-                              )
-                            : Text(dateRangeFormatTime(range.start)),
-                      ),
-                      trailing: IconButton(
-                        onPressed: () {
-                          widget.controller.setDateRange(null);
-                          widget.controller.refreshPage();
-                        },
-                        icon: const Icon(Icons.close),
-                      ),
-                    )
-                  : const SizedBox.shrink();
-            },
-          ),
-          Expanded(
-            child: PageView.builder(
-              controller: _controller,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 3,
-              itemBuilder: (context, index) {
-                switch (index) {
-                  case _BrowseHistoryBody._index:
-                    return _BrowseHistoryBody(widget.controller);
-                  case _PostHistoryBody._index:
-                    return _PostHistoryBody(widget.controller);
-                  case _ReplyHistoryBody._index:
-                    return _ReplyHistoryBody(widget.controller);
-                  default:
-                    return const Center(
-                      child: Text(
-                        '未知记录',
-                        style: TextStyle(
-                            color: Colors.red, fontWeight: FontWeight.bold),
-                      ),
-                    );
-                }
-              },
-            ),
-          )
-        ],
-      );
 }
 
 class _HistoryDialog extends StatelessWidget {
@@ -343,14 +236,12 @@ class _HistoryDialog extends StatelessWidget {
             if (confirmDelete) {
               final result = await postListDialog<bool>(ConfirmCancelDialog(
                 content: '确定删除？',
-                onConfirm: () {
-                  onDelete();
-                  postListBack<bool>(result: true);
-                },
+                onConfirm: () => postListBack<bool>(result: true),
                 onCancel: () => postListBack<bool>(result: false),
               ));
 
               if (result ?? false) {
+                onDelete();
                 postListBack();
               }
             } else {
@@ -360,11 +251,11 @@ class _HistoryDialog extends StatelessWidget {
           },
           child: Text('删除', style: Theme.of(context).textTheme.subtitle1),
         ),
-        if (hasPostId) CopyPostId(postHistory),
-        if (hasPostId) CopyPostReference(postHistory),
+        if (hasPostId) CopyPostId(postHistory.id),
+        if (hasPostId) CopyPostReference(postHistory.id),
         CopyPostContent(postHistory),
-        if (post != null) CopyPostId(mainPost, text: '复制主串串号'),
-        if (post != null) CopyPostReference(mainPost, text: '复制主串串号引用'),
+        if (post != null) CopyPostId(mainPost.id, text: '复制主串串号'),
+        if (post != null) CopyPostReference(mainPost.id, text: '复制主串串号引用'),
         if (mainPost.id > 0)
           NewTab(mainPost, text: post != null ? '在新标签页打开主串' : null),
         if (mainPost.id > 0)
@@ -502,10 +393,7 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
           );
         },
         noItemsFoundBuilder: (context) => const Center(
-          child: Text(
-            '没有浏览记录',
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-          ),
+          child: Text('没有浏览记录', style: AppTheme.boldRed),
         ),
         canRefreshAtBottom: false,
       ),
@@ -600,10 +488,7 @@ class _PostHistoryBodyState extends State<_PostHistoryBody> {
           );
         },
         noItemsFoundBuilder: (context) => const Center(
-          child: Text(
-            '没有主题记录',
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-          ),
+          child: Text('没有主题记录', style: AppTheme.boldRed),
         ),
         canRefreshAtBottom: false,
       ),
@@ -730,12 +615,124 @@ class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
           );
         },
         noItemsFoundBuilder: (context) => const Center(
-          child: Text(
-            '没有回复记录',
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-          ),
+          child: Text('没有回复记录', style: AppTheme.boldRed),
         ),
         canRefreshAtBottom: false,
+      ),
+    );
+  }
+}
+
+class HistoryBody extends StatefulWidget {
+  final PostListController controller;
+
+  const HistoryBody(this.controller, {super.key});
+
+  @override
+  State<HistoryBody> createState() => _HistoryBodyState();
+}
+
+class _HistoryBodyState extends State<HistoryBody> {
+  late final PageController _controller;
+
+  late final StreamSubscription<int?> _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = PageController(
+        initialPage: widget.controller.bottomBarIndex.value ?? 0);
+    _subscription = widget.controller.bottomBarIndex.listen((index) {
+      if (index != null) {
+        _controller.jumpToPage(index);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    _controller.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+        children: [
+          Obx(
+            () {
+              final range = widget.controller.getDateRange();
+
+              return range != null
+                  ? ListTile(
+                      title: Center(
+                        child: range.start != range.end
+                            ? Text(
+                                '${dateRangeFormatTime(range.start)} - ${dateRangeFormatTime(range.end)}',
+                              )
+                            : Text(dateRangeFormatTime(range.start)),
+                      ),
+                      trailing: IconButton(
+                        onPressed: () {
+                          widget.controller.setDateRange(null);
+                          widget.controller.refreshPage();
+                        },
+                        icon: const Icon(Icons.close),
+                      ),
+                    )
+                  : const SizedBox.shrink();
+            },
+          ),
+          Expanded(
+            child: PageView.builder(
+              controller: _controller,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                switch (index) {
+                  case _BrowseHistoryBody._index:
+                    return _BrowseHistoryBody(widget.controller);
+                  case _PostHistoryBody._index:
+                    return _PostHistoryBody(widget.controller);
+                  case _ReplyHistoryBody._index:
+                    return _ReplyHistoryBody(widget.controller);
+                  default:
+                    return const Center(
+                      child: Text('未知记录', style: AppTheme.boldRed),
+                    );
+                }
+              },
+            ),
+          )
+        ],
+      );
+}
+
+class HistoryBottomBar extends StatelessWidget {
+  final PostListController controller;
+
+  const HistoryBottomBar(this.controller, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final index = controller.bottomBarIndex;
+
+    return Obx(
+      () => BottomNavigationBar(
+        currentIndex: index.value ?? 0,
+        onTap: (value) {
+          if (index.value != value) {
+            popAllPopup();
+            index.value = value;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '浏览'),
+          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '主题'),
+          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '回复'),
+        ],
       ),
     );
   }

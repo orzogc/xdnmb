@@ -11,10 +11,6 @@ import 'url.dart';
 Map<String, OnTagCallback> onHiddenTag(OnTagCallback onHiddenText) =>
     HashMap.fromEntries([MapEntry('h', onHiddenText)]);
 
-/* Map<String, OnTagCallback> onHiddenTextTag() =>
-    onHiddenTag((context, element, textStyle) =>
-        onHiddenText(context: context, element: element, textStyle: textStyle)); */
-
 InlineSpan onHiddenText(
     {required BuildContext context,
     required Element element,

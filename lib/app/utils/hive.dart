@@ -13,4 +13,5 @@ Future<void> initHive() async {
   Hive.registerAdapter<CookieData>(CookieDataAdapter());
   Hive.registerAdapter<PostDraftData>(PostDraftDataAdapter());
   Hive.registerAdapter<EmoticonData>(EmoticonDataAdapter());
+  Hive.registerAdapter<BlockForumData>(BlockForumDataAdapter());
 }

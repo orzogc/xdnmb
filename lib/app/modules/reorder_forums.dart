@@ -9,6 +9,8 @@ import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
+import '../utils/text.dart';
+import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
@@ -111,10 +113,7 @@ class _DeprecatedButton extends StatelessWidget {
             onCancel: () => Get.back(),
           ),
         ),
-        child: const Text(
-          '废弃',
-          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-        ),
+        child: const Text('废弃', style: AppTheme.boldRed),
       );
 }
 
@@ -172,6 +171,7 @@ class _ForumsState extends State<_Forums> {
             final span = htmlToTextSpan(context, forum.forumName,
                 textStyle: theme.textTheme.subtitle1);
             final forumName = span.toPlainText();
+            //final forumName = htmlToPlainText(context, forum.forumName);
 
             return ListTile(
               key: ValueKey<PostList>(PostList.fromForumData(forum)),
@@ -182,12 +182,13 @@ class _ForumsState extends State<_Forums> {
                       final forum = _displayedForums.removeAt(index);
                       _hiddenForums.add(forum);
                     });
-                    showToast('已隐藏板块 $forumName');
+                    showToast('隐藏板块 $forumName');
                   }
                 },
                 icon: const Icon(Icons.visibility),
               ),
-              title: RichText(text: span),
+              title: RichText(
+                  text: span, maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 mainAxisSize: MainAxisSize.min,
@@ -262,7 +263,8 @@ class _ForumsState extends State<_Forums> {
                   },
                   icon: const Icon(Icons.visibility_off),
                 ),
-                title: RichText(text: span),
+                title: RichText(
+                    text: span, maxLines: 1, overflow: TextOverflow.ellipsis),
                 trailing: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
