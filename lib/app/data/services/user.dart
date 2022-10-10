@@ -63,7 +63,7 @@ class UserService extends GetxService {
 
   Iterable<CookieData> get xdnmbCookies => _cookiesBox.values;
 
-  bool get hasXdnmbCookie => xdnmbCookies.isNotEmpty;
+  bool get hasXdnmbCookie => _cookiesBox.isNotEmpty;
 
   late final ValueListenable<Box> userCookieListenable;
 

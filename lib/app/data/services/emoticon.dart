@@ -5,8 +5,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/emoticon.dart';
 import '../models/hive.dart';
 
-class EmoticonsService extends GetxService {
-  static EmoticonsService get to => Get.find<EmoticonsService>();
+class EmoticonListService extends GetxService {
+  static EmoticonListService get to => Get.find<EmoticonListService>();
 
   late final Box<EmoticonData> _emoticonBox;
 

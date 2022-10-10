@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:get/get.dart';
+import 'package:xdnmb/app/utils/theme.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/draft.dart';
 import '../data/models/forum.dart';
 import '../data/services/blacklist.dart';
-import '../data/services/drafts.dart';
+import '../data/services/draft.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/history.dart';
@@ -605,7 +606,7 @@ class _SaveDraftDialog extends StatelessWidget {
               if (controller.hasText)
                 TextButton(
                   onPressed: () async {
-                    await PostDraftsService.to
+                    await PostDraftListService.to
                         .addDraft(PostDraftData.fromController(controller));
                     showToast('已保存为草稿');
 
@@ -788,14 +789,19 @@ class _BottomBarState extends State<_BottomBar> {
   }
 }
 
-class PostListView extends StatelessWidget {
+class PostListView extends StatefulWidget {
+  const PostListView({super.key});
+
+  @override
+  State<PostListView> createState() => _PostListViewState();
+}
+
+class _PostListViewState extends State<PostListView> {
   static bool _isInitial = true;
 
-  final Rxn<DateTime> _lastPressBackTime = Rxn(null);
+  DateTime? _lastPressBackTime;
 
   final Rxn<PersistentBottomSheetController> _bottomSheetController = Rxn(null);
-
-  PostListView({super.key});
 
   Future<bool> _onWillPop(BuildContext context) async {
     if (Navigator.canPop(context)) {
@@ -811,10 +817,9 @@ class PostListView extends StatelessWidget {
     }
 
     final now = DateTime.now();
-    if (_lastPressBackTime.value == null ||
-        now.difference(_lastPressBackTime.value!) >
-            const Duration(seconds: 2)) {
-      _lastPressBackTime.value = now;
+    if (_lastPressBackTime == null ||
+        now.difference(_lastPressBackTime!) > const Duration(seconds: 2)) {
+      _lastPressBackTime = now;
 
       showToast('再按一次退出');
       return false;
@@ -830,7 +835,7 @@ class PostListView extends StatelessWidget {
 
     final blacklist = BlacklistService.to;
     final data = PersistentDataService.to;
-    final drafts = PostDraftsService.to;
+    final drafts = PostDraftListService.to;
     final forums = ForumListService.to;
     final history = PostHistoryService.to;
     final settings = SettingsService.to;
@@ -858,12 +863,9 @@ class PostListView extends StatelessWidget {
               body: Column(
                 children: [
                   Expanded(child: PostListPage(key: PostListPage.pageKey)),
-                  Obx(
-                    () => (_bottomSheetController.value != null &&
-                            !data.isKeyboardVisible.value)
-                        ? SizedBox(height: bottomSheetHeight)
-                        : const SizedBox.shrink(),
-                  ),
+                  if (_bottomSheetController.value != null &&
+                      !data.isKeyboardVisible.value)
+                    SizedBox(height: bottomSheetHeight)
                 ],
               ),
               drawerEdgeDragWidth: media.size.width / 2.0,
@@ -877,7 +879,7 @@ class PostListView extends StatelessWidget {
               bottomNavigationBar: _BottomBar(key: _BottomBar._bottomBarKey),
             );
           } else {
-            return const SizedBox.shrink();
+            return const Center(child: Text('启动中', style: AppTheme.boldRed));
           }
         },
       ),

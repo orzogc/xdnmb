@@ -149,6 +149,7 @@ class _FeedBodyState extends State<FeedBody> {
               _FeedKey.fromController(widget.controller, _refresh)),
           controller: _anchorController,
           initialPage: widget.controller.page.value,
+          canRefreshAtBottom: false,
           fetch: (page) async =>
               (await client.getFeed(settings.feedUuid, page: page))
                   .map((feed) => PostWithPage(feed, page))
@@ -191,7 +192,6 @@ class _FeedBodyState extends State<FeedBody> {
           noItemsFoundBuilder: (context) => const Center(
             child: Text('没有订阅', style: AppTheme.boldRed),
           ),
-          canRefreshAtBottom: false,
         ),
       ),
     );

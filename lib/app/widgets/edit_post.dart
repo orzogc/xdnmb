@@ -13,8 +13,8 @@ import '../data/models/draft.dart';
 import '../data/models/emoticon.dart';
 import '../data/models/post.dart';
 import '../data/models/reply.dart';
-import '../data/services/drafts.dart';
-import '../data/services/emoticons.dart';
+import '../data/services/draft.dart';
+import '../data/services/emoticon.dart';
 import '../data/services/forum.dart';
 import '../data/services/history.dart';
 import '../data/services/persistent.dart';
@@ -530,7 +530,7 @@ class _SaveDraft extends StatelessWidget {
           final content = getContent();
 
           if (title.isNotEmpty || name.isNotEmpty || content.isNotEmpty) {
-            PostDraftsService.to.addDraft(PostDraftData(
+            PostDraftListService.to.addDraft(PostDraftData(
                 title: title.isNotEmpty ? title : null,
                 name: name.isNotEmpty ? name : null,
                 content: content.isNotEmpty ? content : null));
@@ -564,9 +564,11 @@ class _Cookie extends StatelessWidget {
                           user.postCookie = cookie.copy();
                           Get.back();
                         },
-                        title: Text(cookie.name),
+                        title: Text(cookie.name,
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
                         subtitle: (cookie.note?.isNotEmpty ?? false)
-                            ? Text(cookie.note!)
+                            ? Text(cookie.note!,
+                                maxLines: 1, overflow: TextOverflow.ellipsis)
                             : null,
                         trailing:
                             (user.isUserCookieValid && cookie.isDeprecated)
@@ -779,7 +781,7 @@ class _Post extends StatelessWidget {
                     if (title.isNotEmpty ||
                         name.isNotEmpty ||
                         content.isNotEmpty) {
-                      PostDraftsService.to.addDraft(PostDraftData(
+                      PostDraftListService.to.addDraft(PostDraftData(
                           title: title.isNotEmpty ? title : null,
                           name: name.isNotEmpty ? name : null,
                           content: content.isNotEmpty ? content : null));
@@ -899,7 +901,7 @@ class _EditEmoticonState extends State<_EditEmoticon> {
 
                 showToast('修改颜文字 $name 成功');
               } else {
-                await EmoticonsService.to
+                await EmoticonListService.to
                     .addEmoticon(EmoticonData(name: name!, text: text!));
 
                 showToast('添加颜文字 $name 成功');
@@ -996,7 +998,7 @@ class _EmoticonState extends State<_Emoticon> {
   @override
   Widget build(BuildContext context) {
     final data = PersistentDataService.to;
-    final emoticons = EmoticonsService.to;
+    final emoticons = EmoticonListService.to;
     final textStyle = Theme.of(context).textTheme.bodyText2;
     final buttonStyle = TextButton.styleFrom(
       padding: EdgeInsets.zero,

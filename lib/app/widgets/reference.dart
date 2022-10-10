@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/blacklist.dart';
@@ -70,76 +71,91 @@ class ReferenceCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: !blacklist.hasPost(postId)
-          ? TapToReload(
-              builder: (context, child) => FutureBuilder<HtmlReference>(
-                future: client.getHtmlReference(postId),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done &&
-                      snapshot.hasData) {
-                    final post = snapshot.data!;
-                    final mainPostId = post.mainPostId;
+      child: TapToReload(
+        builder: (context, child) => FutureBuilder<HtmlReference>(
+          future: client.getHtmlReference(postId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done &&
+                snapshot.hasData) {
+              final post = snapshot.data!;
+              final mainPostId = post.mainPostId;
+              final isVisible = (post.isAdmin ||
+                      !(blacklist.hasPost(postId) ||
+                          blacklist.hasUser(post.userHash)))
+                  .obs;
 
-                    return (post.isAdmin || !blacklist.hasUser(post.userHash))
-                        ? Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              PostCard(
-                                post: post,
-                                showForumName: false,
-                                showReplyCount: false,
-                                poUserHash: poUserHash,
-                                onTap: (post) {},
-                                onLongPress: (post) => postListDialog(_Dialog(
-                                    post: post, mainPostId: mainPostId)),
-                                onLinkTap: (context, link) => parseUrl(
-                                    url: link,
+              return Obx(
+                () => isVisible.value
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          PostCard(
+                            post: post,
+                            showForumName: false,
+                            showReplyCount: false,
+                            poUserHash: poUserHash,
+                            onTap: (post) {},
+                            onLongPress: (post) => postListDialog(
+                                _Dialog(post: post, mainPostId: mainPostId)),
+                            onLinkTap: (context, link) => parseUrl(
+                                url: link,
+                                mainPostId: this.mainPostId,
+                                poUserHash: poUserHash),
+                            onHiddenText: (context, element, textStyle) =>
+                                onHiddenText(
+                                    context: context,
+                                    element: element,
+                                    textStyle: textStyle,
+                                    canTap: true,
                                     mainPostId: this.mainPostId,
                                     poUserHash: poUserHash),
-                                onHiddenText: (context, element, textStyle) =>
-                                    onHiddenText(
-                                        context: context,
-                                        element: element,
-                                        textStyle: textStyle,
-                                        canTap: true,
-                                        mainPostId: this.mainPostId,
-                                        poUserHash: poUserHash),
-                                mouseCursor: SystemMouseCursors.basic,
-                                hoverColor: Theme.of(context).cardColor,
-                                isContentScrollable: true,
+                            mouseCursor: SystemMouseCursors.basic,
+                            hoverColor: Theme.of(context).cardColor,
+                            isContentScrollable: true,
+                          ),
+                          if (mainPostId != null &&
+                              mainPostId != this.mainPostId)
+                            Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: TextButton(
+                                onPressed: () => AppRoutes.toThread(
+                                    mainPostId: mainPostId,
+                                    mainPost:
+                                        post.id == mainPostId ? post : null),
+                                child: const Text('跳转原串'),
                               ),
-                              if (mainPostId != null &&
-                                  mainPostId != this.mainPostId)
-                                Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: TextButton(
-                                    onPressed: () => AppRoutes.toThread(
-                                        mainPostId: mainPostId,
-                                        mainPost: post.id == mainPostId
-                                            ? post
-                                            : null),
-                                    child: const Text('跳转原串'),
-                                  ),
-                                ),
-                            ],
-                          )
-                        : const Text('本串已被屏蔽', style: AppTheme.boldRed);
-                  }
+                            ),
+                        ],
+                      )
+                    : GestureDetector(
+                        onTap: () => isVisible.value = true,
+                        child: const Padding(
+                          padding: EdgeInsets.all(5.0),
+                          child: Text(
+                            '本串已被屏蔽，点击查看内容',
+                            style: AppTheme.boldRed,
+                          ),
+                        ),
+                      ),
+              );
+            }
 
-                  if (snapshot.connectionState == ConnectionState.done &&
-                      snapshot.hasError) {
-                    showToast(exceptionMessage(snapshot.error!));
+            if (snapshot.connectionState == ConnectionState.done &&
+                snapshot.hasError) {
+              showToast(exceptionMessage(snapshot.error!));
 
-                    return child!;
-                  }
+              return child!;
+            }
 
-                  return const CircularProgressIndicator();
-                },
-              ),
-              tapped: const Text('加载失败，点击重试', style: AppTheme.boldRed),
-            )
-          : const Text('本串已被屏蔽', style: AppTheme.boldRed),
+            return const CircularProgressIndicator();
+          },
+        ),
+        tapped: const Padding(
+          padding: EdgeInsets.all(5.0),
+          child: Text('加载失败，点击重试', style: AppTheme.boldRed),
+        ),
+      ),
     );
   }
 }

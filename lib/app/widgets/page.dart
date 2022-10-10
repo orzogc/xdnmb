@@ -97,7 +97,53 @@ class _JumpPageDialogState extends State<_JumpPageDialog> {
   }
 }
 
-class PageButton extends StatelessWidget {
+class PageButton extends StatefulWidget {
+  final PostListController controller;
+
+  final int? maxPage;
+
+  const PageButton({super.key, required this.controller, this.maxPage});
+
+  @override
+  State<PageButton> createState() => _PageButtonState();
+}
+
+class _PageButtonState extends State<PageButton> {
+  bool isShowDialog = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return TextButton(
+      onPressed: () async {
+        if (!isShowDialog) {
+          isShowDialog = true;
+          try {
+            final page = await postListDialog<int>(_JumpPageDialog(
+                currentPage: widget.controller.currentPage.value,
+                maxPage: widget.maxPage));
+            if (page != null) {
+              widget.controller.refreshPage(page);
+            }
+          } finally {
+            isShowDialog = false;
+          }
+        }
+      },
+      child: Obx(
+        () => Text(
+          '${widget.controller.currentPage.value}',
+          style: theme.textTheme.headline6?.apply(
+            color: theme.colorScheme.onPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/* class PageButton extends StatelessWidget {
   final PostListController controller;
 
   final int? maxPage;
@@ -107,15 +153,23 @@ class PageButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    bool isShowDialog = false;
 
     return TextButton(
-      onPressed: () => postListDialog<int>(_JumpPageDialog(
-              currentPage: controller.currentPage.value, maxPage: maxPage))
-          .then((page) {
-        if (page != null) {
-          controller.refreshPage(page);
+      onPressed: () async {
+        if (!isShowDialog) {
+          isShowDialog = true;
+          try {
+            final page = await postListDialog<int>(_JumpPageDialog(
+                currentPage: controller.currentPage.value, maxPage: maxPage));
+            if (page != null) {
+              controller.refreshPage(page);
+            }
+          } finally {
+            isShowDialog = false;
+          }
         }
-      }),
+      },
       child: Obx(
         () => Text(
           '${controller.currentPage.value}',
@@ -125,4 +179,4 @@ class PageButton extends StatelessWidget {
       ),
     );
   }
-}
+} */

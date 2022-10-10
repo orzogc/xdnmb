@@ -189,10 +189,38 @@ class _List<T> extends StatelessWidget {
       : const Center(child: Text('没有黑名单', style: AppTheme.boldRed));
 }
 
-class _Body extends StatelessWidget {
+class _Body extends StatefulWidget {
   final int index;
 
   const _Body({super.key, required this.index});
+
+  @override
+  State<_Body> createState() => _BodyState();
+}
+
+class _BodyState extends State<_Body> {
+  final List<BlockForumData> _deletedForumList = [];
+
+  final List<int> _deletedPostIdList = [];
+
+  final List<String> _deletedUserHashList = [];
+
+  @override
+  void dispose() {
+    final blacklist = BlacklistService.to;
+
+    for (final forum in _deletedForumList) {
+      blacklist.unblockForum(forum);
+    }
+    for (final postId in _deletedPostIdList) {
+      blacklist.unblockPost(postId);
+    }
+    for (final userHash in _deletedUserHashList) {
+      blacklist.unblockUser(userHash);
+    }
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -200,19 +228,20 @@ class _Body extends StatelessWidget {
     final forums = ForumListService.to;
     final textStyle = Theme.of(context).textTheme.subtitle1;
 
-    switch (index) {
+    switch (widget.index) {
       case BlacklistView._forumIndex:
         return _List<BlockForumData>(
           itemCount: blacklist.forumBlacklistLength,
           getItem: (index) => blacklist.blockedForum(index),
-          titleBuilder: (item) => ForumName(forumId: item.forumId, maxLines: 1),
-          subtitleBuilder: (item) => ForumName(
-              forumId: item.timelineId, isTimeline: true, maxLines: 1),
-          onDelete: (item) => blacklist.unblockForum(item),
-          deleteDialogContent: (item) {
-            final forumName = forums.forumName(item.forumId);
+          titleBuilder: (forum) =>
+              ForumName(forumId: forum.forumId, maxLines: 1),
+          subtitleBuilder: (forum) => ForumName(
+              forumId: forum.timelineId, isTimeline: true, maxLines: 1),
+          onDelete: (forum) => _deletedForumList.add(forum),
+          deleteDialogContent: (forum) {
+            final forumName = forums.forumName(forum.forumId);
             final timelineName =
-                forums.forumName(item.timelineId, isTimeline: true);
+                forums.forumName(forum.timelineId, isTimeline: true);
 
             return RichText(
               text: (forumName != null && timelineName != null)
@@ -245,11 +274,11 @@ class _Body extends StatelessWidget {
                       : TextSpan(text: '确定取消屏蔽板块？', style: textStyle)),
             );
           },
-          deleteToastContent: (item) {
+          deleteToastContent: (forum) {
             final forumName =
-                htmlToPlainText(context, forums.forumName(item.forumId) ?? '');
+                htmlToPlainText(context, forums.forumName(forum.forumId) ?? '');
             final timelineName = htmlToPlainText(context,
-                forums.forumName(item.timelineId, isTimeline: true) ?? '');
+                forums.forumName(forum.timelineId, isTimeline: true) ?? '');
 
             return (forumName.isNotEmpty && timelineName.isNotEmpty)
                 ? '在 $timelineName 取消屏蔽板块 $forumName'
@@ -260,20 +289,20 @@ class _Body extends StatelessWidget {
         return _List<int>(
           itemCount: blacklist.postBlacklistLength,
           getItem: (index) => blacklist.blockedPost(index),
-          titleBuilder: (item) => Text('$item'),
-          onDelete: (item) => blacklist.unblockPost(item),
-          deleteDialogContent: (item) =>
-              Text('确定取消屏蔽 ${item.toPostNumber()} ？'),
-          deleteToastContent: (item) => '取消屏蔽 ${item.toPostNumber()}',
+          titleBuilder: (postId) => Text('$postId'),
+          onDelete: (postId) => _deletedPostIdList.add(postId),
+          deleteDialogContent: (postId) =>
+              Text('确定取消屏蔽 ${postId.toPostNumber()} ？'),
+          deleteToastContent: (postId) => '取消屏蔽 ${postId.toPostNumber()}',
         );
       case BlacklistView._userIndex:
         return _List<String>(
           itemCount: blacklist.userBlacklistLength,
           getItem: (index) => blacklist.blockedUser(index),
-          titleBuilder: (item) => Text(item),
-          onDelete: (item) => blacklist.unblockUser(item),
-          deleteDialogContent: (item) => Text('确定取消屏蔽饼干 $item ？'),
-          deleteToastContent: (item) => '取消屏蔽饼干 $item',
+          titleBuilder: (userHash) => Text(userHash),
+          onDelete: (userHash) => _deletedUserHashList.add(userHash),
+          deleteDialogContent: (userHash) => Text('确定取消屏蔽饼干 $userHash ？'),
+          deleteToastContent: (userHash) => '取消屏蔽饼干 $userHash',
         );
       default:
         return const Center(child: Text('未知黑名单列表', style: AppTheme.boldRed));

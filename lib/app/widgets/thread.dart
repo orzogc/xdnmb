@@ -524,11 +524,26 @@ class _ThreadBodyState extends State<ThreadBody> {
                         child: Text('没有串', style: AppTheme.boldRed),
                       ),
                       onNoMoreItems: () => _isNoMoreItems = true,
+                      onRefresh: () {
+                        if ((mainPost.value == null ||
+                                !mainPost.value!.isAdmin) &&
+                            (blacklist.hasPost(postId.value!) ||
+                                (mainPost.value != null &&
+                                    blacklist
+                                        .hasUser(mainPost.value!.userHash)))) {
+                          widget.controller.refreshPage();
+                        }
+                      },
                     ),
                   ),
                 ],
               )
-            : const Center(child: Text('本串已被屏蔽', style: AppTheme.boldRed));
+            : GestureDetector(
+                onTap: widget.controller.refreshPage,
+                child: const Center(
+                  child: Text('本串已被屏蔽', style: AppTheme.boldRed),
+                ),
+              );
       },
     );
   }

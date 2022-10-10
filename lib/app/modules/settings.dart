@@ -78,7 +78,7 @@ class SettingsView extends GetView<SettingsController> {
       ),
       body: ListView(
         children: [
-          const ListTile(title: Text('管理饼干'), onTap: AppRoutes.toUser),
+          const ListTile(title: Text('饼干'), onTap: AppRoutes.toUser),
           const ListTile(title: Text('黑名单'), onTap: AppRoutes.toBlacklist),
           ValueListenableBuilder<Box>(
             valueListenable: settings.initialForumListenable,

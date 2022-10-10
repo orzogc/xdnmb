@@ -308,6 +308,7 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
         key: getPostListKey(
             PostList.fromController(widget.controller), _refresh),
         initialPage: widget.controller.page.value,
+        canRefreshAtBottom: false,
         fetch: (page) => history.browseHistoryList(
             (page - 1) * _historyEachPage,
             page * _historyEachPage,
@@ -395,7 +396,6 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
         noItemsFoundBuilder: (context) => const Center(
           child: Text('没有浏览记录', style: AppTheme.boldRed),
         ),
-        canRefreshAtBottom: false,
       ),
     );
   }
@@ -444,6 +444,7 @@ class _PostHistoryBodyState extends State<_PostHistoryBody> {
         key: getPostListKey(
             PostList.fromController(widget.controller), _refresh),
         initialPage: widget.controller.page.value,
+        canRefreshAtBottom: false,
         fetch: (page) => history.postDataList((page - 1) * _historyEachPage,
             page * _historyEachPage, widget.controller.getDateRange()),
         itemBuilder: (context, mainPost, index) {
@@ -490,7 +491,6 @@ class _PostHistoryBodyState extends State<_PostHistoryBody> {
         noItemsFoundBuilder: (context) => const Center(
           child: Text('没有主题记录', style: AppTheme.boldRed),
         ),
-        canRefreshAtBottom: false,
       ),
     );
   }
@@ -539,6 +539,7 @@ class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
         key: getPostListKey(
             PostList.fromController(widget.controller), _refresh),
         initialPage: widget.controller.page.value,
+        canRefreshAtBottom: false,
         fetch: (page) => history.replyDataList((page - 1) * _historyEachPage,
             page * _historyEachPage, widget.controller.getDateRange()),
         itemBuilder: (context, reply, index) {
@@ -617,7 +618,6 @@ class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
         noItemsFoundBuilder: (context) => const Center(
           child: Text('没有回复记录', style: AppTheme.boldRed),
         ),
-        canRefreshAtBottom: false,
       ),
     );
   }

@@ -409,17 +409,25 @@ class _Cookie extends StatelessWidget {
           ),
         );
       },
-      title: Text(cookie.name,
-          style: TextStyle(fontSize: theme.textTheme.bodyText2?.fontSize)),
-      subtitle: (cookie.note?.isNotEmpty ?? false) ? Text(cookie.note!) : null,
+      title: Text(
+        cookie.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(fontSize: theme.textTheme.bodyText2?.fontSize),
+      ),
+      subtitle: (cookie.note?.isNotEmpty ?? false)
+          ? Text(cookie.note!, maxLines: 1, overflow: TextOverflow.ellipsis)
+          : null,
       trailing: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
           if (user.isUserCookieValid && cookie.isDeprecated)
-            const Text(
-              '非登陆帐号饼干',
-              style: AppTheme.boldRed,
+            const Flexible(
+              child: Text(
+                '非登陆帐号饼干',
+                style: AppTheme.boldRed,
+              ),
             ),
           if (user.isUserCookieValid &&
               cookie.isDeprecated &&
@@ -476,7 +484,7 @@ class CookieView extends GetView<CookieController> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('管理饼干'),
+        title: const Text('饼干'),
       ),
       body: ValueListenableBuilder<Box>(
         valueListenable: user.userCookieListenable,
@@ -524,8 +532,9 @@ class CookieView extends GetView<CookieController> {
                                         ? const Text(
                                             '可领取饼干',
                                             style: TextStyle(
-                                                color: Colors.blue,
-                                                fontWeight: FontWeight.bold),
+                                              color: Colors.blue,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           )
                                         : const Text('不可领取饼干',
                                             style: AppTheme.boldRed),

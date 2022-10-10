@@ -18,6 +18,8 @@ class BiListView<T> extends StatefulWidget {
 
   final int? lastPage;
 
+  final bool canRefreshAtBottom;
+
   final FetchPage<T> fetch;
 
   final ItemWidgetBuilder<T> itemBuilder;
@@ -28,7 +30,7 @@ class BiListView<T> extends StatefulWidget {
 
   final VoidCallback? onNoMoreItems;
 
-  final bool canRefreshAtBottom;
+  final VoidCallback? onRefresh;
 
   const BiListView(
       {super.key,
@@ -36,12 +38,13 @@ class BiListView<T> extends StatefulWidget {
       required this.initialPage,
       this.firstPage = 1,
       this.lastPage,
+      this.canRefreshAtBottom = true,
       required this.fetch,
       required this.itemBuilder,
       this.separator,
       this.noItemsFoundBuilder,
       this.onNoMoreItems,
-      this.canRefreshAtBottom = true});
+      this.onRefresh});
 
   @override
   State<BiListView<T>> createState() => _BiListViewState<T>();
@@ -134,6 +137,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
       _isRefreshing = true;
 
       try {
+        if (widget.onRefresh != null) {
+          widget.onRefresh!();
+        }
+
         if (widget.initialPage == widget.firstPage) {
           _pagingUpController?.refresh();
           _pagingDownController?.refresh();
@@ -155,6 +162,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
       _isLoading = true;
 
       try {
+        if (widget.onRefresh != null) {
+          widget.onRefresh!();
+        }
+
         await _fetchDownPage(_lastPage);
       } finally {
         _isLoading = false;

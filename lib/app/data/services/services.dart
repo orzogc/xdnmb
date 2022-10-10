@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
 
 import 'blacklist.dart';
-import 'drafts.dart';
-import 'emoticons.dart';
+import 'draft.dart';
+import 'emoticon.dart';
 import 'forum.dart';
 import 'history.dart';
 import 'image.dart';
@@ -21,7 +21,7 @@ Bindings servicesBindings() => BindingsBuilder(() {
       Get.put(ForumListService());
       Get.put(BlacklistService());
       Get.put(PostHistoryService());
-      Get.put(PostDraftsService());
-      Get.put(EmoticonsService());
+      Get.put(PostDraftListService());
+      Get.put(EmoticonListService());
       Get.put(XdnmbClientService());
     });

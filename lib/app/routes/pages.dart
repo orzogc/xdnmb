@@ -15,37 +15,37 @@ import 'routes.dart';
 abstract class AppPages {
   static final GetPage forum = GetPage(
       name: AppRoutes.forum,
-      page: () => PostListView(),
+      page: () => const PostListView(),
       binding: PostListBinding(),
       transition: Transition.rightToLeft);
 
   static final GetPage timeline = GetPage(
       name: AppRoutes.timeline,
-      page: () => PostListView(),
+      page: () => const PostListView(),
       binding: PostListBinding(),
       transition: Transition.rightToLeft);
 
   static final GetPage thread = GetPage(
       name: AppRoutes.thread,
-      page: () => PostListView(),
+      page: () => const PostListView(),
       binding: PostListBinding(),
       transition: Transition.rightToLeft);
 
   static final GetPage onlyPoThread = GetPage(
       name: AppRoutes.onlyPoThread,
-      page: () => PostListView(),
+      page: () => const PostListView(),
       binding: PostListBinding(),
       transition: Transition.rightToLeft);
 
   static final GetPage feed = GetPage(
       name: AppRoutes.feed,
-      page: () => PostListView(),
+      page: () => const PostListView(),
       binding: PostListBinding(),
       transition: Transition.rightToLeft);
 
   static final GetPage history = GetPage(
       name: AppRoutes.history,
-      page: () => PostListView(),
+      page: () => const PostListView(),
       binding: PostListBinding(),
       transition: Transition.rightToLeft);
 

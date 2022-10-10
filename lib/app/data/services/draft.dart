@@ -5,8 +5,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/draft.dart';
 import '../models/hive.dart';
 
-class PostDraftsService extends GetxService {
-  static PostDraftsService get to => Get.find<PostDraftsService>();
+class PostDraftListService extends GetxService {
+  static PostDraftListService get to => Get.find<PostDraftListService>();
 
   late final Box<PostDraftData> _draftBox;
 
