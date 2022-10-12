@@ -67,7 +67,7 @@ class _TextContentState extends State<TextContent> {
         text: _htmlText.toTextSpan(),
         maxLines: widget.maxLines,
         overflow:
-            widget.maxLines == null ? TextOverflow.clip : TextOverflow.ellipsis,
+            widget.maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip,
       );
 }
 

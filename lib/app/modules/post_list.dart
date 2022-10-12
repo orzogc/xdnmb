@@ -569,7 +569,10 @@ class PostListPageState extends State<PostListPage> {
 class _SaveDraftDialog extends StatelessWidget {
   final EditPostController controller;
 
-  const _SaveDraftDialog(this.controller, {super.key});
+  final bool canPost;
+
+  const _SaveDraftDialog(
+      {super.key, required this.controller, required this.canPost});
 
   @override
   Widget build(BuildContext context) => AlertDialog(
@@ -587,9 +590,10 @@ class _SaveDraftDialog extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextButton(
-                  onPressed: () => Get.back<bool>(result: false),
-                  child: const Text('返回')),
+              if (canPost)
+                TextButton(
+                    onPressed: () => Get.back<bool>(result: false),
+                    child: const Text('取消')),
               if (controller.isImagePainted)
                 TextButton(
                   onPressed: () async {
@@ -721,16 +725,15 @@ class FloatingButtonState extends State<FloatingButton> {
         final isPosted = state.isPosted;
         if (!isPosted) {
           final controller = state.toController();
+          final postListType = PostListController.get().postListType.value;
           if ((controller.hasText || controller.isImagePainted) &&
-              !(await Get.dialog<bool>(_SaveDraftDialog(controller)) ??
+              !(await Get.dialog<bool>(_SaveDraftDialog(
+                      controller: controller,
+                      canPost: postListType.canPost())) ??
                   false)) {
-            final controller_ = PostListController.get();
-            if (!controller_.postListType.value.canPost()) {
-              popOnce();
-              _refresh();
+            if (postListType.canPost()) {
+              bottomSheet(controller);
             }
-
-            bottomSheet(controller);
           }
         }
       });
@@ -741,8 +744,7 @@ class FloatingButtonState extends State<FloatingButton> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = PostListController.get();
-    final postListType = controller.postListType;
+    final postListType = PostListController.get().postListType;
 
     return Obx(
       () => postListType.value.canPost()

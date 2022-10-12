@@ -202,52 +202,48 @@ class ForumRuleDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.headline6;
+    final forum = ForumListService.to.forum(controller.id.value!);
 
-    return Obx(
-      () {
-        final forum = ForumListService.to.forum(controller.id.value!);
-
-        return AlertDialog(
-          actionsPadding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
-          title: forum != null
-              ? forumNameText(context, forum.forumName,
-                  trailing: ' 版规', textStyle: textStyle)
-              : const Text('版规'),
-          content: SingleChildScrollViewWithScrollbar(
-              child: TextContent(
-            text: forum?.message ?? '',
-            onLinkTap: (context, link) => parseUrl(url: link),
-            onImage: (context, image, element) => image != null
-                ? TextSpan(
-                    children: [
-                      WidgetSpan(
-                        child: CachedNetworkImage(
-                          imageUrl: image,
-                          cacheManager: XdnmbImageCacheManager(),
-                          progressIndicatorBuilder:
-                              loadingThumbImageIndicatorBuilder,
-                          errorWidget: loadingImageErrorBuilder,
-                        ),
-                      ),
-                      const TextSpan(text: '\n'),
-                    ],
-                  )
-                : const TextSpan(),
-          )),
-          actions: [
-            TextButton(
-              onPressed: () => postListBack(),
-              child: Text(
-                '确定',
-                style: TextStyle(
-                  fontSize: Theme.of(context).textTheme.subtitle1?.fontSize,
-                ),
-              ),
-            )
-          ],
-        );
-      },
+    return AlertDialog(
+      actionsPadding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
+      title: forum != null
+          ? ForumName(
+              forumId: forum.id,
+              trailing: ' 版规',
+              textStyle: Theme.of(context).textTheme.headline6)
+          : const Text('版规'),
+      content: SingleChildScrollViewWithScrollbar(
+          child: TextContent(
+        text: forum?.message ?? '',
+        onLinkTap: (context, link) => parseUrl(url: link),
+        onImage: (context, image, element) => image != null
+            ? TextSpan(
+                children: [
+                  WidgetSpan(
+                    child: CachedNetworkImage(
+                      imageUrl: image,
+                      cacheManager: XdnmbImageCacheManager(),
+                      progressIndicatorBuilder:
+                          loadingThumbImageIndicatorBuilder,
+                      errorWidget: loadingImageErrorBuilder,
+                    ),
+                  ),
+                  const TextSpan(text: '\n'),
+                ],
+              )
+            : const TextSpan(),
+      )),
+      actions: [
+        TextButton(
+          onPressed: () => postListBack(),
+          child: Text(
+            '确定',
+            style: TextStyle(
+              fontSize: Theme.of(context).textTheme.subtitle1?.fontSize,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

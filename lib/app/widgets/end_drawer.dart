@@ -1,9 +1,8 @@
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
-import 'package:html_to_text/html_to_text.dart';
 
 import '../data/models/forum.dart';
 import '../data/services/forum.dart';
@@ -70,7 +69,6 @@ class _Dialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final textStyle = Theme.of(context).textTheme.subtitle1;
     final client = XdnmbClientService.to;
-    final forums = ForumListService.to;
     final forumName = htmlToPlainText(context, forum.forumName);
 
     return SimpleDialog(
@@ -83,9 +81,9 @@ class _Dialog extends StatelessWidget {
             showToast('已在新标签页打开 $forumName');
             Get.back(result: true);
           },
-          child: forumNameText(
-            context,
-            forum.forumName,
+          child: ForumName(
+            forumId: forum.id,
+            isTimeline: forum.isTimeline,
             leading: '在新标签页打开 ',
             textStyle: textStyle,
             maxLines: 1,
@@ -99,9 +97,9 @@ class _Dialog extends StatelessWidget {
             showToast('已在新标签页后台打开 $forumName');
             Get.back(result: true);
           },
-          child: forumNameText(
-            context,
-            forum.forumName,
+          child: ForumName(
+            forumId: forum.id,
+            isTimeline: forum.isTimeline,
             leading: '在新标签页后台打开 ',
             textStyle: textStyle,
             maxLines: 1,
@@ -110,14 +108,14 @@ class _Dialog extends StatelessWidget {
         if (client.isReady.value)
           SimpleDialogOption(
             onPressed: () async {
-              await forums.hideForum(forum);
+              await ForumListService.to.hideForum(forum);
 
-              showToast('已隐藏板块 $forumName');
+              showToast('隐藏板块 $forumName');
               Get.back(result: false);
             },
-            child: forumNameText(
-              context,
-              forum.forumName,
+            child: ForumName(
+              forumId: forum.id,
+              isTimeline: forum.isTimeline,
               leading: '隐藏 ',
               trailing: ' 板块',
               textStyle: textStyle,
@@ -132,9 +130,9 @@ class _Dialog extends StatelessWidget {
                 Get.back(result: false);
               }
             },
-            child: forumNameText(
-              context,
-              forum.forumName,
+            child: ForumName(
+              forumId: forum.id,
+              isTimeline: forum.isTimeline,
               leading: '修改 ',
               trailing: ' 板块的名字',
               textStyle: textStyle,
@@ -154,12 +152,12 @@ class _ForumList extends StatelessWidget {
     final forums = ForumListService.to;
     final theme = Theme.of(context);
 
-    return ValueListenableBuilder<Box<ForumData>>(
-      valueListenable: forums.displayedForumListenable,
+    return ValueListenableBuilder<HashMap<int, int>>(
+      valueListenable: forums.displayedForumIndexNotifier,
       builder: (context, box, child) => ListView.builder(
         key: const PageStorageKey<String>('forumList'),
         padding: EdgeInsets.zero,
-        itemCount: forums.displayedLength,
+        itemCount: forums.displayedForumsCount,
         itemBuilder: (context, index) {
           final forum = forums.displayedForum(index);
           final controller = PostListController.get();
@@ -189,9 +187,10 @@ class _ForumList extends StatelessWidget {
                       (forumId == forum.id && isTimeline == forum.isTimeline)
                           ? theme.focusColor
                           : null,
-                  title: forumNameText(
-                    context,
-                    forum.forumName,
+                  title: ForumName(
+                    forumId: forum.id,
+                    isTimeline: forum.isTimeline,
+                    isDeprecated: forum.isDeprecated,
                     textStyle: theme.textTheme.bodyText1,
                     maxLines: 1,
                   ),

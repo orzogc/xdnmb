@@ -5,38 +5,65 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/forum.dart';
 import '../data/services/forum.dart';
+import '../utils/theme.dart';
 import 'dialog.dart';
 
-Widget forumNameText(BuildContext context, String forumName,
-        {String? leading,
-        String? trailing,
-        TextStyle? textStyle,
-        int? maxLines,
-        TextOverflow overflow = TextOverflow.ellipsis}) =>
-    (leading != null || trailing != null)
-        ? RichText(
-            text: TextSpan(
-              children: [
-                if (leading != null) TextSpan(text: leading, style: textStyle),
-                htmlToTextSpan(context, forumName, textStyle: textStyle),
-                if (trailing != null)
-                  TextSpan(text: trailing, style: textStyle),
-              ],
-              style: textStyle,
-            ),
-            overflow: overflow,
-            maxLines: maxLines,
-          )
-        : RichText(
-            text: htmlToTextSpan(context, forumName, textStyle: textStyle),
-            overflow: overflow,
-            maxLines: maxLines,
-          );
+class ForumNameText extends StatelessWidget {
+  final String forumName;
+
+  final String? leading;
+
+  final String? trailing;
+
+  final TextStyle? textStyle;
+
+  final int? maxLines;
+
+  const ForumNameText(
+      {super.key,
+      required this.forumName,
+      this.leading,
+      this.trailing,
+      this.textStyle,
+      this.maxLines});
+
+  @override
+  Widget build(BuildContext context) => (leading != null || trailing != null)
+      ? RichText(
+          text: TextSpan(
+            children: [
+              if (leading != null) TextSpan(text: leading, style: textStyle),
+              htmlToTextSpan(context, forumName, textStyle: textStyle),
+              if (trailing != null) TextSpan(text: trailing, style: textStyle),
+            ],
+            style: textStyle,
+          ),
+          maxLines: maxLines,
+          overflow:
+              maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip,
+        )
+      : RichText(
+          text: htmlToTextSpan(context, forumName, textStyle: textStyle),
+          maxLines: maxLines,
+          overflow:
+              maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip,
+        );
+}
 
 class ForumName extends StatelessWidget {
   final int forumId;
 
   final bool isTimeline;
+
+  final bool? isDeprecated;
+
+  final String? leading;
+
+  final String? trailing;
+
+  final String? fallbackText;
+
+  final TextStyle? textStyle;
 
   final int? maxLines;
 
@@ -44,15 +71,50 @@ class ForumName extends StatelessWidget {
       {super.key,
       required this.forumId,
       this.isTimeline = false,
-      this.maxLines});
+      this.isDeprecated,
+      this.leading,
+      this.trailing,
+      this.fallbackText,
+      this.textStyle,
+      this.maxLines})
+      : assert(isDeprecated == null || (leading == null && trailing == null));
 
   @override
   Widget build(BuildContext context) {
-    final name = ForumListService.to.forumName(forumId, isTimeline: isTimeline);
+    final forums = ForumListService.to;
 
-    return name != null
-        ? forumNameText(context, name, maxLines: maxLines)
-        : const SizedBox.shrink();
+    return ValueListenableBuilder<bool>(
+      valueListenable: forums.updateForumNameNotifier,
+      builder: (context, value, child) {
+        final name = forums.forumName(forumId, isTimeline: isTimeline);
+        final Widget nameWidget = name != null
+            ? ForumNameText(
+                forumName: name,
+                leading: leading,
+                trailing: trailing,
+                textStyle: textStyle,
+                maxLines: maxLines)
+            : (fallbackText != null
+                ? Text(fallbackText!,
+                    style: textStyle,
+                    maxLines: maxLines,
+                    overflow: maxLines != null
+                        ? TextOverflow.ellipsis
+                        : TextOverflow.clip)
+                : const SizedBox.shrink());
+
+        return (isDeprecated != null && isDeprecated!)
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //mainAxisSize: MainAxisSize.min,
+                children: [
+                  nameWidget,
+                  Text('废弃', style: textStyle?.merge(AppTheme.boldRed)),
+                ],
+              )
+            : nameWidget;
+      },
+    );
   }
 }
 
@@ -101,23 +163,19 @@ class _EditForumNameState extends State<EditForumName> {
       ),
       actions: [
         ElevatedButton(
-          onPressed: () async {
-            final forumName = widget.forum.showName;
-            await widget.forum.editUserDefinedName(forumName);
-            forums.isReady.refresh();
+          onPressed: () {
             if (mounted) {
-              setState(() => _controller.text = forumName);
+              setState(() => _controller.text = widget.forum.showName);
             }
           },
-          child: const Text('恢复默认名字'),
+          child: const Text('默认名字'),
         ),
         ElevatedButton(
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
               _formKey.currentState!.save();
 
-              await widget.forum.editUserDefinedName(_controller.text);
-              forums.isReady.refresh();
+              await forums.setForumName(widget.forum, _controller.text);
               Get.back(result: true);
             }
           },
@@ -148,9 +206,10 @@ class SelectForum extends StatelessWidget {
             in isOnlyForum ? forums.where((forum) => forum.isForum) : forums)
           SimpleDialogOption(
             onPressed: () => onSelect(forum),
-            child: forumNameText(
-              context,
-              forum.forumName,
+            child: ForumName(
+              forumId: forum.id,
+              isTimeline: forum.isTimeline,
+              isDeprecated: forum.isDeprecated,
               textStyle: Theme.of(context).textTheme.bodyText1,
               maxLines: 1,
             ),

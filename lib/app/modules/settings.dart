@@ -91,9 +91,9 @@ class SettingsView extends GetView<SettingsController> {
                 })),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 150),
-                  child: forumNameText(
-                    context,
-                    settings.initialForum.forumName,
+                  child: ForumName(
+                    forumId: settings.initialForum.id,
+                    isTimeline: settings.initialForum.isTimeline,
                     textStyle: TextStyle(
                       color: Get.isDarkMode
                           ? Colors.white

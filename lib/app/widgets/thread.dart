@@ -294,17 +294,29 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   bool _isNoMoreItems = false;
 
+  bool _isFirstFetch = true;
+
   Future<void> _saveBrowseHistory() async {
-    _isSavingBrowseHistory = true;
-    await Future.delayed(const Duration(seconds: 5), () async {
-      _history!.update(
-          mainPost: widget.controller.post.value as Post,
-          browsePage: widget.controller.currentPage.value,
-          browsePostId: _browsePostId,
-          isOnlyPo: widget.controller.postListType.value.isOnlyPoThread());
-      await PostHistoryService.to.saveBrowseHistory(_history!);
-    });
-    _isSavingBrowseHistory = false;
+    if (!_isSavingBrowseHistory) {
+      _isSavingBrowseHistory = true;
+
+      try {
+        await Future.delayed(const Duration(seconds: 5), () async {
+          final post = widget.controller.post.value;
+          if (post is Post) {
+            _history!.update(
+                mainPost: post,
+                browsePage: widget.controller.currentPage.value,
+                browsePostId: _browsePostId,
+                isOnlyPo:
+                    widget.controller.postListType.value.isOnlyPoThread());
+            await PostHistoryService.to.saveBrowseHistory(_history!);
+          }
+        });
+      } finally {
+        _isSavingBrowseHistory = false;
+      }
+    }
   }
 
   void _saveHistoryAndJumpToIndex(Thread thread, int page) {
@@ -410,9 +422,7 @@ class _ThreadBodyState extends State<ThreadBody> {
             widget.controller.currentPage.value = index.getPageFromIndex();
             _browsePostId = index.getIdFromIndex();
 
-            if (!_isSavingBrowseHistory) {
-              _saveBrowseHistory();
-            }
+            _saveBrowseHistory();
           },
         );
 
@@ -442,7 +452,10 @@ class _ThreadBodyState extends State<ThreadBody> {
                             : await client.getOnlyPoThread(postId.value!,
                                 page: page);
 
-                        mainPost.value ??= thread.mainPost;
+                        if (_isFirstFetch) {
+                          mainPost.value = thread.mainPost;
+                          _isFirstFetch = false;
+                        }
 
                         if (page != 1 && thread.replies.isEmpty) {
                           if (postPage.value == page) {

@@ -1,4 +1,6 @@
 abstract class HiveBoxName {
+  static const String forums = 'forums';
+
   static const String displayedForums = 'displayedForums';
 
   static const String hiddenForums = 'hiddenForums';

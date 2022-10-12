@@ -73,28 +73,34 @@ class PostDraftsView extends GetView<PostDraftsController> {
                                     IconButton(
                                       onPressed: () async {
                                         final overlay = context.loaderOverlay;
-                                        overlay.show();
-
-                                        final data =
-                                            await ScreenshotController()
-                                                .captureFromWidget(
-                                                    Container(
-                                                      width: 300.0,
-                                                      color: Colors.white,
-                                                      child: PostDraft(
-                                                        title: draft.title,
-                                                        name: draft.name,
-                                                        content: draft.content,
-                                                        textStyle:
-                                                            const TextStyle(
-                                                          color: Colors.black,
+                                        try {
+                                          overlay.show();
+                                          final data =
+                                              await ScreenshotController()
+                                                  .captureFromWidget(
+                                                      Container(
+                                                        width: 300.0,
+                                                        color: Colors.white,
+                                                        child: PostDraft(
+                                                          title: draft.title,
+                                                          name: draft.name,
+                                                          content:
+                                                              draft.content,
+                                                          textStyle:
+                                                              const TextStyle(
+                                                            color: Colors.black,
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                    context: context);
+                                                      context: context);
 
-                                        overlay.hide();
-                                        Get.back<Uint8List>(result: data);
+                                          showToast('草稿生成图片成功');
+                                          Get.back<Uint8List>(result: data);
+                                        } finally {
+                                          if (overlay.visible) {
+                                            overlay.hide();
+                                          }
+                                        }
                                       },
                                       icon: const Icon(Icons.screenshot),
                                     ),

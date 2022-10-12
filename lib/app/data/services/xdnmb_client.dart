@@ -15,10 +15,6 @@ class XdnmbClientService extends GetxService {
 
   Notice? notice;
 
-  late final Map<int, Timeline> timelineMap;
-
-  late final Map<int, Forum> forumMap;
-
   final RxBool isReady = false.obs;
 
   XdnmbClientService() : client = XdnmbApi();
@@ -42,35 +38,28 @@ class XdnmbClientService extends GetxService {
       showToast('获取X岛公告失败：${exceptionMessage(e)}');
     }
 
-    List<Timeline>? timelineList;
-    ForumList? forumList;
     try {
       debugPrint('开始更新X岛服务');
 
       await client.updateUrls();
 
-      timelineList = await client.getTimelineList();
-      timelineMap = {
+      final timelineList = await client.getTimelineList();
+      final timelineMap = {
         for (final timeline in timelineList) timeline.id: timeline
       };
 
-      forumList = await client.getForumList();
-      forumMap = {for (final forum in forumList.forumList) forum.id: forum};
+      final forumList = await client.getForumList();
+      final forumMap = {
+        for (final forum in forumList.forumList) forum.id: forum
+      };
 
       final forums = ForumListService.to;
       if (forums.isReady.value) {
-        await forums.updateForums();
+        await forums.updateForums(timelineMap, forumMap);
       }
 
       debugPrint('更新X岛服务成功');
     } catch (e) {
-      if (timelineList == null) {
-        timelineMap = {};
-      }
-      if (forumList == null) {
-        forumMap = {};
-      }
-
       showToast('更新X岛服务失败：${exceptionMessage(e)}');
     }
 

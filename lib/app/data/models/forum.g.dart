@@ -18,7 +18,7 @@ class ForumDataAdapter extends TypeAdapter<ForumData> {
     };
     return ForumData(
       id: fields[0] as int,
-      name: fields[1] == null ? '未知板块' : fields[1] as String,
+      name: fields[1] as String,
       displayName: fields[2] == null ? '' : fields[2] as String,
       message: fields[3] == null ? '' : fields[3] as String,
       maxPage: fields[4] == null ? 100 : fields[4] as int,
@@ -26,13 +26,14 @@ class ForumDataAdapter extends TypeAdapter<ForumData> {
       forumGroupId: fields[6] as int?,
       isDeprecated: fields[7] == null ? false : fields[7] as bool,
       userDefinedName: fields[8] as String?,
+      isHidden: fields[9] == null ? false : fields[9] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, ForumData obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +51,9 @@ class ForumDataAdapter extends TypeAdapter<ForumData> {
       ..writeByte(7)
       ..write(obj.isDeprecated)
       ..writeByte(8)
-      ..write(obj.userDefinedName);
+      ..write(obj.userDefinedName)
+      ..writeByte(9)
+      ..write(obj.isHidden);
   }
 
   @override

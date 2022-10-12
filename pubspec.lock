@@ -93,7 +93,7 @@ packages:
       name: build_runner
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.2.1"
+    version: "2.3.0"
   build_runner_core:
     dependency: transitive
     description:
@@ -261,7 +261,7 @@ packages:
       name: file_picker
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "5.2.0+1"
+    version: "5.2.1"
   fixnum:
     dependency: transitive
     description:
@@ -1071,7 +1071,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "7fd22d8ece6a438ed717ba265bd7366d581173f4"
+      resolved-ref: "04835e66f0e3d21d1ebc9360deca85c0fe4353c9"
       url: "https://github.com/orzogc/xdnmb_api.git"
     source: git
     version: "0.1.0"

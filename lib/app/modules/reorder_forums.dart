@@ -25,9 +25,8 @@ class _AddForum extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final client = XdnmbClientService.to.client;
-    final forms = ForumListService.to;
+    final forums = ForumListService.to;
     String? id;
-    String? name;
 
     return LoaderOverlay(
       child: InputDialog(
@@ -43,15 +42,9 @@ class _AddForum extends StatelessWidget {
                 onSaved: (newValue) => id = newValue,
                 validator: (value) => value.tryParseInt() == null
                     ? '请输入板块ID数字'
-                    : (forms.forum(int.parse(value!)) != null
+                    : (forums.forum(int.parse(value!)) != null
                         ? '已有该板块ID'
                         : null),
-              ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: '板块名字'),
-                onSaved: (newValue) => name = newValue,
-                validator: (value) =>
-                    (value == null || value.isEmpty) ? '请输入板块名字' : null,
               ),
             ],
           ),
@@ -66,21 +59,17 @@ class _AddForum extends StatelessWidget {
                 try {
                   overlay.show();
                   final forumId = int.parse(id!);
-                  final message = await client.getHtmlForumMessage(forumId);
-                  final forum = ForumData(
-                      id: forumId,
-                      name: name!,
-                      message: message,
-                      maxPage: 100,
-                      isDeprecated: true);
-                  await forms.addForum(forum);
+                  final forum = ForumData.fromHtmlForum(
+                      await client.getHtmlForumInfo(forumId));
+                  await forums.addForum(forum);
                   final state = forumListKey.currentState!;
                   state._refresh(() => state._displayedForums.add(forum));
 
-                  showToast('添加板块 $name 成功');
+                  showToast(
+                      '添加板块 ${htmlToPlainText(Get.context!, forum.name)} 成功');
                   Get.back();
                 } catch (e) {
-                  showToast('添加板块 $name 失败：${exceptionMessage(e)}');
+                  showToast('添加板块（id：$id）失败：${exceptionMessage(e)}');
                 } finally {
                   if (overlay.visible) {
                     overlay.hide();
@@ -94,27 +83,6 @@ class _AddForum extends StatelessWidget {
       ),
     );
   }
-}
-
-class _DeprecatedButton extends StatelessWidget {
-  final VoidCallback onDelete;
-
-  const _DeprecatedButton({super.key, required this.onDelete});
-
-  @override
-  Widget build(BuildContext context) => TextButton(
-        onPressed: () => Get.dialog(
-          ConfirmCancelDialog(
-            content: '确定删除该板块？',
-            onConfirm: () {
-              onDelete();
-              Get.back();
-            },
-            onCancel: () => Get.back(),
-          ),
-        ),
-        child: const Text('废弃', style: AppTheme.boldRed),
-      );
 }
 
 class _Forums extends StatefulWidget {
@@ -154,6 +122,7 @@ class _ForumsState extends State<_Forums> {
 
   @override
   Widget build(BuildContext context) {
+    final forums = ForumListService.to;
     final theme = Theme.of(context);
 
     return ListView(
@@ -168,10 +137,6 @@ class _ForumsState extends State<_Forums> {
           itemCount: _displayedForums.length,
           itemBuilder: (context, index) {
             final forum = _displayedForums[index];
-            final span = htmlToTextSpan(context, forum.forumName,
-                textStyle: theme.textTheme.subtitle1);
-            final forumName = span.toPlainText();
-            //final forumName = htmlToPlainText(context, forum.forumName);
 
             return ListTile(
               key: ValueKey<PostList>(PostList.fromForumData(forum)),
@@ -181,41 +146,31 @@ class _ForumsState extends State<_Forums> {
                     setState(() {
                       final forum = _displayedForums.removeAt(index);
                       _hiddenForums.add(forum);
+                      forums.hideForum(forum);
                     });
-                    showToast('隐藏板块 $forumName');
+                    showToast(
+                        '隐藏板块 ${htmlToPlainText(context, forum.forumName)}');
                   }
                 },
                 icon: const Icon(Icons.visibility),
               ),
-              title: RichText(
-                  text: span, maxLines: 1, overflow: TextOverflow.ellipsis),
+              title: ForumName(
+                forumId: forum.id,
+                isTimeline: forum.isTimeline,
+                isDeprecated: forum.isDeprecated,
+                textStyle: theme.textTheme.subtitle1,
+                maxLines: 1,
+              ),
               trailing: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (forum.isDeprecated)
-                    _DeprecatedButton(
-                      onDelete: () async {
-                        await forum.delete();
-                        if (mounted) {
-                          setState(() {
-                            _displayedForums.removeAt(index);
-                          });
-                        }
-                        showToast('删除板块 $forumName 成功');
-                      },
-                    ),
                   IconButton(
-                    onPressed: () async {
-                      await Get.dialog(EditForumName(forum: forum));
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    },
+                    onPressed: () => Get.dialog(EditForumName(forum: forum)),
                     icon: const Icon(
                       Icons.edit,
                     ),
                   ),
+                  const SizedBox(width: 10.0),
                   ReorderableDragStartListener(
                     index: index,
                     child: const Icon(Icons.drag_handle),
@@ -245,9 +200,6 @@ class _ForumsState extends State<_Forums> {
             _hiddenForums.length,
             (index) {
               final forum = _hiddenForums[index];
-              final span = htmlToTextSpan(context, forum.forumName,
-                  textStyle: theme.textTheme.subtitle1);
-              final forumName = span.toPlainText();
 
               return ListTile(
                 key: ValueKey<PostList>(PostList.fromForumData(forum)),
@@ -257,40 +209,24 @@ class _ForumsState extends State<_Forums> {
                       setState(() {
                         final forum = _hiddenForums.removeAt(index);
                         _displayedForums.add(forum);
+                        forums.displayForum(forum);
                       });
-                      showToast('取消隐藏板块 $forumName');
+                      showToast(
+                          '取消隐藏板块 ${htmlToPlainText(context, forum.forumName)}');
                     }
                   },
                   icon: const Icon(Icons.visibility_off),
                 ),
-                title: RichText(
-                    text: span, maxLines: 1, overflow: TextOverflow.ellipsis),
-                trailing: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (forum.isDeprecated)
-                      _DeprecatedButton(
-                        onDelete: () async {
-                          await forum.delete();
-                          if (mounted) {
-                            setState(() {
-                              _hiddenForums.removeAt(index);
-                            });
-                          }
-                          showToast('删除板块 $forumName 成功');
-                        },
-                      ),
-                    IconButton(
-                      onPressed: () async {
-                        await Get.dialog(EditForumName(forum: forum));
-                        if (mounted) {
-                          setState(() {});
-                        }
-                      },
-                      icon: const Icon(Icons.edit),
-                    ),
-                  ],
+                title: ForumName(
+                  forumId: forum.id,
+                  isTimeline: forum.isTimeline,
+                  isDeprecated: forum.isDeprecated,
+                  textStyle: theme.textTheme.subtitle1,
+                  maxLines: 1,
+                ),
+                trailing: IconButton(
+                  onPressed: () => Get.dialog(EditForumName(forum: forum)),
+                  icon: const Icon(Icons.edit),
                 ),
               );
             },

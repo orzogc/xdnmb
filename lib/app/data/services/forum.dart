@@ -1,9 +1,9 @@
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../models/forum.dart';
 import '../models/hive.dart';
@@ -19,7 +19,11 @@ class _ForumKey {
 
   const _ForumKey(this.id, this.isTimeline);
 
-  _ForumKey.fromForum(ForumData forum) : this(forum.id, forum.isTimeline);
+  _ForumKey.fromTimeline(Timeline timeline) : this(timeline.id, true);
+
+  _ForumKey.fromForum(Forum forum) : this(forum.id, false);
+
+  _ForumKey.fromForumData(ForumData forum) : this(forum.id, forum.isTimeline);
 
   @override
   bool operator ==(Object other) =>
@@ -35,9 +39,12 @@ class _ForumValue {
 
   final int maxPage;
 
-  const _ForumValue(this.name, this.maxPage);
+  final bool isDeprecated;
 
-  _ForumValue.fromForum(ForumData forum) : this(forum.forumName, forum.maxPage);
+  const _ForumValue(this.name, this.maxPage, this.isDeprecated);
+
+  _ForumValue.fromForum(ForumData forum)
+      : this(forum.forumName, forum.maxPage, forum.isDeprecated);
 
   @override
   bool operator ==(Object other) =>
@@ -48,38 +55,72 @@ class _ForumValue {
   int get hashCode => Object.hash(name, maxPage);
 }
 
-typedef NameWidgetBuilder = Widget Function(String name);
-
-// TODO: 获取隐藏板块信息
 class ForumListService extends GetxService {
   static ForumListService get to => Get.find<ForumListService>();
 
-  late final Box<ForumData> _displayedBox;
-
-  late final Box<ForumData> _hiddenBox;
+  late final Box<ForumData> _forumBox;
 
   final RxBool isReady = false.obs;
 
-  int get displayedLength => _displayedBox.length;
+  final ValueNotifier<bool> updateForumNameNotifier = ValueNotifier(false);
 
-  Iterable<ForumData> get displayedForums => _displayedBox.values;
+  late final ValueListenable<Box<ForumData>> forumsListenable;
 
-  Iterable<ForumData> get hiddenForums => _hiddenBox.values;
+  /// key为顺序，value为[_forumBox]里的index
+  final ValueNotifier<HashMap<int, int>> displayedForumIndexNotifier =
+      ValueNotifier(HashMap());
 
-  Iterable<ForumData> get forums => displayedForums.followedBy(hiddenForums);
+  late HashMap<_ForumKey, _ForumValue> _forumMap;
 
-  late final ValueListenable<Box<ForumData>> displayedForumListenable;
+  final HashSet<int> _deprecatedForumId = HashSet();
 
-  HashMap<_ForumKey, _ForumValue> _forumMap = HashMap();
+  int get displayedForumsCount => displayedForumIndexNotifier.value.length;
+
+  Iterable<ForumData> get forums => _forumBox.values;
+
+  Iterable<ForumData> get displayedForums =>
+      forums.where((forum) => forum.isDisplayed);
+
+  Iterable<ForumData> get hiddenForums =>
+      forums.where((forum) => forum.isHidden);
+
+  void _updateDisplayedForumIndexNotifier() =>
+      displayedForumIndexNotifier.value = HashMap.of(
+          (HashMap.of(forums.toList().asMap())
+                ..removeWhere((key, forum) => forum.isHidden))
+              .keys
+              .toList()
+              .asMap());
 
   void _updateForumMap() =>
-      _forumMap = HashMap.fromEntries(forums.map((forum) =>
-          MapEntry(_ForumKey.fromForum(forum), _ForumValue.fromForum(forum))));
+      _forumMap = HashMap.fromEntries(forums.map((forum) => MapEntry(
+          _ForumKey.fromForumData(forum), _ForumValue.fromForum(forum))));
 
+  void _notifyUpdateForumName() =>
+      updateForumNameNotifier.value = !updateForumNameNotifier.value;
+
+  Future<void> _getHtmlForum(int forumId) async {
+    if (_forumMap.isNotEmpty &&
+        !_forumMap.containsKey(_ForumKey(forumId, false)) &&
+        !_deprecatedForumId.contains(forumId)) {
+      _deprecatedForumId.add(forumId);
+
+      try {
+        final client = XdnmbClientService.to.client;
+        final forum = await client.getHtmlForumInfo(forumId);
+        await addForum(ForumData.fromHtmlForum(forum));
+        debugPrint('增加废弃板块：${forum.name}');
+      } catch (e) {
+        debugPrint('获取HtmlForum失败：$e');
+      }
+    }
+  }
+
+  /// 返回[ForumData]，不会自动请求未知板块的信息
   ForumData? forum(int forumId, {bool isTimeline = false}) {
     try {
       return forums.firstWhere(
-          (forum) => forum.isTimeline == isTimeline && forum.id == forumId);
+          (forum) => forum.id == forumId && forum.isTimeline == isTimeline);
     } catch (e) {
       debugPrint('ForumListService里没有ID为$forumId的板块/时间线');
 
@@ -87,64 +128,50 @@ class ForumListService extends GetxService {
     }
   }
 
-  Future<void> updateForums() async {
-    final client = XdnmbClientService.to;
-
-    if (_displayedBox.isEmpty && _hiddenBox.isEmpty) {
-      await _displayedBox.addAll(client.timelineMap.values
+  Future<void> updateForums(
+      Map<int, Timeline> timelineMap, Map<int, Forum> forumMap) async {
+    if (_forumBox.isEmpty) {
+      await _forumBox.addAll(timelineMap.values
           .map((timeline) => ForumData.fromTimeline(timeline))
-          .followedBy(client.forumMap.values
-              .map((forum) => ForumData.fromForum(forum))));
+          .followedBy(
+              forumMap.values.map((forum) => ForumData.fromForum(forum))));
     } else {
-      final newDisplayed = <ForumData>[];
-      for (final forum in displayedForums) {
-        if (forum.isTimeline) {
-          if (client.timelineMap.containsKey(forum.id)) {
-            newDisplayed.add(ForumData.fromTimeline(
-                client.timelineMap[forum.id]!, forum.userDefinedName));
+      for (final entry in forums.toList().asMap().entries) {
+        if (entry.value.isTimeline) {
+          final timeline = timelineMap[entry.value.id];
+          if (timeline != null) {
+            await _forumBox.putAt(
+                entry.key,
+                ForumData.fromTimeline(timeline,
+                    userDefinedName: entry.value.userDefinedName,
+                    isHidden: entry.value.isHidden));
           } else {
-            newDisplayed.add(forum.deprecate());
+            await _forumBox.putAt(entry.key, entry.value.deprecate());
           }
         } else {
-          if (client.forumMap.containsKey(forum.id)) {
-            newDisplayed.add(ForumData.fromForum(
-                client.forumMap[forum.id]!, forum.userDefinedName));
+          final forum = forumMap[entry.value.id];
+          if (forum != null) {
+            await _forumBox.putAt(
+                entry.key,
+                ForumData.fromForum(forum,
+                    userDefinedName: entry.value.userDefinedName,
+                    isHidden: entry.value.isHidden));
           } else {
-            newDisplayed.add(forum.deprecate());
+            await _forumBox.putAt(entry.key, entry.value.deprecate());
           }
         }
       }
 
-      final newHidden = <ForumData>[];
-      for (final forum in hiddenForums) {
-        if (forum.isTimeline) {
-          if (client.timelineMap.containsKey(forum.id)) {
-            newHidden.add(ForumData.fromTimeline(
-                client.timelineMap[forum.id]!, forum.userDefinedName));
-          } else {
-            newHidden.add(forum.deprecate());
-          }
-        } else {
-          if (client.forumMap.containsKey(forum.id)) {
-            newHidden.add(ForumData.fromForum(
-                client.forumMap[forum.id]!, forum.userDefinedName));
-          } else {
-            newHidden.add(forum.deprecate());
-          }
-        }
-      }
-
+      _updateForumMap();
       final newForums = <ForumData>[];
-      final allForums = forums;
-      for (final timeline in client.timelineMap.values) {
-        if (!allForums
-            .any((forum) => forum.isTimeline && forum.id == timeline.id)) {
+      for (final timeline in timelineMap.values) {
+        if (!_forumMap.containsKey(_ForumKey.fromTimeline(timeline))) {
           newForums.add(ForumData.fromTimeline(timeline));
         }
       }
-      for (final forum_ in client.forumMap.values) {
-        if (!allForums.any((forum) => forum.isForum && forum.id == forum_.id)) {
-          newForums.add(ForumData.fromForum(forum_));
+      for (final forum in forumMap.values) {
+        if (!_forumMap.containsKey(_ForumKey.fromForum(forum))) {
+          newForums.add(ForumData.fromForum(forum));
         }
       }
 
@@ -152,57 +179,87 @@ class ForumListService extends GetxService {
         final newForumString =
             newForums.map((forum) => forum.forumName).join(' ');
         showToast('新板块：$newForumString');
-      }
 
-      await _displayedBox.clear();
-      await _hiddenBox.clear();
-      await _displayedBox.addAll(newDisplayed.followedBy(newForums));
-      await _hiddenBox.addAll(newHidden);
+        await _forumBox.addAll(newForums);
+      }
     }
+
+    _updateDisplayedForumIndexNotifier();
+    _updateForumMap();
+    _notifyUpdateForumName();
   }
 
-  ForumData? displayedForum(int index) => _displayedBox.getAt(index);
+  ForumData? displayedForum(int index) {
+    final index_ = displayedForumIndexNotifier.value[index];
+
+    return index_ != null ? _forumBox.getAt(index_) : null;
+  }
 
   Future<void> saveForums(
       {required List<ForumData> displayedForums,
       required List<ForumData> hiddenForums}) async {
-    await _displayedBox.clear();
-    await _hiddenBox.clear();
-    await _displayedBox.addAll(displayedForums);
-    await _hiddenBox.addAll(hiddenForums);
+    await _forumBox.clear();
+    _forumBox.addAll(displayedForums.followedBy(hiddenForums));
+
+    _updateDisplayedForumIndexNotifier();
+  }
+
+  Future<void> displayForum(ForumData forum) async {
+    await forum.setIsHidden(false);
+
+    _updateDisplayedForumIndexNotifier();
   }
 
   Future<void> hideForum(ForumData forum) async {
-    await forum.delete();
-    await _hiddenBox.add(forum);
+    await forum.setIsHidden(true);
+
+    _updateDisplayedForumIndexNotifier();
   }
 
-  String? forumName(int forumId, {bool isTimeline = false}) =>
-      _forumMap[_ForumKey(forumId, isTimeline)]?.name;
+  Future<void> setForumName(ForumData forum, String? name) async {
+    await forum.setUserDefinedName(name);
 
-  int? maxPage(int forumId, {bool isTimeline = false}) =>
-      _forumMap[_ForumKey(forumId, isTimeline)]?.maxPage;
+    _updateForumMap();
+    _notifyUpdateForumName();
+  }
 
-  Future<void> addForum(ForumData forum) => _displayedBox.add(forum);
+  /// 返回板块名字，会自动请求未知板块的信息
+  String? forumName(int forumId, {bool isTimeline = false}) {
+    final name = _forumMap[_ForumKey(forumId, isTimeline)]?.name;
+    if (name != null) {
+      return name;
+    }
+
+    if (isTimeline) {
+      return '时间线';
+    }
+    _getHtmlForum(forumId);
+
+    return null;
+  }
+
+  int maxPage(int forumId, {bool isTimeline = false}) =>
+      _forumMap[_ForumKey(forumId, isTimeline)]?.maxPage ??
+      (isTimeline ? 20 : 100);
+
+  Future<void> addForum(ForumData forum) async {
+    await _forumBox.add(forum);
+
+    _updateDisplayedForumIndexNotifier();
+    _updateForumMap();
+    _notifyUpdateForumName();
+  }
 
   @override
   void onInit() async {
     super.onInit();
 
-    _displayedBox = await Hive.openBox<ForumData>(HiveBoxName.displayedForums);
-    _hiddenBox = await Hive.openBox<ForumData>(HiveBoxName.hiddenForums);
+    _forumBox = await Hive.openBox<ForumData>(HiveBoxName.forums);
 
+    forumsListenable = _forumBox.listenable();
+
+    _updateDisplayedForumIndexNotifier();
     _updateForumMap();
-    _displayedBox.watch().listen((event) {
-      debugPrint('_displayedBox change');
-      _updateForumMap();
-    });
-    _hiddenBox.watch().listen((event) {
-      debugPrint('_hiddenBox change');
-      _updateForumMap();
-    });
-
-    displayedForumListenable = _displayedBox.listenable();
 
     isReady.value = true;
     debugPrint('读取板块列表成功');
@@ -210,8 +267,7 @@ class ForumListService extends GetxService {
 
   @override
   void onClose() async {
-    await _displayedBox.close();
-    await _hiddenBox.close();
+    await _forumBox.close();
     isReady.value = false;
 
     super.onClose();

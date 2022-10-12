@@ -53,10 +53,14 @@ class _PostUser extends StatelessWidget {
 class _PostTime extends StatelessWidget {
   final DateTime postTime;
 
-  const _PostTime(this.postTime, {super.key});
+  final bool showFullTime;
+
+  const _PostTime(
+      {super.key, required this.postTime, this.showFullTime = true});
 
   @override
-  Widget build(BuildContext context) => Text(postFormatTime(postTime));
+  Widget build(BuildContext context) =>
+      Text(showFullTime ? fullFormatTime(postTime) : formatTime(postTime));
 }
 
 typedef OnPostIdCallback = void Function(int postId);
@@ -204,6 +208,8 @@ class PostContent extends StatelessWidget {
 
   final PostBase post;
 
+  final bool showFullTime;
+
   final bool showPostId;
 
   final bool showForumName;
@@ -231,6 +237,7 @@ class PostContent extends StatelessWidget {
   const PostContent(
       {super.key,
       required this.post,
+      this.showFullTime = true,
       this.showPostId = true,
       this.showForumName = true,
       this.showReplyCount = true,
@@ -285,7 +292,12 @@ class PostContent extends StatelessWidget {
                         isAdmin: post.isAdmin,
                       ),
                     ),
-                    Flexible(child: _PostTime(post.postTime)),
+                    Flexible(
+                      child: _PostTime(
+                        postTime: post.postTime,
+                        showFullTime: showFullTime,
+                      ),
+                    ),
                     if (showPostId)
                       Flexible(
                           child: _PostId(
@@ -315,6 +327,8 @@ class PostContent extends StatelessWidget {
 
 class PostCard extends StatelessWidget {
   final PostBase post;
+
+  final bool showFullTime;
 
   final bool showPostId;
 
@@ -352,6 +366,7 @@ class PostCard extends StatelessWidget {
   const PostCard(
       {super.key,
       required this.post,
+      this.showFullTime = true,
       this.showPostId = true,
       this.showForumName = true,
       this.showReplyCount = true,
@@ -380,6 +395,7 @@ class PostCard extends StatelessWidget {
       hoverColor: hoverColor,
       child: PostContent(
         post: post,
+        showFullTime: showFullTime,
         showPostId: showPostId,
         showForumName: showForumName,
         showReplyCount: showReplyCount,

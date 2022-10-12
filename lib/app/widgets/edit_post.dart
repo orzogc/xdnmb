@@ -56,35 +56,44 @@ class _ForumName extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String? forumName;
-    if (forumId != null) {
-      forumName = ForumListService.to.forumName(forumId!);
-    }
-    forumName ??= '选择板块';
+    final forums = ForumListService.to;
 
-    return postListType.isTimeline()
-        ? TextButton(
-            onPressed: () {
-              if (postListType.isTimeline()) {
-                Get.dialog(
-                  SelectForum(
-                    isOnlyForum: true,
-                    onSelect: (forum) {
-                      onForum(forum);
-                      Get.back();
-                    },
-                  ),
-                );
-              }
-            },
-            child: forumNameText(context, forumName,
-                textStyle: TextStyle(
-                    color: Get.isDarkMode
-                        ? Colors.white
-                        : AppTheme.primaryColorLight),
-                maxLines: 2),
-          )
-        : forumNameText(context, forumName, maxLines: 2);
+    return ValueListenableBuilder<bool>(
+      valueListenable: forums.updateForumNameNotifier,
+      builder: (context, value, child) {
+        String? forumName;
+        if (forumId != null) {
+          forumName = forums.forumName(forumId!);
+        }
+        forumName ??= '选择板块';
+
+        return postListType.isTimeline()
+            ? TextButton(
+                onPressed: () {
+                  if (postListType.isTimeline()) {
+                    Get.dialog(
+                      SelectForum(
+                        isOnlyForum: true,
+                        onSelect: (forum) {
+                          onForum(forum);
+                          Get.back();
+                        },
+                      ),
+                    );
+                  }
+                },
+                child: ForumNameText(
+                  forumName: forumName,
+                  textStyle: TextStyle(
+                      color: Get.isDarkMode
+                          ? Colors.white
+                          : AppTheme.primaryColorLight),
+                  maxLines: 2,
+                ),
+              )
+            : ForumNameText(forumName: forumName, maxLines: 2);
+      },
+    );
   }
 }
 

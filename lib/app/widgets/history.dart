@@ -360,7 +360,7 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
                                 children: [
                                   Flexible(
                                     child: Text(
-                                      '最后浏览时间：${postFormatTime(browse.browseTime)}',
+                                      '最后浏览时间：${formatTime(browse.browseTime)}',
                                     ),
                                   ),
                                   if (browsePage != null &&
@@ -670,9 +670,9 @@ class _HistoryBodyState extends State<HistoryBody> {
                       title: Center(
                         child: range.start != range.end
                             ? Text(
-                                '${dateRangeFormatTime(range.start)} - ${dateRangeFormatTime(range.end)}',
+                                '${formatDay(range.start)} - ${formatDay(range.end)}',
                               )
-                            : Text(dateRangeFormatTime(range.start)),
+                            : Text(formatDay(range.start)),
                       ),
                       trailing: IconButton(
                         onPressed: () {

@@ -126,31 +126,29 @@ class _BlockForum extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme.subtitle1;
 
     return SimpleDialogOption(
-      onPressed: () {
-        final forumName = ForumListService.to.forumName(forumId);
-        final forumText = htmlToPlainText(context, forumName ?? '');
+      onPressed: () async {
+        final result = await postListDialog<bool>(ConfirmCancelDialog(
+          contentWidget: ForumName(
+              forumId: forumId,
+              leading: '确定屏蔽板块 ',
+              trailing: ' ？',
+              fallbackText: '确定屏蔽板块？',
+              textStyle: textStyle,
+              maxLines: 1),
+          onConfirm: () => postListBack<bool>(result: true),
+          onCancel: () => postListBack<bool>(result: false),
+        ));
 
-        Future(() async {
-          final result = await postListDialog<bool>(ConfirmCancelDialog(
-            contentWidget: forumName != null
-                ? forumNameText(context, forumName,
-                    leading: '确定屏蔽板块 ',
-                    trailing: ' ？',
-                    textStyle: textStyle,
-                    maxLines: 1)
-                : const Text('确定屏蔽板块？'),
-            onConfirm: () => postListBack<bool>(result: true),
-            onCancel: () => postListBack<bool>(result: false),
-          ));
+        if (result ?? false) {
+          await BlacklistService.to.blockForum(BlockForumData(
+              forumId: forumId, timelineId: controller.id.value!));
+          controller.refreshPage();
 
-          if (result ?? false) {
-            await BlacklistService.to.blockForum(BlockForumData(
-                forumId: forumId, timelineId: controller.id.value!));
-            controller.refreshPage();
-            showToast('屏蔽板块 $forumText');
-            postListBack();
-          }
-        });
+          final forumText = htmlToPlainText(
+              Get.context!, ForumListService.to.forumName(forumId) ?? '');
+          showToast('屏蔽板块 $forumText');
+          postListBack();
+        }
       },
       child: Text('屏蔽板块', style: textStyle),
     );
@@ -236,8 +234,7 @@ class _ForumBodyState extends State<ForumBody> {
         controller: _anchorController,
         initialPage: widget.controller.page.value,
         lastPage: forums.maxPage(id.value!,
-                isTimeline: postListType.value.isTimeline()) ??
-            100,
+            isTimeline: postListType.value.isTimeline()),
         fetch: (page) async => postListType.value.isTimeline()
             ? (await client.getTimeline(id.value!, page: page)
                   ..retainWhere((thread) =>
@@ -265,6 +262,7 @@ class _ForumBodyState extends State<ForumBody> {
             elevation: 1.5,
             child: PostCard(
               post: thread.thread.mainPost,
+              showFullTime: false,
               showForumName: postListType.value.isTimeline(),
               contentMaxLines: 8,
               poUserHash: thread.thread.mainPost.userHash,

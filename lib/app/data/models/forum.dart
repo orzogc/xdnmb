@@ -9,7 +9,7 @@ class ForumData extends HiveObject implements ForumBase {
   @override
   final int id;
 
-  @HiveField(1, defaultValue: '未知板块')
+  @HiveField(1)
   @override
   final String name;
 
@@ -37,7 +37,14 @@ class ForumData extends HiveObject implements ForumBase {
   @HiveField(8, defaultValue: null)
   String? userDefinedName;
 
+  @HiveField(9, defaultValue: false)
+  bool isHidden;
+
   bool get isForum => !isTimeline;
+
+  bool get isDisplayed => !isHidden;
+
+  bool get isNonDeprecated => !isDeprecated;
 
   String get forumName =>
       (userDefinedName != null && userDefinedName!.isNotEmpty)
@@ -53,9 +60,11 @@ class ForumData extends HiveObject implements ForumBase {
       this.isTimeline = false,
       this.forumGroupId,
       this.isDeprecated = false,
-      this.userDefinedName});
+      this.userDefinedName,
+      this.isHidden = false});
 
-  ForumData.fromTimeline(Timeline timeline, [this.userDefinedName])
+  ForumData.fromTimeline(Timeline timeline,
+      {this.userDefinedName, this.isHidden = false})
       : id = timeline.id,
         name = timeline.name,
         displayName = timeline.displayName,
@@ -65,7 +74,8 @@ class ForumData extends HiveObject implements ForumBase {
         forumGroupId = null,
         isDeprecated = false;
 
-  ForumData.fromForum(Forum forum, [this.userDefinedName])
+  ForumData.fromForum(Forum forum,
+      {this.userDefinedName, this.isHidden = false})
       : id = forum.id,
         name = forum.name,
         displayName = forum.displayName,
@@ -74,6 +84,24 @@ class ForumData extends HiveObject implements ForumBase {
         isTimeline = false,
         forumGroupId = forum.forumGroupId,
         isDeprecated = false;
+
+  ForumData.fromHtmlForum(HtmlForum forum)
+      : this(
+            id: forum.id,
+            name: forum.name,
+            message: forum.message,
+            maxPage: forum.maxPage,
+            isDeprecated: true,
+            isHidden: true);
+
+  ForumData.unknownTimeline(int timelineId)
+      : this(
+            id: timelineId,
+            name: '时间线',
+            maxPage: 20,
+            isTimeline: true,
+            isDeprecated: true,
+            isHidden: true);
 
   ForumData deprecate() => ForumData(
       id: id,
@@ -84,10 +112,16 @@ class ForumData extends HiveObject implements ForumBase {
       isTimeline: isTimeline,
       forumGroupId: forumGroupId,
       isDeprecated: true,
-      userDefinedName: userDefinedName);
+      userDefinedName: userDefinedName,
+      isHidden: isHidden);
 
-  Future<void> editUserDefinedName(String? name) async {
+  Future<void> setUserDefinedName(String? name) async {
     userDefinedName = name;
+    await save();
+  }
+
+  Future<void> setIsHidden(bool isHidden) async {
+    this.isHidden = isHidden;
     await save();
   }
 
@@ -100,7 +134,8 @@ class ForumData extends HiveObject implements ForumBase {
       isTimeline: isTimeline,
       forumGroupId: forumGroupId,
       isDeprecated: isDeprecated,
-      userDefinedName: userDefinedName);
+      userDefinedName: userDefinedName,
+      isHidden: isHidden);
 
   @override
   bool operator ==(Object other) =>
@@ -114,11 +149,12 @@ class ForumData extends HiveObject implements ForumBase {
           isTimeline == other.isTimeline &&
           forumGroupId == other.forumGroupId &&
           isDeprecated == other.isDeprecated &&
-          userDefinedName == other.userDefinedName);
+          userDefinedName == other.userDefinedName &&
+          isHidden == other.isHidden);
 
   @override
   int get hashCode => Object.hash(id, name, displayName, message, maxPage,
-      isTimeline, forumGroupId, isDeprecated, userDefinedName);
+      isTimeline, forumGroupId, isDeprecated, userDefinedName, isHidden);
 }
 
 @HiveType(typeId: 5)
