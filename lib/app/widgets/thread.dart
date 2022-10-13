@@ -37,6 +37,7 @@ PostListController threadController(
         id: parameters['mainPostId'].tryParseInt() ?? 0,
         page: parameters['page'].tryParseInt() ?? 1,
         post: arguments is PostBase ? arguments : null,
+        cancelAutoJump: parameters['cancelAutoJump'].tryParseBool(),
         jumpToId: parameters['jumpToId'].tryParseInt());
 
 PostListController onlyPoThreadController(
@@ -45,7 +46,8 @@ PostListController onlyPoThreadController(
         postListType: PostListType.onlyPoThread,
         id: parameters['mainPostId'].tryParseInt() ?? 0,
         page: parameters['page'].tryParseInt() ?? 1,
-        post: arguments is PostBase ? arguments : null);
+        post: arguments is PostBase ? arguments : null,
+        cancelAutoJump: parameters['cancelAutoJump'].tryParseBool());
 
 class ThreadAppBarTitle extends StatelessWidget {
   final PostListController controller;
@@ -60,7 +62,11 @@ class ThreadAppBarTitle extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Obx(() => Text(controller.id.value!.toPostNumber())),
+        Obx(() {
+          final onlyPoText =
+              controller.postListType.value.isOnlyPoThread() ? ' Po' : '';
+          return Text('${controller.id.value!.toPostNumber()}$onlyPoText');
+        }),
         DefaultTextStyle.merge(
           style: theme.textTheme.bodyText2!
               .apply(color: theme.colorScheme.onPrimary),
@@ -597,7 +603,10 @@ class _ThreadBodyState extends State<ThreadBody> {
     final postId = widget.controller.id;
     final postPage = widget.controller.page;
     final currentPage = widget.controller.currentPage;
+    final cancelAutoJump = widget.controller.cancelAutoJump;
     final jumpToId = widget.controller.jumpToId;
+
+    debugPrint('aaa $cancelAutoJump');
 
     return FutureBuilder(
       future: _history == null
@@ -606,7 +615,9 @@ class _ThreadBodyState extends State<ThreadBody> {
                   await PostHistoryService.to.getBrowseHistory(postId.value!);
 
               if (jumpToId == null) {
-                if (settings.isJumpToLastBrowsePage && _history != null) {
+                if (!(cancelAutoJump ?? false) &&
+                    settings.isJumpToLastBrowsePage &&
+                    _history != null) {
                   final page = postListType.value.isThread()
                       ? _history!.browsePage
                       : _history!.onlyPoBrowsePage;

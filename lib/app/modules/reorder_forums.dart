@@ -10,7 +10,6 @@ import '../modules/post_list.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/text.dart';
-import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
@@ -63,7 +62,7 @@ class _AddForum extends StatelessWidget {
                       await client.getHtmlForumInfo(forumId));
                   await forums.addForum(forum);
                   final state = forumListKey.currentState!;
-                  state._refresh(() => state._displayedForums.add(forum));
+                  state._refresh(() => state._hiddenForums.add(forum));
 
                   showToast(
                       '添加板块 ${htmlToPlainText(Get.context!, forum.name)} 成功');
@@ -248,7 +247,7 @@ class ReorderForumsBinding implements Bindings {
 
 // TODO: 显示版规？
 class ReorderForumsView extends GetView<ReorderForumsController> {
-  final GlobalKey<_ForumsState> _forumListKey = GlobalKey();
+  final GlobalKey<_ForumsState> _forumListKey = GlobalKey<_ForumsState>();
 
   ReorderForumsView({super.key});
 

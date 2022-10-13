@@ -11,9 +11,9 @@ import '../data/services/user.dart';
 import '../data/services/xdnmb_client.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/launch.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
+import '../utils/url.dart';
 import '../widgets/dialog.dart';
 import '../widgets/reload.dart';
 

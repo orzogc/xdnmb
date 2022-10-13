@@ -26,7 +26,7 @@ InlineSpan onHiddenText(
       htmlToTextSpan(
         context,
         element.innerHtml,
-        onText: (context, text) => Regex.onReference(text),
+        onText: (context, text) => Regex.onText(text),
         onTextRecursiveParse: true,
         buildText: (context, text, textStyle, link) {
           if (text == '\n' || text == '\n\n') {

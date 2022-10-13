@@ -250,6 +250,14 @@ class ForumListService extends GetxService {
     _notifyUpdateForumName();
   }
 
+  ForumData? findForum(String name) {
+    try {
+      return forums.firstWhere((forum) => forum.isForum && forum.name == name);
+    } catch (e) {
+      return null;
+    }
+  }
+
   @override
   void onInit() async {
     super.onInit();

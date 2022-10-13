@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../data/services/settings.dart';
 import '../modules/post_list.dart';
@@ -10,6 +9,7 @@ import '../utils/hidden_text.dart';
 import '../utils/regex.dart';
 import '../utils/stack.dart';
 import '../utils/toast.dart';
+import '../utils/url.dart';
 import 'content.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
@@ -247,7 +247,7 @@ class _SponsorDialog extends StatelessWidget {
           child: Text('赞助客户端作者', style: textStyle),
         ),
         SimpleDialogOption(
-          onPressed: () => launchUrl(Uri.parse(_xdnmbSponsor)),
+          onPressed: () => launchURL(_xdnmbSponsor),
           child: Text('赞助X岛匿名版官方', style: textStyle),
         ),
       ],

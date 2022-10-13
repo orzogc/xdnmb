@@ -149,7 +149,7 @@ class _BottomOverlay extends StatelessWidget {
 
             final file = File(path);
             if (await file.exists()) {
-              var isSame = true;
+              bool isSame = true;
               if (info != null) {
                 if (await info.file.length() != await file.length()) {
                   isSame = false;

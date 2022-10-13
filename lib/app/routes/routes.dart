@@ -15,10 +15,10 @@ abstract class AppRoutes {
   /// 参数：timelineId和page
   static const String timeline = '/${PathNames.timeline}';
 
-  /// 参数：mainPostId、page和jumpToId，arguments为主串Post
+  /// 参数：mainPostId、page、cancelAutoJump和jumpToId，arguments为主串Post
   static const String thread = '/${PathNames.thread}';
 
-  /// 参数：mainPostId和page
+  /// 参数：mainPostId、cancelAutoJump和page
   static const String onlyPoThread = '/${PathNames.onlyPoThread}';
 
   /// 参数：postId
@@ -98,6 +98,7 @@ abstract class AppRoutes {
   static Future<T?>? toThread<T>(
           {required int mainPostId,
           int page = 1,
+          bool? cancelAutoJump,
           int? jumpToId,
           PostBase? mainPost}) =>
       Get.toNamed<T>(
@@ -107,12 +108,16 @@ abstract class AppRoutes {
         parameters: {
           'mainPostId': '$mainPostId',
           'page': '$page',
+          if (cancelAutoJump != null) 'cancelAutoJump': '$cancelAutoJump',
           if (jumpToId != null) 'jumpToId': '$jumpToId',
         },
       );
 
   static Future<T?>? toOnlyPoThread<T>(
-          {required int mainPostId, int page = 1, PostBase? mainPost}) =>
+          {required int mainPostId,
+          int page = 1,
+          bool? cancelAutoJump,
+          PostBase? mainPost}) =>
       Get.toNamed<T>(
         onlyPoThread,
         id: ControllerStack.getKeyId(),
@@ -120,6 +125,7 @@ abstract class AppRoutes {
         parameters: {
           'mainPostId': '$mainPostId',
           'page': '$page',
+          if (cancelAutoJump != null) 'cancelAutoJump': '$cancelAutoJump',
         },
       );
 

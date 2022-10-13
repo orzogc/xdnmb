@@ -46,7 +46,7 @@ class _TextContentState extends State<TextContent> {
       Regex.replaceHiddenTag(widget.text) ?? widget.text,
       onLinkTap: widget.onLinkTap,
       // TODO: 解析HTTP链接
-      onText: (context, text) => Regex.onReference(text),
+      onText: (context, text) => Regex.onText(text),
       onTextRecursiveParse: true,
       onTags: widget.onHiddenText != null
           ? onHiddenTag(widget.onHiddenText!)
@@ -122,7 +122,7 @@ class _ContentState extends State<Content> {
       text ?? widget.post.content,
       onLinkTap: widget.onLinkTap,
       // TODO: 解析HTTP链接
-      onText: (context, text) => Regex.onReference(text),
+      onText: (context, text) => Regex.onText(text),
       onTextRecursiveParse: true,
       onTags: widget.onHiddenText != null
           ? onHiddenTag(widget.onHiddenText!)

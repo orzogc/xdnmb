@@ -717,7 +717,7 @@ class _Post extends StatelessWidget {
                 return;
               }
 
-              var content = getContent();
+              String content = getContent();
 
               if (content.isNotEmpty || imageData != null) {
                 final client = XdnmbClientService.to.client;

@@ -118,6 +118,8 @@ class PostListController {
 
   final Rxn<List<DateTimeRange?>> dateRange;
 
+  final bool? cancelAutoJump;
+
   final int? jumpToId;
 
   int? get forumOrTimelineId => postListType.value.isThreadType()
@@ -137,6 +139,7 @@ class PostListController {
       PostBase? post,
       int? bottomBarIndex,
       List<DateTimeRange?>? dateRange,
+      this.cancelAutoJump,
       this.jumpToId})
       : postListType = postListType.obs,
         id = RxnInt(id),
@@ -154,6 +157,7 @@ class PostListController {
         post = Rxn(post),
         bottomBarIndex = RxnInt(null),
         dateRange = Rxn(null),
+        cancelAutoJump = null,
         jumpToId = null;
 
   PostListController.fromPost({required PostBase post, int page = 1})
@@ -164,6 +168,7 @@ class PostListController {
         post = Rxn(post),
         bottomBarIndex = RxnInt(null),
         dateRange = Rxn(null),
+        cancelAutoJump = null,
         jumpToId = null;
 
   PostListController.fromThread(
@@ -176,6 +181,7 @@ class PostListController {
         post = Rxn(thread.mainPost),
         bottomBarIndex = RxnInt(null),
         dateRange = Rxn(null),
+        cancelAutoJump = null,
         jumpToId = null;
 
   PostListController.fromForumData({required ForumData forum, int page = 1})
@@ -187,6 +193,7 @@ class PostListController {
         post = Rxn(null),
         bottomBarIndex = RxnInt(null),
         dateRange = Rxn(null),
+        cancelAutoJump = null,
         jumpToId = null;
 
   static PostListController get([int? index]) =>
@@ -235,6 +242,7 @@ class PostListController {
       post: post.value,
       bottomBarIndex: bottomBarIndex.value,
       dateRange: dateRange.value,
+      cancelAutoJump: cancelAutoJump,
       jumpToId: jumpToId);
 
   PostListController copyKeepingPage() => PostListController(
@@ -245,6 +253,7 @@ class PostListController {
       post: post.value,
       bottomBarIndex: bottomBarIndex.value,
       dateRange: dateRange.value,
+      cancelAutoJump: cancelAutoJump,
       jumpToId: jumpToId);
 }
 

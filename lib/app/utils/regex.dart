@@ -4,21 +4,29 @@ import '../routes/routes.dart';
 import 'extensions.dart';
 
 abstract class Regex {
-  static const _postReference1 = r'(?:&gt;)*No\.([0-9]+)';
+  static const String _postReference1 = r'(?:&gt;)*No\.([0-9]+)';
 
-  static const _postReference2 = r'(?:&gt;)+([0-9]+)';
+  static const String _postReference2 = r'(?:&gt;)+([0-9]+)';
 
-  static const _postId = r'(^[0-9]+$)';
+  static const String _link =
+      r'(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})';
 
-  static const _postReference3 = r'(?:>)*No\.([0-9]+)';
+  static const String _postId = r'(^[0-9]+$)';
 
-  static const _postReference4 = r'(?:>)+([0-9]+)';
+  static const String _postReference3 = r'(?:>)*No\.([0-9]+)';
 
-  static const _hasHiddenTag = r'\[h\].+\[\/h\]';
+  static const String _postReference4 = r'(?:>)+([0-9]+)';
 
-  static const _hiddenTag = r'(\[h\])|(\[\/h\])';
+  static const String _hasHiddenTag = r'\[h\].+\[\/h\]';
 
-  static final RegExp _postRegex = RegExp('$_postReference1|$_postReference2');
+  static const String _hiddenTag = r'(\[h\])|(\[\/h\])';
+
+  static const String _xdnmbHost = r'^www\.nmbxd[0-9]*\.com$';
+
+  static const String _xdnmbHtml = r'(.+)(?=\.html$)|(.+)';
+
+  static final RegExp _textRegex =
+      RegExp('$_postReference1|$_postReference2|$_link');
 
   static final RegExp _postIdRegex =
       RegExp('$_postId|$_postReference3|$_postReference4');
@@ -26,6 +34,10 @@ abstract class Regex {
   static final RegExp _hasHiddenTagRegex = RegExp(_hasHiddenTag, dotAll: true);
 
   static final RegExp _hiddenTagRegex = RegExp(_hiddenTag);
+
+  static final RegExp _xdnmbHostRegex = RegExp(_xdnmbHost);
+
+  static final RegExp _xdnmbHtmlRegex = RegExp(_xdnmbHtml);
 
   static String? replaceHiddenTag(String text) {
     if (text.contains(_hasHiddenTagRegex)) {
@@ -39,17 +51,18 @@ abstract class Regex {
     return null;
   }
 
-  static String? onReference(String text) {
-    var isReplaced = false;
+  static String? onText(String text) {
+    bool isReplaced = false;
 
-    text = text.replaceAllMapped(_postRegex, (match) {
+    text = text.replaceAllMapped(_textRegex, (match) {
       isReplaced = true;
       final id = match[1] ?? match[2];
+      final link = match[3];
 
       return id != null
           ? '<a href="${AppRoutes.referenceUrl(int.parse(id))}" '
               'style="color:#789922;">${match[0]}</a>'
-          : match[0]!;
+          : (link != null ? '<a href="$link">${match[0]}</a>' : match[0]!);
     });
 
     if (isReplaced) {
@@ -69,6 +82,14 @@ abstract class Regex {
 
     return null;
   }
+
+  static bool isXdnmbHost(String text) => _xdnmbHostRegex.hasMatch(text);
+
+  static String? getXdnmbParameter(String text) {
+    final match = _xdnmbHtmlRegex.firstMatch(text);
+
+    return match?[1] ?? match?[2];
+  }
 }
 
 String _parseHiddenTag(String text) {
@@ -84,8 +105,8 @@ String _parseHiddenTag(String text) {
     }
   }
 
-  var left = 0;
-  var right = 0;
+  int left = 0;
+  int right = 0;
   while (left < leftHiddenTags.length && right < rightHiddenTags.length) {
     if (rightHiddenTags[right] < leftHiddenTags[left]) {
       final nextRightIndex = rightHiddenTags
