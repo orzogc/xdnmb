@@ -44,7 +44,7 @@ void popAllPopup([int? index]) {
 }
 
 void openNewTabBackground(PostListController controller) =>
-    ControllerStack.addController(controller);
+    ControllerStack.addNewController(controller);
 
 void openNewTab(PostListController controller) {
   openNewTabBackground(controller);

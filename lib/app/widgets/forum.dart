@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -16,7 +14,6 @@ import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
-import '../utils/key.dart';
 import '../utils/navigation.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
@@ -25,96 +22,77 @@ import 'bilistview.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
 import 'post.dart';
+import 'post_list.dart';
 import 'reference.dart';
 
-class ForumController extends PostListController_ {
+abstract class ForumTypeController extends PostListController {
   @override
   final int id;
 
+  @override
+  PostBase? get post => null;
+
+  @override
+  set post(PostBase? post) {}
+
+  @override
+  int? get bottomBarIndex => null;
+
+  @override
+  set bottomBarIndex(int? index) {}
+
+  @override
+  List<DateTimeRange?>? get dateRange => null;
+
+  @override
+  set dateRange(List<DateTimeRange?>? range) {}
+
+  @override
+  bool? get cancelAutoJump => null;
+
+  @override
+  int? get jumpToId => null;
+
+  ForumTypeController({required this.id, required int page}) : super(page);
+
+  factory ForumTypeController.fromForumData(
+          {required ForumData forum, int page = 1}) =>
+      forum.isTimeline
+          ? TimelineController(id: forum.id, page: page)
+          : ForumController(id: forum.id, page: page);
+
+  @override
+  void refreshDateRange() {}
+}
+
+class ForumController extends ForumTypeController {
   @override
   PostListType get postListType => PostListType.forum;
 
-  @override
-  PostBase? get post => null;
-
-  @override
-  set post(PostBase? post) {}
-
-  @override
-  int? get bottomBarIndex => null;
-
-  @override
-  set bottomBarIndex(int? index) {}
-
-  @override
-  List<DateTimeRange?>? get dateRange => null;
-
-  @override
-  set dateRange(List<DateTimeRange?>? range) {}
-
-  @override
-  bool? get cancelAutoJump => null;
-
-  @override
-  int? get jumpToId => null;
-
-  ForumController({required this.id, required int page}) : super(page);
-
-  @override
-  void refreshDateRange() {}
+  ForumController({required int id, required int page})
+      : super(id: id, page: page);
 }
 
-class TimelineController extends PostListController_ {
-  @override
-  final int id;
-
+class TimelineController extends ForumTypeController {
   @override
   PostListType get postListType => PostListType.timeline;
 
-  @override
-  PostBase? get post => null;
-
-  @override
-  set post(PostBase? post) {}
-
-  @override
-  int? get bottomBarIndex => null;
-
-  @override
-  set bottomBarIndex(int? index) {}
-
-  @override
-  List<DateTimeRange?>? get dateRange => null;
-
-  @override
-  set dateRange(List<DateTimeRange?>? range) {}
-
-  @override
-  bool? get cancelAutoJump => null;
-
-  @override
-  int? get jumpToId => null;
-
-  TimelineController({required this.id, required int page}) : super(page);
-
-  @override
-  void refreshDateRange() {}
+  TimelineController({required int id, required int page})
+      : super(id: id, page: page);
 }
 
-PostListController forumController(Map<String, String?> parameters) =>
-    PostListController(
-        postListType: PostListType.forum,
+ForumController forumController(Map<String, String?> parameters) =>
+    ForumController(
         id: parameters['forumId'].tryParseInt() ?? 0,
         page: parameters['page'].tryParseInt() ?? 1);
 
-PostListController timelineController(Map<String, String?> parameters) =>
-    PostListController(
-        postListType: PostListType.timeline,
+TimelineController timelineController(Map<String, String?> parameters) =>
+    TimelineController(
         id: parameters['timelineId'].tryParseInt() ?? 0,
         page: parameters['page'].tryParseInt() ?? 1);
 
 class ForumAppBarTitle extends StatelessWidget {
-  final PostListController controller;
+  final ForumTypeController controller;
 
   const ForumAppBarTitle(this.controller, {super.key});
 
@@ -126,10 +104,10 @@ class ForumAppBarTitle extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Obx(() => ForumName(
-            forumId: controller.id.value!,
-            isTimeline: controller.postListType.value.isTimeline(),
-            maxLines: 1)),
+        ForumName(
+            forumId: controller.id,
+            isTimeline: controller.isTimeline,
+            maxLines: 1),
         Text(
           'X岛 nmbxd.com',
           style: theme.textTheme.bodyText2
@@ -141,7 +119,7 @@ class ForumAppBarTitle extends StatelessWidget {
 }
 
 class ForumAppBarPopupMenuButton extends StatelessWidget {
-  final PostListController controller;
+  final ForumTypeController controller;
 
   const ForumAppBarPopupMenuButton(this.controller, {super.key});
 
@@ -157,9 +135,9 @@ class ForumAppBarPopupMenuButton extends StatelessWidget {
               onTap: () => postListDialog(const Center(
                   child: ReferenceCard(postId: 50000001, poUserHash: 'Admin'))),
               child: const Text('岛规')),
-          if (controller.postListType.value.isForum())
+          if (controller.isForum)
             PopupMenuItem(
-              onTap: () => showForumRuleDialog(controller),
+              onTap: () => showForumRuleDialog(controller as ForumController),
               child: const Text('版规'),
             ),
         ],
@@ -188,7 +166,7 @@ class _AddFeed extends StatelessWidget {
 }
 
 class _BlockForum extends StatelessWidget {
-  final PostListController controller;
+  final ForumTypeController controller;
 
   final int forumId;
 
@@ -214,9 +192,9 @@ class _BlockForum extends StatelessWidget {
         ));
 
         if (result ?? false) {
-          await BlacklistService.to.blockForum(BlockForumData(
-              forumId: forumId, timelineId: controller.id.value!));
-          controller.refreshPage();
+          await BlacklistService.to.blockForum(
+              BlockForumData(forumId: forumId, timelineId: controller.id));
+          controller.refreshPage_();
 
           final forumText = htmlToPlainText(
               Get.context!, ForumListService.to.forumName(forumId) ?? '');
@@ -230,7 +208,7 @@ class _BlockForum extends StatelessWidget {
 }
 
 class _ForumDialog extends StatelessWidget {
-  final PostListController controller;
+  final ForumTypeController controller;
 
   final PostBase post;
 
@@ -242,13 +220,13 @@ class _ForumDialog extends StatelessWidget {
         children: [
           _AddFeed(post.id),
           Report(post.id),
-          if (controller.postListType.value.isTimeline() &&
-              post.forumId != null)
+          if (controller.isTimeline && post.forumId != null)
             _BlockForum(controller: controller, forumId: post.forumId!),
           if (!post.isAdmin)
-            BlockPost(postId: post.id, onBlock: controller.refreshPage),
+            BlockPost(postId: post.id, onBlock: controller.refreshPage_),
           if (!post.isAdmin)
-            BlockUser(userHash: post.userHash, onBlock: controller.refreshPage),
+            BlockUser(
+                userHash: post.userHash, onBlock: controller.refreshPage_),
           CopyPostId(post.id),
           CopyPostReference(post.id),
           CopyPostContent(post),
@@ -258,69 +236,38 @@ class _ForumDialog extends StatelessWidget {
       );
 }
 
-class ForumBody extends StatefulWidget {
-  final PostListController controller;
+class ForumBody extends StatelessWidget {
+  final ForumTypeController controller;
 
   const ForumBody(this.controller, {super.key});
-
-  @override
-  State<ForumBody> createState() => _ForumBodyState();
-}
-
-class _ForumBodyState extends State<ForumBody> {
-  late final AnchorScrollController _anchorController;
-
-  late final StreamSubscription<int> _subscription;
-
-  int _refresh = 0;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _anchorController = AnchorScrollController(
-      onIndexChanged: (index, userScroll) =>
-          widget.controller.currentPage.value = index.getPageFromIndex(),
-    );
-    _subscription = widget.controller.page.listen((page) => _refresh++);
-  }
-
-  @override
-  void dispose() {
-    _anchorController.dispose();
-    _subscription.cancel();
-
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final client = XdnmbClientService.to.client;
     final forums = ForumListService.to;
     final blacklist = BlacklistService.to;
-    final postListType = widget.controller.postListType;
-    final id = widget.controller.id;
+    final id = controller.id;
 
-    return Obx(
-      () => BiListView<ThreadWithPage>(
-        key: getPostListKey(
-            PostList.fromController(widget.controller), _refresh),
-        controller: _anchorController,
-        initialPage: widget.controller.page.value,
-        lastPage: forums.maxPage(id.value!,
-            isTimeline: postListType.value.isTimeline()),
-        fetch: (page) async => postListType.value.isTimeline()
-            ? (await client.getTimeline(id.value!, page: page)
+    return PostListAnchorRefresher(
+      controller: controller,
+      builder: (context, anchorController, refresh) =>
+          BiListView<ThreadWithPage>(
+        key: ValueKey<int>(refresh),
+        controller: anchorController,
+        initialPage: controller.page,
+        lastPage: forums.maxPage(id, isTimeline: controller.isTimeline),
+        fetch: (page) async => controller.isTimeline
+            ? (await client.getTimeline(id, page: page)
                   ..retainWhere((thread) =>
                       thread.mainPost.isAdmin ||
                       !(blacklist.hasForum(BlockForumData(
                               forumId: thread.mainPost.forumId,
-                              timelineId: id.value!)) ||
+                              timelineId: id)) ||
                           blacklist.hasPost(thread.mainPost.id) ||
                           blacklist.hasUser(thread.mainPost.userHash))))
                 .map((thread) => ThreadWithPage(thread, page))
                 .toList()
-            : (await client.getForum(id.value!, page: page)
+            : (await client.getForum(id, page: page)
                   ..retainWhere((thread) =>
                       thread.mainPost.isAdmin ||
                       !(blacklist.hasPost(thread.mainPost.id) ||
@@ -329,7 +276,7 @@ class _ForumBodyState extends State<ForumBody> {
                 .toList(),
         itemBuilder: (context, thread, index) => AnchorItemWrapper(
           key: thread.toValueKey(),
-          controller: _anchorController,
+          controller: anchorController,
           index: thread.toIndex(),
           child: Card(
             margin: const EdgeInsets.symmetric(vertical: 4.0),
@@ -337,14 +284,14 @@ class _ForumBodyState extends State<ForumBody> {
             child: PostCard(
               post: thread.thread.mainPost,
               showFullTime: false,
-              showForumName: postListType.value.isTimeline(),
+              showForumName: controller.isTimeline,
               contentMaxLines: 8,
               poUserHash: thread.thread.mainPost.userHash,
               onTap: (post) => AppRoutes.toThread(
                   mainPostId: thread.thread.mainPost.id,
                   mainPost: thread.thread.mainPost),
               onLongPress: (post) => postListDialog(
-                _ForumDialog(controller: widget.controller, post: post),
+                _ForumDialog(controller: controller, post: post),
               ),
               onHiddenText: (context, element, textStyle) => onHiddenText(
                 context: context,

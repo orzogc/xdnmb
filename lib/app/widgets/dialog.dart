@@ -19,9 +19,11 @@ import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'content.dart';
 import 'edit_post.dart';
+import 'forum.dart';
 import 'forum_name.dart';
 import 'loading.dart';
 import 'scroll.dart';
+import 'thread.dart';
 
 Future<T?> postListDialog<T>(
   Widget widget, {
@@ -51,7 +53,7 @@ Future<T?> postListDialog<T>(
 Future<T?> showNoticeDialog<T>({bool showCheckbox = false}) =>
     postListDialog<T>(NoticeDialog(showCheckbox: showCheckbox));
 
-Future<T?> showForumRuleDialog<T>(PostListController controller) =>
+Future<T?> showForumRuleDialog<T>(ForumController controller) =>
     postListDialog<T>(ForumRuleDialog(controller));
 
 class InputDialog extends StatelessWidget {
@@ -196,13 +198,13 @@ class NoticeDialog extends StatelessWidget {
 }
 
 class ForumRuleDialog extends StatelessWidget {
-  final PostListController controller;
+  final ForumController controller;
 
   const ForumRuleDialog(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    final forum = ForumListService.to.forum(controller.id.value!);
+    final forum = ForumListService.to.forum(controller.id);
 
     return AlertDialog(
       actionsPadding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
@@ -258,7 +260,7 @@ class NewTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () {
-          final controller = PostListController.fromPost(post: post);
+          final controller = ThreadTypeController.fromPost(post: post);
           postListBack();
           openNewTab(controller);
           showToast('已在新标签页打开 ${post.toPostNumber()}');
@@ -280,7 +282,7 @@ class NewTabBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () {
-          final controller = PostListController.fromPost(post: post);
+          final controller = ThreadTypeController.fromPost(post: post);
           openNewTabBackground(controller);
           showToast('已在新标签页后台打开 ${post.toPostNumber()}');
           postListBack();

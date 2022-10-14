@@ -17,7 +17,6 @@ import '../modules/edit_post.dart';
 import '../routes/routes.dart';
 import '../utils/image.dart';
 import '../utils/navigation.dart';
-import '../utils/notify.dart';
 import '../utils/stack.dart';
 import '../utils/toast.dart';
 import '../widgets/page.dart';
@@ -38,27 +37,27 @@ enum PostListType {
   feed,
   history;
 
-  bool isThread() => this == thread;
+  bool get isThread => this == thread;
 
-  bool isOnlyPoThread() => this == onlyPoThread;
+  bool get isOnlyPoThread => this == onlyPoThread;
 
-  bool isForum() => this == forum;
+  bool get isForum => this == forum;
 
-  bool isTimeline() => this == timeline;
+  bool get isTimeline => this == timeline;
 
-  bool isFeed() => this == feed;
+  bool get isFeed => this == feed;
 
-  bool isHistory() => this == history;
+  bool get isHistory => this == history;
 
-  bool isThreadType() => isThread() || isOnlyPoThread();
+  bool get isThreadType => isThread || isOnlyPoThread;
 
-  bool isForumType() => isForum() || isTimeline();
+  bool get isForumType => isForum || isTimeline;
 
-  bool hasForumId() => isThreadType() || isForum();
+  bool get hasForumId => isThreadType || isForum;
 
-  bool canPost() => isThreadType() || isForumType();
+  bool get canPost => isThreadType || isForumType;
 
-  bool isXdnmbApi() => isThreadType() || isForumType() || isFeed();
+  bool get isXdnmbApi => isThreadType || isForumType || isFeed;
 }
 
 class PostList {
@@ -70,27 +69,18 @@ class PostList {
 
   const PostList({required this.postListType, this.id, this.page = 1});
 
-  PostList.fromController(PostListController controller)
-      : postListType = controller.postListType.value,
-        id = controller.id.value,
-        page = controller.page.value;
+  PostList.fromController(PostListController controller, [int? page])
+      : this(
+            postListType: controller.postListType,
+            id: controller.id,
+            page: page ?? controller.page);
 
-  PostList.fromPost(PostBase post)
-      : postListType = PostListType.thread,
-        id = post.id,
-        page = 1;
-
-  PostList.fromThread({required Thread thread, bool isThread = true})
-      : postListType =
-            isThread ? PostListType.thread : PostListType.onlyPoThread,
-        id = thread.mainPost.id,
-        page = 1;
-
-  PostList.fromForumData(ForumData forum)
-      : postListType =
-            forum.isTimeline ? PostListType.timeline : PostListType.forum,
-        id = forum.id,
-        page = 1;
+  PostList.fromForumData(ForumData forum, [int page = 1])
+      : this(
+            postListType:
+                forum.isTimeline ? PostListType.timeline : PostListType.forum,
+            id: forum.id,
+            page: page);
 
   @override
   bool operator ==(Object other) =>
@@ -104,9 +94,7 @@ class PostList {
   int get hashCode => Object.hash(postListType, id, page);
 }
 
-abstract class PostListController_ {
-  final Notifier refreshNotifier = Notifier();
-
+abstract class PostListController extends ChangeNotifier {
   final RxInt _page;
 
   PostListType get postListType;
@@ -133,13 +121,37 @@ abstract class PostListController_ {
 
   int? get jumpToId;
 
-  int? get forumOrTimelineId => postListType.isThreadType()
-      ? post?.forumId
-      : (postListType.isForumType() ? id : null);
+  bool get isThread => postListType.isThread;
 
-  int? get forumId => postListType.hasForumId() ? forumOrTimelineId : null;
+  bool get isOnlyPoThread => postListType.isOnlyPoThread;
 
-  PostListController_(int page) : _page = page.obs;
+  bool get isForum => postListType.isForum;
+
+  bool get isTimeline => postListType.isTimeline;
+
+  bool get isFeed => postListType.isFeed;
+
+  bool get isHistory => postListType.isHistory;
+
+  bool get isThreadType => postListType.isThreadType;
+
+  bool get isForumType => postListType.isForumType;
+
+  bool get hasForumId => postListType.hasForumId;
+
+  bool get canPost => postListType.canPost;
+
+  bool get isXdnmbApi => postListType.isXdnmbApi;
+
+  int? get forumOrTimelineId =>
+      isThreadType ? post?.forumId : (isForumType ? id : null);
+
+  int? get forumId => hasForumId ? forumOrTimelineId : null;
+
+  PostListController(int page) : _page = page.obs;
+
+  static PostListController get([int? index]) =>
+      ControllerStack.getController(index);
 
   void refreshDateRange();
 
@@ -160,168 +172,12 @@ abstract class PostListController_ {
     }
   }
 
-  void refresh() => refreshNotifier.notify();
+  void refresh() => notifyListeners();
 
-  void refreshPage([int page = 1]) {
+  void refreshPage_([int page = 1]) {
     this.page = page;
     refresh();
   }
-
-  void dispose() => refreshNotifier.dispose();
-}
-
-class PostListController {
-  final Rx<PostListType> postListType;
-
-  final RxnInt id;
-
-  final RxInt page;
-
-  final RxInt currentPage;
-
-  final Rxn<PostBase> post;
-
-  final RxnInt bottomBarIndex;
-
-  final Rxn<List<DateTimeRange?>> dateRange;
-
-  final bool? cancelAutoJump;
-
-  final int? jumpToId;
-
-  int? get forumOrTimelineId => postListType.value.isThreadType()
-      ? post.value?.forumId
-      : postListType.value.isForumType()
-          ? id.value
-          : null;
-
-  int? get forumId =>
-      postListType.value.hasForumId() ? forumOrTimelineId : null;
-
-  PostListController(
-      {required PostListType postListType,
-      int? id,
-      int page = 1,
-      int? currentPage,
-      PostBase? post,
-      int? bottomBarIndex,
-      List<DateTimeRange?>? dateRange,
-      this.cancelAutoJump,
-      this.jumpToId})
-      : postListType = postListType.obs,
-        id = RxnInt(id),
-        page = page.obs,
-        currentPage = currentPage != null ? currentPage.obs : page.obs,
-        post = Rxn(post),
-        bottomBarIndex = RxnInt(bottomBarIndex),
-        dateRange = Rxn(dateRange);
-
-  PostListController.fromPostList({required PostList postList, PostBase? post})
-      : postListType = postList.postListType.obs,
-        id = RxnInt(postList.id),
-        page = postList.page.obs,
-        currentPage = postList.page.obs,
-        post = Rxn(post),
-        bottomBarIndex = RxnInt(null),
-        dateRange = Rxn(null),
-        cancelAutoJump = null,
-        jumpToId = null;
-
-  PostListController.fromPost({required PostBase post, int page = 1})
-      : postListType = PostListType.thread.obs,
-        id = RxnInt(post.id),
-        page = page.obs,
-        currentPage = page.obs,
-        post = Rxn(post),
-        bottomBarIndex = RxnInt(null),
-        dateRange = Rxn(null),
-        cancelAutoJump = null,
-        jumpToId = null;
-
-  PostListController.fromThread(
-      {required Thread thread, bool isThread = true, int page = 1})
-      : postListType =
-            (isThread ? PostListType.thread : PostListType.onlyPoThread).obs,
-        id = RxnInt(thread.mainPost.id),
-        page = page.obs,
-        currentPage = page.obs,
-        post = Rxn(thread.mainPost),
-        bottomBarIndex = RxnInt(null),
-        dateRange = Rxn(null),
-        cancelAutoJump = null,
-        jumpToId = null;
-
-  PostListController.fromForumData({required ForumData forum, int page = 1})
-      : postListType =
-            (forum.isTimeline ? PostListType.timeline : PostListType.forum).obs,
-        id = RxnInt(forum.id),
-        page = page.obs,
-        currentPage = page.obs,
-        post = Rxn(null),
-        bottomBarIndex = RxnInt(null),
-        dateRange = Rxn(null),
-        cancelAutoJump = null,
-        jumpToId = null;
-
-  static PostListController get([int? index]) =>
-      ControllerStack.getController(index);
-
-  void setForumData({required ForumData forum, int page = 1}) {
-    postListType.value =
-        forum.isTimeline ? PostListType.timeline : PostListType.forum;
-    id.value = forum.id;
-    this.page.value = page;
-    currentPage.value = page;
-    post.value = null;
-    bottomBarIndex.value = null;
-    dateRange.value = null;
-  }
-
-  DateTimeRange? getDateRange([int? index]) {
-    assert(index == null || index < 3);
-
-    return bottomBarIndex.value != null
-        ? (dateRange.value?[index ?? bottomBarIndex.value!])
-        : null;
-  }
-
-  void setDateRange(DateTimeRange? range, [int? index]) {
-    assert(index == null || index < 3);
-
-    if (bottomBarIndex.value != null) {
-      dateRange.value![index ?? bottomBarIndex.value!] = range;
-      dateRange.refresh();
-    }
-  }
-
-  void refreshPage([int page = 1]) {
-    this.page.trigger(page);
-    currentPage.value = page;
-  }
-
-  void refreshCurrentPage() => page.trigger(currentPage.value);
-
-  PostListController copy() => PostListController(
-      postListType: postListType.value,
-      id: id.value,
-      page: page.value,
-      currentPage: currentPage.value,
-      post: post.value,
-      bottomBarIndex: bottomBarIndex.value,
-      dateRange: dateRange.value,
-      cancelAutoJump: cancelAutoJump,
-      jumpToId: jumpToId);
-
-  PostListController copyKeepingPage() => PostListController(
-      postListType: postListType.value,
-      id: id.value,
-      page: currentPage.value,
-      currentPage: currentPage.value,
-      post: post.value,
-      bottomBarIndex: bottomBarIndex.value,
-      dateRange: dateRange.value,
-      cancelAutoJump: cancelAutoJump,
-      jumpToId: jumpToId);
 }
 
 class PostListBinding implements Bindings {
@@ -386,7 +242,6 @@ class PostListAppBarState extends State<PostListAppBar> {
   Widget build(BuildContext context) {
     final scaffold = Scaffold.of(context);
     final controller = PostListController.get();
-    final postListType = controller.postListType;
 
     Widget button = IconButton(
       icon: const Icon(Icons.menu),
@@ -401,61 +256,55 @@ class PostListAppBarState extends State<PostListAppBar> {
       }
     }
 
-    return Obx(
-      () {
-        final post = controller.post.value;
+    late final Widget title;
+    int? maxPage;
+    switch (controller.postListType) {
+      case PostListType.thread:
+      case PostListType.onlyPoThread:
+        final post = controller.post;
+        title = ThreadAppBarTitle(controller as ThreadTypeController);
+        maxPage = post?.replyCount != null
+            ? (post!.replyCount! != 0 ? (post.replyCount! / 19).ceil() : 1)
+            : null;
+        break;
+      case PostListType.forum:
+      case PostListType.timeline:
+        title = ForumAppBarTitle(controller as ForumTypeController);
+        break;
+      case PostListType.feed:
+        title = const FeedAppBarTitle();
+        break;
+      case PostListType.history:
+        title = HistoryAppBarTitle(controller as HistoryController,
+            key: ValueKey(HistoryBottomBarKey.fromController(controller)));
+        break;
+    }
 
-        late final Widget title;
-        int? maxPage;
-        switch (postListType.value) {
-          case PostListType.thread:
-          case PostListType.onlyPoThread:
-            title = ThreadAppBarTitle(controller);
-            maxPage = post?.replyCount != null
-                ? post!.replyCount! != 0
-                    ? (post.replyCount! / 19).ceil()
-                    : 1
-                : null;
-            break;
-          case PostListType.forum:
-          case PostListType.timeline:
-            title = ForumAppBarTitle(controller);
-            break;
-          case PostListType.feed:
-            title = const FeedAppBarTitle();
-            break;
-          case PostListType.history:
-            title = HistoryAppBarTitle(controller,
-                key: ValueKey(HistoryBottomBarKey.fromController(controller)));
-            break;
+    return GestureDetector(
+      onTap: () {
+        if (!controller.isThreadType) {
+          controller.refreshPage_();
         }
-
-        return GestureDetector(
-          onTap: () {
-            if (!postListType.value.isThreadType()) {
-              controller.refreshPage();
-            }
-            refresh();
-          },
-          child: AppBar(
-            leading: button,
-            title: title,
-            actions: [
-              if (postListType.value.isXdnmbApi())
-                PageButton(controller: controller, maxPage: maxPage),
-              if (postListType.value.isThreadType())
-                ThreadAppBarPopupMenuButton(
-                    controller: controller, refresh: () => _refresh()),
-              if (postListType.value.isForumType())
-                ForumAppBarPopupMenuButton(controller),
-              if (postListType.value.isHistory())
-                HistoryDateRangePicker(controller),
-              if (postListType.value.isHistory())
-                HistoryAppBarPopupMenuButton(controller),
-            ],
-          ),
-        );
+        refresh();
       },
+      child: AppBar(
+        leading: button,
+        title: title,
+        actions: [
+          if (controller.isXdnmbApi)
+            PageButton(controller: controller, maxPage: maxPage),
+          if (controller.isThreadType)
+            ThreadAppBarPopupMenuButton(
+                controller: controller as ThreadTypeController,
+                refresh: () => _refresh()),
+          if (controller.isForumType)
+            ForumAppBarPopupMenuButton(controller as ForumTypeController),
+          if (controller.isHistory)
+            HistoryDateRangePicker(controller as HistoryController),
+          if (controller.isHistory)
+            HistoryAppBarPopupMenuButton(controller as HistoryController),
+        ],
+      ),
     );
   }
 }
@@ -465,31 +314,31 @@ Route buildRoute(PostListController controller) => GetPageRoute(
         final hasBeenDarkMode = SettingsService.to.hasBeenDarkMode;
         final postListType = controller.postListType;
 
+        late final Widget body;
+        switch (postListType) {
+          case PostListType.thread:
+          case PostListType.onlyPoThread:
+            body = ThreadBody(controller as ThreadTypeController);
+            break;
+          case PostListType.forum:
+          case PostListType.timeline:
+            body = ForumBody(controller as ForumTypeController);
+            break;
+          case PostListType.feed:
+            body = FeedBody(controller as FeedController);
+            break;
+          case PostListType.history:
+            body = HistoryBody(controller as HistoryController);
+            break;
+        }
+
         return Obx(
           () {
             final theme = Get.theme;
 
-            late final Widget body;
-            switch (postListType.value) {
-              case PostListType.thread:
-              case PostListType.onlyPoThread:
-                body = ThreadBody(controller);
-                break;
-              case PostListType.forum:
-              case PostListType.timeline:
-                body = ForumBody(controller);
-                break;
-              case PostListType.feed:
-                body = FeedBody(controller);
-                break;
-              case PostListType.history:
-                body = HistoryBody(controller);
-                break;
-            }
-
             return Material(
               color: hasBeenDarkMode.value
-                  ? (postListType.value.isThreadType()
+                  ? (postListType.isThreadType
                       ? theme.cardColor
                       : theme.scaffoldBackgroundColor)
                   : theme.scaffoldBackgroundColor,
@@ -507,30 +356,31 @@ Widget buildNavigator(int index) {
   debugPrint('build navigator: $index');
 
   late final String initialRoute;
-  switch (controller.postListType.value) {
+  switch (controller.postListType) {
     case PostListType.thread:
-      initialRoute = AppRoutes.threadUrl(controller.id.value!,
-          page: controller.page.value, jumpToId: controller.jumpToId);
+      initialRoute = AppRoutes.threadUrl(controller.id!,
+          page: controller.page,
+          cancelAutoJump: controller.cancelAutoJump ?? false,
+          jumpToId: controller.jumpToId);
       break;
     case PostListType.onlyPoThread:
-      initialRoute = AppRoutes.onlyPoThreadUrl(controller.id.value!,
-          page: controller.page.value);
+      initialRoute = AppRoutes.onlyPoThreadUrl(controller.id!,
+          page: controller.page,
+          cancelAutoJump: controller.cancelAutoJump ?? false);
       break;
     case PostListType.forum:
-      initialRoute =
-          AppRoutes.forumUrl(controller.id.value!, page: controller.page.value);
+      initialRoute = AppRoutes.forumUrl(controller.id!, page: controller.page);
       break;
     case PostListType.timeline:
-      initialRoute = AppRoutes.timelineUrl(controller.id.value!,
-          page: controller.page.value);
+      initialRoute =
+          AppRoutes.timelineUrl(controller.id!, page: controller.page);
       break;
     case PostListType.feed:
-      initialRoute = AppRoutes.feedUrl(page: controller.page.value);
+      initialRoute = AppRoutes.feedUrl(page: controller.page);
       break;
     case PostListType.history:
       initialRoute = AppRoutes.historyUrl(
-          index: controller.bottomBarIndex.value ?? 0,
-          page: controller.page.value);
+          index: controller.bottomBarIndex ?? 0, page: controller.page);
       break;
   }
 
@@ -623,7 +473,7 @@ class PostListPageState extends State<PostListPage> {
 
     debugPrint('build page');
 
-    final page = Obx(
+    final Widget page = Obx(
       () => PageView.builder(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
@@ -768,7 +618,7 @@ class FloatingButtonState extends State<FloatingButton> {
 
       setState(() {
         if (hasBottomSheet) {
-          if (controller.postListType.value.canPost()) {
+          if (controller.canPost) {
             EditPost.bottomSheetkey.currentState!.setPostList(
                 PostList.fromController(controller), controller.forumId);
           } else {
@@ -801,13 +651,13 @@ class FloatingButtonState extends State<FloatingButton> {
         final isPosted = state.isPosted;
         if (!isPosted) {
           final controller = state.toController();
-          final postListType = PostListController.get().postListType.value;
+          final postListController = PostListController.get();
           if ((controller.hasText || controller.isImagePainted) &&
               !(await Get.dialog<bool>(_SaveDraftDialog(
                       controller: controller,
-                      canPost: postListType.canPost())) ??
+                      canPost: postListController.canPost)) ??
                   false)) {
-            if (postListType.canPost()) {
+            if (postListController.canPost) {
               bottomSheet(controller);
             }
           }
@@ -819,24 +669,18 @@ class FloatingButtonState extends State<FloatingButton> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final postListType = PostListController.get().postListType;
-
-    return Obx(
-      () => postListType.value.canPost()
-          ? Padding(
-              padding: EdgeInsets.only(bottom: hasBottomSheet ? 56.0 : 0.0),
-              child: FloatingActionButton(
-                tooltip: hasBottomSheet ? '收起' : '发串',
-                onPressed: bottomSheet,
-                child: Icon(
-                  hasBottomSheet ? Icons.arrow_downward : Icons.edit,
-                ),
-              ),
-            )
-          : const SizedBox.shrink(),
-    );
-  }
+  Widget build(BuildContext context) => PostListController.get().canPost
+      ? Padding(
+          padding: EdgeInsets.only(bottom: hasBottomSheet ? 56.0 : 0.0),
+          child: FloatingActionButton(
+            tooltip: hasBottomSheet ? '收起' : '发串',
+            onPressed: bottomSheet,
+            child: Icon(
+              hasBottomSheet ? Icons.arrow_downward : Icons.edit,
+            ),
+          ),
+        )
+      : const SizedBox.shrink();
 }
 
 class _BottomBar extends StatefulWidget {
@@ -859,11 +703,10 @@ class _BottomBarState extends State<_BottomBar> {
   @override
   Widget build(BuildContext context) {
     final controller = PostListController.get();
-    final postListType = controller.postListType;
 
-    return Obx(() => postListType.value.isHistory()
-        ? HistoryBottomBar(controller)
-        : const SizedBox.shrink());
+    return controller.isHistory
+        ? HistoryBottomBar(controller as HistoryController)
+        : const SizedBox.shrink();
   }
 }
 
@@ -875,7 +718,7 @@ class PostListView extends StatefulWidget {
 }
 
 class _PostListViewState extends State<PostListView> {
-  static bool _isInitial = true;
+  static bool _isInitial = false;
 
   DateTime? _lastPressBackTime;
 
@@ -930,10 +773,11 @@ class _PostListViewState extends State<PostListView> {
               history.isReady.value &&
               settings.isReady.value &&
               user.isReady.value) {
-            if (_isInitial) {
-              PostListController.get()
-                  .setForumData(forum: settings.initialForum);
-              _isInitial = false;
+            if (!_isInitial) {
+              ControllerStack.replaceLastController(
+                  ForumTypeController.fromForumData(
+                      forum: settings.initialForum));
+              _isInitial = true;
             }
 
             return Scaffold(

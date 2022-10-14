@@ -12,7 +12,6 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
-import '../utils/key.dart';
 import '../utils/navigation.dart';
 import '../utils/theme.dart';
 import '../utils/time.dart';
@@ -20,6 +19,7 @@ import '../utils/toast.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
 import 'post.dart';
+import 'post_list.dart';
 
 const int _historyEachPage = 20;
 
@@ -31,9 +31,9 @@ class HistoryBottomBarKey {
   const HistoryBottomBarKey(this.index, this.range);
 
   HistoryBottomBarKey.fromController(PostListController controller)
-      : assert(controller.bottomBarIndex.value != null &&
-            controller.bottomBarIndex.value! < 3),
-        index = controller.bottomBarIndex.value!,
+      : assert(controller.bottomBarIndex != null &&
+            controller.bottomBarIndex! < 3),
+        index = controller.bottomBarIndex!,
         range = controller.getDateRange();
 
   @override
@@ -47,7 +47,7 @@ class HistoryBottomBarKey {
   int get hashCode => Object.hash(index, range);
 }
 
-class HistoryController extends PostListController_ {
+class HistoryController extends PostListController {
   final RxInt _bottomBarIndex;
 
   final Rx<List<DateTimeRange?>> _dateRange;
@@ -96,15 +96,13 @@ class HistoryController extends PostListController_ {
   void refreshDateRange() => _dateRange.refresh();
 }
 
-PostListController historyController(Map<String, String?> parameters) =>
-    PostListController(
-        postListType: PostListType.history,
+HistoryController historyController(Map<String, String?> parameters) =>
+    HistoryController(
         page: parameters['page'].tryParseInt() ?? 1,
-        bottomBarIndex: parameters['index'].tryParseInt() ?? 0,
-        dateRange: List.filled(3, null));
+        bottomBarIndex: parameters['index'].tryParseInt() ?? 0);
 
 class HistoryAppBarTitle extends StatelessWidget {
-  final PostListController controller;
+  final HistoryController controller;
 
   const HistoryAppBarTitle(this.controller, {super.key});
 
@@ -113,7 +111,7 @@ class HistoryAppBarTitle extends StatelessWidget {
     final history = PostHistoryService.to;
 
     return FutureBuilder<int?>(future: Future(() {
-      switch (controller.bottomBarIndex.value) {
+      switch (controller.bottomBarIndex) {
         case _BrowseHistoryBody._index:
           return history.browseHistoryCount(controller.getDateRange());
         case _PostHistoryBody._index:
@@ -121,12 +119,12 @@ class HistoryAppBarTitle extends StatelessWidget {
         case _ReplyHistoryBody._index:
           return history.replyDataCount(controller.getDateRange());
         default:
-          debugPrint('未知bottomBarIndex：${controller.bottomBarIndex.value}');
+          debugPrint('未知bottomBarIndex：${controller.bottomBarIndex}');
           return null;
       }
     }), builder: (context, snapshot) {
       late final String text;
-      switch (controller.bottomBarIndex.value) {
+      switch (controller.bottomBarIndex) {
         case _BrowseHistoryBody._index:
           text = '浏览历史记录';
           break;
@@ -158,7 +156,7 @@ class HistoryAppBarTitle extends StatelessWidget {
 class HistoryDateRangePicker extends StatelessWidget {
   static final DateTime _firstDate = DateTime(2022, 6, 19);
 
-  final PostListController controller;
+  final HistoryController controller;
 
   const HistoryDateRangePicker(this.controller, {super.key});
 
@@ -175,7 +173,7 @@ class HistoryDateRangePicker extends StatelessWidget {
 
           if (range != null) {
             controller.setDateRange(range);
-            controller.refreshPage();
+            controller.refreshPage_();
           }
         },
         icon: const Icon(Icons.calendar_month),
@@ -183,7 +181,7 @@ class HistoryDateRangePicker extends StatelessWidget {
 }
 
 class HistoryAppBarPopupMenuButton extends StatelessWidget {
-  final PostListController controller;
+  final HistoryController controller;
 
   const HistoryAppBarPopupMenuButton(this.controller, {super.key});
 
@@ -197,14 +195,14 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
           onTap: () async {
             final range = controller.getDateRange();
 
-            switch (controller.bottomBarIndex.value) {
+            switch (controller.bottomBarIndex) {
               case _BrowseHistoryBody._index:
                 if (await history.browseHistoryCount(range) > 0) {
                   postListDialog(ConfirmCancelDialog(
                     content: '确定清空浏览记录？',
                     onConfirm: () async {
                       await history.clearBrowseHistory(range);
-                      controller.refreshPage();
+                      controller.refreshPage_();
                       showToast('清空浏览记录');
                       postListBack();
                     },
@@ -219,7 +217,7 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
                     content: '确定清空主题记录？',
                     onConfirm: () async {
                       await history.clearPostData(range);
-                      controller.refreshPage();
+                      controller.refreshPage_();
                       showToast('清空主题记录');
                       postListBack();
                     },
@@ -234,7 +232,7 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
                     content: '确定清空回复记录？',
                     onConfirm: () async {
                       await history.clearReplyData(range);
-                      controller.refreshPage();
+                      controller.refreshPage_();
                       showToast('清空回复记录');
                       postListBack();
                     },
@@ -244,8 +242,7 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
 
                 break;
               default:
-                debugPrint(
-                    '未知bottomBarIndex：${controller.bottomBarIndex.value}');
+                debugPrint('未知bottomBarIndex：${controller.bottomBarIndex}');
             }
           },
           child: const Text('清空'),
@@ -314,54 +311,27 @@ class _HistoryDialog extends StatelessWidget {
   }
 }
 
-class _BrowseHistoryBody extends StatefulWidget {
+class _BrowseHistoryBody extends StatelessWidget {
   static const _index = 0;
 
-  final PostListController controller;
+  final HistoryController controller;
 
   const _BrowseHistoryBody(this.controller, {super.key});
-
-  @override
-  State<_BrowseHistoryBody> createState() => _BrowseHistoryBodyState();
-}
-
-class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
-  late final StreamSubscription<int> _pageSubscription;
-
-  int _refresh = 0;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _pageSubscription = widget.controller.page.listen((page) {
-      if (widget.controller.bottomBarIndex.value == _BrowseHistoryBody._index) {
-        _refresh++;
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _pageSubscription.cancel();
-
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
 
-    return Obx(
-      () => BiListView<BrowseHistory>(
-        key: getPostListKey(
-            PostList.fromController(widget.controller), _refresh),
-        initialPage: widget.controller.page.value,
+    return PostListRefresher(
+      controller: controller,
+      builder: (context, refresh) => BiListView<BrowseHistory>(
+        key: ValueKey<int>(refresh),
+        initialPage: controller.page,
         canRefreshAtBottom: false,
         fetch: (page) => history.browseHistoryList(
             (page - 1) * _historyEachPage,
             page * _historyEachPage,
-            widget.controller.getDateRange()),
+            controller.getDateRange()),
         itemBuilder: (context, browse, index) {
           final isVisible = true.obs;
 
@@ -450,52 +420,25 @@ class _BrowseHistoryBodyState extends State<_BrowseHistoryBody> {
   }
 }
 
-class _PostHistoryBody extends StatefulWidget {
+class _PostHistoryBody extends StatelessWidget {
   static const _index = 1;
 
-  final PostListController controller;
+  final HistoryController controller;
 
   const _PostHistoryBody(this.controller, {super.key});
-
-  @override
-  State<_PostHistoryBody> createState() => _PostHistoryBodyState();
-}
-
-class _PostHistoryBodyState extends State<_PostHistoryBody> {
-  late final StreamSubscription<int> _pageSubscription;
-
-  int _refresh = 0;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _pageSubscription = widget.controller.page.listen((page) {
-      if (widget.controller.bottomBarIndex.value == _PostHistoryBody._index) {
-        _refresh++;
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _pageSubscription.cancel();
-
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
 
-    return Obx(
-      () => BiListView<PostData>(
-        key: getPostListKey(
-            PostList.fromController(widget.controller), _refresh),
-        initialPage: widget.controller.page.value,
+    return PostListRefresher(
+      controller: controller,
+      builder: (context, refresh) => BiListView<PostData>(
+        key: ValueKey<int>(refresh),
+        initialPage: controller.page,
         canRefreshAtBottom: false,
         fetch: (page) => history.postDataList((page - 1) * _historyEachPage,
-            page * _historyEachPage, widget.controller.getDateRange()),
+            page * _historyEachPage, controller.getDateRange()),
         itemBuilder: (context, mainPost, index) {
           final isVisible = true.obs;
 
@@ -545,52 +488,25 @@ class _PostHistoryBodyState extends State<_PostHistoryBody> {
   }
 }
 
-class _ReplyHistoryBody extends StatefulWidget {
+class _ReplyHistoryBody extends StatelessWidget {
   static const _index = 2;
 
-  final PostListController controller;
+  final HistoryController controller;
 
   const _ReplyHistoryBody(this.controller, {super.key});
-
-  @override
-  State<_ReplyHistoryBody> createState() => _ReplyHistoryBodyState();
-}
-
-class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
-  late final StreamSubscription<int> _pageSubscription;
-
-  int _refresh = 0;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _pageSubscription = widget.controller.page.listen((page) {
-      if (widget.controller.bottomBarIndex.value == _ReplyHistoryBody._index) {
-        _refresh++;
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _pageSubscription.cancel();
-
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
 
-    return Obx(
-      () => BiListView<ReplyData>(
-        key: getPostListKey(
-            PostList.fromController(widget.controller), _refresh),
-        initialPage: widget.controller.page.value,
+    return PostListRefresher(
+      controller: controller,
+      builder: (context, refresh) => BiListView<ReplyData>(
+        key: ValueKey<int>(refresh),
+        initialPage: controller.page,
         canRefreshAtBottom: false,
         fetch: (page) => history.replyDataList((page - 1) * _historyEachPage,
-            page * _historyEachPage, widget.controller.getDateRange()),
+            page * _historyEachPage, controller.getDateRange()),
         itemBuilder: (context, reply, index) {
           final isVisible = true.obs;
 
@@ -673,7 +589,7 @@ class _ReplyHistoryBodyState extends State<_ReplyHistoryBody> {
 }
 
 class HistoryBody extends StatefulWidget {
-  final PostListController controller;
+  final HistoryController controller;
 
   const HistoryBody(this.controller, {super.key});
 
@@ -690,10 +606,9 @@ class _HistoryBodyState extends State<HistoryBody> {
   void initState() {
     super.initState();
 
-    _controller = PageController(
-        initialPage: widget.controller.bottomBarIndex.value ?? 0);
-    _subscription = widget.controller.bottomBarIndex.listen((index) {
-      if (index != null) {
+    _controller = PageController(initialPage: widget.controller.bottomBarIndex);
+    _subscription = widget.controller._bottomBarIndex.listen((index) {
+      if (index >= 0 && index <= 2) {
         _controller.jumpToPage(index);
       }
     });
@@ -726,7 +641,7 @@ class _HistoryBodyState extends State<HistoryBody> {
                       trailing: IconButton(
                         onPressed: () {
                           widget.controller.setDateRange(null);
-                          widget.controller.refreshPage();
+                          widget.controller.refreshPage_();
                         },
                         icon: const Icon(Icons.close),
                       ),
@@ -760,29 +675,25 @@ class _HistoryBodyState extends State<HistoryBody> {
 }
 
 class HistoryBottomBar extends StatelessWidget {
-  final PostListController controller;
+  final HistoryController controller;
 
   const HistoryBottomBar(this.controller, {super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final index = controller.bottomBarIndex;
-
-    return Obx(
-      () => BottomNavigationBar(
-        currentIndex: index.value ?? 0,
-        onTap: (value) {
-          if (index.value != value) {
-            popAllPopup();
-            index.value = value;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '浏览'),
-          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '主题'),
-          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '回复'),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Obx(
+        () => BottomNavigationBar(
+          currentIndex: controller.bottomBarIndex,
+          onTap: (value) {
+            if (controller.bottomBarIndex != value) {
+              popAllPopup();
+              controller.bottomBarIndex = value;
+            }
+          },
+          items: const [
+            BottomNavigationBarItem(icon: SizedBox.shrink(), label: '浏览'),
+            BottomNavigationBarItem(icon: SizedBox.shrink(), label: '主题'),
+            BottomNavigationBarItem(icon: SizedBox.shrink(), label: '回复'),
+          ],
+        ),
+      );
 }

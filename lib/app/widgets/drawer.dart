@@ -132,17 +132,17 @@ class _TabTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = PostListController.get(index);
+    //final postListType = controller.postListType;
 
-    return Obx(() {
-      final postListType = controller.postListType.value;
-      final forumId = controller.forumOrTimelineId;
-      final postId = controller.post.value?.id;
+    late final Widget title;
+    switch (controller.postListType) {
+      case PostListType.thread:
+      case PostListType.onlyPoThread:
+        title = Obx(() {
+          final postId = controller.post?.id;
+          final forumId = controller.post?.forumId;
 
-      late final Widget title;
-      switch (postListType) {
-        case PostListType.thread:
-        case PostListType.onlyPoThread:
-          title = Row(
+          return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (forumId != null)
@@ -150,26 +150,29 @@ class _TabTitle extends StatelessWidget {
               if (postId != null) Flexible(child: Text(postId.toPostNumber())),
             ],
           );
-          break;
-        case PostListType.forum:
-        case PostListType.timeline:
-          title = (forumId != null
-              ? ForumName(
-                  forumId: forumId,
-                  isTimeline: postListType.isTimeline(),
-                  maxLines: 1)
-              : const SizedBox.shrink());
-          break;
-        case PostListType.feed:
-          title = const Text('订阅');
-          break;
-        case PostListType.history:
-          title = const Text('历史记录');
-          break;
-      }
+        });
 
-      return title;
-    });
+        break;
+      case PostListType.forum:
+      case PostListType.timeline:
+        final forumId = controller.id;
+        title = (forumId != null
+            ? ForumName(
+                forumId: forumId,
+                isTimeline: controller.isTimeline,
+                maxLines: 1)
+            : const SizedBox.shrink());
+
+        break;
+      case PostListType.feed:
+        title = const Text('订阅');
+        break;
+      case PostListType.history:
+        title = const Text('历史记录');
+        break;
+    }
+
+    return title;
   }
 }
 
@@ -188,39 +191,43 @@ class _TabList extends StatelessWidget {
           itemCount: ControllerStack.length.value,
           itemBuilder: (context, index) {
             final controller = PostListController.get(index);
-            final post = controller.post;
+            //final post = controller.post;
 
-            return Obx(
-              () => ListTile(
-                key: ValueKey<int>(ControllerStack.getKeyId(index)),
-                onTap: () {
-                  PostListPage.pageKey.currentState!.jumpToPage(index);
-                  Get.back();
-                },
-                tileColor:
-                    index == ControllerStack.index ? theme.focusColor : null,
-                title: _TabTitle(index),
-                subtitle: post.value != null
-                    ? Content(
-                        post: post.value!,
-                        maxLines: 2,
-                        onHiddenText: (context, element, textStyle) =>
-                            onHiddenText(
-                                context: context,
-                                element: element,
-                                textStyle: textStyle),
-                        displayImage: false)
-                    : null,
-                trailing: ControllerStack.length.value > 1
-                    ? IconButton(
-                        onPressed: () {
-                          ControllerStack.removeControllerAt(index);
-                          PostListPage.pageKey.currentState!
-                              .jumpToPage(ControllerStack.index);
-                        },
-                        icon: const Icon(Icons.close))
-                    : null,
-              ),
+            return ListTile(
+              key: ValueKey<int>(ControllerStack.getKeyId(index)),
+              onTap: () {
+                PostListPage.pageKey.currentState!.jumpToPage(index);
+                Get.back();
+              },
+              tileColor:
+                  index == ControllerStack.index ? theme.focusColor : null,
+              title: _TabTitle(index),
+              subtitle: controller.isThreadType
+                  ? Obx(() {
+                      final post = controller.post;
+
+                      return post != null
+                          ? Content(
+                              post: post,
+                              maxLines: 2,
+                              onHiddenText: (context, element, textStyle) =>
+                                  onHiddenText(
+                                      context: context,
+                                      element: element,
+                                      textStyle: textStyle),
+                              displayImage: false)
+                          : const SizedBox.shrink();
+                    })
+                  : null,
+              trailing: ControllerStack.length.value > 1
+                  ? IconButton(
+                      onPressed: () {
+                        ControllerStack.removeControllersAt(index);
+                        PostListPage.pageKey.currentState!
+                            .jumpToPage(ControllerStack.index);
+                      },
+                      icon: const Icon(Icons.close))
+                  : null,
             );
           },
           separatorBuilder: (BuildContext context, int index) =>

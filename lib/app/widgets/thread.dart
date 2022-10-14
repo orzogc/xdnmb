@@ -18,8 +18,8 @@ import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
-import '../utils/key.dart';
 import '../utils/navigation.dart';
+import '../utils/notify.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
@@ -30,7 +30,7 @@ import 'forum_name.dart';
 import 'loading.dart';
 import 'post.dart';
 
-class ThreadController extends PostListController_ {
+abstract class ThreadTypeController extends PostListController {
   @override
   final int id;
 
@@ -38,55 +38,6 @@ class ThreadController extends PostListController_ {
 
   @override
   final bool cancelAutoJump;
-
-  @override
-  final int? jumpToId;
-
-  @override
-  PostListType get postListType => PostListType.thread;
-
-  @override
-  PostBase? get post => _post.value;
-
-  @override
-  set post(PostBase? post) => _post.value = post;
-
-  @override
-  int? get bottomBarIndex => null;
-
-  @override
-  set bottomBarIndex(int? index) {}
-
-  @override
-  List<DateTimeRange?>? get dateRange => null;
-
-  @override
-  set dateRange(List<DateTimeRange?>? range) {}
-
-  ThreadController(
-      {required this.id,
-      required int page,
-      PostBase? post,
-      this.cancelAutoJump = false,
-      this.jumpToId})
-      : _post = Rxn(post),
-        super(page);
-
-  @override
-  void refreshDateRange() {}
-}
-
-class OnlyPoThreadController extends PostListController_ {
-  @override
-  final int id;
-
-  final Rxn<PostBase> _post;
-
-  @override
-  final bool cancelAutoJump;
-
-  @override
-  PostListType get postListType => PostListType.onlyPoThread;
 
   @override
   PostBase? get post => _post.value;
@@ -109,7 +60,7 @@ class OnlyPoThreadController extends PostListController_ {
   @override
   int? get jumpToId => null;
 
-  OnlyPoThreadController(
+  ThreadTypeController(
       {required this.id,
       required int page,
       PostBase? post,
@@ -117,31 +68,73 @@ class OnlyPoThreadController extends PostListController_ {
       : _post = Rxn(post),
         super(page);
 
+  factory ThreadTypeController.fromPost(
+          {required PostBase post, int page = 1, isOnlyPoThread = false}) =>
+      isOnlyPoThread
+          ? OnlyPoThreadController(id: post.id, page: page, post: post)
+          : ThreadController(id: post.id, page: page, post: post);
+
   @override
   void refreshDateRange() {}
+
+  ThreadTypeController copyPage();
 }
 
-PostListController threadController(
+class ThreadController extends ThreadTypeController {
+  @override
+  final int? jumpToId;
+
+  @override
+  PostListType get postListType => PostListType.thread;
+
+  ThreadController(
+      {required int id,
+      required int page,
+      PostBase? post,
+      bool cancelAutoJump = false,
+      this.jumpToId})
+      : super(id: id, page: page, post: post, cancelAutoJump: cancelAutoJump);
+
+  @override
+  ThreadTypeController copyPage() =>
+      ThreadController(id: id, page: page, post: post);
+}
+
+class OnlyPoThreadController extends ThreadTypeController {
+  @override
+  PostListType get postListType => PostListType.onlyPoThread;
+
+  OnlyPoThreadController(
+      {required int id,
+      required int page,
+      PostBase? post,
+      bool cancelAutoJump = false})
+      : super(id: id, page: page, post: post, cancelAutoJump: cancelAutoJump);
+
+  @override
+  ThreadTypeController copyPage() =>
+      OnlyPoThreadController(id: id, page: page, post: post);
+}
+
+ThreadController threadController(
         Map<String, String?> parameters, Object? arguments) =>
-    PostListController(
-        postListType: PostListType.thread,
+    ThreadController(
         id: parameters['mainPostId'].tryParseInt() ?? 0,
         page: parameters['page'].tryParseInt() ?? 1,
         post: arguments is PostBase ? arguments : null,
-        cancelAutoJump: parameters['cancelAutoJump'].tryParseBool(),
+        cancelAutoJump: parameters['cancelAutoJump'].tryParseBool() ?? false,
         jumpToId: parameters['jumpToId'].tryParseInt());
 
-PostListController onlyPoThreadController(
+OnlyPoThreadController onlyPoThreadController(
         Map<String, String?> parameters, Object? arguments) =>
-    PostListController(
-        postListType: PostListType.onlyPoThread,
+    OnlyPoThreadController(
         id: parameters['mainPostId'].tryParseInt() ?? 0,
         page: parameters['page'].tryParseInt() ?? 1,
         post: arguments is PostBase ? arguments : null,
-        cancelAutoJump: parameters['cancelAutoJump'].tryParseBool());
+        cancelAutoJump: parameters['cancelAutoJump'].tryParseBool() ?? false);
 
 class ThreadAppBarTitle extends StatelessWidget {
-  final PostListController controller;
+  final ThreadTypeController controller;
 
   const ThreadAppBarTitle(this.controller, {super.key});
 
@@ -153,11 +146,8 @@ class ThreadAppBarTitle extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Obx(() {
-          final onlyPoText =
-              controller.postListType.value.isOnlyPoThread() ? ' Po' : '';
-          return Text('${controller.id.value!.toPostNumber()}$onlyPoText');
-        }),
+        Text(
+            '${controller.id.toPostNumber()}${controller.isOnlyPoThread ? ' Po' : ''}'),
         DefaultTextStyle.merge(
           style: theme.textTheme.bodyText2!
               .apply(color: theme.colorScheme.onPrimary),
@@ -165,7 +155,7 @@ class ThreadAppBarTitle extends StatelessWidget {
             children: [
               const Text('X岛 nmbxd.com '),
               Obx(() {
-                final forumId = controller.post.value?.forumId;
+                final forumId = controller.post?.forumId;
 
                 return forumId != null
                     ? Flexible(child: ForumName(forumId: forumId, maxLines: 1))
@@ -180,7 +170,7 @@ class ThreadAppBarTitle extends StatelessWidget {
 }
 
 class _ThreadDialog extends StatelessWidget {
-  final PostListController controller;
+  final ThreadTypeController controller;
 
   final PostBase post;
 
@@ -201,12 +191,9 @@ class _ThreadDialog extends StatelessWidget {
             ),
           if (post is! Tip) Report(post.id),
           if (post is! Tip && !post.isAdmin)
-            BlockPost(postId: post.id, onBlock: controller.refreshCurrentPage),
+            BlockPost(postId: post.id, onBlock: controller.refresh),
           if (post is! Tip && !post.isAdmin)
-            BlockUser(
-              userHash: post.userHash,
-              onBlock: controller.refreshCurrentPage,
-            ),
+            BlockUser(userHash: post.userHash, onBlock: controller.refresh),
           if (post is! Tip) CopyPostId(post.id),
           if (post is! Tip) CopyPostReference(post.id),
           CopyPostContent(post),
@@ -215,7 +202,7 @@ class _ThreadDialog extends StatelessWidget {
 }
 
 class ThreadAppBarPopupMenuButton extends StatefulWidget {
-  final PostListController controller;
+  final ThreadTypeController controller;
 
   final VoidCallback refresh;
 
@@ -232,9 +219,9 @@ class _ThreadAppBarPopupMenuButtonState
   @override
   Widget build(BuildContext context) {
     final blacklist = BlacklistService.to;
-    final postListType = widget.controller.postListType.value;
-    final postId = widget.controller.id.value!;
-    final mainPost = widget.controller.post.value;
+    final controller = widget.controller;
+    final postId = controller.id;
+    final mainPost = controller.post;
 
     final isBlockedPost = blacklist.hasPost(postId);
     final isBlockedUser =
@@ -266,7 +253,7 @@ class _ThreadAppBarPopupMenuButtonState
           ),
           child: const Text('举报'),
         ),
-        if (postListType.isThread() && !isBlockedPost && !isBlockedUser)
+        if (controller.isThread && !isBlockedPost && !isBlockedUser)
           PopupMenuItem(
             onTap: () => AppRoutes.toOnlyPoThread(
                 mainPostId: postId, mainPost: mainPost),
@@ -280,7 +267,7 @@ class _ThreadAppBarPopupMenuButtonState
                 content: '确定屏蔽主串 ${postId.toPostNumber()} ？',
                 onConfirm: () async {
                   await blacklist.blockPost(postId);
-                  widget.controller.refreshPage();
+                  controller.refreshPage_();
                   if (mounted) {
                     setState(() {});
                   }
@@ -298,7 +285,7 @@ class _ThreadAppBarPopupMenuButtonState
               content: '确定屏蔽Po饼干 ${mainPost.userHash} ？',
               onConfirm: () async {
                 await blacklist.blockUser(mainPost.userHash);
-                widget.controller.refreshPage();
+                controller.refreshPage_();
                 if (mounted) {
                   setState(() {});
                 }
@@ -309,7 +296,7 @@ class _ThreadAppBarPopupMenuButtonState
             )),
             child: const Text('屏蔽Po饼干'),
           ),
-        if (postListType.isOnlyPoThread() && !isBlockedPost && !isBlockedUser)
+        if (controller.isOnlyPoThread && !isBlockedPost && !isBlockedUser)
           PopupMenuItem(
             onTap: () =>
                 AppRoutes.toThread(mainPostId: postId, mainPost: mainPost),
@@ -319,7 +306,7 @@ class _ThreadAppBarPopupMenuButtonState
           PopupMenuItem(
             onTap: () async {
               await blacklist.unblockPost(postId);
-              widget.controller.refreshPage();
+              controller.refreshPage_();
               if (mounted) {
                 setState(() {});
               }
@@ -331,7 +318,7 @@ class _ThreadAppBarPopupMenuButtonState
           PopupMenuItem(
             onTap: () async {
               await blacklist.unblockUser(mainPost.userHash);
-              widget.controller.refreshPage();
+              controller.refreshPage_();
               if (mounted) {
                 setState(() {});
               }
@@ -342,7 +329,7 @@ class _ThreadAppBarPopupMenuButtonState
         if (!isBlockedPost && !isBlockedUser)
           PopupMenuItem(
             onTap: () {
-              openNewTab(widget.controller.copyKeepingPage());
+              openNewTab(controller.copyPage());
 
               showToast('已在新标签页打开 ${postId.toPostNumber()}');
             },
@@ -351,7 +338,7 @@ class _ThreadAppBarPopupMenuButtonState
         if (!isBlockedPost && !isBlockedUser)
           PopupMenuItem(
             onTap: () {
-              openNewTabBackground(widget.controller.copyKeepingPage());
+              openNewTabBackground(controller.copyPage());
 
               showToast('已在新标签页后台打开 ${postId.toPostNumber()}');
             },
@@ -363,7 +350,7 @@ class _ThreadAppBarPopupMenuButtonState
 }
 
 class ThreadBody extends StatefulWidget {
-  final PostListController controller;
+  final ThreadTypeController controller;
 
   const ThreadBody(this.controller, {super.key});
 
@@ -385,10 +372,6 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   int _refresh = 0;
 
-  late final StreamSubscription<int> _refreshSubscription;
-
-  StreamSubscription<int>? _jumpSubscription;
-
   bool _isNoMoreItems = false;
 
   bool _isFirstFetch = true;
@@ -399,14 +382,13 @@ class _ThreadBodyState extends State<ThreadBody> {
 
       try {
         await Future.delayed(const Duration(seconds: 5), () async {
-          final post = widget.controller.post.value;
+          final post = widget.controller.post;
           if (post is Post) {
             _history!.update(
                 mainPost: post,
-                browsePage: widget.controller.currentPage.value,
+                browsePage: widget.controller.page,
                 browsePostId: _browsePostId,
-                isOnlyPo:
-                    widget.controller.postListType.value.isOnlyPoThread());
+                isOnlyPo: widget.controller.isOnlyPoThread);
             await PostHistoryService.to.saveBrowseHistory(_history!);
           }
         });
@@ -416,14 +398,13 @@ class _ThreadBodyState extends State<ThreadBody> {
     }
   }
 
-  void _saveHistoryAndJumpToIndex(Thread thread, int page) {
+  void _saveHistoryAndJumpToIndex(Thread thread, int firstPage, int page) {
     final settings = SettingsService.to;
     final history = PostHistoryService.to;
-    final postListType = widget.controller.postListType;
-    final postPage = widget.controller.page;
-    final jumpToId = widget.controller.jumpToId;
+    final controller = widget.controller;
+    final jumpToId = controller.jumpToId;
 
-    if (postPage.value == page) {
+    if (firstPage == page) {
       final firstPost = page == 1
           ? thread.mainPost
           : (thread.replies.isNotEmpty
@@ -434,7 +415,7 @@ class _ThreadBodyState extends State<ThreadBody> {
             mainPost: thread.mainPost,
             browsePage: page,
             browsePostId: firstPost.id,
-            isOnlyPo: postListType.value.isOnlyPoThread());
+            isOnlyPo: controller.isOnlyPoThread);
         history.saveBrowseHistory(_history!);
         _isToJump.value = false;
       } else if (!_isToJump.value) {
@@ -443,13 +424,13 @@ class _ThreadBodyState extends State<ThreadBody> {
             mainPost: thread.mainPost,
             browsePage: page,
             browsePostId: firstPost.id,
-            isOnlyPo: postListType.value.isOnlyPoThread());
+            isOnlyPo: controller.isOnlyPoThread);
         history.saveBrowseHistory(_history!);
       } else if (jumpToId != null ||
           (settings.isJumpToLastBrowsePage &&
               settings.isJumpToLastBrowsePosition)) {
         final index = jumpToId?.toIndex(page) ??
-            _history!.toIndex(isOnlyPo: postListType.value.isOnlyPoThread());
+            _history!.toIndex(isOnlyPo: controller.isOnlyPoThread);
         if (index != null) {
           final postIds = thread.replies.map((post) => post.id);
           final id = index.getIdFromIndex();
@@ -506,150 +487,154 @@ class _ThreadBodyState extends State<ThreadBody> {
     final theme = Theme.of(context);
     final client = XdnmbClientService.to.client;
     final blacklist = BlacklistService.to;
-    final postListType = widget.controller.postListType;
-    final postId = widget.controller.id;
-    final postPage = widget.controller.page;
-    final mainPost = widget.controller.post;
+    final controller = widget.controller;
+    final postId = controller.id;
 
-    return Obx(
-      () {
+    return NotifyBuilder(
+      animation: controller,
+      builder: (context, child) {
         _anchorController?.dispose();
         _anchorController = AnchorScrollController(
           onIndexChanged: (index, userScroll) {
-            widget.controller.currentPage.value = index.getPageFromIndex();
+            controller.page = index.getPageFromIndex();
             _browsePostId = index.getIdFromIndex();
 
             _saveBrowseHistory();
           },
         );
 
-        // 方便刷新
-        postPage.value = postPage.value;
+        final firstPage = controller.page;
 
-        return ((mainPost.value != null && mainPost.value!.isAdmin) ||
-                !(blacklist.hasPost(postId.value!) ||
-                    (mainPost.value != null &&
-                        blacklist.hasUser(mainPost.value!.userHash))))
-            ? Stack(
-                children: [
-                  if (_isToJump.value) const QuotationLoadingIndicator(),
-                  Visibility(
-                    visible: !_isToJump.value,
-                    maintainState: true,
-                    maintainAnimation: true,
-                    maintainSize: true,
-                    child: BiListView<PostWithPage>(
-                      key: getPostListKey(
-                          PostList.fromController(widget.controller), _refresh),
-                      controller: _anchorController,
-                      initialPage: postPage.value,
-                      fetch: (page) async {
-                        final thread = postListType.value.isThread()
-                            ? await client.getThread(postId.value!, page: page)
-                            : await client.getOnlyPoThread(postId.value!,
-                                page: page);
+        return ((controller.post != null && controller.post!.isAdmin) ||
+                !(blacklist.hasPost(postId) ||
+                    (controller.post != null &&
+                        blacklist.hasUser(controller.post!.userHash))))
+            ? Obx(
+                () {
+                  debugPrint('aaa');
 
-                        if (_isFirstFetch) {
-                          mainPost.value = thread.mainPost;
-                          _isFirstFetch = false;
-                        }
+                  return Stack(
+                    children: [
+                      if (_isToJump.value) const QuotationLoadingIndicator(),
+                      Visibility(
+                        visible: !_isToJump.value,
+                        maintainState: true,
+                        maintainAnimation: true,
+                        maintainSize: true,
+                        child: BiListView<PostWithPage>(
+                          key: ValueKey<int>(_refresh),
+                          controller: _anchorController,
+                          initialPage: firstPage,
+                          fetch: (page) async {
+                            final thread = controller.isThread
+                                ? await client.getThread(postId, page: page)
+                                : await client.getOnlyPoThread(postId,
+                                    page: page);
 
-                        if (page != 1 && thread.replies.isEmpty) {
-                          if (postPage.value == page) {
-                            _isToJump.value = false;
-                          }
-                          return [];
-                        }
+                            if (_isFirstFetch) {
+                              controller.post = thread.mainPost;
+                              _isFirstFetch = false;
+                            }
 
-                        thread.replies.retainWhere((post) =>
-                            post.isAdmin ||
-                            !(blacklist.hasPost(post.id) ||
-                                blacklist.hasUser(post.userHash)));
+                            if (page != 1 && thread.replies.isEmpty) {
+                              if (firstPage == page) {
+                                _isToJump.value = false;
+                              }
+                              return [];
+                            }
 
-                        _saveHistoryAndJumpToIndex(thread, page);
+                            thread.replies.retainWhere((post) =>
+                                post.isAdmin ||
+                                !(blacklist.hasPost(post.id) ||
+                                    blacklist.hasUser(post.userHash)));
 
-                        final List<PostWithPage> posts = [];
-                        if (page == 1) {
-                          posts.add(PostWithPage(thread.mainPost, page));
-                        }
-                        // TODO: 提示tip是官方信息
-                        if (thread.tip != null) {
-                          posts.add(PostWithPage(thread.tip!, page));
-                        }
-                        if (thread.replies.isNotEmpty) {
-                          posts.addAll(thread.replies
-                              .map((post) => PostWithPage(post, page)));
-                        }
+                            _saveHistoryAndJumpToIndex(thread, firstPage, page);
 
-                        return posts;
-                      },
-                      itemBuilder: (context, post, index) {
-                        final postCard = PostCard(
-                          key: post.post is Tip ? UniqueKey() : null,
-                          post: post.post,
-                          showForumName: false,
-                          showReplyCount: false,
-                          poUserHash: mainPost.value?.userHash,
-                          onTap: (post) {},
-                          onLongPress: (post) => postListDialog(_ThreadDialog(
-                              controller: widget.controller, post: post)),
-                          onLinkTap: (context, link) => parseUrl(
-                              url: link,
-                              mainPostId: mainPost.value?.id,
-                              poUserHash: mainPost.value?.userHash),
-                          onHiddenText: (context, element, textStyle) =>
-                              onHiddenText(
-                                  context: context,
-                                  element: element,
-                                  textStyle: textStyle,
-                                  canTap: true,
-                                  mainPostId: mainPost.value?.id,
-                                  poUserHash: mainPost.value?.userHash),
-                          onImagePainted: (imageData) =>
-                              _replyWithImage(widget.controller, imageData),
-                          mouseCursor: SystemMouseCursors.basic,
-                          hoverColor: Get.isDarkMode
-                              ? theme.cardColor
-                              : theme.scaffoldBackgroundColor,
-                          canReturnImageData: true,
-                          onPostIdTap: post.post is! Tip
-                              ? (postId) =>
-                                  _replyPost(widget.controller, postId)
-                              : null,
-                        );
+                            final List<PostWithPage> posts = [];
+                            if (page == 1) {
+                              posts.add(PostWithPage(thread.mainPost, page));
+                            }
+                            // TODO: 提示tip是官方信息
+                            if (thread.tip != null) {
+                              posts.add(PostWithPage(thread.tip!, page));
+                            }
+                            if (thread.replies.isNotEmpty) {
+                              posts.addAll(thread.replies
+                                  .map((post) => PostWithPage(post, page)));
+                            }
 
-                        return post.post is! Tip
-                            ? AnchorItemWrapper(
-                                key: ValueKey(_PostKey(
+                            return posts;
+                          },
+                          itemBuilder: (context, post, index) {
+                            final postCard = PostCard(
+                              key: post.post is Tip ? UniqueKey() : null,
+                              post: post.post,
+                              showForumName: false,
+                              showReplyCount: false,
+                              poUserHash: controller.post?.userHash,
+                              onTap: (post) {},
+                              onLongPress: (post) => postListDialog(
+                                  _ThreadDialog(
+                                      controller: controller, post: post)),
+                              onLinkTap: (context, link) => parseUrl(
+                                  url: link,
+                                  mainPostId: controller.post?.id,
+                                  poUserHash: controller.post?.userHash),
+                              onHiddenText: (context, element, textStyle) =>
+                                  onHiddenText(
+                                      context: context,
+                                      element: element,
+                                      textStyle: textStyle,
+                                      canTap: true,
+                                      mainPostId: controller.post?.id,
+                                      poUserHash: controller.post?.userHash),
+                              onImagePainted: (imageData) =>
+                                  _replyWithImage(controller, imageData),
+                              mouseCursor: SystemMouseCursors.basic,
+                              hoverColor: Get.isDarkMode
+                                  ? theme.cardColor
+                                  : theme.scaffoldBackgroundColor,
+                              canReturnImageData: true,
+                              onPostIdTap: post.post is! Tip
+                                  ? (postId) => _replyPost(controller, postId)
+                                  : null,
+                            );
+
+                            return post.post is! Tip
+                                ? AnchorItemWrapper(
+                                    key: ValueKey(_PostKey(
+                                        index: post.toIndex(),
+                                        isVisible: !_isToJump.value)),
+                                    controller: _anchorController,
                                     index: post.toIndex(),
-                                    isVisible: !_isToJump.value)),
-                                controller: _anchorController,
-                                index: post.toIndex(),
-                                child: postCard,
-                              )
-                            : postCard;
-                      },
-                      separator: const Divider(height: 10.0, thickness: 1.0),
-                      noItemsFoundBuilder: (context) => const Center(
-                        child: Text('没有串', style: AppTheme.boldRed),
+                                    child: postCard,
+                                  )
+                                : postCard;
+                          },
+                          separator:
+                              const Divider(height: 10.0, thickness: 1.0),
+                          noItemsFoundBuilder: (context) => const Center(
+                            child: Text('没有串', style: AppTheme.boldRed),
+                          ),
+                          onNoMoreItems: () => _isNoMoreItems = true,
+                          onRefresh: () {
+                            if ((controller.post == null ||
+                                    !controller.post!.isAdmin) &&
+                                (blacklist.hasPost(postId) ||
+                                    (controller.post != null &&
+                                        blacklist.hasUser(
+                                            controller.post!.userHash)))) {
+                              controller.refreshPage_();
+                            }
+                          },
+                        ),
                       ),
-                      onNoMoreItems: () => _isNoMoreItems = true,
-                      onRefresh: () {
-                        if ((mainPost.value == null ||
-                                !mainPost.value!.isAdmin) &&
-                            (blacklist.hasPost(postId.value!) ||
-                                (mainPost.value != null &&
-                                    blacklist
-                                        .hasUser(mainPost.value!.userHash)))) {
-                          widget.controller.refreshPage();
-                        }
-                      },
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               )
             : GestureDetector(
-                onTap: widget.controller.refreshPage,
+                onTap: controller.refreshPage_,
                 child: const Center(
                   child: Text('本串已被屏蔽', style: AppTheme.boldRed),
                 ),
@@ -658,31 +643,35 @@ class _ThreadBodyState extends State<ThreadBody> {
     );
   }
 
+  void _cancelJump() {
+    _isToJump.value = false;
+    _isNoMoreItems = false;
+  }
+
   void _setToJump() {
     _isToJump.value = true;
-    _jumpSubscription?.cancel();
-    _jumpSubscription = widget.controller.page.listen((page) {
-      _isToJump.value = false;
-      _isNoMoreItems = false;
-    });
+    widget.controller.removeListener(_cancelJump);
+    widget.controller.addListener(_cancelJump);
   }
+
+  void _addRefresh() => _refresh++;
 
   @override
   void initState() {
     super.initState();
 
-    _browsePostId = widget.controller.id.value!;
+    _browsePostId = widget.controller.id;
 
-    _refreshSubscription = widget.controller.page.listen((page) => _refresh++);
+    widget.controller.addListener(_addRefresh);
   }
 
   @override
   void dispose() {
-    _refreshSubscription.cancel();
     _isToJump.value = false;
     _anchorController?.dispose();
     _anchorController = null;
-    _jumpSubscription?.cancel();
+    widget.controller.removeListener(_cancelJump);
+    widget.controller.removeListener(_addRefresh);
 
     super.dispose();
   }
@@ -690,31 +679,25 @@ class _ThreadBodyState extends State<ThreadBody> {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
-    final postListType = widget.controller.postListType;
-    final postId = widget.controller.id;
-    final postPage = widget.controller.page;
-    final currentPage = widget.controller.currentPage;
-    final cancelAutoJump = widget.controller.cancelAutoJump;
-    final jumpToId = widget.controller.jumpToId;
-
-    debugPrint('aaa $cancelAutoJump');
+    final controller = widget.controller;
+    final postId = controller.id;
+    final cancelAutoJump = controller.cancelAutoJump;
+    final jumpToId = controller.jumpToId;
 
     return FutureBuilder(
       future: _history == null
           ? Future(() async {
-              _history =
-                  await PostHistoryService.to.getBrowseHistory(postId.value!);
+              _history = await PostHistoryService.to.getBrowseHistory(postId);
 
               if (jumpToId == null) {
-                if (!(cancelAutoJump ?? false) &&
+                if (!cancelAutoJump &&
                     settings.isJumpToLastBrowsePage &&
                     _history != null) {
-                  final page = postListType.value.isThread()
+                  final page = controller.isThread
                       ? _history!.browsePage
                       : _history!.onlyPoBrowsePage;
                   if (page != null) {
-                    postPage.value = page;
-                    currentPage.value = page;
+                    controller.page = page;
 
                     _setToJump();
                   }
@@ -759,7 +742,7 @@ class _PostKey {
   int get hashCode => Object.hash(index, isVisible);
 }
 
-void _replyPost(PostListController controller, int postId) {
+void _replyPost(ThreadTypeController controller, int postId) {
   final button = FloatingButton.buttonKey.currentState;
   if (button != null && button.mounted) {
     final text = '${postId.toPostReference()}\n';
@@ -771,15 +754,15 @@ void _replyPost(PostListController controller, int postId) {
       }
     } else {
       button.bottomSheet(EditPostController(
-          postListType: controller.postListType.value,
-          id: controller.id.value!,
+          postListType: controller.postListType,
+          id: controller.id,
           forumId: controller.forumId,
           content: text));
     }
   }
 }
 
-void _replyWithImage(PostListController controller, Uint8List imageData) {
+void _replyWithImage(ThreadTypeController controller, Uint8List imageData) {
   final button = FloatingButton.buttonKey.currentState;
   if (button != null && button.mounted) {
     if (button.hasBottomSheet) {
@@ -789,8 +772,8 @@ void _replyWithImage(PostListController controller, Uint8List imageData) {
       }
     } else {
       button.bottomSheet(EditPostController(
-          postListType: controller.postListType.value,
-          id: controller.id.value!,
+          postListType: controller.postListType,
+          id: controller.id,
           forumId: controller.forumId,
           imageData: imageData));
     }

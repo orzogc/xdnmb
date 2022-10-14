@@ -68,10 +68,10 @@ class _ForumName extends StatelessWidget {
         }
         forumName ??= '选择板块';
 
-        return postListType.isTimeline()
+        return postListType.isTimeline
             ? TextButton(
                 onPressed: () {
-                  if (postListType.isTimeline()) {
+                  if (postListType.isTimeline) {
                     Get.dialog(
                       SelectForum(
                         isOnlyForum: true,
@@ -709,7 +709,7 @@ class _Post extends StatelessWidget {
             if (forumId != null) {
               final postListType = postList.postListType;
 
-              if (postListType.isForum() &&
+              if (postListType.isForum &&
                   forumId == EditPost.dutyRoomId &&
                   (reportReason == null || reportReason!.isEmpty)) {
                 showToast('请选择举报理由');
@@ -734,8 +734,8 @@ class _Post extends StatelessWidget {
                     }
                   }
 
-                  if (postListType.isForumType()) {
-                    if (postListType.isForum() &&
+                  if (postListType.isForumType) {
+                    if (postListType.isForum &&
                         forumId == EditPost.dutyRoomId) {
                       content = '举报理由：$reportReason\n$content';
                     }
@@ -762,7 +762,7 @@ class _Post extends StatelessWidget {
                   }
                 }).then(
                   (value) {
-                    if (postListType.isForumType()) {
+                    if (postListType.isForumType) {
                       showToast('发表新串成功');
                       final post = PostData(
                           forumId: forumId!,
@@ -1177,7 +1177,7 @@ class EditPostState extends State<EditPost> {
   void setPostList(PostList postList, int? forumId) {
     _postList.value = postList;
     _forumId.value =
-        forumId ?? (postList.postListType.isForum() ? postList.id : null);
+        forumId ?? (postList.postListType.isForum ? postList.id : null);
   }
 
   Widget _inputArea(BuildContext context, double height) {
@@ -1215,7 +1215,7 @@ class EditPostState extends State<EditPost> {
                       onForum: (forum) => _forumId.value = forum.id,
                     ),
                   ),
-                  if (_postList.value.postListType.isThreadType())
+                  if (_postList.value.postListType.isThreadType)
                     Text(_postList.value.id!.toPostNumber()),
                   Flexible(
                     child: IconButton(
@@ -1308,7 +1308,7 @@ class EditPostState extends State<EditPost> {
                                 ),
                               ),
                             if (_isExpanded.value) const SizedBox(height: 10.0),
-                            if (_postList.value.postListType.isForum() &&
+                            if (_postList.value.postListType.isForum &&
                                 _forumId.value == EditPost.dutyRoomId)
                               _ReportReason(
                                 reportReason: reportReason,
@@ -1411,7 +1411,7 @@ class EditPostState extends State<EditPost> {
                       forumId: _forumId.value,
                       isWatermark: _isWatermark.value,
                       imageData: _imageData.value,
-                      reportReason: (_postList.value.postListType.isForum() &&
+                      reportReason: (_postList.value.postListType.isForum &&
                               _forumId.value == EditPost.dutyRoomId)
                           ? _reportReason.value
                           : null,
@@ -1436,7 +1436,7 @@ class EditPostState extends State<EditPost> {
 
     _postList = Rx(widget.postList);
     _forumId = RxnInt(widget.forumId ??
-        (widget.postList.postListType.isForum() ? widget.postList.id : null));
+        (widget.postList.postListType.isForum ? widget.postList.id : null));
 
     _titleController = _initController(widget.title);
     _nameController = _initController(widget.name);

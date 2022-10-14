@@ -7,11 +7,11 @@ import '../utils/navigation.dart';
 import 'dialog.dart';
 
 class _JumpPageDialog extends StatefulWidget {
-  final int currentPage;
+  final int page;
 
   final int? maxPage;
 
-  const _JumpPageDialog({super.key, required this.currentPage, this.maxPage});
+  const _JumpPageDialog({super.key, required this.page, this.maxPage});
 
   @override
   State<_JumpPageDialog> createState() => _JumpPageDialogState();
@@ -26,7 +26,7 @@ class _JumpPageDialogState extends State<_JumpPageDialog> {
   void initState() {
     super.initState();
 
-    _controller = TextEditingController(text: '${widget.currentPage}');
+    _controller = TextEditingController(text: '${widget.page}');
   }
 
   @override
@@ -121,10 +121,9 @@ class _PageButtonState extends State<PageButton> {
           isShowDialog = true;
           try {
             final page = await postListDialog<int>(_JumpPageDialog(
-                currentPage: widget.controller.currentPage.value,
-                maxPage: widget.maxPage));
+                page: widget.controller.page, maxPage: widget.maxPage));
             if (page != null) {
-              widget.controller.refreshPage(page);
+              widget.controller.refreshPage_(page);
             }
           } finally {
             isShowDialog = false;
@@ -133,7 +132,7 @@ class _PageButtonState extends State<PageButton> {
       },
       child: Obx(
         () => Text(
-          '${widget.controller.currentPage.value}',
+          '${widget.controller.page}',
           style: theme.textTheme.headline6?.apply(
             color: theme.colorScheme.onPrimary,
           ),
@@ -142,41 +141,3 @@ class _PageButtonState extends State<PageButton> {
     );
   }
 }
-
-/* class PageButton extends StatelessWidget {
-  final PostListController controller;
-
-  final int? maxPage;
-
-  const PageButton({super.key, required this.controller, this.maxPage});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    bool isShowDialog = false;
-
-    return TextButton(
-      onPressed: () async {
-        if (!isShowDialog) {
-          isShowDialog = true;
-          try {
-            final page = await postListDialog<int>(_JumpPageDialog(
-                currentPage: controller.currentPage.value, maxPage: maxPage));
-            if (page != null) {
-              controller.refreshPage(page);
-            }
-          } finally {
-            isShowDialog = false;
-          }
-        }
-      },
-      child: Obx(
-        () => Text(
-          '${controller.currentPage.value}',
-          style: theme.textTheme.headline6
-              ?.apply(color: theme.colorScheme.onPrimary),
-        ),
-      ),
-    );
-  }
-} */

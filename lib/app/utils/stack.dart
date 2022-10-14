@@ -48,34 +48,42 @@ abstract class ControllerStack {
   static void popController([int? index]) {
     index = index ?? ControllerStack.index;
     if (index >= 0 && index < _cache.length) {
-      _cache[index].controllers.removeLast();
+      final controller = _cache[index].controllers.removeLast();
+      controller.dispose();
     } else {
       debugPrint('popController(): index out of range');
     }
   }
 
-  static void addController(PostListController controller) {
+  static void addNewController(PostListController controller) {
     _latestKey += 1;
     _cache.add(_ControllerData(key: _latestKey, controllers: [controller]));
     length.value = _cache.length;
   }
 
-  static List<PostListController>? removeControllerAt(int index) {
+  static void removeControllersAt(int index) {
     if (_cache.length <= 1) {
       debugPrint('removeControllerAt(): cache length is less than 2');
     } else if (index >= 0 && index < _cache.length) {
       final data = _cache.removeAt(index);
+      for (final contorller in data.controllers) {
+        contorller.dispose();
+      }
+
       length.value = _cache.length;
       if (ControllerStack.index > index) {
         ControllerStack.index -= 1;
       } else if (ControllerStack.index == index) {
         ControllerStack.index = min(ControllerStack.index, _cache.length - 1);
       }
-      return data.controllers;
     } else {
-      debugPrint('removeControllerAt(): index out of range');
+      debugPrint('removeControllersAt(): index out of range');
     }
+  }
 
-    return null;
+  static void replaceLastController(PostListController controller,
+      [int? index]) {
+    popController(index);
+    pushController(controller, index);
   }
 }

@@ -18,7 +18,7 @@ abstract class AppRoutes {
   /// 参数：mainPostId、page、cancelAutoJump和jumpToId，arguments为主串Post
   static const String thread = '/${PathNames.thread}';
 
-  /// 参数：mainPostId、cancelAutoJump和page
+  /// 参数：mainPostId、page和cancelAutoJump，arguments为主串Post
   static const String onlyPoThread = '/${PathNames.onlyPoThread}';
 
   /// 参数：postId
@@ -60,45 +60,41 @@ abstract class AppRoutes {
   static String timelineUrl(int timelineId, {int page = 1}) =>
       '$timeline?timelineId=$timelineId&page=$page';
 
-  static String threadUrl(int mainPostId, {int page = 1, int? jumpToId}) =>
+  static String threadUrl(int mainPostId,
+          {int page = 1, bool cancelAutoJump = false, int? jumpToId}) =>
       jumpToId != null
-          ? '$thread?mainPostId=$mainPostId&page=$page&jumpToId=$jumpToId'
-          : '$thread?mainPostId=$mainPostId&page=$page';
+          ? '$thread?mainPostId=$mainPostId&page=$page&cancelAutoJump=$cancelAutoJump&jumpToId=$jumpToId'
+          : '$thread?mainPostId=$mainPostId&page=$page&cancelAutoJump=$cancelAutoJump';
 
-  static String onlyPoThreadUrl(int mainPostId, {int page = 1}) =>
-      '$onlyPoThread?mainPostId=$mainPostId&page=$page';
-
-  static String referenceUrl(int postId) => '$reference?postId=$postId';
+  static String onlyPoThreadUrl(int mainPostId,
+          {int page = 1, bool cancelAutoJump = false}) =>
+      '$onlyPoThread?mainPostId=$mainPostId&page=$page&cancelAutoJump=$cancelAutoJump';
 
   static String feedUrl({int page = 1}) => '$feed?page=$page';
 
   static String historyUrl({int index = 0, int page = 1}) =>
       '$history?index=$index&page=$page';
 
+  static String referenceUrl(int postId) => '$reference?postId=$postId';
+
   static Future<T?>? toForum<T>({required int forumId, int page = 1}) =>
       Get.toNamed<T>(
         forum,
         id: ControllerStack.getKeyId(),
-        parameters: {
-          'forumId': '$forumId',
-          'page': '$page',
-        },
+        parameters: {'forumId': '$forumId', 'page': '$page'},
       );
 
   static Future<T?>? toTimeline<T>({required int timelineId, int page = 1}) =>
       Get.toNamed<T>(
         timeline,
         id: ControllerStack.getKeyId(),
-        parameters: {
-          'timelineId': '$timelineId',
-          'page': '$page',
-        },
+        parameters: {'timelineId': '$timelineId', 'page': '$page'},
       );
 
   static Future<T?>? toThread<T>(
           {required int mainPostId,
           int page = 1,
-          bool? cancelAutoJump,
+          bool cancelAutoJump = false,
           int? jumpToId,
           PostBase? mainPost}) =>
       Get.toNamed<T>(
@@ -108,7 +104,7 @@ abstract class AppRoutes {
         parameters: {
           'mainPostId': '$mainPostId',
           'page': '$page',
-          if (cancelAutoJump != null) 'cancelAutoJump': '$cancelAutoJump',
+          'cancelAutoJump': '$cancelAutoJump',
           if (jumpToId != null) 'jumpToId': '$jumpToId',
         },
       );
@@ -116,7 +112,7 @@ abstract class AppRoutes {
   static Future<T?>? toOnlyPoThread<T>(
           {required int mainPostId,
           int page = 1,
-          bool? cancelAutoJump,
+          bool cancelAutoJump = false,
           PostBase? mainPost}) =>
       Get.toNamed<T>(
         onlyPoThread,
@@ -125,7 +121,7 @@ abstract class AppRoutes {
         parameters: {
           'mainPostId': '$mainPostId',
           'page': '$page',
-          if (cancelAutoJump != null) 'cancelAutoJump': '$cancelAutoJump',
+          'cancelAutoJump': '$cancelAutoJump',
         },
       );
 
@@ -139,10 +135,7 @@ abstract class AppRoutes {
       Get.toNamed<T>(
         history,
         id: ControllerStack.getKeyId(),
-        parameters: {
-          'index': '$index',
-          'page': '$page',
-        },
+        parameters: {'index': '$index', 'page': '$page'},
       );
 
   static Future<T?>? toImage<T>(ImageController controller) =>

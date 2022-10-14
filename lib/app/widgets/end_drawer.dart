@@ -12,6 +12,7 @@ import '../routes/routes.dart';
 import '../utils/navigation.dart';
 import '../utils/text.dart';
 import '../utils/toast.dart';
+import 'forum.dart';
 import 'forum_name.dart';
 
 class _DrawerHeader extends StatelessWidget {
@@ -75,7 +76,7 @@ class _Dialog extends StatelessWidget {
       children: [
         SimpleDialogOption(
           onPressed: () {
-            final controller = PostListController.fromForumData(forum: forum);
+            final controller = ForumTypeController.fromForumData(forum: forum);
             openNewTab(controller);
 
             showToast('已在新标签页打开 $forumName');
@@ -91,7 +92,7 @@ class _Dialog extends StatelessWidget {
         ),
         SimpleDialogOption(
           onPressed: () {
-            final controller = PostListController.fromForumData(forum: forum);
+            final controller = ForumTypeController.fromForumData(forum: forum);
             openNewTabBackground(controller);
 
             showToast('已在新标签页后台打开 $forumName');
@@ -162,7 +163,7 @@ class _ForumList extends StatelessWidget {
           final forum = forums.displayedForum(index);
           final controller = PostListController.get();
           final forumId = controller.forumOrTimelineId;
-          final isTimeline = controller.postListType.value.isTimeline();
+          final isTimeline = controller.isTimeline;
 
           return forum != null
               ? ListTile(
