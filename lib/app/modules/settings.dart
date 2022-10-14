@@ -137,24 +137,25 @@ class SettingsView extends GetView<SettingsController> {
           ),
           ValueListenableBuilder<Box>(
             valueListenable: settings.isJumpToLastBrowsePageListenable,
-            builder: (context, value, child) => ValueListenableBuilder(
+            builder: (context, value, child) => ValueListenableBuilder<Box>(
               valueListenable: settings.isJumpToLastBrowsePositionListenable,
               builder: (context, value, child) => ListTile(
-                title: Text(
-                  '自动跳转页数时滚动到最近浏览的位置',
-                  style: TextStyle(
-                    color: settings.isJumpToLastBrowsePage
-                        ? null
-                        : Get.isDarkMode
-                            ? Theme.of(context).primaryColor
-                            : null,
-                  ),
-                ),
+                title: child,
                 trailing: Switch(
                   value: settings.isJumpToLastBrowsePosition,
                   onChanged: settings.isJumpToLastBrowsePage
                       ? (value) => settings.isJumpToLastBrowsePosition = value
                       : null,
+                ),
+              ),
+              child: Text(
+                '自动跳转页数时跳转到最近浏览的位置',
+                style: TextStyle(
+                  color: settings.isJumpToLastBrowsePage
+                      ? null
+                      : Get.isDarkMode
+                          ? AppTheme.primaryColorDark
+                          : Colors.grey,
                 ),
               ),
             ),
@@ -164,10 +165,11 @@ class SettingsView extends GetView<SettingsController> {
             builder: (context, value, child) => ListTile(
               title: const Text('订阅ID'),
               subtitle: Text(settings.feedUuid),
-              trailing: TextButton(
-                onPressed: () => Get.dialog(_EditFeedUuid()),
-                child: const Text('编辑'),
-              ),
+              trailing: child,
+            ),
+            child: TextButton(
+              onPressed: () => Get.dialog(_EditFeedUuid()),
+              child: const Text('编辑'),
             ),
           ),
         ],

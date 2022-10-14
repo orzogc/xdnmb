@@ -5,6 +5,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/forum.dart';
 import '../data/services/forum.dart';
+import '../utils/notify.dart';
 import '../utils/theme.dart';
 import 'dialog.dart';
 
@@ -83,9 +84,9 @@ class ForumName extends StatelessWidget {
   Widget build(BuildContext context) {
     final forums = ForumListService.to;
 
-    return ValueListenableBuilder<bool>(
-      valueListenable: forums.updateForumNameNotifier,
-      builder: (context, value, child) {
+    return NotifyBuilder(
+      animation: forums.updateForumNameNotifier,
+      builder: (context, child) {
         final name = forums.forumName(forumId, isTimeline: isTimeline);
         final Widget nameWidget = name != null
             ? ForumNameText(
@@ -106,7 +107,6 @@ class ForumName extends StatelessWidget {
         return (isDeprecated != null && isDeprecated!)
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //mainAxisSize: MainAxisSize.min,
                 children: [
                   nameWidget,
                   Text('废弃', style: textStyle?.merge(AppTheme.boldRed)),

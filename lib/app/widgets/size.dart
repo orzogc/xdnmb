@@ -6,10 +6,9 @@ typedef ChildSizeBuilder = Widget Function(
 class ChildSizeNotifier extends StatefulWidget {
   final ChildSizeBuilder builder;
 
-  final Widget child;
+  final Widget? child;
 
-  const ChildSizeNotifier(
-      {super.key, required this.builder, required this.child});
+  const ChildSizeNotifier({super.key, required this.builder, this.child});
 
   @override
   State<ChildSizeNotifier> createState() => _ChildSizeNotifierState();

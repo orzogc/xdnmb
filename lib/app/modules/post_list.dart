@@ -17,6 +17,7 @@ import '../modules/edit_post.dart';
 import '../routes/routes.dart';
 import '../utils/image.dart';
 import '../utils/navigation.dart';
+import '../utils/notify.dart';
 import '../utils/stack.dart';
 import '../utils/toast.dart';
 import '../widgets/page.dart';
@@ -101,6 +102,72 @@ class PostList {
 
   @override
   int get hashCode => Object.hash(postListType, id, page);
+}
+
+abstract class PostListController_ {
+  final Notifier refreshNotifier = Notifier();
+
+  final RxInt _page;
+
+  PostListType get postListType;
+
+  int? get id;
+
+  int get page => _page.value;
+
+  set page(int page) => _page.value = page;
+
+  PostBase? get post;
+
+  set post(PostBase? post);
+
+  int? get bottomBarIndex;
+
+  set bottomBarIndex(int? index);
+
+  List<DateTimeRange?>? get dateRange;
+
+  set dateRange(List<DateTimeRange?>? range);
+
+  bool? get cancelAutoJump;
+
+  int? get jumpToId;
+
+  int? get forumOrTimelineId => postListType.isThreadType()
+      ? post?.forumId
+      : (postListType.isForumType() ? id : null);
+
+  int? get forumId => postListType.hasForumId() ? forumOrTimelineId : null;
+
+  PostListController_(int page) : _page = page.obs;
+
+  void refreshDateRange();
+
+  DateTimeRange? getDateRange([int? index]) {
+    assert(index == null || index < 3);
+
+    return bottomBarIndex != null
+        ? (dateRange?[index ?? bottomBarIndex!])
+        : null;
+  }
+
+  void setDateRange(DateTimeRange? range, [int? index]) {
+    assert(index == null || index < 3);
+
+    if (bottomBarIndex != null && dateRange != null) {
+      dateRange![index ?? bottomBarIndex!] = range;
+      refreshDateRange();
+    }
+  }
+
+  void refresh() => refreshNotifier.notify();
+
+  void refreshPage([int page = 1]) {
+    this.page = page;
+    refresh();
+  }
+
+  void dispose() => refreshNotifier.dispose();
 }
 
 class PostListController {

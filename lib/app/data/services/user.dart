@@ -29,21 +29,25 @@ class UserService extends GetxService {
 
   int totalCookiesNum = 0;
 
+  /// 用户帐号cookie
   String? get userCookie => _userBox.get(User.userCookie);
 
   set userCookie(String? userCookie) =>
       _userBox.put(User.userCookie, userCookie);
 
+  /// 用户帐号cookie的过期日期
   DateTime? get userCookieExpireDate => _userBox.get(User.userCookieExpireDate);
 
   set userCookieExpireDate(DateTime? dateTime) =>
       _userBox.put(User.userCookieExpireDate, dateTime);
 
+  /// 浏览用的饼干
   CookieData? get browseCookie => _userBox.get(User.browseCookie);
 
   set browseCookie(CookieData? browseCookie) =>
       _userBox.put(User.browseCookie, browseCookie);
 
+  /// 发串用的饼干
   CookieData? get postCookie => _userBox.get(User.postCookie);
 
   set postCookie(CookieData? postCookie) =>

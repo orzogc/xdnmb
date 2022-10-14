@@ -30,6 +30,7 @@ import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/image.dart';
 import '../utils/icons.dart';
+import '../utils/notify.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'dialog.dart';
@@ -58,9 +59,9 @@ class _ForumName extends StatelessWidget {
   Widget build(BuildContext context) {
     final forums = ForumListService.to;
 
-    return ValueListenableBuilder<bool>(
-      valueListenable: forums.updateForumNameNotifier,
-      builder: (context, value, child) {
+    return NotifyBuilder(
+      animation: forums.updateForumNameNotifier,
+      builder: (context, child) {
         String? forumName;
         if (forumId != null) {
           forumName = forums.forumName(forumId!);
@@ -166,14 +167,12 @@ class _ReportReason extends StatelessWidget {
       builder: (context, constraints) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ChildSizeNotifier(
-              builder: (context, size, child) {
-                WidgetsBinding.instance.addPostFrameCallback(
-                    (timeStamp) => width.value = size.width);
+          ChildSizeNotifier(builder: (context, size, child) {
+            WidgetsBinding.instance
+                .addPostFrameCallback((timeStamp) => width.value = size.width);
 
-                return child!;
-              },
-              child: const Text('举报理由：')),
+            return const Text('举报理由：');
+          }),
           Obx(
             () => DropdownButton<String>(
               value: _value.value,
@@ -1054,12 +1053,13 @@ class _EmoticonState extends State<_Emoticon> {
                                 Get.dialog(_EmoticonDialog(emoticon)),
                             child: Text(emoticon.name, style: textStyle),
                           ),
-                        TextButton(
-                          style: buttonStyle,
-                          onPressed: () => Get.dialog(const _EditEmoticon()),
-                          child: Text('自定义', style: textStyle),
-                        ),
+                        child!,
                       ],
+                    ),
+                    child: TextButton(
+                      style: buttonStyle,
+                      onPressed: () => Get.dialog(const _EditEmoticon()),
+                      child: Text('自定义', style: textStyle),
                     ),
                   ),
                 ),

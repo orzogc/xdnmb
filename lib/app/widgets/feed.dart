@@ -52,6 +52,43 @@ class _FeedKey {
   int get hashCode => Object.hash(postListType, page, uuid, refresh);
 }
 
+class FeedController extends PostListController_ {
+  @override
+  PostListType get postListType => PostListType.feed;
+
+  @override
+  int? get id => null;
+
+  @override
+  PostBase? get post => null;
+
+  @override
+  set post(PostBase? post) {}
+
+  @override
+  int? get bottomBarIndex => null;
+
+  @override
+  set bottomBarIndex(int? index) {}
+
+  @override
+  List<DateTimeRange?>? get dateRange => null;
+
+  @override
+  set dateRange(List<DateTimeRange?>? range) {}
+
+  @override
+  bool? get cancelAutoJump => null;
+
+  @override
+  int? get jumpToId => null;
+
+  FeedController({required int page}) : super(page);
+
+  @override
+  void refreshDateRange() {}
+}
+
 PostListController feedController(Map<String, String?> parameters) =>
     PostListController(
         postListType: PostListType.feed,

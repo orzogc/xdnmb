@@ -7,6 +7,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../models/forum.dart';
 import '../models/hive.dart';
+import '../../utils/notify.dart';
 import '../../utils/toast.dart';
 import 'xdnmb_client.dart';
 
@@ -62,7 +63,7 @@ class ForumListService extends GetxService {
 
   final RxBool isReady = false.obs;
 
-  final ValueNotifier<bool> updateForumNameNotifier = ValueNotifier(false);
+  final Notifier updateForumNameNotifier = Notifier();
 
   late final ValueListenable<Box<ForumData>> forumsListenable;
 
@@ -96,8 +97,7 @@ class ForumListService extends GetxService {
       _forumMap = HashMap.fromEntries(forums.map((forum) => MapEntry(
           _ForumKey.fromForumData(forum), _ForumValue.fromForum(forum))));
 
-  void _notifyUpdateForumName() =>
-      updateForumNameNotifier.value = !updateForumNameNotifier.value;
+  void _notifyUpdateForumName() => updateForumNameNotifier.notify();
 
   Future<void> _getHtmlForum(int forumId) async {
     if (_forumMap.isNotEmpty &&

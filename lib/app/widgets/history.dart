@@ -47,6 +47,55 @@ class HistoryBottomBarKey {
   int get hashCode => Object.hash(index, range);
 }
 
+class HistoryController extends PostListController_ {
+  final RxInt _bottomBarIndex;
+
+  final Rx<List<DateTimeRange?>> _dateRange;
+
+  @override
+  PostListType get postListType => PostListType.history;
+
+  @override
+  int? get id => null;
+
+  @override
+  PostBase? get post => null;
+
+  @override
+  set post(PostBase? post) {}
+
+  @override
+  int get bottomBarIndex => _bottomBarIndex.value;
+
+  @override
+  set bottomBarIndex(int? index) =>
+      index != null ? _bottomBarIndex.value = index : null;
+
+  @override
+  List<DateTimeRange?> get dateRange => _dateRange.value;
+
+  @override
+  set dateRange(List<DateTimeRange?>? range) =>
+      range != null ? _dateRange.value = range : null;
+
+  @override
+  bool? get cancelAutoJump => null;
+
+  @override
+  int? get jumpToId => null;
+
+  HistoryController(
+      {required int page,
+      int bottomBarIndex = 0,
+      List<DateTimeRange?> dateRange = const [null, null, null]})
+      : _bottomBarIndex = bottomBarIndex.obs,
+        _dateRange = Rx(dateRange),
+        super(page);
+
+  @override
+  void refreshDateRange() => _dateRange.refresh();
+}
+
 PostListController historyController(Map<String, String?> parameters) =>
     PostListController(
         postListType: PostListType.history,

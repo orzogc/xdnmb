@@ -30,6 +30,97 @@ import 'forum_name.dart';
 import 'loading.dart';
 import 'post.dart';
 
+class ThreadController extends PostListController_ {
+  @override
+  final int id;
+
+  final Rxn<PostBase> _post;
+
+  @override
+  final bool cancelAutoJump;
+
+  @override
+  final int? jumpToId;
+
+  @override
+  PostListType get postListType => PostListType.thread;
+
+  @override
+  PostBase? get post => _post.value;
+
+  @override
+  set post(PostBase? post) => _post.value = post;
+
+  @override
+  int? get bottomBarIndex => null;
+
+  @override
+  set bottomBarIndex(int? index) {}
+
+  @override
+  List<DateTimeRange?>? get dateRange => null;
+
+  @override
+  set dateRange(List<DateTimeRange?>? range) {}
+
+  ThreadController(
+      {required this.id,
+      required int page,
+      PostBase? post,
+      this.cancelAutoJump = false,
+      this.jumpToId})
+      : _post = Rxn(post),
+        super(page);
+
+  @override
+  void refreshDateRange() {}
+}
+
+class OnlyPoThreadController extends PostListController_ {
+  @override
+  final int id;
+
+  final Rxn<PostBase> _post;
+
+  @override
+  final bool cancelAutoJump;
+
+  @override
+  PostListType get postListType => PostListType.onlyPoThread;
+
+  @override
+  PostBase? get post => _post.value;
+
+  @override
+  set post(PostBase? post) => _post.value = post;
+
+  @override
+  int? get bottomBarIndex => null;
+
+  @override
+  set bottomBarIndex(int? index) {}
+
+  @override
+  List<DateTimeRange?>? get dateRange => null;
+
+  @override
+  set dateRange(List<DateTimeRange?>? range) {}
+
+  @override
+  int? get jumpToId => null;
+
+  OnlyPoThreadController(
+      {required this.id,
+      required int page,
+      PostBase? post,
+      this.cancelAutoJump = false})
+      : _post = Rxn(post),
+        super(page);
+
+  @override
+  void refreshDateRange() {}
+}
+
 PostListController threadController(
         Map<String, String?> parameters, Object? arguments) =>
     PostListController(

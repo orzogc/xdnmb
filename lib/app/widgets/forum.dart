@@ -27,6 +27,80 @@ import 'forum_name.dart';
 import 'post.dart';
 import 'reference.dart';
 
+class ForumController extends PostListController_ {
+  @override
+  final int id;
+
+  @override
+  PostListType get postListType => PostListType.forum;
+
+  @override
+  PostBase? get post => null;
+
+  @override
+  set post(PostBase? post) {}
+
+  @override
+  int? get bottomBarIndex => null;
+
+  @override
+  set bottomBarIndex(int? index) {}
+
+  @override
+  List<DateTimeRange?>? get dateRange => null;
+
+  @override
+  set dateRange(List<DateTimeRange?>? range) {}
+
+  @override
+  bool? get cancelAutoJump => null;
+
+  @override
+  int? get jumpToId => null;
+
+  ForumController({required this.id, required int page}) : super(page);
+
+  @override
+  void refreshDateRange() {}
+}
+
+class TimelineController extends PostListController_ {
+  @override
+  final int id;
+
+  @override
+  PostListType get postListType => PostListType.timeline;
+
+  @override
+  PostBase? get post => null;
+
+  @override
+  set post(PostBase? post) {}
+
+  @override
+  int? get bottomBarIndex => null;
+
+  @override
+  set bottomBarIndex(int? index) {}
+
+  @override
+  List<DateTimeRange?>? get dateRange => null;
+
+  @override
+  set dateRange(List<DateTimeRange?>? range) {}
+
+  @override
+  bool? get cancelAutoJump => null;
+
+  @override
+  int? get jumpToId => null;
+
+  TimelineController({required this.id, required int page}) : super(page);
+
+  @override
+  void refreshDateRange() {}
+}
+
 PostListController forumController(Map<String, String?> parameters) =>
     PostListController(
         postListType: PostListType.forum,
