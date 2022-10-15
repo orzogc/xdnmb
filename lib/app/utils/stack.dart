@@ -63,7 +63,7 @@ abstract class ControllerStack {
 
   static void removeControllersAt(int index) {
     if (_cache.length <= 1) {
-      debugPrint('removeControllerAt(): cache length is less than 2');
+      debugPrint('removeControllersAt(): cache length is less than 2');
     } else if (index >= 0 && index < _cache.length) {
       final data = _cache.removeAt(index);
       for (final contorller in data.controllers) {

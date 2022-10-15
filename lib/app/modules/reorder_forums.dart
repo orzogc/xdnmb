@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:html_to_text/html_to_text.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 
 import '../data/models/forum.dart';

@@ -30,34 +30,38 @@ import 'forum_name.dart';
 import 'loading.dart';
 import 'post.dart';
 
+class _PostKey {
+  final int index;
+
+  final bool isVisible;
+
+  const _PostKey({required this.index, required this.isVisible});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is _PostKey &&
+          index == other.index &&
+          isVisible == other.isVisible);
+
+  @override
+  int get hashCode => Object.hash(index, isVisible);
+}
+
 abstract class ThreadTypeController extends PostListController {
   @override
   final int id;
 
   final Rxn<PostBase> _post;
 
-  @override
   final bool cancelAutoJump;
 
-  @override
+  final Notifier _refreshNotifier = Notifier();
+
   PostBase? get post => _post.value;
 
-  @override
   set post(PostBase? post) => _post.value = post;
 
-  @override
-  int? get bottomBarIndex => null;
-
-  @override
-  set bottomBarIndex(int? index) {}
-
-  @override
-  List<DateTimeRange?>? get dateRange => null;
-
-  @override
-  set dateRange(List<DateTimeRange?>? range) {}
-
-  @override
   int? get jumpToId => null;
 
   ThreadTypeController(
@@ -73,9 +77,6 @@ abstract class ThreadTypeController extends PostListController {
       isOnlyPoThread
           ? OnlyPoThreadController(id: post.id, page: page, post: post)
           : ThreadController(id: post.id, page: page, post: post);
-
-  @override
-  void refreshDateRange() {}
 
   ThreadTypeController copyPage();
 }
@@ -201,150 +202,132 @@ class _ThreadDialog extends StatelessWidget {
       );
 }
 
-class ThreadAppBarPopupMenuButton extends StatefulWidget {
+class ThreadAppBarPopupMenuButton extends StatelessWidget {
   final ThreadTypeController controller;
 
-  final VoidCallback refresh;
+  const ThreadAppBarPopupMenuButton(this.controller, {super.key});
 
-  const ThreadAppBarPopupMenuButton(
-      {super.key, required this.controller, required this.refresh});
-
-  @override
-  State<ThreadAppBarPopupMenuButton> createState() =>
-      _ThreadAppBarPopupMenuButtonState();
-}
-
-class _ThreadAppBarPopupMenuButtonState
-    extends State<ThreadAppBarPopupMenuButton> {
   @override
   Widget build(BuildContext context) {
     final blacklist = BlacklistService.to;
-    final controller = widget.controller;
     final postId = controller.id;
-    final mainPost = controller.post;
 
-    final isBlockedPost = blacklist.hasPost(postId);
-    final isBlockedUser =
-        mainPost != null ? blacklist.hasUser(mainPost.userHash) : false;
+    return NotifyBuilder(
+      animation: controller._refreshNotifier,
+      builder: (context, child) {
+        final mainPost = controller.post;
+        final isBlockedPost = blacklist.hasPost(postId);
+        final isBlockedUser =
+            mainPost != null ? blacklist.hasUser(mainPost.userHash) : false;
 
-    return PopupMenuButton(
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          onTap: () async {
-            try {
-              await XdnmbClientService.to.client
-                  .addFeed(SettingsService.to.feedUuid, postId);
-              showToast('订阅 ${postId.toPostNumber()} 成功');
-            } catch (e) {
-              showToast(
-                  '订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');
-            }
-          },
-          child: const Text('订阅'),
-        ),
-        PopupMenuItem(
-          onTap: () => WidgetsBinding.instance.addPostFrameCallback(
-            (timeStamp) => AppRoutes.toEditPost(
-              postListType: PostListType.forum,
-              id: EditPost.dutyRoomId,
-              content: '${postId.toPostReference()}\n',
-              forumId: EditPost.dutyRoomId,
-            ),
-          ),
-          child: const Text('举报'),
-        ),
-        if (controller.isThread && !isBlockedPost && !isBlockedUser)
-          PopupMenuItem(
-            onTap: () => AppRoutes.toOnlyPoThread(
-                mainPostId: postId, mainPost: mainPost),
-            child: const Text('只看Po'),
-          ),
-        if (((mainPost != null && !mainPost.isAdmin) || mainPost == null) &&
-            !isBlockedPost)
-          PopupMenuItem(
-            onTap: () => postListDialog(
-              ConfirmCancelDialog(
-                content: '确定屏蔽主串 ${postId.toPostNumber()} ？',
-                onConfirm: () async {
-                  await blacklist.blockPost(postId);
-                  controller.refreshPage_();
-                  if (mounted) {
-                    setState(() {});
-                  }
-                  showToast('屏蔽主串 ${postId.toPostNumber()}');
-                  postListBack();
-                },
-                onCancel: () => postListBack(),
-              ),
-            ),
-            child: const Text('屏蔽主串'),
-          ),
-        if (mainPost != null && !mainPost.isAdmin && !isBlockedUser)
-          PopupMenuItem(
-            onTap: () => postListDialog(ConfirmCancelDialog(
-              content: '确定屏蔽Po饼干 ${mainPost.userHash} ？',
-              onConfirm: () async {
-                await blacklist.blockUser(mainPost.userHash);
-                controller.refreshPage_();
-                if (mounted) {
-                  setState(() {});
+        return PopupMenuButton(
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              onTap: () async {
+                try {
+                  await XdnmbClientService.to.client
+                      .addFeed(SettingsService.to.feedUuid, postId);
+                  showToast('订阅 ${postId.toPostNumber()} 成功');
+                } catch (e) {
+                  showToast(
+                      '订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');
                 }
-                showToast('屏蔽Po饼干 ${mainPost.userHash}');
-                postListBack();
               },
-              onCancel: () => postListBack(),
-            )),
-            child: const Text('屏蔽Po饼干'),
-          ),
-        if (controller.isOnlyPoThread && !isBlockedPost && !isBlockedUser)
-          PopupMenuItem(
-            onTap: () =>
-                AppRoutes.toThread(mainPostId: postId, mainPost: mainPost),
-            child: const Text('取消只看Po'),
-          ),
-        if (isBlockedPost)
-          PopupMenuItem(
-            onTap: () async {
-              await blacklist.unblockPost(postId);
-              controller.refreshPage_();
-              if (mounted) {
-                setState(() {});
-              }
-              showToast('取消屏蔽主串 ${postId.toPostNumber()}');
-            },
-            child: const Text('取消屏蔽主串'),
-          ),
-        if (isBlockedUser)
-          PopupMenuItem(
-            onTap: () async {
-              await blacklist.unblockUser(mainPost.userHash);
-              controller.refreshPage_();
-              if (mounted) {
-                setState(() {});
-              }
-              showToast('取消屏蔽Po饼干 ${mainPost.userHash}');
-            },
-            child: const Text('取消屏蔽Po饼干'),
-          ),
-        if (!isBlockedPost && !isBlockedUser)
-          PopupMenuItem(
-            onTap: () {
-              openNewTab(controller.copyPage());
+              child: const Text('订阅'),
+            ),
+            PopupMenuItem(
+              onTap: () => WidgetsBinding.instance.addPostFrameCallback(
+                (timeStamp) => AppRoutes.toEditPost(
+                  postListType: PostListType.forum,
+                  id: EditPost.dutyRoomId,
+                  content: '${postId.toPostReference()}\n',
+                  forumId: EditPost.dutyRoomId,
+                ),
+              ),
+              child: const Text('举报'),
+            ),
+            if (controller.isThread && !isBlockedPost && !isBlockedUser)
+              PopupMenuItem(
+                onTap: () => AppRoutes.toOnlyPoThread(
+                    mainPostId: postId, mainPost: mainPost),
+                child: const Text('只看Po'),
+              ),
+            if (((mainPost != null && !mainPost.isAdmin) || mainPost == null) &&
+                !isBlockedPost)
+              PopupMenuItem(
+                onTap: () => postListDialog(
+                  ConfirmCancelDialog(
+                    content: '确定屏蔽主串 ${postId.toPostNumber()} ？',
+                    onConfirm: () async {
+                      await blacklist.blockPost(postId);
+                      controller.refreshPage();
+                      showToast('屏蔽主串 ${postId.toPostNumber()}');
+                      postListBack();
+                    },
+                    onCancel: () => postListBack(),
+                  ),
+                ),
+                child: const Text('屏蔽主串'),
+              ),
+            if (mainPost != null && !mainPost.isAdmin && !isBlockedUser)
+              PopupMenuItem(
+                onTap: () => postListDialog(ConfirmCancelDialog(
+                  content: '确定屏蔽Po饼干 ${mainPost.userHash} ？',
+                  onConfirm: () async {
+                    await blacklist.blockUser(mainPost.userHash);
+                    controller.refreshPage();
+                    showToast('屏蔽Po饼干 ${mainPost.userHash}');
+                    postListBack();
+                  },
+                  onCancel: () => postListBack(),
+                )),
+                child: const Text('屏蔽Po饼干'),
+              ),
+            if (controller.isOnlyPoThread && !isBlockedPost && !isBlockedUser)
+              PopupMenuItem(
+                onTap: () =>
+                    AppRoutes.toThread(mainPostId: postId, mainPost: mainPost),
+                child: const Text('取消只看Po'),
+              ),
+            if (isBlockedPost)
+              PopupMenuItem(
+                onTap: () async {
+                  await blacklist.unblockPost(postId);
+                  controller.refreshPage();
+                  showToast('取消屏蔽主串 ${postId.toPostNumber()}');
+                },
+                child: const Text('取消屏蔽主串'),
+              ),
+            if (isBlockedUser)
+              PopupMenuItem(
+                onTap: () async {
+                  await blacklist.unblockUser(mainPost.userHash);
+                  controller.refreshPage();
+                  showToast('取消屏蔽Po饼干 ${mainPost.userHash}');
+                },
+                child: const Text('取消屏蔽Po饼干'),
+              ),
+            if (!isBlockedPost && !isBlockedUser)
+              PopupMenuItem(
+                onTap: () {
+                  openNewTab(controller.copyPage());
 
-              showToast('已在新标签页打开 ${postId.toPostNumber()}');
-            },
-            child: const Text('在新标签页打开'),
-          ),
-        if (!isBlockedPost && !isBlockedUser)
-          PopupMenuItem(
-            onTap: () {
-              openNewTabBackground(controller.copyPage());
+                  showToast('已在新标签页打开 ${postId.toPostNumber()}');
+                },
+                child: const Text('在新标签页打开'),
+              ),
+            if (!isBlockedPost && !isBlockedUser)
+              PopupMenuItem(
+                onTap: () {
+                  openNewTabBackground(controller.copyPage());
 
-              showToast('已在新标签页后台打开 ${postId.toPostNumber()}');
-            },
-            child: const Text('在新标签页后台打开'),
-          ),
-      ],
+                  showToast('已在新标签页后台打开 ${postId.toPostNumber()}');
+                },
+                child: const Text('在新标签页后台打开'),
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -374,8 +357,6 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   bool _isNoMoreItems = false;
 
-  bool _isFirstFetch = true;
-
   Future<void> _saveBrowseHistory() async {
     if (!_isSavingBrowseHistory) {
       _isSavingBrowseHistory = true;
@@ -404,7 +385,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     final controller = widget.controller;
     final jumpToId = controller.jumpToId;
 
-    if (firstPage == page) {
+    if (page == firstPage) {
       final firstPost = page == 1
           ? thread.mainPost
           : (thread.replies.isNotEmpty
@@ -443,18 +424,16 @@ class _ThreadBodyState extends State<ThreadBody> {
                         index: index, scrollSpeed: 10.0);
 
                     if (firstPost.id != id) {
-                      while (id != _browsePostId && !_isNoMoreItems) {
-                        if (_isToJump.value) {
-                          await Future.delayed(const Duration(milliseconds: 50),
-                              () async {
-                            if (_isToJump.value) {
-                              await _anchorController?.scrollToIndex(
-                                  index: index, scrollSpeed: 10.0);
-                            }
-                          });
-                        } else {
-                          break;
-                        }
+                      while (_isToJump.value &&
+                          id != _browsePostId &&
+                          !_isNoMoreItems) {
+                        await Future.delayed(const Duration(milliseconds: 50),
+                            () async {
+                          if (_isToJump.value) {
+                            await _anchorController?.scrollToIndex(
+                                index: index, scrollSpeed: 10.0);
+                          }
+                        });
                       }
                     }
                   }
@@ -493,159 +472,170 @@ class _ThreadBodyState extends State<ThreadBody> {
     return NotifyBuilder(
       animation: controller,
       builder: (context, child) {
-        _anchorController?.dispose();
-        _anchorController = AnchorScrollController(
-          onIndexChanged: (index, userScroll) {
-            controller.page = index.getPageFromIndex();
-            _browsePostId = index.getIdFromIndex();
-
-            _saveBrowseHistory();
-          },
-        );
-
         final firstPage = controller.page;
 
-        return ((controller.post != null && controller.post!.isAdmin) ||
-                !(blacklist.hasPost(postId) ||
-                    (controller.post != null &&
-                        blacklist.hasUser(controller.post!.userHash))))
-            ? Obx(
-                () {
-                  debugPrint('aaa');
+        return NotifyBuilder(
+          animation: controller._refreshNotifier,
+          builder: (context, child) {
+            final mainPost = controller.post;
 
-                  return Stack(
-                    children: [
-                      if (_isToJump.value) const QuotationLoadingIndicator(),
-                      Visibility(
-                        visible: !_isToJump.value,
-                        maintainState: true,
-                        maintainAnimation: true,
-                        maintainSize: true,
-                        child: BiListView<PostWithPage>(
-                          key: ValueKey<int>(_refresh),
-                          controller: _anchorController,
-                          initialPage: firstPage,
-                          fetch: (page) async {
-                            final thread = controller.isThread
-                                ? await client.getThread(postId, page: page)
-                                : await client.getOnlyPoThread(postId,
-                                    page: page);
+            return ((mainPost != null && mainPost.isAdmin) ||
+                    !(blacklist.hasPost(postId) ||
+                        (mainPost != null &&
+                            blacklist.hasUser(mainPost.userHash))))
+                ? Obx(
+                    () {
+                      _anchorController?.dispose();
+                      _anchorController = AnchorScrollController(
+                        onIndexChanged: (index, userScroll) {
+                          controller.page = index.getPageFromIndex();
+                          _browsePostId = index.getIdFromIndex();
 
-                            if (_isFirstFetch) {
-                              controller.post = thread.mainPost;
-                              _isFirstFetch = false;
-                            }
+                          _saveBrowseHistory();
+                        },
+                      );
 
-                            if (page != 1 && thread.replies.isEmpty) {
-                              if (firstPage == page) {
-                                _isToJump.value = false;
-                              }
-                              return [];
-                            }
+                      return Stack(
+                        children: [
+                          if (_isToJump.value)
+                            const QuotationLoadingIndicator(),
+                          Visibility(
+                            visible: !_isToJump.value,
+                            maintainState: true,
+                            maintainAnimation: true,
+                            maintainSize: true,
+                            child: BiListView<PostWithPage>(
+                              key: ValueKey<int>(_refresh),
+                              controller: _anchorController,
+                              initialPage: firstPage,
+                              fetch: (page) async {
+                                final thread = controller.isThread
+                                    ? await client.getThread(postId, page: page)
+                                    : await client.getOnlyPoThread(postId,
+                                        page: page);
 
-                            thread.replies.retainWhere((post) =>
-                                post.isAdmin ||
-                                !(blacklist.hasPost(post.id) ||
-                                    blacklist.hasUser(post.userHash)));
+                                controller.post = thread.mainPost;
+                                if (page == firstPage) {
+                                  controller._refreshNotifier.notify();
+                                }
 
-                            _saveHistoryAndJumpToIndex(thread, firstPage, page);
+                                if (page != 1 && thread.replies.isEmpty) {
+                                  if (page == firstPage) {
+                                    _isToJump.value = false;
+                                  }
+                                  return [];
+                                }
 
-                            final List<PostWithPage> posts = [];
-                            if (page == 1) {
-                              posts.add(PostWithPage(thread.mainPost, page));
-                            }
-                            // TODO: 提示tip是官方信息
-                            if (thread.tip != null) {
-                              posts.add(PostWithPage(thread.tip!, page));
-                            }
-                            if (thread.replies.isNotEmpty) {
-                              posts.addAll(thread.replies
-                                  .map((post) => PostWithPage(post, page)));
-                            }
+                                thread.replies.retainWhere((post) =>
+                                    post.isAdmin ||
+                                    !(blacklist.hasPost(post.id) ||
+                                        blacklist.hasUser(post.userHash)));
 
-                            return posts;
-                          },
-                          itemBuilder: (context, post, index) {
-                            final postCard = PostCard(
-                              key: post.post is Tip ? UniqueKey() : null,
-                              post: post.post,
-                              showForumName: false,
-                              showReplyCount: false,
-                              poUserHash: controller.post?.userHash,
-                              onTap: (post) {},
-                              onLongPress: (post) => postListDialog(
-                                  _ThreadDialog(
-                                      controller: controller, post: post)),
-                              onLinkTap: (context, link) => parseUrl(
-                                  url: link,
-                                  mainPostId: controller.post?.id,
-                                  poUserHash: controller.post?.userHash),
-                              onHiddenText: (context, element, textStyle) =>
-                                  onHiddenText(
-                                      context: context,
-                                      element: element,
-                                      textStyle: textStyle,
-                                      canTap: true,
-                                      mainPostId: controller.post?.id,
-                                      poUserHash: controller.post?.userHash),
-                              onImagePainted: (imageData) =>
-                                  _replyWithImage(controller, imageData),
-                              mouseCursor: SystemMouseCursors.basic,
-                              hoverColor: Get.isDarkMode
-                                  ? theme.cardColor
-                                  : theme.scaffoldBackgroundColor,
-                              canReturnImageData: true,
-                              onPostIdTap: post.post is! Tip
-                                  ? (postId) => _replyPost(controller, postId)
-                                  : null,
-                            );
+                                _saveHistoryAndJumpToIndex(
+                                    thread, firstPage, page);
 
-                            return post.post is! Tip
-                                ? AnchorItemWrapper(
-                                    key: ValueKey(_PostKey(
+                                final List<PostWithPage> posts = [];
+                                if (page == 1) {
+                                  posts
+                                      .add(PostWithPage(thread.mainPost, page));
+                                }
+                                // TODO: 提示tip是官方信息
+                                if (thread.tip != null) {
+                                  posts.add(PostWithPage(thread.tip!, page));
+                                }
+                                if (thread.replies.isNotEmpty) {
+                                  posts.addAll(thread.replies
+                                      .map((post) => PostWithPage(post, page)));
+                                }
+
+                                return posts;
+                              },
+                              itemBuilder: (context, post, index) {
+                                final mainPost = controller.post;
+
+                                final postCard = PostCard(
+                                  key: post.post is Tip ? UniqueKey() : null,
+                                  post: post.post,
+                                  showForumName: false,
+                                  showReplyCount: false,
+                                  poUserHash: mainPost?.userHash,
+                                  onTap: (post) {},
+                                  onLongPress: (post) => postListDialog(
+                                      _ThreadDialog(
+                                          controller: controller, post: post)),
+                                  onLinkTap: (context, link) => parseUrl(
+                                      url: link,
+                                      mainPostId: mainPost?.id,
+                                      poUserHash: mainPost?.userHash),
+                                  onHiddenText: (context, element, textStyle) =>
+                                      onHiddenText(
+                                          context: context,
+                                          element: element,
+                                          textStyle: textStyle,
+                                          canTap: true,
+                                          mainPostId: mainPost?.id,
+                                          poUserHash: mainPost?.userHash),
+                                  onImagePainted: (imageData) =>
+                                      _replyWithImage(controller, imageData),
+                                  mouseCursor: SystemMouseCursors.basic,
+                                  hoverColor: Get.isDarkMode
+                                      ? theme.cardColor
+                                      : theme.scaffoldBackgroundColor,
+                                  canReturnImageData: true,
+                                  onPostIdTap: post.post is! Tip
+                                      ? (postId) =>
+                                          _replyPost(controller, postId)
+                                      : null,
+                                );
+
+                                return post.post is! Tip
+                                    ? AnchorItemWrapper(
+                                        key: ValueKey(_PostKey(
+                                            index: post.toIndex(),
+                                            isVisible: !_isToJump.value)),
+                                        controller: _anchorController,
                                         index: post.toIndex(),
-                                        isVisible: !_isToJump.value)),
-                                    controller: _anchorController,
-                                    index: post.toIndex(),
-                                    child: postCard,
-                                  )
-                                : postCard;
-                          },
-                          separator:
-                              const Divider(height: 10.0, thickness: 1.0),
-                          noItemsFoundBuilder: (context) => const Center(
-                            child: Text('没有串', style: AppTheme.boldRed),
+                                        child: postCard,
+                                      )
+                                    : postCard;
+                              },
+                              separator:
+                                  const Divider(height: 10.0, thickness: 1.0),
+                              noItemsFoundBuilder: (context) => const Center(
+                                child: Text('没有串', style: AppTheme.boldRed),
+                              ),
+                              onNoMoreItems: () => _isNoMoreItems = true,
+                              onRefresh: () {
+                                final mainPost = controller.post;
+                                if ((mainPost == null || !mainPost.isAdmin) &&
+                                    (blacklist.hasPost(postId) ||
+                                        (mainPost != null &&
+                                            blacklist
+                                                .hasUser(mainPost.userHash)))) {
+                                  controller.refreshPage();
+                                }
+                              },
+                            ),
                           ),
-                          onNoMoreItems: () => _isNoMoreItems = true,
-                          onRefresh: () {
-                            if ((controller.post == null ||
-                                    !controller.post!.isAdmin) &&
-                                (blacklist.hasPost(postId) ||
-                                    (controller.post != null &&
-                                        blacklist.hasUser(
-                                            controller.post!.userHash)))) {
-                              controller.refreshPage_();
-                            }
-                          },
-                        ),
-                      ),
-                    ],
+                        ],
+                      );
+                    },
+                  )
+                : GestureDetector(
+                    onTap: controller.refreshPage,
+                    child: const Center(
+                      child: Text('本串已被屏蔽', style: AppTheme.boldRed),
+                    ),
                   );
-                },
-              )
-            : GestureDetector(
-                onTap: controller.refreshPage_,
-                child: const Center(
-                  child: Text('本串已被屏蔽', style: AppTheme.boldRed),
-                ),
-              );
+          },
+        );
       },
     );
   }
 
   void _cancelJump() {
     _isToJump.value = false;
-    _isNoMoreItems = false;
+    //_isNoMoreItems = false;
   }
 
   void _setToJump() {
@@ -699,7 +689,9 @@ class _ThreadBodyState extends State<ThreadBody> {
                   if (page != null) {
                     controller.page = page;
 
-                    _setToJump();
+                    if (settings.isJumpToLastBrowsePosition) {
+                      _setToJump();
+                    }
                   }
                 }
               } else {
@@ -722,24 +714,6 @@ class _ThreadBodyState extends State<ThreadBody> {
       },
     );
   }
-}
-
-class _PostKey {
-  final int index;
-
-  final bool isVisible;
-
-  const _PostKey({required this.index, required this.isVisible});
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is _PostKey &&
-          index == other.index &&
-          isVisible == other.isVisible);
-
-  @override
-  int get hashCode => Object.hash(index, isVisible);
 }
 
 void _replyPost(ThreadTypeController controller, int postId) {

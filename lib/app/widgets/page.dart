@@ -123,7 +123,7 @@ class _PageButtonState extends State<PageButton> {
             final page = await postListDialog<int>(_JumpPageDialog(
                 page: widget.controller.page, maxPage: widget.maxPage));
             if (page != null) {
-              widget.controller.refreshPage_(page);
+              widget.controller.refreshPage(page);
             }
           } finally {
             isShowDialog = false;

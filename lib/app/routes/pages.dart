@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:xdnmb/app/modules/post_list.dart';
 
 import '../modules/blacklist.dart';
 import '../modules/cookie.dart';
@@ -7,6 +6,7 @@ import '../modules/drafts.dart';
 import '../modules/edit_post.dart';
 import '../modules/image.dart';
 import '../modules/paint.dart';
+import '../modules/post_list.dart';
 import '../modules/reorder_forums.dart';
 import '../modules/settings.dart';
 

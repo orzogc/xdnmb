@@ -29,30 +29,6 @@ abstract class ForumTypeController extends PostListController {
   @override
   final int id;
 
-  @override
-  PostBase? get post => null;
-
-  @override
-  set post(PostBase? post) {}
-
-  @override
-  int? get bottomBarIndex => null;
-
-  @override
-  set bottomBarIndex(int? index) {}
-
-  @override
-  List<DateTimeRange?>? get dateRange => null;
-
-  @override
-  set dateRange(List<DateTimeRange?>? range) {}
-
-  @override
-  bool? get cancelAutoJump => null;
-
-  @override
-  int? get jumpToId => null;
-
   ForumTypeController({required this.id, required int page}) : super(page);
 
   factory ForumTypeController.fromForumData(
@@ -60,9 +36,6 @@ abstract class ForumTypeController extends PostListController {
       forum.isTimeline
           ? TimelineController(id: forum.id, page: page)
           : ForumController(id: forum.id, page: page);
-
-  @override
-  void refreshDateRange() {}
 }
 
 class ForumController extends ForumTypeController {
@@ -194,7 +167,7 @@ class _BlockForum extends StatelessWidget {
         if (result ?? false) {
           await BlacklistService.to.blockForum(
               BlockForumData(forumId: forumId, timelineId: controller.id));
-          controller.refreshPage_();
+          controller.refreshPage();
 
           final forumText = htmlToPlainText(
               Get.context!, ForumListService.to.forumName(forumId) ?? '');
@@ -223,10 +196,9 @@ class _ForumDialog extends StatelessWidget {
           if (controller.isTimeline && post.forumId != null)
             _BlockForum(controller: controller, forumId: post.forumId!),
           if (!post.isAdmin)
-            BlockPost(postId: post.id, onBlock: controller.refreshPage_),
+            BlockPost(postId: post.id, onBlock: controller.refreshPage),
           if (!post.isAdmin)
-            BlockUser(
-                userHash: post.userHash, onBlock: controller.refreshPage_),
+            BlockUser(userHash: post.userHash, onBlock: controller.refreshPage),
           CopyPostId(post.id),
           CopyPostReference(post.id),
           CopyPostContent(post),

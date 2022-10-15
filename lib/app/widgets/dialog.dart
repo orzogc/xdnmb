@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:html_to_text/html_to_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/blacklist.dart';

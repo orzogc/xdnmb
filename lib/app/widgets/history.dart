@@ -13,6 +13,7 @@ import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/hidden_text.dart';
 import '../utils/navigation.dart';
+import '../utils/notify.dart';
 import '../utils/theme.dart';
 import '../utils/time.dart';
 import '../utils/toast.dart';
@@ -23,6 +24,27 @@ import 'post_list.dart';
 
 const int _historyEachPage = 20;
 
+class _HistoryKey {
+  final DateTimeRange? range;
+
+  final int refresh;
+
+  final bool value;
+
+  const _HistoryKey(this.range, this.refresh, this.value);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is _HistoryKey &&
+          range == other.range &&
+          refresh == other.refresh &&
+          value == other.value);
+
+  @override
+  int get hashCode => Object.hash(range, refresh, value);
+}
+
 class HistoryBottomBarKey {
   final int index;
 
@@ -30,11 +52,10 @@ class HistoryBottomBarKey {
 
   const HistoryBottomBarKey(this.index, this.range);
 
-  HistoryBottomBarKey.fromController(PostListController controller)
-      : assert(controller.bottomBarIndex != null &&
-            controller.bottomBarIndex! < 3),
-        index = controller.bottomBarIndex!,
-        range = controller.getDateRange();
+  HistoryBottomBarKey.fromController(HistoryController controller)
+      : assert(controller.bottomBarIndex < 3),
+        index = controller.bottomBarIndex,
+        range = controller._getDateRange();
 
   @override
   bool operator ==(Object other) =>
@@ -52,54 +73,69 @@ class HistoryController extends PostListController {
 
   final Rx<List<DateTimeRange?>> _dateRange;
 
+  final List<ListenableNotifier> _notifiers = [
+    ListenableNotifier(),
+    ListenableNotifier(),
+    ListenableNotifier()
+  ];
+
   @override
   PostListType get postListType => PostListType.history;
 
   @override
   int? get id => null;
 
-  @override
-  PostBase? get post => null;
-
-  @override
-  set post(PostBase? post) {}
-
-  @override
   int get bottomBarIndex => _bottomBarIndex.value;
 
-  @override
-  set bottomBarIndex(int? index) =>
-      index != null ? _bottomBarIndex.value = index : null;
+  set bottomBarIndex(int index) => _bottomBarIndex.value = index;
 
-  @override
   List<DateTimeRange?> get dateRange => _dateRange.value;
 
-  @override
-  set dateRange(List<DateTimeRange?>? range) =>
-      range != null ? _dateRange.value = range : null;
-
-  @override
-  bool? get cancelAutoJump => null;
-
-  @override
-  int? get jumpToId => null;
+  set dateRange(List<DateTimeRange?> range) => _dateRange.value = range;
 
   HistoryController(
       {required int page,
       int bottomBarIndex = 0,
-      List<DateTimeRange?> dateRange = const [null, null, null]})
+      required List<DateTimeRange?> dateRange})
       : _bottomBarIndex = bottomBarIndex.obs,
         _dateRange = Rx(dateRange),
         super(page);
 
-  @override
-  void refreshDateRange() => _dateRange.refresh();
+  ListenableNotifier _getNotifier([int? index]) {
+    assert(index == null || index < 3);
+
+    return _notifiers[index ?? bottomBarIndex];
+  }
+
+  void _notify([int? index]) {
+    _getNotifier(index).notify();
+    _bottomBarIndex.refresh();
+  }
+
+  void _trigger([int? index]) {
+    _getNotifier(index).trigger();
+    _bottomBarIndex.refresh();
+  }
+
+  DateTimeRange? _getDateRange([int? index]) {
+    assert(index == null || index < 3);
+
+    return dateRange[index ?? bottomBarIndex];
+  }
+
+  void _setDateRange(DateTimeRange? range, [int? index]) {
+    assert(index == null || index < 3);
+
+    dateRange[index ?? bottomBarIndex] = range;
+    _notify(index);
+  }
 }
 
 HistoryController historyController(Map<String, String?> parameters) =>
     HistoryController(
         page: parameters['page'].tryParseInt() ?? 1,
-        bottomBarIndex: parameters['index'].tryParseInt() ?? 0);
+        bottomBarIndex: parameters['index'].tryParseInt() ?? 0,
+        dateRange: List.filled(3, null));
 
 class HistoryAppBarTitle extends StatelessWidget {
   final HistoryController controller;
@@ -113,11 +149,11 @@ class HistoryAppBarTitle extends StatelessWidget {
     return FutureBuilder<int?>(future: Future(() {
       switch (controller.bottomBarIndex) {
         case _BrowseHistoryBody._index:
-          return history.browseHistoryCount(controller.getDateRange());
+          return history.browseHistoryCount(controller._getDateRange());
         case _PostHistoryBody._index:
-          return history.postDataCount(controller.getDateRange());
+          return history.postDataCount(controller._getDateRange());
         case _ReplyHistoryBody._index:
-          return history.replyDataCount(controller.getDateRange());
+          return history.replyDataCount(controller._getDateRange());
         default:
           debugPrint('未知bottomBarIndex：${controller.bottomBarIndex}');
           return null;
@@ -165,15 +201,15 @@ class HistoryDateRangePicker extends StatelessWidget {
         onPressed: () async {
           final range = await showDateRangePicker(
               context: context,
-              initialDateRange: controller.getDateRange(),
+              initialDateRange: controller._getDateRange(),
               firstDate: _firstDate,
               lastDate: DateTime.now(),
               initialEntryMode: DatePickerEntryMode.calendarOnly,
               locale: WidgetsBinding.instance.platformDispatcher.locale);
 
           if (range != null) {
-            controller.setDateRange(range);
-            controller.refreshPage_();
+            controller._setDateRange(range);
+            //controller.refreshPage();
           }
         },
         icon: const Icon(Icons.calendar_month),
@@ -193,7 +229,7 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
       itemBuilder: (context) => [
         PopupMenuItem(
           onTap: () async {
-            final range = controller.getDateRange();
+            final range = controller._getDateRange();
 
             switch (controller.bottomBarIndex) {
               case _BrowseHistoryBody._index:
@@ -202,7 +238,7 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
                     content: '确定清空浏览记录？',
                     onConfirm: () async {
                       await history.clearBrowseHistory(range);
-                      controller.refreshPage_();
+                      controller._trigger();
                       showToast('清空浏览记录');
                       postListBack();
                     },
@@ -217,7 +253,7 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
                     content: '确定清空主题记录？',
                     onConfirm: () async {
                       await history.clearPostData(range);
-                      controller.refreshPage_();
+                      controller._trigger();
                       showToast('清空主题记录');
                       postListBack();
                     },
@@ -232,7 +268,7 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
                     content: '确定清空回复记录？',
                     onConfirm: () async {
                       await history.clearReplyData(range);
-                      controller.refreshPage_();
+                      controller._trigger();
                       showToast('清空回复记录');
                       postListBack();
                     },
@@ -324,96 +360,102 @@ class _BrowseHistoryBody extends StatelessWidget {
 
     return PostListRefresher(
       controller: controller,
-      builder: (context, refresh) => BiListView<BrowseHistory>(
-        key: ValueKey<int>(refresh),
-        initialPage: controller.page,
-        canRefreshAtBottom: false,
-        fetch: (page) => history.browseHistoryList(
-            (page - 1) * _historyEachPage,
-            page * _historyEachPage,
-            controller.getDateRange()),
-        itemBuilder: (context, browse, index) {
-          final isVisible = true.obs;
+      builder: (context, refresh) => ValueListenableBuilder<bool>(
+        valueListenable: controller._getNotifier(_BrowseHistoryBody._index),
+        builder: (context, value, child) => BiListView<BrowseHistory>(
+          key: ValueKey<_HistoryKey>(_HistoryKey(
+              controller._getDateRange(_BrowseHistoryBody._index),
+              refresh,
+              value)),
+          initialPage: controller.page,
+          canRefreshAtBottom: false,
+          fetch: (page) => history.browseHistoryList(
+              (page - 1) * _historyEachPage,
+              page * _historyEachPage,
+              controller._getDateRange(_BrowseHistoryBody._index)),
+          itemBuilder: (context, browse, index) {
+            final isVisible = true.obs;
 
-          int? browsePage;
-          int? browsePostId;
-          if (browse.browsePage != null) {
-            browsePage = browse.browsePage;
-            browsePostId = browse.browsePostId;
-          } else {
-            browsePage = browse.onlyPoBrowsePage;
-            browsePostId = browse.onlyPoBrowsePostId;
-          }
+            int? browsePage;
+            int? browsePostId;
+            if (browse.browsePage != null) {
+              browsePage = browse.browsePage;
+              browsePostId = browse.browsePostId;
+            } else {
+              browsePage = browse.onlyPoBrowsePage;
+              browsePostId = browse.onlyPoBrowsePostId;
+            }
 
-          return Obx(
-            () => isVisible.value
-                ? Card(
-                    key: ValueKey(browse.id),
-                    margin: const EdgeInsets.symmetric(vertical: 4.0),
-                    elevation: 1.5,
-                    child: InkWell(
-                      onTap: () => AppRoutes.toThread(
-                          mainPostId: browse.id, mainPost: browse),
-                      onLongPress: () => postListDialog(
-                        _HistoryDialog(
-                          mainPost: browse,
-                          confirmDelete: false,
-                          onDelete: () async {
-                            await history.deleteBrowseHistory(browse.id);
-                            showToast('删除 ${browse.id.toPostNumber()} 的浏览记录');
-                            isVisible.value = false;
-                          },
+            return Obx(
+              () => isVisible.value
+                  ? Card(
+                      key: ValueKey(browse.id),
+                      margin: const EdgeInsets.symmetric(vertical: 4.0),
+                      elevation: 1.5,
+                      child: InkWell(
+                        onTap: () => AppRoutes.toThread(
+                            mainPostId: browse.id, mainPost: browse),
+                        onLongPress: () => postListDialog(
+                          _HistoryDialog(
+                            mainPost: browse,
+                            confirmDelete: false,
+                            onDelete: () async {
+                              await history.deleteBrowseHistory(browse.id);
+                              showToast('删除 ${browse.id.toPostNumber()} 的浏览记录');
+                              isVisible.value = false;
+                            },
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(
-                                left: 10.0, top: 5.0, right: 10.0),
-                            child: DefaultTextStyle.merge(
-                              style: Theme.of(context).textTheme.caption,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      '最后浏览时间：${formatTime(browse.browseTime)}',
-                                    ),
-                                  ),
-                                  if (browsePage != null &&
-                                      browsePostId != null)
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 10.0, top: 5.0, right: 10.0),
+                              child: DefaultTextStyle.merge(
+                                style: Theme.of(context).textTheme.caption,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
                                     Flexible(
                                       child: Text(
-                                        '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
+                                        '最后浏览时间：${formatTime(browse.browseTime)}',
                                       ),
                                     ),
-                                ],
+                                    if (browsePage != null &&
+                                        browsePostId != null)
+                                      Flexible(
+                                        child: Text(
+                                          '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          PostContent(
-                            post: browse,
-                            showReplyCount: false,
-                            contentMaxLines: 8,
-                            poUserHash: browse.userHash,
-                            onHiddenText: (context, element, textStyle) =>
-                                onHiddenText(
-                              context: context,
-                              element: element,
-                              textStyle: textStyle,
+                            PostContent(
+                              post: browse,
+                              showReplyCount: false,
+                              contentMaxLines: 8,
+                              poUserHash: browse.userHash,
+                              onHiddenText: (context, element, textStyle) =>
+                                  onHiddenText(
+                                context: context,
+                                element: element,
+                                textStyle: textStyle,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          );
-        },
-        noItemsFoundBuilder: (context) => const Center(
-          child: Text('没有浏览记录', style: AppTheme.boldRed),
+                    )
+                  : const SizedBox.shrink(),
+            );
+          },
+          noItemsFoundBuilder: (context) => const Center(
+            child: Text('没有浏览记录', style: AppTheme.boldRed),
+          ),
         ),
       ),
     );
@@ -433,55 +475,63 @@ class _PostHistoryBody extends StatelessWidget {
 
     return PostListRefresher(
       controller: controller,
-      builder: (context, refresh) => BiListView<PostData>(
-        key: ValueKey<int>(refresh),
-        initialPage: controller.page,
-        canRefreshAtBottom: false,
-        fetch: (page) => history.postDataList((page - 1) * _historyEachPage,
-            page * _historyEachPage, controller.getDateRange()),
-        itemBuilder: (context, mainPost, index) {
-          final isVisible = true.obs;
+      builder: (context, refresh) => ValueListenableBuilder<bool>(
+        valueListenable: controller._getNotifier(_PostHistoryBody._index),
+        builder: (context, value, child) => BiListView<PostData>(
+          key: ValueKey<_HistoryKey>(_HistoryKey(
+              controller._getDateRange(_PostHistoryBody._index),
+              refresh,
+              value)),
+          initialPage: controller.page,
+          canRefreshAtBottom: false,
+          fetch: (page) => history.postDataList(
+              (page - 1) * _historyEachPage,
+              page * _historyEachPage,
+              controller._getDateRange(_PostHistoryBody._index)),
+          itemBuilder: (context, mainPost, index) {
+            final isVisible = true.obs;
 
-          return Obx(
-            () => isVisible.value
-                ? Card(
-                    key: ValueKey(mainPost.id),
-                    margin: const EdgeInsets.symmetric(vertical: 4.0),
-                    elevation: 1.5,
-                    child: PostCard(
-                      post: mainPost.toPost(),
-                      showPostId: mainPost.postId != null ? true : false,
-                      showReplyCount: false,
-                      contentMaxLines: 8,
-                      poUserHash: mainPost.userHash,
-                      onTap: (post) {
-                        if (post.id > 0) {
-                          AppRoutes.toThread(
-                              mainPostId: post.id, mainPost: post);
-                        }
-                      },
-                      onLongPress: (post) => postListDialog(_HistoryDialog(
-                          mainPost: post,
-                          onDelete: () async {
-                            await history.deletePostData(mainPost.id);
-                            mainPost.postId != null
-                                ? showToast(
-                                    '删除主题 ${mainPost.postId!.toPostNumber()} 的记录')
-                                : showToast('删除主题记录');
-                            isVisible.value = false;
-                          })),
-                      onHiddenText: (context, element, textStyle) =>
-                          onHiddenText(
-                              context: context,
-                              element: element,
-                              textStyle: textStyle),
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          );
-        },
-        noItemsFoundBuilder: (context) => const Center(
-          child: Text('没有主题记录', style: AppTheme.boldRed),
+            return Obx(
+              () => isVisible.value
+                  ? Card(
+                      key: ValueKey(mainPost.id),
+                      margin: const EdgeInsets.symmetric(vertical: 4.0),
+                      elevation: 1.5,
+                      child: PostCard(
+                        post: mainPost.toPost(),
+                        showPostId: mainPost.postId != null ? true : false,
+                        showReplyCount: false,
+                        contentMaxLines: 8,
+                        poUserHash: mainPost.userHash,
+                        onTap: (post) {
+                          if (post.id > 0) {
+                            AppRoutes.toThread(
+                                mainPostId: post.id, mainPost: post);
+                          }
+                        },
+                        onLongPress: (post) => postListDialog(_HistoryDialog(
+                            mainPost: post,
+                            onDelete: () async {
+                              await history.deletePostData(mainPost.id);
+                              mainPost.postId != null
+                                  ? showToast(
+                                      '删除主题 ${mainPost.postId!.toPostNumber()} 的记录')
+                                  : showToast('删除主题记录');
+                              isVisible.value = false;
+                            })),
+                        onHiddenText: (context, element, textStyle) =>
+                            onHiddenText(
+                                context: context,
+                                element: element,
+                                textStyle: textStyle),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            );
+          },
+          noItemsFoundBuilder: (context) => const Center(
+            child: Text('没有主题记录', style: AppTheme.boldRed),
+          ),
         ),
       ),
     );
@@ -501,87 +551,95 @@ class _ReplyHistoryBody extends StatelessWidget {
 
     return PostListRefresher(
       controller: controller,
-      builder: (context, refresh) => BiListView<ReplyData>(
-        key: ValueKey<int>(refresh),
-        initialPage: controller.page,
-        canRefreshAtBottom: false,
-        fetch: (page) => history.replyDataList((page - 1) * _historyEachPage,
-            page * _historyEachPage, controller.getDateRange()),
-        itemBuilder: (context, reply, index) {
-          final isVisible = true.obs;
+      builder: (context, refresh) => ValueListenableBuilder<bool>(
+        valueListenable: controller._getNotifier(_ReplyHistoryBody._index),
+        builder: (context, value, child) => BiListView<ReplyData>(
+          key: ValueKey<_HistoryKey>(_HistoryKey(
+              controller._getDateRange(_ReplyHistoryBody._index),
+              refresh,
+              value)),
+          initialPage: controller.page,
+          canRefreshAtBottom: false,
+          fetch: (page) => history.replyDataList(
+              (page - 1) * _historyEachPage,
+              page * _historyEachPage,
+              controller._getDateRange(_ReplyHistoryBody._index)),
+          itemBuilder: (context, reply, index) {
+            final isVisible = true.obs;
 
-          return Obx(
-            () {
-              final post = reply.toPost();
+            return Obx(
+              () {
+                final post = reply.toPost();
 
-              return isVisible.value
-                  ? Card(
-                      key: ValueKey(reply.id),
-                      margin: const EdgeInsets.symmetric(vertical: 4.0),
-                      elevation: 1.5,
-                      child: InkWell(
-                        onTap: () => AppRoutes.toThread(
-                            mainPostId: reply.mainPostId,
-                            page: reply.page ?? 1,
-                            jumpToId:
-                                (reply.page != null && reply.postId != null)
-                                    ? reply.postId
-                                    : null),
-                        onLongPress: () => postListDialog(_HistoryDialog(
-                            mainPost: reply.toMainPost(),
-                            post: post,
-                            onDelete: () async {
-                              await history.deletePostData(reply.id);
-                              reply.postId != null
-                                  ? showToast(
-                                      '删除回复 ${reply.postId!.toPostNumber()} 的记录')
-                                  : showToast('删除回复记录');
-                              isVisible.value = false;
-                            })),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 10.0, top: 5.0, right: 10.0),
-                              child: DefaultTextStyle.merge(
-                                style: Theme.of(context).textTheme.caption,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Flexible(
-                                        child: Text(
-                                            '主串：${reply.mainPostId.toPostNumber()}')),
-                                    if (reply.page != null)
+                return isVisible.value
+                    ? Card(
+                        key: ValueKey(reply.id),
+                        margin: const EdgeInsets.symmetric(vertical: 4.0),
+                        elevation: 1.5,
+                        child: InkWell(
+                          onTap: () => AppRoutes.toThread(
+                              mainPostId: reply.mainPostId,
+                              page: reply.page ?? 1,
+                              jumpToId:
+                                  (reply.page != null && reply.postId != null)
+                                      ? reply.postId
+                                      : null),
+                          onLongPress: () => postListDialog(_HistoryDialog(
+                              mainPost: reply.toMainPost(),
+                              post: post,
+                              onDelete: () async {
+                                await history.deletePostData(reply.id);
+                                reply.postId != null
+                                    ? showToast(
+                                        '删除回复 ${reply.postId!.toPostNumber()} 的记录')
+                                    : showToast('删除回复记录');
+                                isVisible.value = false;
+                              })),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 10.0, top: 5.0, right: 10.0),
+                                child: DefaultTextStyle.merge(
+                                  style: Theme.of(context).textTheme.caption,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
                                       Flexible(
-                                          child: Text('第 ${reply.page} 页')),
-                                  ],
+                                          child: Text(
+                                              '主串：${reply.mainPostId.toPostNumber()}')),
+                                      if (reply.page != null)
+                                        Flexible(
+                                            child: Text('第 ${reply.page} 页')),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                            PostContent(
-                              post: post,
-                              showPostId: reply.postId != null ? true : false,
-                              showReplyCount: false,
-                              contentMaxLines: 8,
-                              onHiddenText: (context, element, textStyle) =>
-                                  onHiddenText(
-                                context: context,
-                                element: element,
-                                textStyle: textStyle,
+                              PostContent(
+                                post: post,
+                                showPostId: reply.postId != null ? true : false,
+                                showReplyCount: false,
+                                contentMaxLines: 8,
+                                onHiddenText: (context, element, textStyle) =>
+                                    onHiddenText(
+                                  context: context,
+                                  element: element,
+                                  textStyle: textStyle,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    )
-                  : const SizedBox.shrink();
-            },
-          );
-        },
-        noItemsFoundBuilder: (context) => const Center(
-          child: Text('没有回复记录', style: AppTheme.boldRed),
+                      )
+                    : const SizedBox.shrink();
+              },
+            );
+          },
+          noItemsFoundBuilder: (context) => const Center(
+            child: Text('没有回复记录', style: AppTheme.boldRed),
+          ),
         ),
       ),
     );
@@ -627,7 +685,7 @@ class _HistoryBodyState extends State<HistoryBody> {
         children: [
           Obx(
             () {
-              final range = widget.controller.getDateRange();
+              final range = widget.controller._getDateRange();
 
               return range != null
                   ? ListTile(
@@ -640,8 +698,8 @@ class _HistoryBodyState extends State<HistoryBody> {
                       ),
                       trailing: IconButton(
                         onPressed: () {
-                          widget.controller.setDateRange(null);
-                          widget.controller.refreshPage_();
+                          widget.controller._setDateRange(null);
+                          //widget.controller.refreshPage();
                         },
                         icon: const Icon(Icons.close),
                       ),

@@ -14,6 +14,7 @@ import 'content.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
 import 'reference.dart';
+import 'thread.dart';
 
 class _SearchDialog extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -132,14 +133,13 @@ class _TabTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = PostListController.get(index);
-    //final postListType = controller.postListType;
 
     late final Widget title;
     switch (controller.postListType) {
       case PostListType.thread:
       case PostListType.onlyPoThread:
         title = Obx(() {
-          final postId = controller.post?.id;
+          final postId = (controller as ThreadTypeController).post?.id;
           final forumId = controller.post?.forumId;
 
           return Row(
@@ -204,7 +204,7 @@ class _TabList extends StatelessWidget {
               title: _TabTitle(index),
               subtitle: controller.isThreadType
                   ? Obx(() {
-                      final post = controller.post;
+                      final post = (controller as ThreadTypeController).post;
 
                       return post != null
                           ? Content(

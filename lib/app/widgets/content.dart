@@ -4,10 +4,10 @@ import 'package:float_column/float_column.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:html_to_text/html_to_text.dart';
-import 'package:xdnmb/app/utils/hidden_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/services/settings.dart';
+import '../utils/hidden_text.dart';
 import '../utils/regex.dart';
 import '../widgets/image.dart';
 
@@ -45,7 +45,6 @@ class _TextContentState extends State<TextContent> {
       context,
       Regex.replaceHiddenTag(widget.text) ?? widget.text,
       onLinkTap: widget.onLinkTap,
-      // TODO: 解析HTTP链接
       onText: (context, text) => Regex.onText(text),
       onTextRecursiveParse: true,
       onTags: widget.onHiddenText != null
@@ -121,7 +120,6 @@ class _ContentState extends State<Content> {
       context,
       text ?? widget.post.content,
       onLinkTap: widget.onLinkTap,
-      // TODO: 解析HTTP链接
       onText: (context, text) => Regex.onText(text),
       onTextRecursiveParse: true,
       onTags: widget.onHiddenText != null
