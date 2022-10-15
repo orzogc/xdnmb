@@ -9,6 +9,7 @@ import '../../widgets/dialog.dart';
 import '../models/hive.dart';
 import '../models/persistent.dart';
 import 'settings.dart';
+import 'xdnmb_client.dart';
 
 class PersistentDataService extends GetxService {
   static PersistentDataService get to => Get.find<PersistentDataService>();
@@ -44,7 +45,15 @@ class PersistentDataService extends GetxService {
 
   late final ValueListenable<Box> keyboardHeightListenable;
 
-  Future<void> updateNotice(Notice notice) async {
+  Future<void> updateNotice() async {
+    final notice = await XdnmbClientService.to.client.getNotice();
+    if (notice.isValid && this.notice != notice.content) {
+      this.notice = notice.content;
+      SettingsService.to.showNotice = true;
+    }
+  }
+
+  Future<void> updateNoticeAndShow(Notice notice) async {
     final settings = SettingsService.to;
     if (settings.isReady.value && notice.isValid) {
       if (this.notice != notice.content) {

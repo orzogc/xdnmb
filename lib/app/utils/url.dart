@@ -46,8 +46,6 @@ Future<void> launchUri(Uri uri) async {
   }
 }
 
-// TODO: 去掉非中文字符
-
 /// [mainPostId]和[poUserHash]为引用串的主串ID和Po饼干（非被引用串）
 void parseUrl(
     {required String url, Uri? uri, int? mainPostId, String? poUserHash}) {

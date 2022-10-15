@@ -76,7 +76,7 @@ class HistoryController extends PostListController {
   final List<ListenableNotifier> _notifiers = [
     ListenableNotifier(),
     ListenableNotifier(),
-    ListenableNotifier()
+    ListenableNotifier(),
   ];
 
   @override

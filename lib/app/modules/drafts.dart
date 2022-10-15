@@ -12,6 +12,42 @@ import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/post.dart';
 
+class _Screenshot extends StatelessWidget {
+  final PostDraftData draft;
+
+  const _Screenshot(this.draft, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: () async {
+        final overlay = context.loaderOverlay;
+        try {
+          overlay.show();
+          final data = await ScreenshotController().captureFromWidget(
+              Container(
+                  width: 300.0,
+                  color: Colors.white,
+                  child: PostDraft(
+                      title: draft.title,
+                      name: draft.name,
+                      content: draft.content,
+                      textStyle: const TextStyle(color: Colors.black))),
+              context: context);
+
+          showToast('草稿生成图片成功');
+          Get.back<Uint8List>(result: data);
+        } finally {
+          if (overlay.visible) {
+            overlay.hide();
+          }
+        }
+      },
+      icon: const Icon(Icons.screenshot),
+    );
+  }
+}
+
 class PostDraftsController extends GetxController {
   final List<PostDraftData> _deleted = [];
 
@@ -70,40 +106,7 @@ class PostDraftsView extends GetView<PostDraftsController> {
                                         contentMaxLines: 8,
                                       ),
                                     ),
-                                    IconButton(
-                                      onPressed: () async {
-                                        final overlay = context.loaderOverlay;
-                                        try {
-                                          overlay.show();
-                                          final data =
-                                              await ScreenshotController()
-                                                  .captureFromWidget(
-                                                      Container(
-                                                        width: 300.0,
-                                                        color: Colors.white,
-                                                        child: PostDraft(
-                                                          title: draft.title,
-                                                          name: draft.name,
-                                                          content:
-                                                              draft.content,
-                                                          textStyle:
-                                                              const TextStyle(
-                                                            color: Colors.black,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      context: context);
-
-                                          showToast('草稿生成图片成功');
-                                          Get.back<Uint8List>(result: data);
-                                        } finally {
-                                          if (overlay.visible) {
-                                            overlay.hide();
-                                          }
-                                        }
-                                      },
-                                      icon: const Icon(Icons.screenshot),
-                                    ),
+                                    _Screenshot(draft),
                                     IconButton(
                                       onPressed: () => Get.dialog(
                                         ConfirmCancelDialog(

@@ -222,6 +222,11 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
 
         return PopupMenuButton(
           itemBuilder: (context) => [
+            if (mainPost != null && mainPost.forumId != null)
+              PopupMenuItem(
+                onTap: () => showForumRuleDialog(mainPost.forumId!),
+                child: const Text('版规'),
+              ),
             PopupMenuItem(
               onTap: () async {
                 try {

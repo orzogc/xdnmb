@@ -11,14 +11,15 @@ import '../data/services/settings.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/cache.dart';
+import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/navigation.dart';
 import '../utils/text.dart';
+import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'content.dart';
 import 'edit_post.dart';
-import 'forum.dart';
 import 'forum_name.dart';
 import 'loading.dart';
 import 'scroll.dart';
@@ -49,11 +50,13 @@ Future<T?> postListDialog<T>(
       routeSettings: routeSettings,
     );
 
-Future<T?> showNoticeDialog<T>({bool showCheckbox = false}) =>
-    postListDialog<T>(NoticeDialog(showCheckbox: showCheckbox));
+Future<T?> showNoticeDialog<T>(
+        {bool showCheckbox = false, bool isAutoUpdate = false}) =>
+    postListDialog<T>(
+        NoticeDialog(showCheckbox: showCheckbox, isAutoUpdate: isAutoUpdate));
 
-Future<T?> showForumRuleDialog<T>(ForumController controller) =>
-    postListDialog<T>(ForumRuleDialog(controller));
+Future<T?> showForumRuleDialog<T>(int forumId) =>
+    postListDialog<T>(ForumRuleDialog(forumId));
 
 class InputDialog extends StatelessWidget {
   final Widget? title;
@@ -140,10 +143,14 @@ class ConfirmCancelDialog extends StatelessWidget {
 class NoticeDialog extends StatelessWidget {
   final bool showCheckbox;
 
-  const NoticeDialog({super.key, this.showCheckbox = false});
+  final bool isAutoUpdate;
+
+  const NoticeDialog(
+      {super.key, this.showCheckbox = false, this.isAutoUpdate = false});
 
   @override
   Widget build(BuildContext context) {
+    final data = PersistentDataService.to;
     final settings = SettingsService.to;
     final textStyle = Theme.of(context).textTheme.subtitle1;
     final isCheck = false.obs;
@@ -156,10 +163,31 @@ class NoticeDialog extends StatelessWidget {
       contentPadding: const EdgeInsets.fromLTRB(24.0, 10.0, 24.0, 5.0),
       title: const Text('公告'),
       content: SingleChildScrollViewWithScrollbar(
-        child: TextContent(
-          text: PersistentDataService.to.notice,
-          onLinkTap: (context, link) => parseUrl(url: link),
-        ),
+        child: isAutoUpdate
+            ? FutureBuilder<void>(
+                future: data.updateNotice(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done &&
+                      snapshot.hasError) {
+                    showToast(exceptionMessage(snapshot.error!));
+
+                    return const Text('加载失败', style: AppTheme.boldRed);
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return TextContent(
+                      text: data.notice,
+                      onLinkTap: (context, link) => parseUrl(url: link),
+                    );
+                  }
+
+                  return const Center(child: CircularProgressIndicator());
+                },
+              )
+            : TextContent(
+                text: data.notice,
+                onLinkTap: (context, link) => parseUrl(url: link),
+              ),
       ),
       actions: [
         if (showCheckbox)
@@ -197,13 +225,13 @@ class NoticeDialog extends StatelessWidget {
 }
 
 class ForumRuleDialog extends StatelessWidget {
-  final ForumController controller;
+  final int forumId;
 
-  const ForumRuleDialog(this.controller, {super.key});
+  const ForumRuleDialog(this.forumId, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    final forum = ForumListService.to.forum(controller.id);
+    final forum = ForumListService.to.forum(forumId);
 
     return AlertDialog(
       actionsPadding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
@@ -211,7 +239,8 @@ class ForumRuleDialog extends StatelessWidget {
           ? ForumName(
               forumId: forum.id,
               trailing: ' 版规',
-              textStyle: Theme.of(context).textTheme.headline6)
+              textStyle: Theme.of(context).textTheme.headline6,
+              maxLines: 1)
           : const Text('版规'),
       content: SingleChildScrollViewWithScrollbar(
           child: TextContent(

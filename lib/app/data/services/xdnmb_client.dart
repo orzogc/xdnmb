@@ -13,8 +13,6 @@ class XdnmbClientService extends GetxService {
   // TODO: timeout
   final XdnmbApi client;
 
-  Notice? notice;
-
   final RxBool isReady = false.obs;
 
   XdnmbClientService() : client = XdnmbApi();
@@ -26,11 +24,11 @@ class XdnmbClientService extends GetxService {
     try {
       debugPrint('开始获取X岛公告');
 
-      notice = await client.getNotice();
+      final notice = await client.getNotice();
 
       final data = PersistentDataService.to;
       if (data.isReady.value) {
-        data.updateNotice(notice!);
+        data.updateNoticeAndShow(notice);
       }
 
       debugPrint('获取X岛公告成功');

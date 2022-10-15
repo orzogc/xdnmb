@@ -99,10 +99,9 @@ class ForumAppBarPopupMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PopupMenuButton(
         itemBuilder: (context) => [
-          // TODO: 获取实时公告
-          const PopupMenuItem(
-            onTap: showNoticeDialog,
-            child: Text('公告'),
+          PopupMenuItem(
+            onTap: () => showNoticeDialog(isAutoUpdate: true),
+            child: const Text('公告'),
           ),
           PopupMenuItem(
               onTap: () => postListDialog(const Center(
@@ -110,7 +109,7 @@ class ForumAppBarPopupMenuButton extends StatelessWidget {
               child: const Text('岛规')),
           if (controller.isForum)
             PopupMenuItem(
-              onTap: () => showForumRuleDialog(controller as ForumController),
+              onTap: () => showForumRuleDialog(controller.id),
               child: const Text('版规'),
             ),
         ],

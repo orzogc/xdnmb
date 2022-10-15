@@ -43,11 +43,11 @@ class FeedController extends PostListController {
   @override
   int? get id => null;
 
-  FeedController({required int page}) : super(page);
+  FeedController(int page) : super(page);
 }
 
 FeedController feedController(Map<String, String?> parameters) =>
-    FeedController(page: parameters['page'].tryParseInt() ?? 1);
+    FeedController(parameters['page'].tryParseInt() ?? 1);
 
 class FeedAppBarTitle extends StatelessWidget {
   const FeedAppBarTitle({super.key});
