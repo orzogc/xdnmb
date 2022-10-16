@@ -13,5 +13,5 @@ abstract class Settings {
 
   static const String isJumpToLastBrowsePosition = 'isJumpToLastBrowsePosition';
 
-  static const String feedUuid = 'feedUuid';
+  static const String feedId = 'feedId';
 }

@@ -12,6 +12,12 @@ import 'extensions.dart';
 import 'regex.dart';
 import 'toast.dart';
 
+abstract class Urls {
+  static const String appSource = 'https://github.com/orzogc/xdnmb';
+
+  static const String xdnmbSponsor = 'https://afdian.net/a/nmbxd';
+}
+
 Future<void> launchURL(String url) async {
   Uri? uri = Uri.tryParse(url);
   if (uri != null) {

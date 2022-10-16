@@ -23,17 +23,17 @@ import 'post_list.dart';
 class _FeedKey {
   final int refresh;
 
-  final String uuid;
+  final String feedId;
 
-  _FeedKey(this.refresh) : uuid = SettingsService.to.feedUuid;
+  _FeedKey(this.refresh) : feedId = SettingsService.to.feedId;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is _FeedKey && refresh == other.refresh && uuid == other.uuid);
+      (other is _FeedKey && refresh == other.refresh && feedId == other.feedId);
 
   @override
-  int get hashCode => Object.hash(refresh, uuid);
+  int get hashCode => Object.hash(refresh, feedId);
 }
 
 class FeedController extends PostListController {
@@ -74,7 +74,7 @@ class _FeedDialog extends StatelessWidget {
               postListBack();
               try {
                 await XdnmbClientService.to.client
-                    .deleteFeed(SettingsService.to.feedUuid, post.id);
+                    .deleteFeed(SettingsService.to.feedId, post.id);
                 showToast('取消订阅 ${post.id.toPostNumber()} 成功');
                 onDelete();
               } catch (e) {
@@ -104,7 +104,7 @@ class FeedBody extends StatelessWidget {
     final settings = SettingsService.to;
 
     return ValueListenableBuilder<Box>(
-      valueListenable: settings.feedUuidListenable,
+      valueListenable: settings.feedIdListenable,
       builder: (context, value, child) => PostListAnchorRefresher(
         controller: controller,
         builder: (context, anchorController, refresh) =>
@@ -114,7 +114,7 @@ class FeedBody extends StatelessWidget {
           initialPage: controller.page,
           canRefreshAtBottom: false,
           fetch: (page) async =>
-              (await client.getFeed(settings.feedUuid, page: page))
+              (await client.getFeed(settings.feedId, page: page))
                   .map((feed) => PostWithPage(feed, page))
                   .toList(),
           itemBuilder: (context, feed, index) {

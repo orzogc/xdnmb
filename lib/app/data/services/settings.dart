@@ -66,9 +66,9 @@ class SettingsService extends GetxService {
       _settingsBox.put(
           Settings.isJumpToLastBrowsePosition, isJumpToLastBrowsePosition);
 
-  String get feedUuid => _settingsBox.get(Settings.feedUuid);
+  String get feedId => _settingsBox.get(Settings.feedId);
 
-  set feedUuid(String uuid) => _settingsBox.put(Settings.feedUuid, uuid);
+  set feedId(String feedId) => _settingsBox.put(Settings.feedId, feedId);
 
   late final ValueListenable<Box> initialForumListenable;
 
@@ -80,7 +80,7 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> isJumpToLastBrowsePositionListenable;
 
-  late final ValueListenable<Box> feedUuidListenable;
+  late final ValueListenable<Box> feedIdListenable;
 
   Future<void> checkDarkMode() async {
     // 等待生效
@@ -105,8 +105,8 @@ class SettingsService extends GetxService {
       await checkDarkMode();
     });
 
-    if (!_settingsBox.containsKey(Settings.feedUuid)) {
-      feedUuid = const Uuid().v4();
+    if (!_settingsBox.containsKey(Settings.feedId)) {
+      feedId = const Uuid().v4();
     }
 
     initialForumListenable =
@@ -118,7 +118,7 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePage]);
     isJumpToLastBrowsePositionListenable =
         _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePosition]);
-    feedUuidListenable = _settingsBox.listenable(keys: [Settings.feedUuid]);
+    feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
 
     isReady.value = true;
     await checkDarkMode();

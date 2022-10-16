@@ -127,7 +127,7 @@ class _AddFeed extends StatelessWidget {
           postListBack();
           try {
             await XdnmbClientService.to.client
-                .addFeed(SettingsService.to.feedUuid, postId);
+                .addFeed(SettingsService.to.feedId, postId);
             showToast('订阅 ${postId.toPostNumber()} 成功');
           } catch (e) {
             showToast('订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');

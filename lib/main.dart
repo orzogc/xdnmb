@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -16,11 +14,10 @@ import 'app/utils/theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  HttpOverrides.global = CustomHttpOverrides();
+  //HttpOverrides.global = CustomHttpOverrides();
 
   await getDatabasePath();
 
-  // TODO: 错误页面和404页面
   try {
     await initHive();
   } catch (e) {
@@ -72,7 +69,7 @@ class XdnmbApp extends StatelessWidget {
 /// 过滤掉可能出现的证书错误
 ///
 /// 测试用，发布正式版本需要去掉
-class CustomHttpOverrides extends HttpOverrides {
+/* class CustomHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
@@ -88,4 +85,4 @@ class CustomHttpOverrides extends HttpOverrides {
 
     return super.findProxyFromEnvironment(url, environment);
   } */
-}
+} */

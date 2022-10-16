@@ -1,23 +1,155 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/services/settings.dart';
 import '../routes/routes.dart';
 import '../utils/theme.dart';
+import '../utils/toast.dart';
+import '../utils/url.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
 
-class _EditFeedUuid extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  _EditFeedUuid({super.key});
+class _InitialForum extends StatelessWidget {
+  const _InitialForum({super.key});
 
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
-    final uuid = settings.feedUuid.obs;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.initialForumListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('应用启动时显示的板块'),
+        trailing: TextButton(
+          onPressed: () => Get.dialog(SelectForum(onSelect: (forum) {
+            settings.initialForum = forum.copy();
+            Get.back();
+          })),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 150),
+            child: ForumName(
+              forumId: settings.initialForum.id,
+              isTimeline: settings.initialForum.isTimeline,
+              textStyle: TextStyle(
+                color:
+                    Get.isDarkMode ? Colors.white : AppTheme.primaryColorLight,
+              ),
+              maxLines: 1,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ShowImage extends StatelessWidget {
+  const _ShowImage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.showImageListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('显示图片'),
+        trailing: Switch(
+          value: settings.showImage,
+          onChanged: (value) => settings.showImage = value,
+        ),
+      ),
+    );
+  }
+}
+
+class _Watermark extends StatelessWidget {
+  const _Watermark({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.isWatermarkListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('发送图片默认附带水印'),
+        trailing: Switch(
+          value: settings.isWatermark,
+          onChanged: (value) => settings.isWatermark = value,
+        ),
+      ),
+    );
+  }
+}
+
+class _AutoJumpPage extends StatelessWidget {
+  const _AutoJumpPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.isJumpToLastBrowsePageListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('打开串时自动跳转到最近浏览的页数'),
+        trailing: Switch(
+          value: settings.isJumpToLastBrowsePage,
+          onChanged: (value) => settings.isJumpToLastBrowsePage = value,
+        ),
+      ),
+    );
+  }
+}
+
+class _AutoJumpPosition extends StatelessWidget {
+  const _AutoJumpPosition({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.isJumpToLastBrowsePageListenable,
+      builder: (context, value, child) => ValueListenableBuilder<Box>(
+        valueListenable: settings.isJumpToLastBrowsePositionListenable,
+        builder: (context, value, child) => ListTile(
+          title: child,
+          trailing: Switch(
+            value: settings.isJumpToLastBrowsePosition,
+            onChanged: settings.isJumpToLastBrowsePage
+                ? (value) => settings.isJumpToLastBrowsePosition = value
+                : null,
+          ),
+        ),
+        child: Text(
+          '自动跳转页数时跳转到最近浏览的位置',
+          style: TextStyle(
+            color: settings.isJumpToLastBrowsePage
+                ? null
+                : Get.isDarkMode
+                    ? AppTheme.primaryColorDark
+                    : Colors.grey,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EditFeedId extends StatelessWidget {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  _EditFeedId({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    final feedId = settings.feedId.obs;
     String? id;
 
     return InputDialog(
@@ -25,10 +157,10 @@ class _EditFeedUuid extends StatelessWidget {
         key: _formKey,
         child: Obx(
           () => TextFormField(
-            key: ValueKey<String>(uuid.value),
+            key: ValueKey<String>(feedId.value),
             decoration: const InputDecoration(labelText: '订阅ID'),
             autofocus: true,
-            initialValue: uuid.value,
+            initialValue: feedId.value,
             onSaved: (newValue) => id = newValue,
             validator: (value) =>
                 (value == null || value.isEmpty) ? '请输入订阅ID' : null,
@@ -37,7 +169,7 @@ class _EditFeedUuid extends StatelessWidget {
       ),
       actions: [
         ElevatedButton(
-          onPressed: () => uuid.value = const Uuid().v4(),
+          onPressed: () => feedId.value = const Uuid().v4(),
           child: const Text('生成UUID'),
         ),
         ElevatedButton(
@@ -45,7 +177,7 @@ class _EditFeedUuid extends StatelessWidget {
             if (_formKey.currentState!.validate()) {
               _formKey.currentState!.save();
 
-              settings.feedUuid = id!;
+              settings.feedId = id!;
               Get.back();
             }
           },
@@ -54,6 +186,67 @@ class _EditFeedUuid extends StatelessWidget {
       ],
     );
   }
+}
+
+class _FeedId extends StatelessWidget {
+  const _FeedId({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.feedIdListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('订阅ID'),
+        subtitle: Text(settings.feedId),
+        trailing: child,
+      ),
+      child: TextButton(
+        onPressed: () => Get.dialog(_EditFeedId()),
+        child: const Text('编辑'),
+      ),
+    );
+  }
+}
+
+class _AppSource extends StatelessWidget {
+  const _AppSource({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        title: const Text('源码'),
+        subtitle: const Text(Urls.appSource),
+        onTap: () => launchURL(Urls.appSource),
+      );
+}
+
+class _AppVersion extends StatelessWidget {
+  const _AppVersion({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        title: const Text('版本'),
+        subtitle: FutureBuilder<String>(
+          future: Future(() async {
+            final info = await PackageInfo.fromPlatform();
+            return info.version;
+          }),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done &&
+                snapshot.hasData) {
+              return Text('${snapshot.data}');
+            }
+
+            if (snapshot.connectionState == ConnectionState.done &&
+                snapshot.hasError) {
+              showToast('获取版本号出现错误：${snapshot.error}');
+            }
+
+            return const SizedBox.shrink();
+          },
+        ),
+      );
 }
 
 class SettingsController extends GetxController {}
@@ -69,111 +262,24 @@ class SettingsView extends GetView<SettingsController> {
   const SettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('设置'),
-      ),
-      body: ListView(
-        children: [
-          const ListTile(title: Text('饼干'), onTap: AppRoutes.toUser),
-          const ListTile(title: Text('黑名单'), onTap: AppRoutes.toBlacklist),
-          ValueListenableBuilder<Box>(
-            valueListenable: settings.initialForumListenable,
-            builder: (context, value, child) => ListTile(
-              title: const Text('应用启动时显示的板块'),
-              trailing: TextButton(
-                onPressed: () => Get.dialog(SelectForum(onSelect: (forum) {
-                  settings.initialForum = forum.copy();
-                  Get.back();
-                })),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 150),
-                  child: ForumName(
-                    forumId: settings.initialForum.id,
-                    isTimeline: settings.initialForum.isTimeline,
-                    textStyle: TextStyle(
-                      color: Get.isDarkMode
-                          ? Colors.white
-                          : AppTheme.primaryColorLight,
-                    ),
-                    maxLines: 1,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          ValueListenableBuilder<Box>(
-            valueListenable: settings.showImageListenable,
-            builder: (context, value, child) => ListTile(
-              title: const Text('显示图片'),
-              trailing: Switch(
-                value: settings.showImage,
-                onChanged: (value) => settings.showImage = value,
-              ),
-            ),
-          ),
-          ValueListenableBuilder<Box>(
-            valueListenable: settings.isWatermarkListenable,
-            builder: (context, value, child) => ListTile(
-              title: const Text('发送图片默认附带水印'),
-              trailing: Switch(
-                value: settings.isWatermark,
-                onChanged: (value) => settings.isWatermark = value,
-              ),
-            ),
-          ),
-          ValueListenableBuilder<Box>(
-            valueListenable: settings.isJumpToLastBrowsePageListenable,
-            builder: (context, value, child) => ListTile(
-              title: const Text('打开串时自动跳转到最近浏览的页数'),
-              trailing: Switch(
-                value: settings.isJumpToLastBrowsePage,
-                onChanged: (value) => settings.isJumpToLastBrowsePage = value,
-              ),
-            ),
-          ),
-          ValueListenableBuilder<Box>(
-            valueListenable: settings.isJumpToLastBrowsePageListenable,
-            builder: (context, value, child) => ValueListenableBuilder<Box>(
-              valueListenable: settings.isJumpToLastBrowsePositionListenable,
-              builder: (context, value, child) => ListTile(
-                title: child,
-                trailing: Switch(
-                  value: settings.isJumpToLastBrowsePosition,
-                  onChanged: settings.isJumpToLastBrowsePage
-                      ? (value) => settings.isJumpToLastBrowsePosition = value
-                      : null,
-                ),
-              ),
-              child: Text(
-                '自动跳转页数时跳转到最近浏览的位置',
-                style: TextStyle(
-                  color: settings.isJumpToLastBrowsePage
-                      ? null
-                      : Get.isDarkMode
-                          ? AppTheme.primaryColorDark
-                          : Colors.grey,
-                ),
-              ),
-            ),
-          ),
-          ValueListenableBuilder<Box>(
-            valueListenable: settings.feedUuidListenable,
-            builder: (context, value, child) => ListTile(
-              title: const Text('订阅ID'),
-              subtitle: Text(settings.feedUuid),
-              trailing: child,
-            ),
-            child: TextButton(
-              onPressed: () => Get.dialog(_EditFeedUuid()),
-              child: const Text('编辑'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: const Text('设置'),
+        ),
+        body: ListView(
+          children: const [
+            ListTile(title: Text('饼干'), onTap: AppRoutes.toUser),
+            ListTile(title: Text('黑名单'), onTap: AppRoutes.toBlacklist),
+            _InitialForum(),
+            _ShowImage(),
+            _Watermark(),
+            _AutoJumpPage(),
+            _AutoJumpPosition(),
+            _FeedId(),
+            ListTile(title: Text('作者'), subtitle: Text('Orzogc')),
+            _AppSource(),
+            _AppVersion(),
+          ],
+        ),
+      );
 }

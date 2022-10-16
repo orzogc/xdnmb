@@ -231,7 +231,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
               onTap: () async {
                 try {
                   await XdnmbClientService.to.client
-                      .addFeed(SettingsService.to.feedUuid, postId);
+                      .addFeed(SettingsService.to.feedId, postId);
                   showToast('订阅 ${postId.toPostNumber()} 成功');
                 } catch (e) {
                   showToast(

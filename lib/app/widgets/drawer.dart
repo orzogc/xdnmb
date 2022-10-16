@@ -239,8 +239,6 @@ class _TabList extends StatelessWidget {
 }
 
 class _SponsorDialog extends StatelessWidget {
-  static const String _xdnmbSponsor = 'https://afdian.net/a/nmbxd';
-
   const _SponsorDialog({super.key});
 
   @override
@@ -254,7 +252,7 @@ class _SponsorDialog extends StatelessWidget {
           child: Text('赞助客户端作者', style: textStyle),
         ),
         SimpleDialogOption(
-          onPressed: () => launchURL(_xdnmbSponsor),
+          onPressed: () => launchURL(Urls.xdnmbSponsor),
           child: Text('赞助X岛匿名版官方', style: textStyle),
         ),
       ],
