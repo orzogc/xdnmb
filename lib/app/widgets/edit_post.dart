@@ -420,77 +420,161 @@ class _ShowEmoticon extends StatelessWidget {
 
 typedef _InsertTextCallback = void Function(String text, [int? offset]);
 
-class _Dice extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
+class _DiceDialog extends StatefulWidget {
   final _InsertTextCallback onDice;
 
-  _Dice({super.key, required this.onDice});
+  const _DiceDialog({super.key, required this.onDice});
 
   @override
-  Widget build(BuildContext context) {
+  State<_DiceDialog> createState() => _DiceDialogState();
+}
+
+class _DiceDialogState extends State<_DiceDialog> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  late final TextEditingController _lowerController;
+
+  late final TextEditingController _upperController;
+
+  @override
+  void initState() {
+    super.initState();
+
     final data = PersistentDataService.to;
-    String? lower;
-    String? upper;
-
-    return IconButton(
-      onPressed: () => Get.dialog(
-        InputDialog(
-          title: const Text('骰子范围'),
-          content: Form(
-            key: _formKey,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                SizedBox(
-                  width: 80,
-                  child: TextFormField(
-                    decoration: const InputDecoration(hintText: '下限'),
-                    initialValue: '${data.diceLower}',
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    onSaved: (newValue) => lower = newValue,
-                    validator: (value) =>
-                        value.tryParseInt() == null ? '请输入下限' : null,
-                  ),
-                ),
-                const Text('—'),
-                SizedBox(
-                  width: 80,
-                  child: TextFormField(
-                    decoration: const InputDecoration(hintText: '上限'),
-                    initialValue: '${data.diceUpper}',
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    onSaved: (newValue) => upper = newValue,
-                    validator: (value) =>
-                        value.tryParseInt() == null ? '请输入上限' : null,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
-
-                  data.diceLower = int.parse(lower!);
-                  data.diceUpper = int.parse(upper!);
-
-                  onDice('[$lower,$upper]');
-                  Get.back();
-                }
-              },
-              child: const Text('确定'),
-            ),
-          ],
-        ),
-      ),
-      icon: const Icon(AppIcons.dice, size: 18.0),
-    );
+    _lowerController = TextEditingController(text: '${data.diceLower}');
+    _upperController = TextEditingController(text: '${data.diceUpper}');
   }
+
+  @override
+  void dispose() {
+    _lowerController.dispose();
+    _upperController.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => InputDialog(
+        title: const Text('骰子范围'),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Flexible(
+                    child: IconButton(
+                      onPressed: () {
+                        final number = _lowerController.text.tryParseInt();
+                        if (number != null) {
+                          _lowerController.text = '${number - 1}';
+                        }
+                      },
+                      icon: const Icon(Icons.chevron_left),
+                    ),
+                  ),
+                  Flexible(
+                    child: SizedBox(
+                      width: 80,
+                      child: TextFormField(
+                        controller: _lowerController,
+                        decoration: const InputDecoration(hintText: '下限'),
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        validator: (value) =>
+                            value.tryParseInt() == null ? '请输入数字' : null,
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: IconButton(
+                      onPressed: () {
+                        final number = _lowerController.text.tryParseInt();
+                        if (number != null) {
+                          _lowerController.text = '${number + 1}';
+                        }
+                      },
+                      icon: const Icon(Icons.chevron_right),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10.0),
+              const Text('|'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Flexible(
+                    child: IconButton(
+                      onPressed: () {
+                        final number = _upperController.text.tryParseInt();
+                        if (number != null) {
+                          _upperController.text = '${number - 1}';
+                        }
+                      },
+                      icon: const Icon(Icons.chevron_left),
+                    ),
+                  ),
+                  Flexible(
+                    child: SizedBox(
+                      width: 80,
+                      child: TextFormField(
+                        controller: _upperController,
+                        decoration: const InputDecoration(hintText: '上限'),
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        validator: (value) =>
+                            value.tryParseInt() == null ? '请输入数字' : null,
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: IconButton(
+                      onPressed: () {
+                        final number = _upperController.text.tryParseInt();
+                        if (number != null) {
+                          _upperController.text = '${number + 1}';
+                        }
+                      },
+                      icon: const Icon(Icons.chevron_right),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                final data = PersistentDataService.to;
+                data.diceLower = int.parse(_lowerController.text);
+                data.diceUpper = int.parse(_upperController.text);
+
+                widget.onDice(
+                    '[${_lowerController.text},${_upperController.text}]');
+                Get.back();
+              }
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      );
+}
+
+class _Dice extends StatelessWidget {
+  final _InsertTextCallback onDice;
+
+  const _Dice({super.key, required this.onDice});
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+        onPressed: () => Get.dialog(_DiceDialog(onDice: onDice)),
+        icon: const Icon(AppIcons.dice, size: 18.0),
+      );
 }
 
 class _Paint extends StatelessWidget {
