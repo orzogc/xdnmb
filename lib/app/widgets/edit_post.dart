@@ -1382,6 +1382,7 @@ class EditPostState extends State<EditPost> {
                 Flexible(child: PickImage(onPickImage: (path) {
                   debugPrint('image path: $path');
                   _imagePath.value = path;
+                  _imageData.value = null;
                 })),
                 Flexible(child: _Dice(onDice: insertText)),
                 Flexible(
