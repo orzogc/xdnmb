@@ -39,7 +39,7 @@ class XdnmbApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'X岛匿名版',
+      title: 'X岛',
       initialBinding: servicesBindings(),
       getPages: getPages,
       initialRoute: AppRoutes.timelineUrl(1),

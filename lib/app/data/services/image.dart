@@ -28,6 +28,16 @@ class ImageService extends GetxService {
       }
     }
 
+    if (GetPlatform.isIOS) {
+      PermissionStatus status = await Permission.photos.status;
+      if (status.isDenied) {
+        status = await Permission.photos.request();
+      }
+      if (!status.isGranted) {
+        showToast('读取图库图片需要图库权限');
+      }
+    }
+
     if (isGranted) {
       try {
         savePath = await picturesPath();

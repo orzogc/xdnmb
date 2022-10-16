@@ -16,7 +16,7 @@ publish_to: 'none'
 version: 0.1.0+1
 
 environment:
-  sdk: ">=2.17.6 <3.0.0"
+  sdk: ">=2.18.2 <3.0.0"
 
 dependencies:
   align_positioned: ^3.0.0
@@ -68,7 +68,7 @@ dev_dependencies:
   flutter_lints: ^2.0.1
   flutter_test:
     sdk: flutter
-  hive_generator: ^1.1.3
+  hive_generator: ^2.0.0
   isar_generator: ^3.0.2
 
 flutter:
