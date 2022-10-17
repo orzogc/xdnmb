@@ -41,9 +41,7 @@ class _PostUser extends StatelessWidget {
       textStyle: TextStyle(
         color: isAdmin
             ? Colors.red
-            : isPo
-                ? poTextColor
-                : defaultStyle.style.color,
+            : (isPo ? poTextColor : defaultStyle.style.color),
         fontWeight: isPo ? FontWeight.bold : defaultStyle.style.fontWeight,
       ),
     );
@@ -109,15 +107,18 @@ class _PostTitle extends StatelessWidget {
   const _PostTitle(this.title, {super.key});
 
   @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          const Text('标题：', style: TextStyle(color: PostContent._headerColor)),
-          htmlToRichText(
-            context,
-            title,
-            textStyle: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ],
+  Widget build(BuildContext context) => RichText(
+        text: TextSpan(
+          text: '标题：',
+          children: [
+            htmlToTextSpan(
+              context,
+              title,
+              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+          style: const TextStyle(color: PostContent._headerColor),
+        ),
       );
 }
 
@@ -127,15 +128,18 @@ class _PostName extends StatelessWidget {
   const _PostName(this.name, {super.key});
 
   @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          const Text('名称：', style: TextStyle(color: PostContent._headerColor)),
-          htmlToRichText(
-            context,
-            name,
-            textStyle: const TextStyle(fontWeight: FontWeight.bold),
-          )
-        ],
+  Widget build(BuildContext context) => RichText(
+        text: TextSpan(
+          text: '名称：',
+          children: [
+            htmlToTextSpan(
+              context,
+              name,
+              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+          style: const TextStyle(color: PostContent._headerColor),
+        ),
       );
 }
 
@@ -299,9 +303,7 @@ class PostContent extends StatelessWidget {
                       ),
                     ),
                     if (showPostId)
-                      Flexible(
-                          child: _PostId(
-                              postId: post.id, onPostIdTap: onPostIdTap)),
+                      _PostId(postId: post.id, onPostIdTap: onPostIdTap),
                     if (showForumName && forumId != null)
                       Flexible(child: ForumName(forumId: forumId, maxLines: 1)),
                     if (showReplyCount && replyCount != null)

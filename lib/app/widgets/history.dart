@@ -162,13 +162,13 @@ class HistoryAppBarTitle extends StatelessWidget {
       late final String text;
       switch (controller.bottomBarIndex) {
         case _BrowseHistoryBody._index:
-          text = '浏览历史记录';
+          text = '浏览';
           break;
         case _PostHistoryBody._index:
-          text = '主题历史记录';
+          text = '主题';
           break;
         case _ReplyHistoryBody._index:
-          text = '回复历史记录';
+          text = '回复';
           break;
         default:
           text = '历史记录';
@@ -414,21 +414,17 @@ class _BrowseHistoryBody extends StatelessWidget {
                                   left: 10.0, top: 5.0, right: 10.0),
                               child: DefaultTextStyle.merge(
                                 style: Theme.of(context).textTheme.caption,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                child: OverflowBar(
+                                  spacing: 5.0,
+                                  alignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Flexible(
-                                      child: Text(
-                                        '最后浏览时间：${formatTime(browse.browseTime)}',
-                                      ),
+                                    Text(
+                                      '最后浏览时间：${formatTime(browse.browseTime)}',
                                     ),
                                     if (browsePage != null &&
                                         browsePostId != null)
-                                      Flexible(
-                                        child: Text(
-                                          '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
-                                        ),
+                                      Text(
+                                        '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
                                       ),
                                   ],
                                 ),
@@ -436,6 +432,7 @@ class _BrowseHistoryBody extends StatelessWidget {
                             ),
                             PostContent(
                               post: browse,
+                              showFullTime: false,
                               showReplyCount: false,
                               contentMaxLines: 8,
                               poUserHash: browse.userHash,
@@ -499,6 +496,7 @@ class _PostHistoryBody extends StatelessWidget {
                       elevation: 1.5,
                       child: PostCard(
                         post: mainPost.toPost(),
+                        showFullTime: false,
                         showPostId: mainPost.postId != null ? true : false,
                         showReplyCount: false,
                         contentMaxLines: 8,
@@ -608,11 +606,14 @@ class _ReplyHistoryBody extends StatelessWidget {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Flexible(
-                                          child: Text(
-                                              '主串：${reply.mainPostId.toPostNumber()}')),
+                                        child: Text(
+                                          '主串：${reply.mainPostId.toPostNumber()}',
+                                        ),
+                                      ),
                                       if (reply.page != null)
                                         Flexible(
-                                            child: Text('第 ${reply.page} 页')),
+                                          child: Text('第 ${reply.page} 页'),
+                                        ),
                                     ],
                                   ),
                                 ),

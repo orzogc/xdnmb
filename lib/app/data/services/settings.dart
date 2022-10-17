@@ -11,6 +11,8 @@ import '../models/settings.dart';
 class SettingsService extends GetxService {
   static SettingsService get to => Get.find<SettingsService>();
 
+  static bool isFixMissingFont = false;
+
   late final Box _settingsBox;
 
   final RxBool hasBeenDarkMode = false.obs;
@@ -70,6 +72,12 @@ class SettingsService extends GetxService {
 
   set feedId(String feedId) => _settingsBox.put(Settings.feedId, feedId);
 
+  bool get fixMissingFont =>
+      _settingsBox.get(Settings.fixMissingFont, defaultValue: false);
+
+  set fixMissingFont(bool fixMissingFont) =>
+      _settingsBox.put(Settings.fixMissingFont, fixMissingFont);
+
   late final ValueListenable<Box> initialForumListenable;
 
   late final ValueListenable<Box> showImageListenable;
@@ -81,6 +89,13 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> isJumpToLastBrowsePositionListenable;
 
   late final ValueListenable<Box> feedIdListenable;
+
+  late final ValueListenable<Box> fixMissingFontListenable;
+
+  static Future<void> getIsFixMissingFont() async {
+    final box = await Hive.openBox(HiveBoxName.settings);
+    isFixMissingFont = box.get(Settings.fixMissingFont, defaultValue: false);
+  }
 
   Future<void> checkDarkMode() async {
     // 等待生效
@@ -119,6 +134,8 @@ class SettingsService extends GetxService {
     isJumpToLastBrowsePositionListenable =
         _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePosition]);
     feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
+    fixMissingFontListenable =
+        _settingsBox.listenable(keys: [Settings.fixMissingFont]);
 
     isReady.value = true;
     await checkDarkMode();

@@ -190,34 +190,44 @@ class NoticeDialog extends StatelessWidget {
               ),
       ),
       actions: [
-        if (showCheckbox)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 5.0),
-                child: Obx(
-                  () => Checkbox(
-                    value: isCheck.value,
-                    onChanged: (value) {
-                      if (value != null) {
-                        isCheck.value = value;
-                      }
-                    },
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (showCheckbox)
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5.0),
+                    child: Obx(
+                      () => Checkbox(
+                        value: isCheck.value,
+                        onChanged: (value) {
+                          if (value != null) {
+                            isCheck.value = value;
+                          }
+                        },
+                      ),
+                    ),
                   ),
-                ),
+                  Text('不再提示此条公告', style: textStyle),
+                ],
               ),
-              Text('不再提示此条公告', style: textStyle),
-            ],
-          ),
-        TextButton(
-          onPressed: () {
-            if (showCheckbox) {
-              settings.showNotice = !isCheck.value;
-            }
-            postListBack();
-          },
-          child: Text('确定', style: TextStyle(fontSize: textStyle?.fontSize)),
+            Row(
+              children: [
+                const Spacer(),
+                TextButton(
+                  onPressed: () {
+                    if (showCheckbox) {
+                      settings.showNotice = !isCheck.value;
+                    }
+                    postListBack();
+                  },
+                  child: Text('确定',
+                      style: TextStyle(fontSize: textStyle?.fontSize)),
+                ),
+              ],
+            ),
+          ],
         )
       ],
     );

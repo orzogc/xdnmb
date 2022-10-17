@@ -131,6 +131,7 @@ class FeedBody extends StatelessWidget {
                         elevation: 1.5,
                         child: PostCard(
                           post: feed.post,
+                          showFullTime: false,
                           contentMaxLines: 8,
                           poUserHash: feed.post.userHash,
                           onTap: (post) => AppRoutes.toThread(

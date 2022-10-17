@@ -210,6 +210,27 @@ class _FeedId extends StatelessWidget {
   }
 }
 
+class _FixMissingFont extends StatelessWidget {
+  const _FixMissingFont({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.fixMissingFontListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('修复字体显示'),
+        subtitle: const Text('字体显示不正常可以尝试开启此项，需要重启应用'),
+        trailing: Switch(
+          value: settings.fixMissingFont,
+          onChanged: (value) => settings.fixMissingFont = value,
+        ),
+      ),
+    );
+  }
+}
+
 class _AppSource extends StatelessWidget {
   const _AppSource({super.key});
 
@@ -276,8 +297,13 @@ class SettingsView extends GetView<SettingsController> {
             _AutoJumpPage(),
             _AutoJumpPosition(),
             _FeedId(),
+            _FixMissingFont(),
             ListTile(title: Text('作者'), subtitle: Text('Orzogc')),
             _AppSource(),
+            ListTile(
+              title: Text('开源许可证'),
+              subtitle: Text('GNU Affero General Public License Version 3'),
+            ),
             _AppVersion(),
           ],
         ),

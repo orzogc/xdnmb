@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
 import 'app/data/services/services.dart';
+import 'app/data/services/settings.dart';
 import 'app/routes/pages.dart';
 import 'app/routes/routes.dart';
 import 'app/utils/directory.dart';
@@ -28,6 +29,7 @@ void main() async {
     debugPrint('初始化Hive失败：$e');
     return;
   }
+  await SettingsService.getIsFixMissingFont();
 
   runApp(const XdnmbApp());
 
@@ -70,7 +72,7 @@ class XdnmbApp extends StatelessWidget {
   }
 }
 
-/// Let’s Encrypt的旧根证书过期导致部分旧手机无法访问A岛链接
+/// Let’s Encrypt的旧根证书过期导致部分旧手机无法访问X岛链接
 Future<void> addCert() async {
   if (GetPlatform.isAndroid) {
     final data =
