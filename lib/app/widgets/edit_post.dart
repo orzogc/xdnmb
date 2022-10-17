@@ -17,6 +17,7 @@ import '../data/services/draft.dart';
 import '../data/services/emoticon.dart';
 import '../data/services/forum.dart';
 import '../data/services/history.dart';
+import '../data/services/image.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../data/services/user.dart';
@@ -700,6 +701,8 @@ class _Post extends StatelessWidget {
 
   final String? reportReason;
 
+  final bool isPainted;
+
   final _GetText getTitle;
 
   final _GetText getName;
@@ -715,6 +718,7 @@ class _Post extends StatelessWidget {
       this.isWatermark,
       this.imageData,
       this.reportReason,
+      required this.isPainted,
       required this.getTitle,
       required this.getName,
       required this.getContent,
@@ -869,17 +873,32 @@ class _Post extends StatelessWidget {
                       saveReply(reply);
                     }
                   },
-                  onError: (e) {
+                  onError: (e) async {
                     if (title.isNotEmpty ||
                         name.isNotEmpty ||
                         content.isNotEmpty) {
-                      PostDraftListService.to.addDraft(PostDraftData(
+                      await PostDraftListService.to.addDraft(PostDraftData(
                           title: title.isNotEmpty ? title : null,
                           name: name.isNotEmpty ? name : null,
                           content: content.isNotEmpty ? content : null));
-                      showToast('发串失败，内容已保存为草稿：${exceptionMessage(e)}');
+
+                      if (isPainted &&
+                          imageData != null &&
+                          await saveImageData(imageData!)) {
+                        showToast(
+                            '发串失败，内容已保存为草稿，图片保存在 ${ImageService.to.savePath} ：${exceptionMessage(e)}');
+                      } else {
+                        showToast('发串失败，内容已保存为草稿：${exceptionMessage(e)}');
+                      }
                     } else {
-                      showToast('发串失败：${exceptionMessage(e)}');
+                      if (isPainted &&
+                          imageData != null &&
+                          await saveImageData(imageData!)) {
+                        showToast(
+                            '发串失败，图片保存在 ${ImageService.to.savePath} ：${exceptionMessage(e)}');
+                      } else {
+                        showToast('发串失败：${exceptionMessage(e)}');
+                      }
                     }
                   },
                 );
@@ -1496,6 +1515,8 @@ class EditPostState extends State<EditPost> {
                       forumId: _forumId.value,
                       isWatermark: _isWatermark.value,
                       imageData: _imageData.value,
+                      isPainted:
+                          _imagePath.value == null && _imageData.value != null,
                       reportReason: (_postList.value.postListType.isForum &&
                               _forumId.value == EditPost.dutyRoomId)
                           ? _reportReason.value

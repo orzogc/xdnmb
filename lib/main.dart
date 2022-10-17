@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
@@ -16,8 +19,9 @@ void main() async {
 
   //HttpOverrides.global = CustomHttpOverrides();
 
-  await getDatabasePath();
+  await addCert();
 
+  await getDatabasePath();
   try {
     await initHive();
   } catch (e) {
@@ -63,6 +67,16 @@ class XdnmbApp extends StatelessWidget {
       ],
       debugShowCheckedModeBanner: false,
     );
+  }
+}
+
+/// Let’s Encrypt的旧根证书过期导致部分旧手机无法访问A岛链接
+Future<void> addCert() async {
+  if (GetPlatform.isAndroid) {
+    final data =
+        await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
+    SecurityContext.defaultContext
+        .setTrustedCertificatesBytes(data.buffer.asInt8List());
   }
 }
 

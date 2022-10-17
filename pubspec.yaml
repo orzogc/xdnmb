@@ -76,6 +76,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  assets:
+    - assets/ca/lets-encrypt-r3.pem
+
   fonts:
     - family: DiceIcon
       fonts:

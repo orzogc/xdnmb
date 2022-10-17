@@ -36,7 +36,8 @@ Image? getImage(Uint8List imageData) {
   return null;
 }
 
-Future<void> saveImageData(Uint8List imageData) async {
+Future<bool> saveImageData(Uint8List imageData,
+    [bool isShowSuccessMessage = true]) async {
   final image = ImageService.to;
 
   if (image.savePath != null) {
@@ -45,11 +46,18 @@ Future<void> saveImageData(Uint8List imageData) async {
       final path = join(image.savePath!, filename);
       final file = File(path);
       await file.writeAsBytes(imageData);
-      showToast('图片保存在 ${image.savePath}');
+
+      if (isShowSuccessMessage) {
+        showToast('图片保存在 ${image.savePath}');
+      }
+
+      return true;
     } catch (e) {
       showToast('保存图片失败：$e');
+      return false;
     }
   } else {
     showToast('没有存储权限无法保存图片');
+    return false;
   }
 }

@@ -278,6 +278,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
       padding: const EdgeInsets.all(4.0),
       child: EasyRefresh(
         controller: _refreshController,
+        header: const MaterialHeader(clamping: false),
+        footer: widget.lastPage == null
+            ? const MaterialFooter(clamping: false)
+            : null,
         onRefresh: () async {
           if (!_isRefreshing) {
             await _refresh();
@@ -291,10 +295,6 @@ class _BiListViewState<T> extends State<BiListView<T>>
                   _refreshController?.finishLoad();
                 }
               }
-            : null,
-        header: const MaterialHeader(clamping: false),
-        footer: widget.lastPage == null
-            ? const MaterialFooter(clamping: false)
             : null,
         noMoreRefresh: true,
         noMoreLoad: widget.lastPage == null ? true : false,
