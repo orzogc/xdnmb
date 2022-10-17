@@ -368,7 +368,7 @@ class _BrowseHistoryBody extends StatelessWidget {
               refresh,
               value)),
           initialPage: controller.page,
-          canRefreshAtBottom: false,
+          canLoadMoreAtBottom: false,
           fetch: (page) => history.browseHistoryList(
               (page - 1) * _historyEachPage,
               page * _historyEachPage,
@@ -480,7 +480,7 @@ class _PostHistoryBody extends StatelessWidget {
               refresh,
               value)),
           initialPage: controller.page,
-          canRefreshAtBottom: false,
+          canLoadMoreAtBottom: false,
           fetch: (page) => history.postDataList(
               (page - 1) * _historyEachPage,
               page * _historyEachPage,
@@ -557,7 +557,7 @@ class _ReplyHistoryBody extends StatelessWidget {
               refresh,
               value)),
           initialPage: controller.page,
-          canRefreshAtBottom: false,
+          canLoadMoreAtBottom: false,
           fetch: (page) => history.replyDataList(
               (page - 1) * _historyEachPage,
               page * _historyEachPage,

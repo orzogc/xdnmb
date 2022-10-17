@@ -1,5 +1,6 @@
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 import 'loading.dart';
@@ -18,7 +19,7 @@ class BiListView<T> extends StatefulWidget {
 
   final int? lastPage;
 
-  final bool canRefreshAtBottom;
+  final bool canLoadMoreAtBottom;
 
   final FetchPage<T> fetch;
 
@@ -38,7 +39,7 @@ class BiListView<T> extends StatefulWidget {
       required this.initialPage,
       this.firstPage = 1,
       this.lastPage,
-      this.canRefreshAtBottom = true,
+      this.canLoadMoreAtBottom = true,
       required this.fetch,
       required this.itemBuilder,
       this.separator,
@@ -70,6 +71,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
   int _lastPage = 0;
 
   int _itemListLength = 0;
+
+  late final ScrollController _scrollController;
+
+  final RxBool _isOutOfBoundary = true.obs;
 
   Future<void> _fetchUpPage(int page) async {
     final lastPage = widget.lastPage;
@@ -189,6 +194,17 @@ class _BiListViewState<T> extends State<BiListView<T>>
     );
   }
 
+  void _checkBoundary() {
+    final position = _scrollController.position;
+
+    if (position.pixels >= position.maxScrollExtent ||
+        position.pixels <= position.minScrollExtent) {
+      _isOutOfBoundary.value = true;
+    } else {
+      _isOutOfBoundary.value = false;
+    }
+  }
+
   @override
   bool get wantKeepAlive => true;
 
@@ -202,6 +218,9 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
     _pagingUpController!.addPageRequestListener(_fetchUpPage);
     _pagingDownController!.addPageRequestListener(_fetchDownPage);
+
+    _scrollController = widget.controller ?? ScrollController();
+    _scrollController.addListener(_checkBoundary);
   }
 
   @override
@@ -212,6 +231,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
     _pagingDownController = null;
     _refreshController?.dispose();
     _refreshController = null;
+    _scrollController.removeListener(_checkBoundary);
+    if (widget.controller == null) {
+      _scrollController.dispose();
+    }
 
     super.dispose();
   }
@@ -248,7 +271,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
         }
 
         return widget.lastPage == null
-            ? (widget.canRefreshAtBottom
+            ? (widget.canLoadMoreAtBottom
                 ? GestureDetector(
                     onTap: _loadMore,
                     child: Center(
@@ -275,8 +298,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
     );
 
     return Padding(
-      padding: const EdgeInsets.all(4.0),
-      child: EasyRefresh(
+      padding: const EdgeInsets.symmetric(horizontal: 5.0),
+      child: EasyRefresh.builder(
         controller: _refreshController,
         header: const MaterialHeader(clamping: false),
         footer: widget.lastPage == null
@@ -288,7 +311,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
             _refreshController?.finishRefresh();
           }
         },
-        onLoad: (widget.lastPage == null && widget.canRefreshAtBottom)
+        onLoad: (widget.lastPage == null && widget.canLoadMoreAtBottom)
             ? () async {
                 if (!_isLoading) {
                   await _loadMore();
@@ -298,34 +321,41 @@ class _BiListViewState<T> extends State<BiListView<T>>
             : null,
         noMoreRefresh: true,
         noMoreLoad: widget.lastPage == null ? true : false,
-        child: Scrollable(
-          controller: widget.controller,
-          viewportBuilder: (context, position) => Viewport(
-            offset: position,
-            center: _downKey,
-            slivers: [
-              if (widget.initialPage > 1)
+        childBuilder: (context, physics) => Obx(
+          () => Scrollable(
+            controller: _scrollController,
+            physics: _isOutOfBoundary.value
+                ? physics
+                : const ClampingScrollPhysics(
+                    parent: RangeMaintainingScrollPhysics()),
+            viewportBuilder: (context, position) => Viewport(
+              offset: position,
+              center: _downKey,
+              slivers: [
+                if (widget.initialPage > 1)
+                  widget.separator != null
+                      ? PagedSliverList.separated(
+                          pagingController: _pagingUpController!,
+                          separatorBuilder: (context, index) =>
+                              widget.separator!,
+                          builderDelegate: pagingUpDelegate)
+                      : PagedSliverList(
+                          pagingController: _pagingUpController!,
+                          builderDelegate: pagingUpDelegate),
+                if (widget.initialPage > 1)
+                  SliverToBoxAdapter(child: widget.separator),
                 widget.separator != null
                     ? PagedSliverList.separated(
-                        pagingController: _pagingUpController!,
+                        key: _downKey,
+                        pagingController: _pagingDownController!,
                         separatorBuilder: (context, index) => widget.separator!,
-                        builderDelegate: pagingUpDelegate)
+                        builderDelegate: pagingDownDelegate)
                     : PagedSliverList(
-                        pagingController: _pagingUpController!,
-                        builderDelegate: pagingUpDelegate),
-              if (widget.initialPage > 1)
-                SliverToBoxAdapter(child: widget.separator),
-              widget.separator != null
-                  ? PagedSliverList.separated(
-                      key: _downKey,
-                      pagingController: _pagingDownController!,
-                      separatorBuilder: (context, index) => widget.separator!,
-                      builderDelegate: pagingDownDelegate)
-                  : PagedSliverList(
-                      key: _downKey,
-                      pagingController: _pagingDownController!,
-                      builderDelegate: pagingDownDelegate),
-            ],
+                        key: _downKey,
+                        pagingController: _pagingDownController!,
+                        builderDelegate: pagingDownDelegate),
+              ],
+            ),
           ),
         ),
       ),

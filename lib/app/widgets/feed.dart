@@ -112,7 +112,7 @@ class FeedBody extends StatelessWidget {
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
           controller: anchorController,
           initialPage: controller.page,
-          canRefreshAtBottom: false,
+          canLoadMoreAtBottom: false,
           fetch: (page) async =>
               (await client.getFeed(settings.feedId, page: page))
                   .map((feed) => PostWithPage(feed, page))
