@@ -41,6 +41,8 @@ import 'loading.dart';
 import 'scroll.dart';
 import 'size.dart';
 
+// TODO: 发串或回复后自动刷新
+
 const double _defaultHeight = 200.0;
 
 class _ForumName extends StatelessWidget {

@@ -697,7 +697,8 @@ class PostListView extends StatefulWidget {
   State<PostListView> createState() => _PostListViewState();
 }
 
-class _PostListViewState extends State<PostListView> {
+class _PostListViewState extends State<PostListView>
+    with WidgetsBindingObserver {
   static bool _isInitial = true;
 
   DateTime? _lastPressBackTime;
@@ -727,6 +728,23 @@ class _PostListViewState extends State<PostListView> {
     }
 
     return true;
+  }
+
+  @override
+  void didChangeMetrics() => PersistentDataService.to.updateKeyboardHeight();
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+
+    super.dispose();
   }
 
   @override
@@ -776,9 +794,8 @@ class _PostListViewState extends State<PostListView> {
               body: Column(
                 children: [
                   Expanded(child: PostListPage(key: PostListPage.pageKey)),
-                  if (_bottomSheetController.value != null &&
-                      !data.isKeyboardVisible.value)
-                    SizedBox(height: bottomSheetHeight)
+                  if (_bottomSheetController.value != null)
+                    SizedBox(height: bottomSheetHeight),
                 ],
               ),
               drawerEdgeDragWidth: media.size.width / 2.0,

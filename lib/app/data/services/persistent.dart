@@ -61,18 +61,10 @@ class PersistentDataService extends GetxService {
     }
   }
 
-  @override
-  void onInit() async {
-    super.onInit();
-
-    _dataBox = await Hive.openBox(HiveBoxName.data);
-
+  void updateKeyboardHeight() {
     if (GetPlatform.isMobile) {
-      final contorller = KeyboardVisibilityController();
-      contorller.onChange.listen((visible) {
-        isKeyboardVisible.value = visible;
-
-        if (visible) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        if (isKeyboardVisible.value) {
           final height = EdgeInsets.fromWindowPadding(
                   WidgetsBinding.instance.window.viewInsets,
                   WidgetsBinding.instance.window.devicePixelRatio)
@@ -82,6 +74,19 @@ class PersistentDataService extends GetxService {
           }
         }
       });
+    }
+  }
+
+  @override
+  void onInit() async {
+    super.onInit();
+
+    _dataBox = await Hive.openBox(HiveBoxName.data);
+
+    if (GetPlatform.isMobile) {
+      KeyboardVisibilityController()
+          .onChange
+          .listen((visible) => isKeyboardVisible.value = visible);
     }
 
     keyboardHeightListenable =

@@ -11,6 +11,7 @@ import 'url.dart';
 Map<String, OnTagCallback> onHiddenTag(OnTagCallback onHiddenText) =>
     HashMap.fromEntries([MapEntry('h', onHiddenText)]);
 
+// TODO: 重构隐藏文字
 InlineSpan onHiddenText(
     {required BuildContext context,
     required Element element,
