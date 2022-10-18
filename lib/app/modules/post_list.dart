@@ -11,6 +11,7 @@ import '../data/services/persistent.dart';
 import '../data/services/history.dart';
 import '../data/services/settings.dart';
 import '../data/services/user.dart';
+import '../data/services/xdnmb_client.dart';
 import '../modules/edit_post.dart';
 import '../routes/routes.dart';
 import '../utils/image.dart';
@@ -756,6 +757,17 @@ class _PostListViewState extends State<PostListView> {
               ControllerStack.replaceLastController(
                   ForumTypeController.fromForumData(
                       forum: settings.initialForum));
+
+              // 公告的显示需要postList的navigator
+              WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+                final client = XdnmbClientService.to;
+                while (!client.hasGotNotice) {
+                  debugPrint('正在等待获取公告');
+                  await Future.delayed(const Duration(milliseconds: 500));
+                }
+                await data.showNotice();
+              });
+
               _isInitial = false;
             }
 

@@ -14,6 +14,8 @@ class XdnmbClientService extends GetxService {
   // TODO: timeout
   final XdnmbApi client;
 
+  bool hasGotNotice = false;
+
   final RxBool isReady = false.obs;
 
   XdnmbClientService() : client = XdnmbApi();
@@ -35,6 +37,8 @@ class XdnmbClientService extends GetxService {
       debugPrint('获取X岛公告成功');
     } catch (e) {
       showToast('获取X岛公告失败：${exceptionMessage(e)}');
+    } finally {
+      hasGotNotice = true;
     }
 
     try {
@@ -63,8 +67,6 @@ class XdnmbClientService extends GetxService {
     }
 
     isReady.value = true;
-
-    PersistentDataService.to.showNotice();
   }
 
   @override

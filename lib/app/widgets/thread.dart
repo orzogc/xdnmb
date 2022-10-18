@@ -30,24 +30,6 @@ import 'forum_name.dart';
 import 'loading.dart';
 import 'post.dart';
 
-class _PostKey {
-  final int index;
-
-  final bool isVisible;
-
-  const _PostKey({required this.index, required this.isVisible});
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is _PostKey &&
-          index == other.index &&
-          isVisible == other.isVisible);
-
-  @override
-  int get hashCode => Object.hash(index, isVisible);
-}
-
 abstract class ThreadTypeController extends PostListController {
   @override
   final int id;
