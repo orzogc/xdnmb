@@ -39,7 +39,8 @@ Future<void> launchURL(String url) async {
 Future<void> launchUri(Uri uri) async {
   if (uri.host.isNotEmpty) {
     try {
-      if (await launchUrl(uri)) {
+      if (await canLaunchUrl(uri) &&
+          await launchUrl(uri, mode: LaunchMode.externalApplication)) {
         debugPrint('打开链接 $uri 成功');
       } else {
         showToast('打开链接 $uri 失败');

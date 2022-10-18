@@ -45,25 +45,19 @@ class PersistentDataService extends GetxService {
 
   late final ValueListenable<Box> keyboardHeightListenable;
 
-  Future<void> updateNotice() async {
-    final notice = await XdnmbClientService.to.client.getNotice();
+  void saveNotice(Notice notice) {
     if (notice.isValid && this.notice != notice.content) {
       this.notice = notice.content;
       SettingsService.to.showNotice = true;
     }
   }
 
-  Future<void> updateNoticeAndShow(Notice notice) async {
-    final settings = SettingsService.to;
-    if (settings.isReady.value && notice.isValid) {
-      if (this.notice != notice.content) {
-        this.notice = notice.content;
-        settings.showNotice = true;
+  Future<void> updateNotice() async =>
+      saveNotice(await XdnmbClientService.to.client.getNotice());
 
-        await showNoticeDialog(showCheckbox: true);
-      } else if (settings.showNotice) {
-        await showNoticeDialog(showCheckbox: true);
-      }
+  Future<void> showNotice() async {
+    if (SettingsService.to.showNotice) {
+      await showNoticeDialog(showCheckbox: true);
     }
   }
 

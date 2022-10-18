@@ -6,6 +6,7 @@ import '../../utils/exception.dart';
 import '../../utils/toast.dart';
 import 'forum.dart';
 import 'persistent.dart';
+import 'settings.dart';
 
 class XdnmbClientService extends GetxService {
   static XdnmbClientService get to => Get.find<XdnmbClientService>();
@@ -27,8 +28,8 @@ class XdnmbClientService extends GetxService {
       final notice = await client.getNotice();
 
       final data = PersistentDataService.to;
-      if (data.isReady.value) {
-        data.updateNoticeAndShow(notice);
+      if (data.isReady.value && SettingsService.to.isReady.value) {
+        data.saveNotice(notice);
       }
 
       debugPrint('获取X岛公告成功');
@@ -62,6 +63,8 @@ class XdnmbClientService extends GetxService {
     }
 
     isReady.value = true;
+
+    PersistentDataService.to.showNotice();
   }
 
   @override
