@@ -87,6 +87,8 @@ class Content extends StatefulWidget {
 
   final Color? hiddenTextColor;
 
+  final TextStyle? textStyle;
+
   const Content(
       {super.key,
       required this.post,
@@ -97,7 +99,8 @@ class Content extends StatefulWidget {
       this.displayImage = true,
       this.canReturnImageData = false,
       this.canTapHiddenText = false,
-      this.hiddenTextColor})
+      this.hiddenTextColor,
+      this.textStyle})
       : assert(onImagePainted == null || displayImage),
         assert(!canReturnImageData || (displayImage && onImagePainted != null)),
         assert(!canTapHiddenText || onLinkTap != null);
@@ -146,7 +149,7 @@ class _ContentState extends State<Content> {
             }
             index++;
 
-            return onHiddenText_(
+            return getHiddenText(
               context: context,
               element: element,
               textStyle: textStyle,
@@ -156,7 +159,7 @@ class _ContentState extends State<Content> {
               onLinkTap: widget.onLinkTap,
             );
           } else {
-            return onHiddenText_(
+            return getHiddenText(
               context: context,
               element: element,
               textStyle: textStyle,
@@ -165,6 +168,7 @@ class _ContentState extends State<Content> {
           }
         },
       ),
+      textStyle: widget.textStyle,
     );
   }
 
@@ -181,6 +185,7 @@ class _ContentState extends State<Content> {
         onLinkTap: widget.onLinkTap,
         onText: (context, text) => Regex.onText(text),
         onTextRecursiveParse: true,
+        textStyle: widget.textStyle,
       );
     }
   }

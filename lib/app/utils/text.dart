@@ -19,7 +19,7 @@ class HiddenText {
   void dispose() => _text?.dispose();
 }
 
-TextSpan onHiddenText_(
+TextSpan getHiddenText(
     {required BuildContext context,
     required Element element,
     required TextStyle textStyle,

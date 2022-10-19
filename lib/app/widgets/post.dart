@@ -17,8 +17,6 @@ typedef PostGestureCallback = void Function(PostBase post);
 class _PostUser extends StatelessWidget {
   final String userHash;
 
-  final Color? poTextColor;
-
   final String? poUserHash;
 
   final bool isAdmin;
@@ -26,7 +24,6 @@ class _PostUser extends StatelessWidget {
   const _PostUser(
       {super.key,
       required this.userHash,
-      required this.poTextColor,
       this.poUserHash,
       this.isAdmin = false});
 
@@ -41,7 +38,7 @@ class _PostUser extends StatelessWidget {
       textStyle: TextStyle(
         color: isAdmin
             ? Colors.red
-            : (isPo ? poTextColor : defaultStyle.style.color),
+            : (isPo ? Colors.cyan.shade700 : defaultStyle.style.color),
         fontWeight: isPo ? FontWeight.bold : defaultStyle.style.fontWeight,
       ),
     );
@@ -262,7 +259,6 @@ class PostContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultStyle = DefaultTextStyle.of(context);
     final theme = Theme.of(context);
     final forumId = post.forumId;
     final replyCount = post.replyCount;
@@ -287,32 +283,32 @@ class PostContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DefaultTextStyle.merge(
-              style: theme.textTheme.caption?.apply(color: _headerColor),
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: _PostUser(
-                        userHash: post.userHash,
-                        poTextColor: defaultStyle.style.color ??
-                            defaultStyle.style.foreground?.color,
-                        poUserHash: poUserHash,
-                        isAdmin: post.isAdmin,
-                      ),
-                    ),
-                    Flexible(
-                      child: _PostTime(
-                        postTime: post.postTime,
-                        showFullTime: showFullTime,
-                      ),
-                    ),
-                    if (showPostId)
-                      _PostId(postId: post.id, onPostIdTap: onPostIdTap),
-                    if (showForumName && forumId != null)
-                      Flexible(child: ForumName(forumId: forumId, maxLines: 1)),
-                    if (showReplyCount && replyCount != null)
-                      _PostReplyCount(replyCount)
-                  ])),
+            style: theme.textTheme.caption?.apply(color: _headerColor),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: _PostUser(
+                    userHash: post.userHash,
+                    poUserHash: poUserHash,
+                    isAdmin: post.isAdmin,
+                  ),
+                ),
+                Flexible(
+                  child: _PostTime(
+                    postTime: post.postTime,
+                    showFullTime: showFullTime,
+                  ),
+                ),
+                if (showPostId)
+                  _PostId(postId: post.id, onPostIdTap: onPostIdTap),
+                if (showForumName && forumId != null)
+                  Flexible(child: ForumName(forumId: forumId, maxLines: 1)),
+                if (showReplyCount && replyCount != null)
+                  _PostReplyCount(replyCount)
+              ],
+            ),
+          ),
           if (post.title.isNotEmpty && post.title != '无标题')
             _PostTitle(post.title),
           if (post.name.isNotEmpty && post.name != '无名氏') _PostName(post.name),

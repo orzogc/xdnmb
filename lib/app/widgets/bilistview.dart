@@ -1,12 +1,15 @@
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
-import 'loading.dart';
+import '../data/services/user.dart';
+import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
+import 'loading.dart';
 
 typedef FetchPage<T> = Future<List<T>> Function(int page);
 
@@ -184,17 +187,31 @@ class _BiListViewState<T> extends State<BiListView<T>>
   }
 
   Widget _errorWidgetBuilder(PagingController<int, T> controller) {
-    showToast(exceptionMessage(controller.error));
+    final user = UserService.to;
+    final message = exceptionMessage(controller.error);
+    showToast(message);
 
     return InkWell(
       onTap: () {
         if (controller.error != null) {
-          controller.retryLastFailedRequest();
+          if (!user.hasBrowseCookie && message.contains('饼干')) {
+            AppRoutes.toUser();
+          } else {
+            controller.retryLastFailedRequest();
+          }
         }
       },
       child: DefaultTextStyle.merge(
         style: AppTheme.boldRed,
-        child: const Center(child: Text('出现错误，点击重新尝试')),
+        child: Center(
+          child: ValueListenableBuilder<Box>(
+            valueListenable: user.browseCookieListenable,
+            builder: (context, value, child) =>
+                (!user.hasBrowseCookie && message.contains('饼干'))
+                    ? const Text('出现错误，点击登陆X岛帐号')
+                    : const Text('出现错误，点击重新尝试'),
+          ),
+        ),
       ),
     );
   }

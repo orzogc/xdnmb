@@ -7,6 +7,7 @@ import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/regex.dart';
 import '../utils/stack.dart';
+import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'content.dart';
@@ -141,13 +142,23 @@ class _TabTitle extends StatelessWidget {
           final postId = (controller as ThreadTypeController).post?.id;
           final forumId = controller.post?.forumId;
 
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (forumId != null)
-                Flexible(child: ForumName(forumId: forumId, maxLines: 1)),
-              if (postId != null) Flexible(child: Text(postId.toPostNumber())),
-            ],
+          return DefaultTextStyle.merge(
+            style:
+                Theme.of(context).textTheme.caption?.apply(color: Colors.grey),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (forumId != null)
+                  Flexible(
+                    child: ForumName(
+                      forumId: forumId,
+                      maxLines: 1,
+                    ),
+                  ),
+                if (postId != null)
+                  Flexible(child: Text(postId.toPostNumber())),
+              ],
+            ),
           );
         });
 
@@ -190,7 +201,6 @@ class _TabList extends StatelessWidget {
           itemCount: ControllerStack.length.value,
           itemBuilder: (context, index) {
             final controller = PostListController.get(index);
-            //final post = controller.post;
 
             return ListTile(
               key: ValueKey<int>(ControllerStack.getKeyId(index)),
@@ -207,7 +217,16 @@ class _TabList extends StatelessWidget {
 
                       return post != null
                           ? Content(
-                              post: post, maxLines: 2, displayImage: false)
+                              key: ValueKey<bool>(Get.isDarkMode),
+                              post: post,
+                              maxLines: 2,
+                              displayImage: false,
+                              textStyle: theme.textTheme.bodyText2?.apply(
+                                color: Get.isDarkMode
+                                    ? AppTheme.colorDark
+                                    : Colors.black,
+                              ),
+                            )
                           : const SizedBox.shrink();
                     })
                   : null,

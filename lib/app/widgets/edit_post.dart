@@ -683,10 +683,15 @@ class _Cookie extends StatelessWidget {
               ),
             ),
           )
-        : const Text('没有饼干',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTheme.boldRed);
+        : TextButton(
+            onPressed: () => AppRoutes.toUser(),
+            child: const Text(
+              '没有饼干',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.boldRed,
+            ),
+          );
   }
 }
 
