@@ -17,7 +17,6 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/hidden_text.dart';
 import '../utils/navigation.dart';
 import '../utils/notify.dart';
 import '../utils/theme.dart';
@@ -508,20 +507,14 @@ class _ThreadBodyState extends State<ThreadBody> {
       onTap: (post) {},
       onLongPress: (post) =>
           postListDialog(_ThreadDialog(controller: controller, post: post)),
-      onLinkTap: (context, link) => parseUrl(
+      onLinkTap: (context, link, text) => parseUrl(
           url: link, mainPostId: mainPost?.id, poUserHash: mainPost?.userHash),
-      onHiddenText: (context, element, textStyle) => onHiddenText(
-          context: context,
-          element: element,
-          textStyle: textStyle,
-          canTap: true,
-          mainPostId: mainPost?.id,
-          poUserHash: mainPost?.userHash),
       onImagePainted: (imageData) => _replyWithImage(controller, imageData),
       mouseCursor: SystemMouseCursors.basic,
       hoverColor:
           Get.isDarkMode ? theme.cardColor : theme.scaffoldBackgroundColor,
       canReturnImageData: true,
+      canTapHiddenText: true,
       onPostIdTap:
           post.post is! Tip ? (postId) => _replyPost(controller, postId) : null,
     );

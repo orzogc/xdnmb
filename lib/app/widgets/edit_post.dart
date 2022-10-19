@@ -32,6 +32,7 @@ import '../utils/extensions.dart';
 import '../utils/image.dart';
 import '../utils/icons.dart';
 import '../utils/notify.dart';
+import '../utils/size.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'dialog.dart';
@@ -644,7 +645,7 @@ class _Cookie extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = UserService.to;
     final size =
-        _textSize(context, '啊啊啊啊啊啊啊', Theme.of(context).textTheme.bodyText2);
+        getTextSize(context, '啊啊啊啊啊啊啊', Theme.of(context).textTheme.bodyText2);
 
     return user.hasPostCookie
         ? ValueListenableBuilder<Box>(
@@ -1386,7 +1387,7 @@ class EditPostState extends State<EditPost> {
               child: Center(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final textSize = _textSize(context, 'A啊', textStyle);
+                    final height = getLineHeight(context, 'A啊', textStyle);
                     final reportReason = _reportReason.value;
 
                     return SingleChildScrollViewWithScrollbar(
@@ -1455,7 +1456,7 @@ class EditPostState extends State<EditPost> {
                                     maxLines: null,
                                     minLines: max(
                                         (constraints.maxHeight - 24.0) ~/
-                                            textSize.height,
+                                            height,
                                         1),
                                     textAlignVertical: TextAlignVertical.top,
                                     decoration: InputDecoration(
@@ -1613,15 +1614,4 @@ TextEditingController _initController(String? text) {
   }
 
   return controller;
-}
-
-Size _textSize(BuildContext context, String text, TextStyle? style) {
-  final TextPainter textPainter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      maxLines: 1,
-      textScaleFactor: MediaQuery.of(context).textScaleFactor,
-      textDirection: TextDirection.ltr)
-    ..layout();
-
-  return Size(textPainter.size.width, textPainter.preferredLineHeight);
 }

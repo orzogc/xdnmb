@@ -7,7 +7,6 @@ import '../data/services/xdnmb_client.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/hidden_text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
@@ -100,20 +99,13 @@ class ReferenceCard extends StatelessWidget {
                               onTap: (post) {},
                               onLongPress: (post) => postListDialog(
                                   _Dialog(post: post, mainPostId: mainPostId)),
-                              onLinkTap: (context, link) => parseUrl(
+                              onLinkTap: (context, link, text) => parseUrl(
                                   url: link,
                                   mainPostId: this.mainPostId,
                                   poUserHash: poUserHash),
-                              onHiddenText: (context, element, textStyle) =>
-                                  onHiddenText(
-                                      context: context,
-                                      element: element,
-                                      textStyle: textStyle,
-                                      canTap: true,
-                                      mainPostId: this.mainPostId,
-                                      poUserHash: poUserHash),
                               mouseCursor: SystemMouseCursors.basic,
                               hoverColor: Theme.of(context).cardColor,
+                              canTapHiddenText: true,
                               isContentScrollable: true,
                             ),
                             if (mainPostId != null &&

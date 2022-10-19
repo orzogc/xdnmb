@@ -177,7 +177,7 @@ class NoticeDialog extends StatelessWidget {
                   if (snapshot.connectionState == ConnectionState.done) {
                     return TextContent(
                       text: data.notice,
-                      onLinkTap: (context, link) => parseUrl(url: link),
+                      onLinkTap: (context, link, text) => parseUrl(url: link),
                     );
                   }
 
@@ -186,7 +186,7 @@ class NoticeDialog extends StatelessWidget {
               )
             : TextContent(
                 text: data.notice,
-                onLinkTap: (context, link) => parseUrl(url: link),
+                onLinkTap: (context, link, text) => parseUrl(url: link),
               ),
       ),
       actions: [
@@ -256,7 +256,7 @@ class ForumRuleDialog extends StatelessWidget {
       content: SingleChildScrollViewWithScrollbar(
           child: TextContent(
         text: forum?.message ?? '',
-        onLinkTap: (context, link) => parseUrl(url: link),
+        onLinkTap: (context, link, text) => parseUrl(url: link),
         onImage: (context, image, element) => image != null
             ? TextSpan(
                 children: [

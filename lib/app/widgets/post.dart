@@ -226,13 +226,15 @@ class PostContent extends StatelessWidget {
 
   final OnLinkTapCallback? onLinkTap;
 
-  final OnTagCallback? onHiddenText;
-
   final ImageDataCallback? onImagePainted;
 
   final bool displayImage;
 
   final bool canReturnImageData;
+
+  final bool canTapHiddenText;
+
+  final Color? hiddenTextColor;
 
   final bool isContentScrollable;
 
@@ -248,10 +250,11 @@ class PostContent extends StatelessWidget {
       this.contentMaxLines,
       this.poUserHash,
       this.onLinkTap,
-      this.onHiddenText,
       this.onImagePainted,
       this.displayImage = true,
       this.canReturnImageData = false,
+      this.canTapHiddenText = false,
+      this.hiddenTextColor,
       this.isContentScrollable = false,
       this.onPostIdTap})
       : assert(onImagePainted == null || displayImage),
@@ -270,10 +273,11 @@ class PostContent extends StatelessWidget {
       poUserHash: poUserHash,
       maxLines: contentMaxLines,
       onLinkTap: onLinkTap,
-      onHiddenText: onHiddenText,
       onImagePainted: onImagePainted,
       displayImage: displayImage,
       canReturnImageData: canReturnImageData,
+      canTapHiddenText: canTapHiddenText,
+      hiddenTextColor: hiddenTextColor,
     );
 
     return Padding(
@@ -349,8 +353,6 @@ class PostCard extends StatelessWidget {
 
   final OnLinkTapCallback? onLinkTap;
 
-  final OnTagCallback? onHiddenText;
-
   final ImageDataCallback? onImagePainted;
 
   final MouseCursor? mouseCursor;
@@ -360,6 +362,10 @@ class PostCard extends StatelessWidget {
   final bool displayImage;
 
   final bool canReturnImageData;
+
+  final bool canTapHiddenText;
+
+  final Color? hiddenTextColor;
 
   final bool isContentScrollable;
 
@@ -377,12 +383,13 @@ class PostCard extends StatelessWidget {
       this.onTap,
       this.onLongPress,
       this.onLinkTap,
-      this.onHiddenText,
       this.onImagePainted,
       this.mouseCursor,
       this.hoverColor,
       this.displayImage = true,
       this.canReturnImageData = false,
+      this.canTapHiddenText = false,
+      this.hiddenTextColor,
       this.isContentScrollable = false,
       this.onPostIdTap})
       : assert(onImagePainted == null || displayImage),
@@ -404,10 +411,11 @@ class PostCard extends StatelessWidget {
         contentMaxLines: contentMaxLines,
         poUserHash: poUserHash,
         onLinkTap: onLinkTap,
-        onHiddenText: onHiddenText,
         onImagePainted: onImagePainted,
         displayImage: displayImage,
         canReturnImageData: canReturnImageData,
+        canTapHiddenText: canTapHiddenText,
+        hiddenTextColor: hiddenTextColor,
         isContentScrollable: isContentScrollable,
         onPostIdTap: onPostIdTap,
       ),

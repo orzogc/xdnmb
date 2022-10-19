@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:float_column/float_column.dart';
@@ -7,9 +8,12 @@ import 'package:html_to_text/html_to_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/services/settings.dart';
-import '../utils/hidden_text.dart';
 import '../utils/regex.dart';
+import '../utils/text.dart';
 import '../widgets/image.dart';
+
+Map<String, OnTagCallback> onHiddenTag(OnTagCallback onHiddenText) =>
+    HashMap.fromEntries([MapEntry('h', onHiddenText)]);
 
 class TextContent extends StatefulWidget {
   final String text;
@@ -18,8 +22,6 @@ class TextContent extends StatefulWidget {
 
   final OnLinkTapCallback? onLinkTap;
 
-  final OnTagCallback? onHiddenText;
-
   final OnImageCallback? onImage;
 
   const TextContent(
@@ -27,7 +29,6 @@ class TextContent extends StatefulWidget {
       required this.text,
       this.maxLines,
       this.onLinkTap,
-      this.onHiddenText,
       this.onImage});
 
   @override
@@ -47,9 +48,6 @@ class _TextContentState extends State<TextContent> {
       onLinkTap: widget.onLinkTap,
       onText: (context, text) => Regex.onText(text),
       onTextRecursiveParse: true,
-      onTags: widget.onHiddenText != null
-          ? onHiddenTag(widget.onHiddenText!)
-          : null,
       onImage: widget.onImage,
     );
   }
@@ -79,13 +77,15 @@ class Content extends StatefulWidget {
 
   final OnLinkTapCallback? onLinkTap;
 
-  final OnTagCallback? onHiddenText;
-
   final ImageDataCallback? onImagePainted;
 
   final bool displayImage;
 
   final bool canReturnImageData;
+
+  final bool canTapHiddenText;
+
+  final Color? hiddenTextColor;
 
   const Content(
       {super.key,
@@ -93,44 +93,104 @@ class Content extends StatefulWidget {
       this.poUserHash,
       this.maxLines,
       this.onLinkTap,
-      this.onHiddenText,
       this.onImagePainted,
       this.displayImage = true,
-      this.canReturnImageData = false})
+      this.canReturnImageData = false,
+      this.canTapHiddenText = false,
+      this.hiddenTextColor})
       : assert(onImagePainted == null || displayImage),
-        assert(!canReturnImageData || (displayImage && onImagePainted != null));
+        assert(!canReturnImageData || (displayImage && onImagePainted != null)),
+        assert(!canTapHiddenText || onLinkTap != null);
 
   @override
   State<Content> createState() => _ContentState();
 }
 
 class _ContentState extends State<Content> {
-  late final HtmlText _htmlText;
+  HtmlText? _htmlText;
 
-  late final bool hasHiddenText;
+  late final String? _text;
+
+  final List<HiddenText> _hiddenTextList = [];
+
+  bool get _hasHiddenText => _text != null;
+
+  void _refresh() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _setHiddenText() {
+    int index = 0;
+    _htmlText?.dispose();
+
+    _htmlText = HtmlText(
+      context,
+      _text!,
+      onLinkTap: widget.onLinkTap,
+      onText: (context, text) => Regex.onText(text),
+      onTextRecursiveParse: true,
+      onTags: onHiddenTag(
+        (context, element, textStyle) {
+          if (widget.canTapHiddenText) {
+            late final HiddenText text;
+            if (index == _hiddenTextList.length) {
+              text = HiddenText();
+              _hiddenTextList.add(text);
+            } else if (index < _hiddenTextList.length) {
+              text = _hiddenTextList[index];
+            } else {
+              debugPrint('无效的_hiddenTextList index：$index');
+              return null;
+            }
+            index++;
+
+            return onHiddenText_(
+              context: context,
+              element: element,
+              textStyle: textStyle,
+              hiddenColor: widget.hiddenTextColor,
+              getHiddenText: () => text,
+              refresh: _refresh,
+              onLinkTap: widget.onLinkTap,
+            );
+          } else {
+            return onHiddenText_(
+              context: context,
+              element: element,
+              textStyle: textStyle,
+              hiddenColor: widget.hiddenTextColor,
+            );
+          }
+        },
+      ),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
 
-    final text = Regex.replaceHiddenTag(widget.post.content);
-    hasHiddenText = text != null ? true : false;
+    _text = Regex.replaceHiddenTag(widget.post.content);
 
-    _htmlText = HtmlText(
-      context,
-      text ?? widget.post.content,
-      onLinkTap: widget.onLinkTap,
-      onText: (context, text) => Regex.onText(text),
-      onTextRecursiveParse: true,
-      onTags: widget.onHiddenText != null
-          ? onHiddenTag(widget.onHiddenText!)
-          : null,
-    );
+    if (!_hasHiddenText) {
+      _htmlText = HtmlText(
+        context,
+        widget.post.content,
+        onLinkTap: widget.onLinkTap,
+        onText: (context, text) => Regex.onText(text),
+        onTextRecursiveParse: true,
+      );
+    }
   }
 
   @override
   void dispose() {
-    _htmlText.dispose();
+    for (final text in _hiddenTextList) {
+      text.dispose();
+    }
+    _htmlText?.dispose();
 
     super.dispose();
   }
@@ -139,8 +199,12 @@ class _ContentState extends State<Content> {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
+    if (_hasHiddenText) {
+      _setHiddenText();
+    }
+
     final richText = RichText(
-      text: _htmlText.toTextSpan(),
+      text: _htmlText!.toTextSpan(),
       maxLines: widget.maxLines,
       overflow:
           widget.maxLines == null ? TextOverflow.clip : TextOverflow.ellipsis,
@@ -169,7 +233,7 @@ class _ContentState extends State<Content> {
                         ),
                       ),
                     ),
-                    hasHiddenText ? Floatable(child: richText) : richText,
+                    richText,
                   ],
                 )
               : richText,

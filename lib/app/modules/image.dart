@@ -12,7 +12,6 @@ import '../data/services/image.dart';
 import '../routes/routes.dart';
 import '../utils/cache.dart';
 import '../utils/extensions.dart';
-import '../utils/hidden_text.dart';
 import '../utils/image.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -74,12 +73,8 @@ class _TopOverlay extends StatelessWidget {
                 showReplyCount: false,
                 contentMaxLines: 5,
                 poUserHash: poUserHash,
-                onHiddenText: (context, element, textStyle) => onHiddenText(
-                    context: context,
-                    element: element,
-                    textStyle: textStyle,
-                    hiddenColor: AppTheme.colorDark),
                 displayImage: false,
+                hiddenTextColor: AppTheme.colorDark,
               ),
             ),
           ],

@@ -5,7 +5,6 @@ import '../data/services/settings.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
-import '../utils/hidden_text.dart';
 import '../utils/regex.dart';
 import '../utils/stack.dart';
 import '../utils/toast.dart';
@@ -208,14 +207,7 @@ class _TabList extends StatelessWidget {
 
                       return post != null
                           ? Content(
-                              post: post,
-                              maxLines: 2,
-                              onHiddenText: (context, element, textStyle) =>
-                                  onHiddenText(
-                                      context: context,
-                                      element: element,
-                                      textStyle: textStyle),
-                              displayImage: false)
+                              post: post, maxLines: 2, displayImage: false)
                           : const SizedBox.shrink();
                     })
                   : null,

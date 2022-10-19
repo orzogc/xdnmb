@@ -13,7 +13,6 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/hidden_text.dart';
 import '../utils/navigation.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
@@ -263,11 +262,6 @@ class ForumBody extends StatelessWidget {
                   mainPost: thread.thread.mainPost),
               onLongPress: (post) => postListDialog(
                 _ForumDialog(controller: controller, post: post),
-              ),
-              onHiddenText: (context, element, textStyle) => onHiddenText(
-                context: context,
-                element: element,
-                textStyle: textStyle,
               ),
             ),
           ),

@@ -11,7 +11,6 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/hidden_text.dart';
 import '../utils/navigation.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -142,11 +141,6 @@ class FeedBody extends StatelessWidget {
                               onDelete: () => isVisible.value = false,
                             ),
                           ),
-                          onHiddenText: (context, element, textStyle) =>
-                              onHiddenText(
-                                  context: context,
-                                  element: element,
-                                  textStyle: textStyle),
                         ),
                       ),
                     )

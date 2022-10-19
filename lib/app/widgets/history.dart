@@ -11,7 +11,6 @@ import '../data/services/history.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
-import '../utils/hidden_text.dart';
 import '../utils/navigation.dart';
 import '../utils/notify.dart';
 import '../utils/theme.dart';
@@ -436,12 +435,6 @@ class _BrowseHistoryBody extends StatelessWidget {
                               showReplyCount: false,
                               contentMaxLines: 8,
                               poUserHash: browse.userHash,
-                              onHiddenText: (context, element, textStyle) =>
-                                  onHiddenText(
-                                context: context,
-                                element: element,
-                                textStyle: textStyle,
-                              ),
                             ),
                           ],
                         ),
@@ -507,7 +500,8 @@ class _PostHistoryBody extends StatelessWidget {
                                 mainPostId: post.id, mainPost: post);
                           }
                         },
-                        onLongPress: (post) => postListDialog(_HistoryDialog(
+                        onLongPress: (post) => postListDialog(
+                          _HistoryDialog(
                             mainPost: post,
                             onDelete: () async {
                               await history.deletePostData(mainPost.id);
@@ -516,12 +510,9 @@ class _PostHistoryBody extends StatelessWidget {
                                       '删除主题 ${mainPost.postId!.toPostNumber()} 的记录')
                                   : showToast('删除主题记录');
                               isVisible.value = false;
-                            })),
-                        onHiddenText: (context, element, textStyle) =>
-                            onHiddenText(
-                                context: context,
-                                element: element,
-                                textStyle: textStyle),
+                            },
+                          ),
+                        ),
                       ),
                     )
                   : const SizedBox.shrink(),
@@ -623,12 +614,6 @@ class _ReplyHistoryBody extends StatelessWidget {
                                 showPostId: reply.postId != null ? true : false,
                                 showReplyCount: false,
                                 contentMaxLines: 8,
-                                onHiddenText: (context, element, textStyle) =>
-                                    onHiddenText(
-                                  context: context,
-                                  element: element,
-                                  textStyle: textStyle,
-                                ),
                               ),
                             ],
                           ),
