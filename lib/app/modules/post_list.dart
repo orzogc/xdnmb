@@ -247,12 +247,8 @@ class PostListAppBarState extends State<PostListAppBar> {
     }
 
     return GestureDetector(
-      onTap: !controller.isThreadType
-          ? () {
-              controller.refreshPage();
-              refresh();
-            }
-          : null,
+      onTap:
+          controller.isThreadType ? controller.refresh : controller.refreshPage,
       child: AppBar(
         leading: button,
         title: title,

@@ -480,7 +480,6 @@ class CookieView extends GetView<CookieController> {
   @override
   Widget build(BuildContext context) {
     final user = UserService.to;
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -552,13 +551,7 @@ class CookieView extends GetView<CookieController> {
                         // TODO: 重试
                         if (snapshot.connectionState == ConnectionState.done &&
                             snapshot.hasError)
-                          Text(
-                            '更新饼干列表出错',
-                            style: TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold,
-                                fontSize: theme.textTheme.bodyText2?.fontSize),
-                          ),
+                          const Text('更新饼干列表出错', style: AppTheme.boldRed),
                         if (snapshot.connectionState != ConnectionState.done)
                           const CircularProgressIndicator(),
                         ...[
@@ -568,13 +561,7 @@ class CookieView extends GetView<CookieController> {
                                 cookie: cookie)
                         ],
                         if (!user.hasXdnmbCookie)
-                          Text(
-                            '没有饼干',
-                            style: TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold,
-                                fontSize: theme.textTheme.bodyText2?.fontSize),
-                          ),
+                          const Text('没有饼干', style: AppTheme.boldRed),
                         if (user.isUserCookieValid &&
                             user.canGetCookie &&
                             user.currentCookiesNum < user.totalCookiesNum)

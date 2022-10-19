@@ -22,7 +22,7 @@ class _InitialForum extends StatelessWidget {
     return ValueListenableBuilder<Box>(
       valueListenable: settings.initialForumListenable,
       builder: (context, value, child) => ListTile(
-        title: const Text('应用启动时显示的板块'),
+        title: const Text('应用启动后显示的板块'),
         trailing: TextButton(
           onPressed: () => Get.dialog(SelectForum(onSelect: (forum) {
             settings.initialForum = forum.copy();
@@ -96,7 +96,8 @@ class _AutoJumpPage extends StatelessWidget {
     return ValueListenableBuilder<Box>(
       valueListenable: settings.isJumpToLastBrowsePageListenable,
       builder: (context, value, child) => ListTile(
-        title: const Text('打开串时自动跳转到最近浏览的页数'),
+        title: const Text('自动跳转页数'),
+        subtitle: const Text('打开串时自动跳转到最近浏览的页数'),
         trailing: Switch(
           value: settings.isJumpToLastBrowsePage,
           onChanged: (value) => settings.isJumpToLastBrowsePage = value,
@@ -114,20 +115,10 @@ class _AutoJumpPosition extends StatelessWidget {
     final settings = SettingsService.to;
 
     return ValueListenableBuilder<Box>(
-      valueListenable: settings.isJumpToLastBrowsePageListenable,
-      builder: (context, value, child) => ValueListenableBuilder<Box>(
-        valueListenable: settings.isJumpToLastBrowsePositionListenable,
-        builder: (context, value, child) => ListTile(
-          title: child,
-          trailing: Switch(
-            value: settings.isJumpToLastBrowsePosition,
-            onChanged: settings.isJumpToLastBrowsePage
-                ? (value) => settings.isJumpToLastBrowsePosition = value
-                : null,
-          ),
-        ),
-        child: Text(
-          '自动跳转页数时跳转到最近浏览的位置',
+      valueListenable: settings.isJumpToLastBrowsePositionListenable,
+      builder: (context, value, child) => ListTile(
+        title: Text(
+          '自动跳转位置',
           style: TextStyle(
             color: settings.isJumpToLastBrowsePage
                 ? null
@@ -135,6 +126,33 @@ class _AutoJumpPosition extends StatelessWidget {
                     ? AppTheme.primaryColorDark
                     : Colors.grey,
           ),
+        ),
+        subtitle: const Text('自动跳转页数时跳转到最近浏览的位置'),
+        trailing: Switch(
+          value: settings.isJumpToLastBrowsePosition,
+          onChanged: settings.isJumpToLastBrowsePage
+              ? (value) => settings.isJumpToLastBrowsePosition = value
+              : null,
+        ),
+      ),
+    );
+  }
+}
+
+class _AfterPostRefresh extends StatelessWidget {
+  const _AfterPostRefresh({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.isAfterPostRefreshListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('发表新串后自动刷新页面'),
+        trailing: Switch(
+          value: settings.isAfterPostRefresh,
+          onChanged: (value) => settings.isAfterPostRefresh = value,
         ),
       ),
     );
@@ -296,6 +314,7 @@ class SettingsView extends GetView<SettingsController> {
             _Watermark(),
             _AutoJumpPage(),
             _AutoJumpPosition(),
+            _AfterPostRefresh(),
             _FeedId(),
             _FixMissingFont(),
             ListTile(title: Text('作者'), subtitle: Text('Orzogc')),

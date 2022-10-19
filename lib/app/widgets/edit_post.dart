@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
+import 'package:xdnmb/app/widgets/thread.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' as xdnmb_api;
 
 import '../data/models/draft.dart';
@@ -32,7 +33,7 @@ import '../utils/extensions.dart';
 import '../utils/image.dart';
 import '../utils/icons.dart';
 import '../utils/notify.dart';
-import '../utils/size.dart';
+import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'dialog.dart';
@@ -41,8 +42,6 @@ import 'image.dart';
 import 'loading.dart';
 import 'scroll.dart';
 import 'size.dart';
-
-// TODO: 发串或回复后自动刷新
 
 const double _defaultHeight = 200.0;
 
@@ -795,6 +794,7 @@ class _Post extends StatelessWidget {
   Widget build(BuildContext context) => IconButton(
         onPressed: () {
           final user = UserService.to;
+          final controller = PostListController.get();
 
           if (user.hasPostCookie) {
             if (forumId != null) {
@@ -874,6 +874,28 @@ class _Post extends StatelessWidget {
                           title: title,
                           content: content);
                       saveReply(reply);
+                    }
+
+                    if (controller.postListType == postListType &&
+                        (controller.isTimeline ||
+                            (controller.isForum && controller.id == forumId) ||
+                            (controller.isThreadType &&
+                                controller.id == postList.id))) {
+                      try {
+                        if (controller.isForumType &&
+                            SettingsService.to.isAfterPostRefresh) {
+                          controller.refreshPage();
+                        } else if (controller.isThread) {
+                          final controller_ = controller as ThreadController;
+                          if (controller_.loadMore != null) {
+                            controller_.loadMore!();
+                          }
+                        }
+                      } catch (e) {
+                        debugPrint('发串后刷新数据出现错误：$e');
+                      }
+                    } else {
+                      debugPrint('PostListController跟发串的数据对不上');
                     }
                   },
                   onError: (e) async {

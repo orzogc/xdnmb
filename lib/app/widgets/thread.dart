@@ -66,6 +66,8 @@ class ThreadController extends ThreadTypeController {
   @override
   final int? jumpToId;
 
+  VoidCallback? loadMore;
+
   @override
   PostListType get postListType => PostListType.thread;
 
@@ -74,7 +76,8 @@ class ThreadController extends ThreadTypeController {
       required int page,
       PostBase? post,
       bool cancelAutoJump = false,
-      this.jumpToId})
+      this.jumpToId,
+      this.loadMore})
       : super(id: id, page: page, post: post, cancelAutoJump: cancelAutoJump);
 
   @override
@@ -589,6 +592,15 @@ class _ThreadBodyState extends State<ThreadBody> {
                                   controller.refreshPage();
                                 }
                               },
+                              getLoadMore: controller.isThread
+                                  ? (function) =>
+                                      (controller as ThreadController)
+                                          .loadMore = () {
+                                        if (_isNoMoreItems) {
+                                          function();
+                                        }
+                                      }
+                                  : null,
                             ),
                           ),
                         ],

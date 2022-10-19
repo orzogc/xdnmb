@@ -10,6 +10,8 @@ import '../utils/toast.dart';
 
 typedef FetchPage<T> = Future<List<T>> Function(int page);
 
+typedef GetFunctionCallback = void Function(VoidCallback function);
+
 class BiListView<T> extends StatefulWidget {
   final ScrollController? controller;
 
@@ -33,6 +35,8 @@ class BiListView<T> extends StatefulWidget {
 
   final VoidCallback? onRefresh;
 
+  final GetFunctionCallback? getLoadMore;
+
   const BiListView(
       {super.key,
       this.controller,
@@ -45,7 +49,8 @@ class BiListView<T> extends StatefulWidget {
       this.separator,
       this.noItemsFoundBuilder,
       this.onNoMoreItems,
-      this.onRefresh});
+      this.onRefresh,
+      this.getLoadMore});
 
   @override
   State<BiListView<T>> createState() => _BiListViewState<T>();
@@ -221,6 +226,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
     _scrollController = widget.controller ?? ScrollController();
     _scrollController.addListener(_checkBoundary);
+
+    if (widget.getLoadMore != null) {
+      widget.getLoadMore!(_loadMore);
+    }
   }
 
   @override

@@ -68,6 +68,12 @@ class SettingsService extends GetxService {
       _settingsBox.put(
           Settings.isJumpToLastBrowsePosition, isJumpToLastBrowsePosition);
 
+  bool get isAfterPostRefresh =>
+      _settingsBox.get(Settings.isAfterPostRefresh, defaultValue: true);
+
+  set isAfterPostRefresh(bool isAfterPostRefresh) =>
+      _settingsBox.put(Settings.isAfterPostRefresh, isAfterPostRefresh);
+
   String get feedId => _settingsBox.get(Settings.feedId);
 
   set feedId(String feedId) => _settingsBox.put(Settings.feedId, feedId);
@@ -87,6 +93,8 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> isJumpToLastBrowsePageListenable;
 
   late final ValueListenable<Box> isJumpToLastBrowsePositionListenable;
+
+  late final ValueListenable<Box> isAfterPostRefreshListenable;
 
   late final ValueListenable<Box> feedIdListenable;
 
@@ -131,8 +139,12 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.isWatermark]);
     isJumpToLastBrowsePageListenable =
         _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePage]);
-    isJumpToLastBrowsePositionListenable =
-        _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePosition]);
+    isJumpToLastBrowsePositionListenable = _settingsBox.listenable(keys: [
+      Settings.isJumpToLastBrowsePage,
+      Settings.isJumpToLastBrowsePosition,
+    ]);
+    isAfterPostRefreshListenable =
+        _settingsBox.listenable(keys: [Settings.isAfterPostRefresh]);
     feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
