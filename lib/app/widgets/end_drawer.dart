@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 
 import '../data/models/forum.dart';
 import '../data/services/forum.dart';
+import '../data/services/persistent.dart';
+import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
@@ -14,6 +16,7 @@ import '../utils/text.dart';
 import '../utils/toast.dart';
 import 'forum.dart';
 import 'forum_name.dart';
+import 'guide.dart';
 
 class _DrawerHeader extends StatelessWidget {
   const _DrawerHeader({Key? key}) : super(key: key);
@@ -22,6 +25,11 @@ class _DrawerHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final client = XdnmbClientService.to;
+
+    final reorderForums = IconButton(
+      onPressed: AppRoutes.toReorderForums,
+      icon: Icon(Icons.swap_vert, color: theme.colorScheme.onPrimary),
+    );
 
     return SizedBox(
       height: (theme.appBarTheme.toolbarHeight ?? kToolbarHeight) +
@@ -34,26 +42,23 @@ class _DrawerHeader extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10.0),
         child: Row(
           children: [
-            Expanded(
-              child: Text(
-                '板块',
-                style: (theme.appBarTheme.titleTextStyle ??
-                        theme.textTheme.headline6)
-                    ?.apply(
-                  color: theme.appBarTheme.foregroundColor ??
-                      theme.colorScheme.onPrimary,
-                ),
+            Text(
+              '板块',
+              style: (theme.appBarTheme.titleTextStyle ??
+                      theme.textTheme.headline6)
+                  ?.apply(
+                color: theme.appBarTheme.foregroundColor ??
+                    theme.colorScheme.onPrimary,
               ),
             ),
-            Obx(
-              () => client.isReady.value
-                  ? IconButton(
-                      onPressed: AppRoutes.toReorderForums,
-                      icon: Icon(Icons.swap_vert,
-                          color: theme.colorScheme.onPrimary),
-                    )
-                  : const SizedBox.shrink(),
-            ),
+            const Spacer(),
+            PersistentDataService.to.showGuide
+                ? ReorderForumsGuide(reorderForums)
+                : Obx(
+                    () => client.isReady.value
+                        ? reorderForums
+                        : const SizedBox.shrink(),
+                  ),
           ],
         ),
       ),
@@ -153,53 +158,65 @@ class _ForumList extends StatelessWidget {
     final forums = ForumListService.to;
     final theme = Theme.of(context);
 
-    return ValueListenableBuilder<HashMap<int, int>>(
-      valueListenable: forums.displayedForumIndexNotifier,
-      builder: (context, box, child) => ListView.builder(
-        key: const PageStorageKey<String>('forumList'),
-        padding: EdgeInsets.zero,
-        itemCount: forums.displayedForumsCount,
-        itemBuilder: (context, index) {
-          final forum = forums.displayedForum(index);
-          final controller = PostListController.get();
-          final forumId = controller.forumOrTimelineId;
-          final isTimeline = controller.isTimeline;
+    return PersistentDataService.to.showGuide
+        ? ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              ForumListGuide(
+                ListTile(
+                  tileColor: theme.focusColor,
+                  title: Text(defaultForum.forumName),
+                ),
+              ),
+            ],
+          )
+        : ValueListenableBuilder<HashMap<int, int>>(
+            valueListenable: forums.displayedForumIndexNotifier,
+            builder: (context, box, child) => ListView.builder(
+              key: const PageStorageKey<String>('forumList'),
+              padding: EdgeInsets.zero,
+              itemCount: forums.displayedForumsCount,
+              itemBuilder: (context, index) {
+                final forum = forums.displayedForum(index);
+                final controller = PostListController.get();
+                final forumId = controller.forumOrTimelineId;
+                final isTimeline = controller.isTimeline;
 
-          return forum != null
-              ? ListTile(
-                  key: ValueKey<PostList>(PostList.fromForumData(forum)),
-                  onTap: () {
-                    if (forumId != forum.id) {
-                      if (forum.isTimeline) {
-                        AppRoutes.toTimeline(timelineId: forum.id);
-                      } else {
-                        AppRoutes.toForum(forumId: forum.id);
-                      }
-                    }
-                    Get.back();
-                  },
-                  onLongPress: () async {
-                    if (await Get.dialog<bool>(_Dialog(forum: forum)) ??
-                        false) {
-                      Get.back();
-                    }
-                  },
-                  tileColor:
-                      (forumId == forum.id && isTimeline == forum.isTimeline)
-                          ? theme.focusColor
-                          : null,
-                  title: ForumName(
-                    forumId: forum.id,
-                    isTimeline: forum.isTimeline,
-                    isDeprecated: forum.isDeprecated,
-                    textStyle: theme.textTheme.bodyText1,
-                    maxLines: 1,
-                  ),
-                )
-              : const SizedBox.shrink();
-        },
-      ),
-    );
+                return forum != null
+                    ? ListTile(
+                        key: ValueKey<PostList>(PostList.fromForumData(forum)),
+                        onTap: () {
+                          if (forumId != forum.id) {
+                            if (forum.isTimeline) {
+                              AppRoutes.toTimeline(timelineId: forum.id);
+                            } else {
+                              AppRoutes.toForum(forumId: forum.id);
+                            }
+                          }
+                          Get.back();
+                        },
+                        onLongPress: () async {
+                          if (await Get.dialog<bool>(_Dialog(forum: forum)) ??
+                              false) {
+                            Get.back();
+                          }
+                        },
+                        tileColor: (forumId == forum.id &&
+                                isTimeline == forum.isTimeline)
+                            ? theme.focusColor
+                            : null,
+                        title: ForumName(
+                          forumId: forum.id,
+                          isTimeline: forum.isTimeline,
+                          isDeprecated: forum.isDeprecated,
+                          textStyle: theme.textTheme.bodyText1,
+                          maxLines: 1,
+                        ),
+                      )
+                    : const SizedBox.shrink();
+              },
+            ),
+          );
   }
 }
 

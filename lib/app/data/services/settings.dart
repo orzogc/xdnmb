@@ -8,6 +8,14 @@ import '../models/forum.dart';
 import '../models/hive.dart';
 import '../models/settings.dart';
 
+final ForumData defaultForum = ForumData(
+    id: 1,
+    name: '综合线',
+    displayName: '综合线',
+    message: '主时间线',
+    maxPage: 20,
+    isTimeline: true);
+
 class SettingsService extends GetxService {
   static SettingsService get to => Get.find<SettingsService>();
 
@@ -31,14 +39,8 @@ class SettingsService extends GetxService {
   set showNotice(bool showNotice) =>
       _settingsBox.put(Settings.showNotice, showNotice);
 
-  ForumData get initialForum => _settingsBox.get(Settings.initialForum,
-      defaultValue: ForumData(
-          id: 1,
-          name: '综合线',
-          displayName: '综合线',
-          message: '主时间线',
-          maxPage: 20,
-          isTimeline: true));
+  ForumData get initialForum =>
+      _settingsBox.get(Settings.initialForum, defaultValue: defaultForum);
 
   set initialForum(ForumData forum) =>
       _settingsBox.put(Settings.initialForum, forum);

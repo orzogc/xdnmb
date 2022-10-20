@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart' hide Element;
-import 'package:get/get.dart';
 import 'package:html_to_text/html_to_text.dart';
 
 import 'regex.dart';
@@ -56,10 +55,8 @@ TextSpan getHiddenText(
       textStyle: textStyle,
       overrideTextStyle: TextStyle(
         decoration: hiddenText._isVisible ? null : TextDecoration.lineThrough,
-        decorationColor: hiddenText._isVisible
-            ? null
-            : (hiddenColor ??
-                (Get.isDarkMode ? AppTheme.colorDark : Colors.black)),
+        decorationColor:
+            hiddenText._isVisible ? null : (hiddenColor ?? textColor()),
         decorationThickness: hiddenText._isVisible ? null : (size.height + 5.0),
       ),
     );
@@ -78,8 +75,7 @@ TextSpan getHiddenText(
     textStyle: textStyle,
     overrideTextStyle: TextStyle(
       decoration: TextDecoration.lineThrough,
-      decorationColor:
-          hiddenColor ?? (Get.isDarkMode ? AppTheme.colorDark : Colors.black),
+      decorationColor: hiddenColor ?? textColor(),
       decorationThickness: size.height + 5.0,
     ),
   );

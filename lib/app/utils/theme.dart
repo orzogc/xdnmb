@@ -6,6 +6,8 @@ import '../data/services/settings.dart';
 Color specialTextColor() =>
     Get.isDarkMode ? AppTheme.colorDark : AppTheme.primaryColorLight;
 
+Color textColor() => Get.isDarkMode ? AppTheme.colorDark : Colors.black;
+
 abstract class AppTheme {
   static final Color primaryColorLight = Colors.red.shade300;
 
@@ -26,6 +28,8 @@ abstract class AppTheme {
   static final Color editPostFilledColorLight = Colors.grey.shade200;
 
   static const Color editPostFilledColorDark = Color(0xff4d4d4d);
+
+  static const Color headerColor = Colors.grey;
 
   static const TextStyle boldRed =
       TextStyle(color: Colors.red, fontWeight: FontWeight.bold);
@@ -138,9 +142,9 @@ abstract class AppTheme {
       subtitle2: TextStyle(),
       bodyText1: TextStyle(),
       bodyText2: TextStyle(),
-      //caption: TextStyle(),
-      //button: TextStyle(),
-      //overline: TextStyle(),
+      caption: TextStyle(),
+      button: TextStyle(),
+      overline: TextStyle(),
     ).apply(displayColor: colorDark, bodyColor: colorDark),
   );
 }

@@ -91,7 +91,7 @@ class _PostReplyCount extends StatelessWidget {
               child: Icon(
                 Icons.mode_comment_outlined,
                 size: 16.0,
-                color: PostContent._headerColor,
+                color: AppTheme.headerColor,
               )),
           Text('$replyCount')
         ],
@@ -114,7 +114,7 @@ class _PostTitle extends StatelessWidget {
               textStyle: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
-          style: const TextStyle(color: PostContent._headerColor),
+          style: const TextStyle(color: AppTheme.headerColor),
         ),
       );
 }
@@ -135,7 +135,7 @@ class _PostName extends StatelessWidget {
               textStyle: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
-          style: const TextStyle(color: PostContent._headerColor),
+          style: const TextStyle(color: AppTheme.headerColor),
         ),
       );
 }
@@ -205,8 +205,6 @@ class PostDraft extends StatelessWidget {
 }
 
 class PostContent extends StatelessWidget {
-  static const Color _headerColor = Colors.grey;
-
   final PostBase post;
 
   final bool showFullTime;
@@ -283,7 +281,7 @@ class PostContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DefaultTextStyle.merge(
-            style: theme.textTheme.caption?.apply(color: _headerColor),
+            style: theme.textTheme.caption?.apply(color: AppTheme.headerColor),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

@@ -37,66 +37,65 @@ class _JumpPageDialogState extends State<_JumpPageDialog> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return InputDialog(
-      title: const Text('跳页'),
-      content: Form(
-        key: _formKey,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-                onPressed: () => _controller.text = '1',
-                icon: const Icon(Icons.first_page)),
-            SizedBox(
-              width: 80,
-              child: TextFormField(
-                controller: _controller,
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  final num = value.tryParseInt();
-                  if (num == null ||
-                      (widget.maxPage != null && num > widget.maxPage!)) {
-                    return '请输入页数';
-                  }
+  Widget build(BuildContext context) => InputDialog(
+        title: const Text('跳页'),
+        content: Form(
+          key: _formKey,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                  onPressed: () => _controller.text = '1',
+                  icon: const Icon(Icons.first_page)),
+              SizedBox(
+                width: 80,
+                child: TextFormField(
+                  controller: _controller,
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    final num = value.tryParseInt();
+                    if (num == null ||
+                        (widget.maxPage != null && num > widget.maxPage!)) {
+                      return '请输入页数';
+                    }
 
-                  return null;
-                },
+                    return null;
+                  },
+                ),
               ),
-            ),
-            if (widget.maxPage != null) const Text('/'),
-            if (widget.maxPage != null) Text('${widget.maxPage}'),
-            IconButton(
-              onPressed: () {
-                if (widget.maxPage != null) {
-                  _controller.text = '${widget.maxPage}';
-                } else {
-                  final page = _controller.text.tryParseInt();
-                  if (page != null) {
-                    _controller.text = '${page + 10}';
+              if (widget.maxPage != null) const Text('/'),
+              if (widget.maxPage != null) Text('${widget.maxPage}'),
+              IconButton(
+                onPressed: () {
+                  if (widget.maxPage != null) {
+                    _controller.text = '${widget.maxPage}';
+                  } else {
+                    final page = _controller.text.tryParseInt();
+                    if (page != null) {
+                      _controller.text = '${page + 10}';
+                    }
                   }
-                }
-              },
-              icon: const Icon(Icons.last_page),
-            ),
-          ],
+                },
+                icon: const Icon(Icons.last_page),
+              ),
+            ],
+          ),
         ),
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              postListBack<int>(result: int.tryParse(_controller.text));
-            }
-          },
-          child: const Text('确定'),
-        )
-      ],
-    );
-  }
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                postListBack<int>(result: int.tryParse(_controller.text));
+              }
+            },
+            child: const Text('确定'),
+          )
+        ],
+      );
 }
 
+// TODO: 规范化其他dialog，防止重复出现
 class PageButton extends StatefulWidget {
   final PostListController controller;
 

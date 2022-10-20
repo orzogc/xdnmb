@@ -619,10 +619,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     );
   }
 
-  void _cancelJump() {
-    _isToJump.value = false;
-    //_isNoMoreItems = false;
-  }
+  void _cancelJump() => _isToJump.value = false;
 
   void _setToJump() {
     _isToJump.value = true;
@@ -630,7 +627,10 @@ class _ThreadBodyState extends State<ThreadBody> {
     widget.controller.addListener(_cancelJump);
   }
 
-  void _addRefresh() => _refresh++;
+  void _addRefresh() {
+    _refresh++;
+    _isNoMoreItems = false;
+  }
 
   @override
   void initState() {

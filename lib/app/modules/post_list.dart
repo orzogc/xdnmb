@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:get/get.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../data/models/draft.dart';
 import '../data/models/forum.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/draft.dart';
+import '../data/services/emoticon.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/history.dart';
 import '../data/services/settings.dart';
 import '../data/services/user.dart';
-import '../data/services/xdnmb_client.dart';
 import '../modules/edit_post.dart';
 import '../routes/routes.dart';
 import '../utils/image.dart';
@@ -26,6 +27,7 @@ import '../widgets/edit_post.dart';
 import '../widgets/end_drawer.dart';
 import '../widgets/feed.dart';
 import '../widgets/forum.dart';
+import '../widgets/guide.dart';
 import '../widgets/history.dart';
 import '../widgets/scroll.dart';
 import '../widgets/thread.dart';
@@ -207,6 +209,7 @@ class PostListAppBarState extends State<PostListAppBar> {
 
   @override
   Widget build(BuildContext context) {
+    final data = PersistentDataService.to;
     final scaffold = Scaffold.of(context);
     final controller = PostListController.get();
 
@@ -251,7 +254,7 @@ class PostListAppBarState extends State<PostListAppBar> {
           controller.isThreadType ? controller.refresh : controller.refreshPage,
       child: AppBar(
         leading: button,
-        title: title,
+        title: data.showGuide ? AppBarTitleGuide(title) : title,
         actions: [
           if (controller.isXdnmbApi)
             controller.isThreadType
@@ -266,14 +269,19 @@ class PostListAppBarState extends State<PostListAppBar> {
                                 : 1)
                             : null);
                   })
-                : PageButton(controller: controller),
+                : data.showGuide
+                    ? AppBarPageButtonGuide(PageButton(controller: controller))
+                    : PageButton(controller: controller),
           if (controller.isThreadType)
             NotifyBuilder(
                 animation: controller,
                 builder: (context, child) => ThreadAppBarPopupMenuButton(
                     controller as ThreadTypeController)),
           if (controller.isForumType)
-            ForumAppBarPopupMenuButton(controller as ForumTypeController),
+            data.showGuide
+                ? AppBarMenuGuide(ForumAppBarPopupMenuButton(
+                    controller as ForumTypeController))
+                : ForumAppBarPopupMenuButton(controller as ForumTypeController),
           if (controller.isHistory)
             HistoryDateRangePicker(controller as HistoryController),
           if (controller.isHistory)
@@ -418,6 +426,24 @@ class PostListPageState extends State<PostListPage> {
   final PageController _pageController = PageController();
 
   bool _isBuilt = false;
+
+  void _openDrawer() => Scaffold.of(context).openDrawer();
+
+  void _closeDrawer() => Scaffold.of(context).closeDrawer();
+
+  void _openEndDrawer() => Scaffold.of(context).openEndDrawer();
+
+  void _closeEndDrawer() => Scaffold.of(context).closeEndDrawer();
+
+  void _startDrawerGuide() => WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) => Future.delayed(const Duration(milliseconds: 200),
+          () => ShowCaseWidget.of(context).startShowCase(Guide.drawerGuides)));
+
+  void _startEndDrawerGuide() => WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) => Future.delayed(
+          const Duration(milliseconds: 200),
+          () =>
+              ShowCaseWidget.of(context).startShowCase(Guide.endDrawerGuides)));
 
   void jumpToPage(int page) {
     _pageController.jumpToPage(page);
@@ -751,6 +777,7 @@ class _PostListViewState extends State<PostListView>
     final blacklist = BlacklistService.to;
     final data = PersistentDataService.to;
     final drafts = PostDraftListService.to;
+    final emoticons = EmoticonListService.to;
     final forums = ForumListService.to;
     final history = PostHistoryService.to;
     final settings = SettingsService.to;
@@ -763,6 +790,7 @@ class _PostListViewState extends State<PostListView>
           if (blacklist.isReady.value &&
               data.isReady.value &&
               drafts.isReady.value &&
+              emoticons.isReady.value &&
               forums.isReady.value &&
               history.isReady.value &&
               settings.isReady.value &&
@@ -772,20 +800,25 @@ class _PostListViewState extends State<PostListView>
                   ForumTypeController.fromForumData(
                       forum: settings.initialForum));
 
-              // 公告的显示需要postList的navigator
-              WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-                final client = XdnmbClientService.to;
-                while (!client.hasGotNotice) {
-                  debugPrint('正在等待获取公告');
-                  await Future.delayed(const Duration(milliseconds: 500));
-                }
-                await data.showNotice();
-              });
+              //data.showGuide = true;
+
+              // 出现用户指导时公告延后显示
+              if (!data.showGuide) {
+                // 公告的显示需要postList的navigator
+                WidgetsBinding.instance
+                    .addPostFrameCallback((timeStamp) => data.showNotice());
+              }
 
               _isInitial = false;
             }
 
-            return Scaffold(
+            final floatingButton = FloatingButton(
+              key: FloatingButton.buttonKey,
+              bottomSheetController: _bottomSheetController,
+              bottomSheetHeight: bottomSheetHeight,
+            );
+
+            final scaffold = Scaffold(
               appBar: PostListAppBar(key: PostListAppBar.appBarKey),
               body: Column(
                 children: [
@@ -797,13 +830,36 @@ class _PostListViewState extends State<PostListView>
               drawerEdgeDragWidth: media.size.width / 2.0,
               drawer: const AppDrawer(),
               endDrawer: const AppEndDrawer(),
-              floatingActionButton: FloatingButton(
-                key: FloatingButton.buttonKey,
-                bottomSheetController: _bottomSheetController,
-                bottomSheetHeight: bottomSheetHeight,
-              ),
+              floatingActionButton: data.showGuide
+                  ? FloatingButtonGuide(floatingButton)
+                  : floatingButton,
               bottomNavigationBar: _BottomBar(key: _BottomBar._bottomBarKey),
             );
+
+            return data.showGuide
+                ? ShowCaseWidget(
+                    onFinish: () {
+                      if (Guide.isShowForumGuides) {
+                        Guide.isShowForumGuides = false;
+                        Guide.isShowDrawerGuides = true;
+                        PostListPage.pageKey.currentState!._openDrawer();
+                        PostListPage.pageKey.currentState!._startDrawerGuide();
+                      } else if (Guide.isShowDrawerGuides) {
+                        Guide.isShowDrawerGuides = false;
+                        PostListPage.pageKey.currentState!._closeDrawer();
+                        Guide.isShowEndDrawerGuides = true;
+                        PostListPage.pageKey.currentState!._openEndDrawer();
+                        PostListPage.pageKey.currentState!
+                            ._startEndDrawerGuide();
+                      } else if (Guide.isShowEndDrawerGuides) {
+                        Guide.isShowEndDrawerGuides = false;
+                        PostListPage.pageKey.currentState!._closeEndDrawer();
+                        data.showGuide = false;
+                        data.showNotice();
+                      }
+                    },
+                    builder: Builder(builder: (context) => scaffold))
+                : scaffold;
           } else {
             return const Center(child: Text('启动中', style: AppTheme.boldRed));
           }

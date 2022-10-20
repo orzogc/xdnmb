@@ -412,7 +412,10 @@ class _BrowseHistoryBody extends StatelessWidget {
                               padding: const EdgeInsets.only(
                                   left: 10.0, top: 5.0, right: 10.0),
                               child: DefaultTextStyle.merge(
-                                style: Theme.of(context).textTheme.caption,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .caption
+                                    ?.apply(color: AppTheme.headerColor),
                                 child: OverflowBar(
                                   spacing: 5.0,
                                   alignment: MainAxisAlignment.spaceBetween,
@@ -591,7 +594,10 @@ class _ReplyHistoryBody extends StatelessWidget {
                                 padding: const EdgeInsets.only(
                                     left: 10.0, top: 5.0, right: 10.0),
                                 child: DefaultTextStyle.merge(
-                                  style: Theme.of(context).textTheme.caption,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .caption
+                                      ?.apply(color: AppTheme.headerColor),
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,

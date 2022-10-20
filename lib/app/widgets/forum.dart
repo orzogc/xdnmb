@@ -1,12 +1,14 @@
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/forum.dart';
 import '../data/models/page.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/forum.dart';
+import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
@@ -20,6 +22,7 @@ import '../utils/toast.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
+import 'guide.dart';
 import 'post.dart';
 import 'post_list.dart';
 import 'reference.dart';
@@ -216,6 +219,7 @@ class ForumBody extends StatelessWidget {
     final client = XdnmbClientService.to.client;
     final forums = ForumListService.to;
     final blacklist = BlacklistService.to;
+    final data = PersistentDataService.to;
     final id = controller.id;
 
     return PostListAnchorRefresher(
@@ -226,46 +230,74 @@ class ForumBody extends StatelessWidget {
         controller: anchorController,
         initialPage: controller.page,
         lastPage: forums.maxPage(id, isTimeline: controller.isTimeline),
-        fetch: (page) async => controller.isTimeline
-            ? (await client.getTimeline(id, page: page)
-                  ..retainWhere((thread) =>
-                      thread.mainPost.isAdmin ||
-                      !(blacklist.hasForum(BlockForumData(
-                              forumId: thread.mainPost.forumId,
-                              timelineId: id)) ||
-                          blacklist.hasPost(thread.mainPost.id) ||
-                          blacklist.hasUser(thread.mainPost.userHash))))
-                .map((thread) => ThreadWithPage(thread, page))
-                .toList()
-            : (await client.getForum(id, page: page)
-                  ..retainWhere((thread) =>
-                      thread.mainPost.isAdmin ||
-                      !(blacklist.hasPost(thread.mainPost.id) ||
-                          blacklist.hasUser(thread.mainPost.userHash))))
-                .map((thread) => ThreadWithPage(thread, page))
-                .toList(),
-        itemBuilder: (context, thread, index) => AnchorItemWrapper(
-          key: thread.toValueKey(),
-          controller: anchorController,
-          index: thread.toIndex(),
-          child: Card(
-            margin: const EdgeInsets.symmetric(vertical: 4.0),
-            elevation: 1.5,
-            child: PostCard(
-              post: thread.thread.mainPost,
-              showFullTime: false,
-              showForumName: controller.isTimeline,
-              contentMaxLines: 8,
-              poUserHash: thread.thread.mainPost.userHash,
-              onTap: (post) => AppRoutes.toThread(
-                  mainPostId: thread.thread.mainPost.id,
-                  mainPost: thread.thread.mainPost),
-              onLongPress: (post) => postListDialog(
-                _ForumDialog(controller: controller, post: post),
+        fetch: (page) async {
+          ShowCaseWidgetState? showCase;
+          final shouldShowGuide = data.showGuide &&
+              controller.isTimeline == defaultForum.isTimeline &&
+              id == defaultForum.id &&
+              page == 1;
+          if (shouldShowGuide) {
+            showCase = ShowCaseWidget.of(context);
+          }
+
+          final threads = controller.isTimeline
+              ? (await client.getTimeline(id, page: page)
+                    ..retainWhere((thread) =>
+                        thread.mainPost.isAdmin ||
+                        !(blacklist.hasForum(BlockForumData(
+                                forumId: thread.mainPost.forumId,
+                                timelineId: id)) ||
+                            blacklist.hasPost(thread.mainPost.id) ||
+                            blacklist.hasUser(thread.mainPost.userHash))))
+                  .map((thread) => ThreadWithPage(thread, page))
+                  .toList()
+              : (await client.getForum(id, page: page)
+                    ..retainWhere((thread) =>
+                        thread.mainPost.isAdmin ||
+                        !(blacklist.hasPost(thread.mainPost.id) ||
+                            blacklist.hasUser(thread.mainPost.userHash))))
+                  .map((thread) => ThreadWithPage(thread, page))
+                  .toList();
+
+          if (shouldShowGuide) {
+            Guide.isShowForumGuides = true;
+            showCase!.startShowCase(Guide.forumGuides);
+          }
+
+          return threads;
+        },
+        itemBuilder: (context, thread, index) {
+          final item = AnchorItemWrapper(
+            key: thread.toValueKey(),
+            controller: anchorController,
+            index: thread.toIndex(),
+            child: Card(
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              elevation: 1.5,
+              child: PostCard(
+                post: thread.thread.mainPost,
+                showFullTime: false,
+                showForumName: controller.isTimeline,
+                contentMaxLines: 8,
+                poUserHash: thread.thread.mainPost.userHash,
+                onTap: (post) => AppRoutes.toThread(
+                    mainPostId: thread.thread.mainPost.id,
+                    mainPost: thread.thread.mainPost),
+                onLongPress: (post) => postListDialog(
+                  _ForumDialog(controller: controller, post: post),
+                ),
               ),
             ),
-          ),
-        ),
+          );
+
+          return data.showGuide &&
+                  controller.isTimeline == defaultForum.isTimeline &&
+                  id == defaultForum.id &&
+                  thread.page == 1 &&
+                  index == 0
+              ? ThreadGuide(item)
+              : item;
+        },
         noItemsFoundBuilder: (context) => const Center(
           child: Text('没有串', style: AppTheme.boldRed),
         ),

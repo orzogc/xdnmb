@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
-import 'package:xdnmb/app/widgets/thread.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' as xdnmb_api;
 
 import '../data/models/draft.dart';
@@ -42,6 +41,7 @@ import 'image.dart';
 import 'loading.dart';
 import 'scroll.dart';
 import 'size.dart';
+import 'thread.dart';
 
 const double _defaultHeight = 200.0;
 

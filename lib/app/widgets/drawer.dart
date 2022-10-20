@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
@@ -13,6 +14,7 @@ import '../utils/url.dart';
 import 'content.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
+import 'guide.dart';
 import 'reference.dart';
 import 'thread.dart';
 
@@ -52,7 +54,7 @@ class _SearchDialog extends StatelessWidget {
               postListDialog(Center(child: ReferenceCard(postId: postId)));
             }
           },
-          child: const Text('查串'),
+          child: const Text('查询串号'),
         ),
         const ElevatedButton(
           onPressed: null,
@@ -68,8 +70,38 @@ class _DrawerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final settings = SettingsService.to;
+    final data = PersistentDataService.to;
+    final theme = Theme.of(context);
+
+    final darkMode = Get.isDarkMode
+        ? IconButton(
+            onPressed: () => settings.isDarkMode = false,
+            tooltip: '光来！',
+            icon: const Icon(Icons.sunny, color: Colors.white),
+          )
+        : IconButton(
+            onPressed: () => settings.isDarkMode = true,
+            tooltip: '暗来！',
+            icon: const Icon(Icons.brightness_3, color: Colors.black),
+          );
+
+    final search = IconButton(
+      onPressed: () async {
+        final result = await Get.dialog<bool>(_SearchDialog());
+        if (result ?? false) {
+          Get.back();
+        }
+      },
+      tooltip: '搜索',
+      icon: Icon(Icons.search, color: theme.colorScheme.onPrimary),
+    );
+
+    final setting = IconButton(
+      onPressed: AppRoutes.toSettings,
+      tooltip: '设置',
+      icon: Icon(Icons.settings, color: theme.colorScheme.onPrimary),
+    );
 
     return SizedBox(
       height: (theme.appBarTheme.toolbarHeight ?? kToolbarHeight) +
@@ -92,32 +124,9 @@ class _DrawerHeader extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            Get.isDarkMode
-                ? IconButton(
-                    onPressed: () => settings.isDarkMode = false,
-                    tooltip: '光来！',
-                    icon: const Icon(Icons.sunny, color: Colors.white),
-                  )
-                : IconButton(
-                    onPressed: () => settings.isDarkMode = true,
-                    tooltip: '暗来！',
-                    icon: const Icon(Icons.brightness_3, color: Colors.black),
-                  ),
-            IconButton(
-              onPressed: () async {
-                final result = await Get.dialog<bool>(_SearchDialog());
-                if (result ?? false) {
-                  Get.back();
-                }
-              },
-              tooltip: '搜索',
-              icon: Icon(Icons.search, color: theme.colorScheme.onPrimary),
-            ),
-            IconButton(
-              onPressed: AppRoutes.toSettings,
-              tooltip: '设置',
-              icon: Icon(Icons.settings, color: theme.colorScheme.onPrimary),
-            ),
+            data.showGuide ? DarkModeGuide(darkMode) : darkMode,
+            data.showGuide ? SearchGuide(search) : search,
+            data.showGuide ? SettingsGuide(setting) : setting,
           ],
         ),
       ),
@@ -143,8 +152,10 @@ class _TabTitle extends StatelessWidget {
           final forumId = controller.post?.forumId;
 
           return DefaultTextStyle.merge(
-            style:
-                Theme.of(context).textTheme.caption?.apply(color: Colors.grey),
+            style: Theme.of(context)
+                .textTheme
+                .caption
+                ?.apply(color: AppTheme.headerColor),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -191,6 +202,7 @@ class _TabList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final data = PersistentDataService.to;
     final theme = Theme.of(context);
 
     return Center(
@@ -202,7 +214,7 @@ class _TabList extends StatelessWidget {
           itemBuilder: (context, index) {
             final controller = PostListController.get(index);
 
-            return ListTile(
+            final tab = ListTile(
               key: ValueKey<int>(ControllerStack.getKeyId(index)),
               onTap: () {
                 PostListPage.pageKey.currentState!.jumpToPage(index);
@@ -222,9 +234,7 @@ class _TabList extends StatelessWidget {
                               maxLines: 2,
                               displayImage: false,
                               textStyle: theme.textTheme.bodyText2?.apply(
-                                color: Get.isDarkMode
-                                    ? AppTheme.colorDark
-                                    : Colors.black,
+                                color: textColor(),
                               ),
                             )
                           : const SizedBox.shrink();
@@ -240,6 +250,8 @@ class _TabList extends StatelessWidget {
                       icon: const Icon(Icons.close))
                   : null,
             );
+
+            return (data.showGuide && index == 0) ? TabListGuide(tab) : tab;
           },
           separatorBuilder: (BuildContext context, int index) =>
               const Divider(height: 10, thickness: 1),
@@ -276,7 +288,24 @@ class _DrawerBottom extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final data = PersistentDataService.to;
     final theme = Theme.of(context);
+
+    final history = IconButton(
+      onPressed: () {
+        AppRoutes.toHistory();
+        Get.back();
+      },
+      icon: const Icon(Icons.history),
+    );
+
+    final feed = IconButton(
+      onPressed: () {
+        AppRoutes.toFeed();
+        Get.back();
+      },
+      icon: const Icon(Icons.rss_feed),
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0),
@@ -293,19 +322,8 @@ class _DrawerBottom extends StatelessWidget {
                       color: theme.primaryColor, fontWeight: FontWeight.bold)),
             ),
           ),
-          IconButton(
-              onPressed: () {
-                AppRoutes.toHistory();
-                Get.back();
-              },
-              icon: const Icon(Icons.history)),
-          IconButton(
-            onPressed: () {
-              AppRoutes.toFeed();
-              Get.back();
-            },
-            icon: const Icon(Icons.rss_feed),
-          )
+          data.showGuide ? HistoryGuide(history) : history,
+          data.showGuide ? FeedGuide(feed) : feed,
         ],
       ),
     );

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:get/get.dart';
@@ -43,7 +42,11 @@ class PersistentDataService extends GetxService {
 
   set diceUpper(int upper) => _dataBox.put(PersistentData.diceUpper, upper);
 
-  late final ValueListenable<Box> keyboardHeightListenable;
+  bool get showGuide =>
+      _dataBox.get(PersistentData.showGuide, defaultValue: true);
+
+  set showGuide(bool showGuide) =>
+      _dataBox.put(PersistentData.showGuide, showGuide);
 
   void saveNotice(Notice notice) {
     if (notice.isValid && this.notice != notice.content) {
@@ -57,6 +60,11 @@ class PersistentDataService extends GetxService {
 
   Future<void> showNotice() async {
     if (SettingsService.to.showNotice) {
+      final client = XdnmbClientService.to;
+      while (!client.hasGotNotice) {
+        debugPrint('正在等待获取公告');
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
       await showNoticeDialog(showCheckbox: true);
     }
   }
@@ -88,9 +96,6 @@ class PersistentDataService extends GetxService {
           .onChange
           .listen((visible) => isKeyboardVisible.value = visible);
     }
-
-    keyboardHeightListenable =
-        _dataBox.listenable(keys: [PersistentData.keyboardHeight]);
 
     isReady.value = true;
 
