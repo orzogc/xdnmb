@@ -20,17 +20,34 @@ class XdnmbClientService extends GetxService {
 
   XdnmbClientService() : client = XdnmbApi();
 
+  Future<void> _updateForumList() async {
+    final timelineList = await client.getTimelineList();
+    final timelineMap = {
+      for (final timeline in timelineList) timeline.id: timeline
+    };
+
+    final forumList = await client.getForumList();
+    final forumMap = {for (final forum in forumList.forumList) forum.id: forum};
+
+    final forums = ForumListService.to;
+    if (forums.isReady.value) {
+      await forums.updateForums(timelineMap, forumMap);
+    }
+  }
+
   @override
   void onReady() async {
     super.onReady();
+
+    final data = PersistentDataService.to;
 
     try {
       debugPrint('开始获取X岛公告');
 
       final notice = await client.getNotice();
 
-      final data = PersistentDataService.to;
       if (data.isReady.value && SettingsService.to.isReady.value) {
+        debugPrint('保存公告');
         data.saveNotice(notice);
       }
 
@@ -46,19 +63,24 @@ class XdnmbClientService extends GetxService {
 
       await client.updateUrls();
 
-      final timelineList = await client.getTimelineList();
-      final timelineMap = {
-        for (final timeline in timelineList) timeline.id: timeline
-      };
-
-      final forumList = await client.getForumList();
-      final forumMap = {
-        for (final forum in forumList.forumList) forum.id: forum
-      };
-
-      final forums = ForumListService.to;
-      if (forums.isReady.value) {
-        await forums.updateForums(timelineMap, forumMap);
+      if (data.isReady.value) {
+        if (data.updateForumListTime != null) {
+          if (DateTime.now().difference(data.updateForumListTime!) >=
+              PersistentDataService.updateForumListInterval) {
+            debugPrint('板块列表过期，更新板块列表');
+            await _updateForumList();
+            data.updateForumListTime = DateTime.now();
+          } else {
+            debugPrint('板块列表未过期，取消更新');
+          }
+        } else {
+          debugPrint('没有更新记录，更新板块列表');
+          await _updateForumList();
+          data.updateForumListTime = DateTime.now();
+        }
+      } else {
+        debugPrint('更新板块列表');
+        await _updateForumList();
       }
 
       debugPrint('更新X岛服务成功');

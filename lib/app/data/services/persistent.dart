@@ -13,6 +13,8 @@ import 'xdnmb_client.dart';
 class PersistentDataService extends GetxService {
   static PersistentDataService get to => Get.find<PersistentDataService>();
 
+  static const Duration updateForumListInterval = Duration(hours: 6);
+
   late final Box _dataBox;
 
   final RxBool isKeyboardVisible = false.obs;
@@ -47,6 +49,12 @@ class PersistentDataService extends GetxService {
 
   set showGuide(bool showGuide) =>
       _dataBox.put(PersistentData.showGuide, showGuide);
+
+  DateTime? get updateForumListTime =>
+      _dataBox.get(PersistentData.updateForumListTime, defaultValue: null);
+
+  set updateForumListTime(DateTime? time) =>
+      _dataBox.put(PersistentData.updateForumListTime, time);
 
   void saveNotice(Notice notice) {
     if (notice.isValid && this.notice != notice.content) {

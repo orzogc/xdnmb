@@ -241,7 +241,8 @@ class UserService extends GetxService {
       updatePostCookie();
     });
 
-    userCookieListenable = _userBox.listenable(keys: [User.userCookie]);
+    userCookieListenable =
+        _userBox.listenable(keys: [User.userCookie, User.userCookieExpireDate]);
     browseCookieListenable = _userBox.listenable(keys: [User.browseCookie]);
     postCookieListenable = _userBox.listenable(keys: [User.postCookie]);
     cookiesListenable = _cookiesBox.listenable();

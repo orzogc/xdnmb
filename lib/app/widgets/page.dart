@@ -95,7 +95,6 @@ class _JumpPageDialogState extends State<_JumpPageDialog> {
       );
 }
 
-// TODO: 规范化其他dialog，防止重复出现
 class PageButton extends StatefulWidget {
   final PostListController controller;
 

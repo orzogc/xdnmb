@@ -10,4 +10,6 @@ abstract class PersistentData {
   static const String diceUpper = 'diceUpper';
 
   static const String showGuide = 'showGuide';
+
+  static const String updateForumListTime = 'updateForumListTime';
 }
