@@ -15,6 +15,8 @@ import 'toast.dart';
 abstract class Urls {
   static const String appSource = 'https://github.com/orzogc/xdnmb';
 
+  static const String authorSponsor = 'https://afdian.net/a/orzogc';
+
   static const String xdnmbSponsor = 'https://afdian.net/a/nmbxd';
 }
 

@@ -249,6 +249,17 @@ class _FixMissingFont extends StatelessWidget {
   }
 }
 
+class _AuthorSponsor extends StatelessWidget {
+  const _AuthorSponsor({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        title: const Text('赞助'),
+        subtitle: const Text(Urls.authorSponsor),
+        onTap: () => launchURL(Urls.authorSponsor),
+      );
+}
+
 class _AppSource extends StatelessWidget {
   const _AppSource({super.key});
 
@@ -318,6 +329,7 @@ class SettingsView extends GetView<SettingsController> {
             _FeedId(),
             _FixMissingFont(),
             ListTile(title: Text('作者'), subtitle: Text('Orzogc')),
+            _AuthorSponsor(),
             _AppSource(),
             ListTile(
               title: Text('开源许可证'),

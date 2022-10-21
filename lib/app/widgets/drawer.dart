@@ -271,7 +271,7 @@ class _SponsorDialog extends StatelessWidget {
     return SimpleDialog(
       children: [
         SimpleDialogOption(
-          onPressed: () {},
+          onPressed: () => launchURL(Urls.authorSponsor),
           child: Text('赞助客户端作者', style: textStyle),
         ),
         SimpleDialogOption(
