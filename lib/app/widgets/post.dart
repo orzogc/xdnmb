@@ -167,11 +167,9 @@ class PostDraft extends StatelessWidget {
       this.content,
       this.contentMaxLines,
       this.textStyle})
-      : assert(
-            (title?.isNotEmpty ?? false) ||
-                (name?.isNotEmpty ?? false) ||
-                (content?.isNotEmpty ?? false),
-            'the post\'s text can\'t be all empty');
+      : assert((title?.isNotEmpty ?? false) ||
+            (name?.isNotEmpty ?? false) ||
+            (content?.isNotEmpty ?? false));
 
   @override
   Widget build(BuildContext context) {

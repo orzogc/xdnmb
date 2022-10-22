@@ -40,7 +40,7 @@ class ImageService extends GetxService {
 
     if (isGranted) {
       try {
-        savePath = await picturesPath();
+        savePath = await getPicturesPath();
       } catch (e) {
         showToast('获取图片保存文件夹失败：$e');
       }

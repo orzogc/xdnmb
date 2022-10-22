@@ -43,7 +43,7 @@ class _DrawerHeader extends StatelessWidget {
         child: Row(
           children: [
             Text(
-              '板块',
+              '版块',
               style: (theme.appBarTheme.titleTextStyle ??
                       theme.textTheme.headline6)
                   ?.apply(
@@ -116,14 +116,14 @@ class _Dialog extends StatelessWidget {
             onPressed: () async {
               await ForumListService.to.hideForum(forum);
 
-              showToast('隐藏板块 $forumName');
+              showToast('隐藏版块 $forumName');
               Get.back(result: false);
             },
             child: ForumName(
               forumId: forum.id,
               isTimeline: forum.isTimeline,
               leading: '隐藏 ',
-              trailing: ' 板块',
+              trailing: ' 版块',
               textStyle: textStyle,
               maxLines: 1,
             ),
@@ -140,7 +140,7 @@ class _Dialog extends StatelessWidget {
               forumId: forum.id,
               isTimeline: forum.isTimeline,
               leading: '修改 ',
-              trailing: ' 板块的名字',
+              trailing: ' 版块的名字',
               textStyle: textStyle,
               maxLines: 1,
             ),

@@ -3,6 +3,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 part 'forum.g.dart';
 
+/// 版块数据
 @HiveType(typeId: 1)
 class ForumData extends HiveObject implements ForumBase {
   @HiveField(0)

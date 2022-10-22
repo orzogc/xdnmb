@@ -67,19 +67,19 @@ class XdnmbClientService extends GetxService {
         if (data.updateForumListTime != null) {
           if (DateTime.now().difference(data.updateForumListTime!) >=
               PersistentDataService.updateForumListInterval) {
-            debugPrint('板块列表过期，更新板块列表');
+            debugPrint('版块列表过期，更新版块列表');
             await _updateForumList();
             data.updateForumListTime = DateTime.now();
           } else {
-            debugPrint('板块列表未过期，取消更新');
+            debugPrint('版块列表未过期，取消更新');
           }
         } else {
-          debugPrint('没有更新记录，更新板块列表');
+          debugPrint('没有更新记录，更新版块列表');
           await _updateForumList();
           data.updateForumListTime = DateTime.now();
         }
       } else {
-        debugPrint('更新板块列表');
+        debugPrint('更新版块列表');
         await _updateForumList();
       }
 

@@ -388,7 +388,7 @@ class _BrowseHistoryBody extends StatelessWidget {
             return Obx(
               () => isVisible.value
                   ? Card(
-                      key: ValueKey(browse.id),
+                      key: ValueKey<int>(browse.id),
                       margin: const EdgeInsets.symmetric(vertical: 4.0),
                       elevation: 1.5,
                       child: InkWell(
@@ -487,7 +487,7 @@ class _PostHistoryBody extends StatelessWidget {
             return Obx(
               () => isVisible.value
                   ? Card(
-                      key: ValueKey(mainPost.id),
+                      key: ValueKey<int>(mainPost.id),
                       margin: const EdgeInsets.symmetric(vertical: 4.0),
                       elevation: 1.5,
                       child: PostCard(
@@ -565,7 +565,7 @@ class _ReplyHistoryBody extends StatelessWidget {
 
                 return isVisible.value
                     ? Card(
-                        key: ValueKey(reply.id),
+                        key: ValueKey<int>(reply.id),
                         margin: const EdgeInsets.symmetric(vertical: 4.0),
                         elevation: 1.5,
                         child: InkWell(

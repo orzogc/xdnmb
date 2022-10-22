@@ -6,6 +6,7 @@ import '../data/models/draft.dart';
 import '../data/models/forum.dart';
 import 'directory.dart';
 
+/// 初始化Hive数据库
 Future<void> initHive() async {
   Hive.init(databasePath);
 

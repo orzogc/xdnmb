@@ -109,20 +109,20 @@ class ForumListService extends GetxService {
         final client = XdnmbClientService.to.client;
         final forum = await client.getHtmlForumInfo(forumId);
         await addForum(ForumData.fromHtmlForum(forum));
-        debugPrint('增加废弃板块：${forum.name}');
+        debugPrint('增加废弃版块：${forum.name}');
       } catch (e) {
         debugPrint('获取HtmlForum失败：$e');
       }
     }
   }
 
-  /// 返回[ForumData]，不会自动请求未知板块的信息
+  /// 返回[ForumData]，不会自动请求未知版块的信息
   ForumData? forum(int forumId, {bool isTimeline = false}) {
     try {
       return forums.firstWhere(
           (forum) => forum.id == forumId && forum.isTimeline == isTimeline);
     } catch (e) {
-      debugPrint('ForumListService里没有ID为$forumId的板块/时间线');
+      debugPrint('ForumListService里没有ID为$forumId的版块/时间线');
 
       return null;
     }
@@ -178,7 +178,7 @@ class ForumListService extends GetxService {
       if (newForums.isNotEmpty) {
         final newForumString =
             newForums.map((forum) => forum.forumName).join(' ');
-        showToast('新板块：$newForumString');
+        showToast('新版块：$newForumString');
 
         await _forumBox.addAll(newForums);
       }
@@ -223,7 +223,7 @@ class ForumListService extends GetxService {
     _notifyUpdateForumName();
   }
 
-  /// 返回板块名字，会自动请求未知板块的信息
+  /// 返回版块名字，会自动请求未知版块的信息
   String? forumName(int forumId, {bool isTimeline = false}) {
     final name = _forumMap[_ForumKey(forumId, isTimeline)]?.name;
     if (name != null) {
@@ -270,7 +270,7 @@ class ForumListService extends GetxService {
     _updateForumMap();
 
     isReady.value = true;
-    debugPrint('读取板块列表成功');
+    debugPrint('读取版块列表成功');
   }
 
   @override

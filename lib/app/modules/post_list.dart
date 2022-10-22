@@ -244,7 +244,8 @@ class PostListAppBarState extends State<PostListAppBar> {
           final controller_ = controller as HistoryController;
 
           return HistoryAppBarTitle(controller_,
-              key: ValueKey(HistoryBottomBarKey.fromController(controller_)));
+              key: ValueKey<HistoryBottomBarKey>(
+                  HistoryBottomBarKey.fromController(controller_)));
         });
         break;
     }

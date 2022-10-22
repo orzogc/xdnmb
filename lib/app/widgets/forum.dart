@@ -156,9 +156,9 @@ class _BlockForum extends StatelessWidget {
         final result = await postListDialog<bool>(ConfirmCancelDialog(
           contentWidget: ForumName(
               forumId: forumId,
-              leading: '确定屏蔽板块 ',
+              leading: '确定屏蔽版块 ',
               trailing: ' ？',
-              fallbackText: '确定屏蔽板块？',
+              fallbackText: '确定屏蔽版块？',
               textStyle: textStyle,
               maxLines: 1),
           onConfirm: () => postListBack<bool>(result: true),
@@ -172,11 +172,11 @@ class _BlockForum extends StatelessWidget {
 
           final forumText = htmlToPlainText(
               Get.context!, ForumListService.to.forumName(forumId) ?? '');
-          showToast('屏蔽板块 $forumText');
+          showToast('屏蔽版块 $forumText');
           postListBack();
         }
       },
-      child: Text('屏蔽板块', style: textStyle),
+      child: Text('屏蔽版块', style: textStyle),
     );
   }
 }
@@ -229,7 +229,9 @@ class ForumBody extends StatelessWidget {
         key: ValueKey<int>(refresh),
         controller: anchorController,
         initialPage: controller.page,
-        lastPage: forums.maxPage(id, isTimeline: controller.isTimeline),
+        // 板块的最大页固定为100
+        lastPage:
+            controller.isTimeline ? forums.maxPage(id, isTimeline: true) : 100,
         fetch: (page) async {
           ShowCaseWidgetState? showCase;
           final shouldShowGuide = data.showGuide &&

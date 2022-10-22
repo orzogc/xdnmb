@@ -234,7 +234,7 @@ class NoticeDialog extends StatelessWidget {
   }
 }
 
-// TODO: 废弃板块自动更新最新版规
+// TODO: 废弃版块自动更新最新版规
 class ForumRuleDialog extends StatelessWidget {
   final int forumId;
 

@@ -29,6 +29,49 @@ import 'forum_name.dart';
 import 'loading.dart';
 import 'post.dart';
 
+class _DumbPost implements PostBase {
+  @override
+  int get id => 0;
+
+  @override
+  int? get forumId => null;
+
+  @override
+  int? get replyCount => null;
+
+  @override
+  String get image => '';
+
+  @override
+  String get imageExtension => '';
+
+  @override
+  DateTime get postTime => DateTime.now();
+
+  @override
+  String get userHash => '';
+
+  @override
+  String get name => '';
+
+  @override
+  String get title => '';
+
+  @override
+  String get content => '';
+
+  @override
+  bool? get isSage => null;
+
+  @override
+  bool get isAdmin => false;
+
+  @override
+  bool? get isHidden => null;
+
+  const _DumbPost();
+}
+
 abstract class ThreadTypeController extends PostListController {
   @override
   final int id;
@@ -348,6 +391,8 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   bool _isNoMoreItems = false;
 
+  int _maxPage = 1;
+
   Future<void> _saveBrowseHistory() async {
     if (!_isSavingBrowseHistory) {
       _isSavingBrowseHistory = true;
@@ -463,6 +508,7 @@ class _ThreadBodyState extends State<ThreadBody> {
         ? await client.getThread(postId, page: page)
         : await client.getOnlyPoThread(postId, page: page);
 
+    _maxPage = thread.mainPost.maxPage ?? 1;
     controller.post = thread.mainPost;
     if (page == firstPage) {
       controller._refreshNotifier.notify();
@@ -497,6 +543,10 @@ class _ThreadBodyState extends State<ThreadBody> {
   }
 
   Widget _itemBuilder(BuildContext context, PostWithPage post) {
+    if (post.post is _DumbPost) {
+      return Center(child: Text('第${post.page}页 空页', style: AppTheme.boldRed));
+    }
+
     final theme = Theme.of(context);
     final controller = widget.controller;
     final mainPost = controller.post;
@@ -601,6 +651,10 @@ class _ThreadBodyState extends State<ThreadBody> {
                                         }
                                       }
                                   : null,
+                              fetchFallback: (page) => Future.value(
+                                [PostWithPage(const _DumbPost(), page)],
+                              ),
+                              getMaxPage: () => _maxPage,
                             ),
                           ),
                         ],
@@ -648,6 +702,8 @@ class _ThreadBodyState extends State<ThreadBody> {
     );
 
     widget.controller.addListener(_addRefresh);
+
+    _maxPage = widget.controller.post?.maxPage ?? 1;
   }
 
   @override

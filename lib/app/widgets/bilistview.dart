@@ -15,6 +15,8 @@ typedef FetchPage<T> = Future<List<T>> Function(int page);
 
 typedef GetFunctionCallback = void Function(VoidCallback function);
 
+typedef GetPageCallback = int Function();
+
 class BiListView<T> extends StatefulWidget {
   final ScrollController? controller;
 
@@ -40,6 +42,10 @@ class BiListView<T> extends StatefulWidget {
 
   final GetFunctionCallback? getLoadMore;
 
+  final FetchPage<T>? fetchFallback;
+
+  final GetPageCallback? getMaxPage;
+
   const BiListView(
       {super.key,
       this.controller,
@@ -53,7 +59,11 @@ class BiListView<T> extends StatefulWidget {
       this.noItemsFoundBuilder,
       this.onNoMoreItems,
       this.onRefresh,
-      this.getLoadMore});
+      this.getLoadMore,
+      this.fetchFallback,
+      this.getMaxPage})
+      : assert(
+            getMaxPage == null || (lastPage == null && fetchFallback != null));
 
   @override
   State<BiListView<T>> createState() => _BiListViewState<T>();
@@ -95,7 +105,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
       try {
         debugPrint('up page fetching $T page: $page');
 
-        final list = await widget.fetch(page);
+        List<T> list = await widget.fetch(page);
+        if (list.isEmpty && widget.fetchFallback != null) {
+          list = await widget.fetchFallback!(page);
+        }
 
         page != widget.firstPage
             ? _pagingUpController?.appendPage(list.reversed.toList(), page - 1)
@@ -120,7 +133,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
       try {
         debugPrint('down page fetching $T page: $page');
 
-        final list = await widget.fetch(page);
+        List<T> list = await widget.fetch(page);
 
         if (_isLoading && _pagingDownController?.itemList != null) {
           _pagingDownController?.itemList!.removeRange(
@@ -130,10 +143,15 @@ class _BiListViewState<T> extends State<BiListView<T>>
         if (list.isNotEmpty) {
           _lastPage = page;
           _itemListLength = _pagingDownController?.itemList?.length ?? 0;
+        } else if (widget.getMaxPage != null &&
+            widget.fetchFallback != null &&
+            page <= widget.getMaxPage!()) {
+          list = await widget.fetchFallback!(page);
+          _lastPage = page;
+          _itemListLength = _pagingDownController?.itemList?.length ?? 0;
         }
 
-        list.isNotEmpty &&
-                ((lastPage != null && page != lastPage) || lastPage == null)
+        list.isNotEmpty && (lastPage == null || page < lastPage)
             ? _pagingDownController?.appendPage(list, page + 1)
             : _pagingDownController?.appendLastPage(list);
       } catch (e) {

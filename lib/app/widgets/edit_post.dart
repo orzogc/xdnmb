@@ -69,7 +69,7 @@ class _ForumName extends StatelessWidget {
         if (forumId != null) {
           forumName = forums.forumName(forumId!);
         }
-        forumName ??= '选择板块';
+        forumName ??= '选择版块';
 
         return postListType.isTimeline
             ? TextButton(
@@ -702,7 +702,7 @@ class _Post extends StatelessWidget {
 
   final int? forumId;
 
-  final bool? isWatermark;
+  final bool isWatermark;
 
   final Uint8List? imageData;
 
@@ -722,7 +722,7 @@ class _Post extends StatelessWidget {
       {super.key,
       required this.postList,
       this.forumId,
-      this.isWatermark,
+      this.isWatermark = false,
       this.imageData,
       this.reportReason,
       required this.isPainted,
@@ -939,7 +939,7 @@ class _Post extends StatelessWidget {
                 showToast('不发图时串的内容不能为空');
               }
             } else {
-              showToast('请选择板块');
+              showToast('请选择版块');
             }
           } else {
             showToast('发串需要饼干，请在设置里领取饼干');

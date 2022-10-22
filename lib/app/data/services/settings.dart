@@ -16,6 +16,7 @@ final ForumData defaultForum = ForumData(
     maxPage: 20,
     isTimeline: true);
 
+/// 设置服务
 class SettingsService extends GetxService {
   static SettingsService get to => Get.find<SettingsService>();
 
@@ -102,6 +103,7 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> fixMissingFontListenable;
 
+  /// 是否修复字体，结果保存在[fixMissingFont]
   static Future<void> getIsFixMissingFont() async {
     final box = await Hive.openBox(HiveBoxName.settings);
     isFixMissingFont = box.get(Settings.fixMissingFont, defaultValue: false);

@@ -229,8 +229,8 @@ class ForumListGuide extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Showcase(
         key: _key,
-        title: '板块列表',
-        description: '从右向左划可以打开板块列表，点击进入板块，长按打开功能菜单',
+        title: '版块列表',
+        description: '从右向左划可以打开版块列表，点击进入版块，长按打开功能菜单',
         child: child,
       );
 }
@@ -245,8 +245,8 @@ class ReorderForumsGuide extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Showcase(
         key: _key,
-        title: '板块排序',
-        description: '点击可以设置板块顺序和显示/隐藏板块',
+        title: '版块排序',
+        description: '点击可以设置版块顺序和显示/隐藏版块',
         child: child,
       );
 }

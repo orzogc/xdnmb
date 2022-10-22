@@ -155,10 +155,10 @@ class _EditForumNameState extends State<EditForumName> {
         key: _formKey,
         child: TextFormField(
           controller: _controller,
-          decoration: const InputDecoration(labelText: '板块名字'),
+          decoration: const InputDecoration(labelText: '版块名字'),
           autofocus: true,
           validator: (value) =>
-              (value == null || value.isEmpty) ? '请输入板块名字' : null,
+              (value == null || value.isEmpty) ? '请输入版块名字' : null,
         ),
       ),
       actions: [

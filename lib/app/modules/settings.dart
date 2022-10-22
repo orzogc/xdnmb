@@ -22,7 +22,7 @@ class _InitialForum extends StatelessWidget {
     return ValueListenableBuilder<Box>(
       valueListenable: settings.initialForumListenable,
       builder: (context, value, child) => ListTile(
-        title: const Text('应用启动后显示的板块'),
+        title: const Text('应用启动后显示的版块'),
         trailing: TextButton(
           onPressed: () => Get.dialog(SelectForum(onSelect: (forum) {
             settings.initialForum = forum.copy();

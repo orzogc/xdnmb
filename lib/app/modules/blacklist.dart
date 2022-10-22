@@ -23,7 +23,7 @@ class _AppBarTitle extends StatelessWidget {
     late final String text;
     switch (index) {
       case BlacklistView._forumIndex:
-        text = '板块黑名单';
+        text = '版块黑名单';
         break;
       case BlacklistView._postIndex:
         text = '串号黑名单';
@@ -60,7 +60,7 @@ class _AppBarPopupMenuButton extends StatelessWidget {
                 case BlacklistView._forumIndex:
                   if (blacklist.forumBlacklistLength > 0) {
                     Get.dialog(ConfirmCancelDialog(
-                      content: '确定清空板块黑名单？',
+                      content: '确定清空版块黑名单？',
                       onConfirm: () async {
                         await blacklist.clearForumBlacklist();
                         refresh();
@@ -251,7 +251,7 @@ class _BodyState extends State<_Body> {
                         htmlToTextSpan(context, timelineName,
                             textStyle: textStyle),
                         TextSpan(
-                          text: ' 取消屏蔽板块 ',
+                          text: ' 取消屏蔽版块 ',
                           children: [
                             htmlToTextSpan(context, forumName,
                                 textStyle: textStyle),
@@ -263,7 +263,7 @@ class _BodyState extends State<_Body> {
                     )
                   : (forumName != null
                       ? TextSpan(
-                          text: '确定取消屏蔽板块 ',
+                          text: '确定取消屏蔽版块 ',
                           children: [
                             htmlToTextSpan(context, forumName,
                                 textStyle: textStyle),
@@ -271,7 +271,7 @@ class _BodyState extends State<_Body> {
                           ],
                           style: textStyle,
                         )
-                      : TextSpan(text: '确定取消屏蔽板块？', style: textStyle)),
+                      : TextSpan(text: '确定取消屏蔽版块？', style: textStyle)),
             );
           },
           deleteToastContent: (forum) {
@@ -281,8 +281,8 @@ class _BodyState extends State<_Body> {
                 forums.forumName(forum.timelineId, isTimeline: true) ?? '');
 
             return (forumName.isNotEmpty && timelineName.isNotEmpty)
-                ? '在 $timelineName 取消屏蔽板块 $forumName'
-                : (forumName.isNotEmpty ? '取消屏蔽板块 $forumName' : '取消屏蔽板块');
+                ? '在 $timelineName 取消屏蔽版块 $forumName'
+                : (forumName.isNotEmpty ? '取消屏蔽版块 $forumName' : '取消屏蔽版块');
           },
         );
       case BlacklistView._postIndex:
@@ -327,7 +327,7 @@ class _BottomBar extends StatelessWidget {
           }
         },
         items: const [
-          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '板块'),
+          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '版块'),
           BottomNavigationBarItem(icon: SizedBox.shrink(), label: '串号'),
           BottomNavigationBarItem(icon: SizedBox.shrink(), label: '饼干'),
         ],

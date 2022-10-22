@@ -18,9 +18,7 @@ import 'app/utils/theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  //HttpOverrides.global = CustomHttpOverrides();
-
-  await addCert();
+  await _addCert();
 
   await getDatabasePath();
   try {
@@ -31,49 +29,54 @@ void main() async {
   }
   await SettingsService.getIsFixMissingFont();
 
-  runApp(const XdnmbApp());
+  runApp(const _XdnmbApp());
 
   await Hive.close();
 }
 
-class XdnmbApp extends StatelessWidget {
-  const XdnmbApp({super.key});
+/// xdnmb应用
+class _XdnmbApp extends StatelessWidget {
+  const _XdnmbApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'X岛',
-      initialBinding: servicesBindings(),
-      getPages: getPages,
-      initialRoute: AppRoutes.timelineUrl(1),
-      theme: AppTheme.theme,
-      darkTheme: AppTheme.darkTheme,
-      builder: EasyLoading.init(),
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale.fromSubtags(languageCode: 'zh'),
-        Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'),
-        Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
-        Locale.fromSubtags(
-            languageCode: 'zh', scriptCode: 'Hans', countryCode: 'CN'),
-        Locale.fromSubtags(
-            languageCode: 'zh', scriptCode: 'Hant', countryCode: 'TW'),
-        Locale.fromSubtags(
-            languageCode: 'zh', scriptCode: 'Hant', countryCode: 'HK'),
-        Locale('en', ''),
-        Locale('en', 'US'),
-      ],
-      debugShowCheckedModeBanner: false,
-    );
-  }
+  Widget build(BuildContext context) => GetMaterialApp(
+        title: 'X岛',
+        initialBinding: servicesBindings(),
+        getPages: getPages,
+        // 默认打开综合线
+        initialRoute: AppRoutes.timelineUrl(1),
+        theme: AppTheme.theme,
+        darkTheme: AppTheme.darkTheme,
+        builder: EasyLoading.init(),
+        // flutter官方的翻译
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        // 支持的locale
+        supportedLocales: const [
+          Locale.fromSubtags(languageCode: 'zh'),
+          Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'),
+          Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+          Locale.fromSubtags(
+              languageCode: 'zh', scriptCode: 'Hans', countryCode: 'CN'),
+          Locale.fromSubtags(
+              languageCode: 'zh', scriptCode: 'Hant', countryCode: 'TW'),
+          Locale.fromSubtags(
+              languageCode: 'zh', scriptCode: 'Hant', countryCode: 'HK'),
+          Locale('en', ''),
+          Locale('en', 'US'),
+        ],
+        debugShowCheckedModeBanner: false,
+      );
 }
 
-/// Let’s Encrypt的旧根证书过期导致部分旧手机无法访问X岛链接
-Future<void> addCert() async {
+/// 添加 Let’s Encrypt 的证书
+///
+/// Let’s Encrypt 的旧证书过期导致部分旧手机无法访问X岛链接
+Future<void> _addCert() async {
+  // 可能只有Android旧手机有此问题？
   if (GetPlatform.isAndroid) {
     final data =
         await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
@@ -81,24 +84,3 @@ Future<void> addCert() async {
         .setTrustedCertificatesBytes(data.buffer.asInt8List());
   }
 }
-
-/// 过滤掉可能出现的证书错误
-///
-/// 测试用，发布正式版本需要去掉
-/* class CustomHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-  }
-
-  /* @override
-  String findProxyFromEnvironment(Uri url, Map<String, String>? environment) {
-    environment = environment ?? {};
-    environment['http_proxy'] = '127.0.0.1:8118';
-    environment['https_proxy'] = '127.0.0.1:8118';
-
-    return super.findProxyFromEnvironment(url, environment);
-  } */
-} */

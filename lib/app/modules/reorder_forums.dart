@@ -34,14 +34,14 @@ class _AddForum extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
-                decoration: const InputDecoration(labelText: '板块ID'),
+                decoration: const InputDecoration(labelText: '版块ID'),
                 autofocus: true,
                 keyboardType: TextInputType.number,
                 onSaved: (newValue) => id = newValue,
                 validator: (value) => value.tryParseInt() == null
-                    ? '请输入板块ID数字'
+                    ? '请输入版块ID数字'
                     : (forums.forum(int.parse(value!)) != null
-                        ? '已有该板块ID'
+                        ? '已有该版块ID'
                         : null),
               ),
             ],
@@ -64,10 +64,10 @@ class _AddForum extends StatelessWidget {
                   state._refresh(() => state._hiddenForums.add(forum));
 
                   showToast(
-                      '添加板块 ${htmlToPlainText(Get.context!, forum.name)} 成功');
+                      '添加版块 ${htmlToPlainText(Get.context!, forum.name)} 成功');
                   Get.back();
                 } catch (e) {
-                  showToast('添加板块（id：$id）失败：${exceptionMessage(e)}');
+                  showToast('添加版块（id：$id）失败：${exceptionMessage(e)}');
                 } finally {
                   if (overlay.visible) {
                     overlay.hide();
@@ -126,7 +126,7 @@ class _ForumsState extends State<_Forums> {
     return ListView(
       children: [
         ListTile(
-          title: Text('显示板块', style: theme.textTheme.headline6),
+          title: Text('显示版块', style: theme.textTheme.headline6),
         ),
         ReorderableListView.builder(
           shrinkWrap: true,
@@ -147,7 +147,7 @@ class _ForumsState extends State<_Forums> {
                       forums.hideForum(forum);
                     });
                     showToast(
-                        '隐藏板块 ${htmlToPlainText(context, forum.forumName)}');
+                        '隐藏版块 ${htmlToPlainText(context, forum.forumName)}');
                   }
                 },
                 icon: const Icon(Icons.visibility),
@@ -190,7 +190,7 @@ class _ForumsState extends State<_Forums> {
           },
         ),
         ListTile(
-          title: Text('隐藏板块', style: theme.textTheme.headline6),
+          title: Text('隐藏版块', style: theme.textTheme.headline6),
         ),
         Column(
           mainAxisSize: MainAxisSize.min,
@@ -210,7 +210,7 @@ class _ForumsState extends State<_Forums> {
                         forums.displayForum(forum);
                       });
                       showToast(
-                          '取消隐藏板块 ${htmlToPlainText(context, forum.forumName)}');
+                          '取消隐藏版块 ${htmlToPlainText(context, forum.forumName)}');
                     }
                   },
                   icon: const Icon(Icons.visibility_off),
@@ -254,7 +254,7 @@ class ReorderForumsView extends GetView<ReorderForumsController> {
   Widget build(BuildContext context) => Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: const Text('板块排序'),
+          title: const Text('版块排序'),
           actions: [
             IconButton(
                 onPressed: () =>
