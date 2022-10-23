@@ -508,7 +508,7 @@ class _ThreadBodyState extends State<ThreadBody> {
         ? await client.getThread(postId, page: page)
         : await client.getOnlyPoThread(postId, page: page);
 
-    _maxPage = thread.mainPost.maxPage ?? 1;
+    _maxPage = thread.maxPage;
     controller.post = thread.mainPost;
     if (page == firstPage) {
       controller._refreshNotifier.notify();
@@ -703,7 +703,10 @@ class _ThreadBodyState extends State<ThreadBody> {
 
     widget.controller.addListener(_addRefresh);
 
-    _maxPage = widget.controller.post?.maxPage ?? 1;
+    final replyCount = widget.controller.post?.replyCount;
+    if (replyCount != null) {
+      _maxPage = replyCount > 0 ? (replyCount / 19).ceil() : 1;
+    }
   }
 
   @override

@@ -18,6 +18,23 @@ abstract class Urls {
   static const String authorSponsor = 'https://afdian.net/a/orzogc';
 
   static const String xdnmbSponsor = 'https://afdian.net/a/nmbxd';
+
+  static const String appLatestVersion =
+      'https://nmb.ovear.info/orzogc/version.json';
+
+  static const String appUpdateMessage =
+      'https://nmb.ovear.info/orzogc/message.json';
+
+  static const String appRelease = 'https://github.com/orzogc/xdnmb/releases';
+
+  static const String appArmeabiv7aApk =
+      'https://nmb.ovear.info/orzogc/xdnmb-latest-armeabi-v7a.apk';
+
+  static const String appArm64Apk =
+      'https://nmb.ovear.info/orzogc/xdnmb-latest-arm64-v8a.apk';
+
+  static const String appX64Apk =
+      'https://nmb.ovear.info/orzogc/xdnmb-latest-x86_64.apk';
 }
 
 Future<void> launchURL(String url) async {

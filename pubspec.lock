@@ -276,6 +276,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "5.2.2"
+  file_utils:
+    dependency: transitive
+    description:
+      name: file_utils
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.1"
   fixnum:
     dependency: transitive
     description:
@@ -478,6 +485,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.0"
+  globbing:
+    dependency: transitive
+    description:
+      name: globbing
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.0"
   graphs:
     dependency: transitive
     description:
@@ -989,6 +1003,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.0+3"
+  system_info2:
+    dependency: "direct main"
+    description:
+      name: system_info2
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.4"
   term_glyph:
     dependency: transitive
     description:
@@ -1094,6 +1115,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.2"
+  version:
+    dependency: "direct main"
+    description:
+      name: version
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.0.2"
   watcher:
     dependency: transitive
     description:
@@ -1127,7 +1155,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "5ad369ce0396aa3c74874a1facd5ed9f0a92c3f6"
+      resolved-ref: "4c75d2d302f84f815a4a4e7822e720d12a7aa441"
       url: "https://github.com/orzogc/xdnmb_api.git"
     source: git
     version: "0.1.0"

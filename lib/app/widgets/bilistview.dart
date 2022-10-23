@@ -224,10 +224,16 @@ class _BiListViewState<T> extends State<BiListView<T>>
         child: Center(
           child: ValueListenableBuilder<Box>(
             valueListenable: user.browseCookieListenable,
-            builder: (context, value, child) =>
+            builder: (context, value, child) => Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('错误：$message'),
+                const SizedBox(height: 20.0),
                 (!user.hasBrowseCookie && message.contains('饼干'))
-                    ? const Text('出现错误，点击登陆X岛帐号')
-                    : const Text('出现错误，点击重新尝试'),
+                    ? const Text('点击登陆X岛帐号')
+                    : const Text('点击重新尝试'),
+              ],
+            ),
           ),
         ),
       ),

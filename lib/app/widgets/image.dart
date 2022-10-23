@@ -10,7 +10,7 @@ import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 import '../data/services/persistent.dart';
 import '../modules/image.dart';
 import '../routes/routes.dart';
-import '../utils/cache.dart';
+import '../utils/image.dart';
 import '../utils/toast.dart';
 import 'loading.dart';
 

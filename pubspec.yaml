@@ -47,8 +47,10 @@ dependencies:
   responsive_grid_list: ^1.3.0
   screenshot: ^1.2.3
   showcaseview: ^1.1.8
+  system_info2: ^2.0.4
   url_launcher: ^6.1.6
   uuid: ^3.0.6
+  version: ^3.0.2
   xdg_directories: ^0.2.0+2
   xdnmb_api:
     git: https://github.com/orzogc/xdnmb_api.git

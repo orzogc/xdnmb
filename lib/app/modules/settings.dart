@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/services/settings.dart';
+import '../data/services/version.dart';
 import '../routes/routes.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -296,6 +297,7 @@ class _AppVersion extends StatelessWidget {
             return const SizedBox.shrink();
           },
         ),
+        onTap: () => CheckAppVersionService.to.checkUpdate(),
       );
 }
 

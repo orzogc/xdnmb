@@ -13,6 +13,7 @@ import '../data/services/persistent.dart';
 import '../data/services/history.dart';
 import '../data/services/settings.dart';
 import '../data/services/user.dart';
+import '../data/services/version.dart';
 import '../modules/edit_post.dart';
 import '../routes/routes.dart';
 import '../utils/image.dart';
@@ -803,8 +804,11 @@ class _PostListViewState extends State<PostListView>
 
               //data.showGuide = true;
 
-              // 出现用户指导时公告延后显示
+              // 出现用户指导时更新和公告延后显示
               if (!data.showGuide) {
+                WidgetsBinding.instance.addPostFrameCallback(
+                    (timeStamp) => CheckAppVersionService.to.checkAppVersion());
+
                 // 公告的显示需要postList的navigator
                 WidgetsBinding.instance
                     .addPostFrameCallback((timeStamp) => data.showNotice());
@@ -856,6 +860,7 @@ class _PostListViewState extends State<PostListView>
                         Guide.isShowEndDrawerGuides = false;
                         PostListPage.pageKey.currentState!._closeEndDrawer();
                         data.showGuide = false;
+                        CheckAppVersionService.to.checkAppVersion();
                         data.showNotice();
                       }
                     },

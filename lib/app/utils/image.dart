@@ -1,14 +1,33 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/image.dart';
 import 'extensions.dart';
+import 'http_client.dart';
 import 'time.dart';
 import 'toast.dart';
+
+class XdnmbImageCacheManager extends CacheManager with ImageCacheManager {
+  static const String _key = 'xdnmbImageCache';
+
+  static final XdnmbImageCacheManager _manager =
+      XdnmbImageCacheManager._internal();
+
+  factory XdnmbImageCacheManager() => _manager;
+
+  XdnmbImageCacheManager._internal()
+      : super(
+          Config(
+            _key,
+            fileService: HttpFileService(httpClient: XdnmbHttpClient()),
+          ),
+        );
+}
 
 String _imageFilename(Uint8List imageData) {
   final time = imageFilenameTime();

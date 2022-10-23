@@ -10,9 +10,9 @@ import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
-import '../utils/cache.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
+import '../utils/image.dart';
 import '../utils/navigation.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
@@ -106,7 +106,9 @@ class ConfirmCancelDialog extends StatelessWidget {
       this.onConfirm,
       this.onCancel,
       this.confirmText,
-      this.cancelText});
+      this.cancelText})
+      : assert(titleWidget == null || title == null),
+        assert(contentWidget == null || content == null);
 
   @override
   Widget build(BuildContext context) {
