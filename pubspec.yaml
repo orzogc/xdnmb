@@ -74,10 +74,10 @@ flutter:
     - family: DiceIcon
       fonts:
         - asset: assets/fonts/DiceIcon.ttf
-    # Font from https://github.com/satbyy/go-noto-universal
-    - family: 'Go Noto Current'
+    # Noto font from Google
+    - family: 'Noto Sans'
       fonts:
-        - asset: assets/fonts/GoNotoCurrent.ttf
+        - asset: assets/fonts/NotoSans-Regular.ttf
 
 flutter_icons:
   image_path_android: assets/icons/icon.png

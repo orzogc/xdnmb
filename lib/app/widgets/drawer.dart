@@ -204,6 +204,7 @@ class _TabList extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = PersistentDataService.to;
     final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodyText2?.apply(color: textColor());
 
     return Center(
       child: Obx(
@@ -233,9 +234,7 @@ class _TabList extends StatelessWidget {
                               post: post,
                               maxLines: 2,
                               displayImage: false,
-                              textStyle: theme.textTheme.bodyText2?.apply(
-                                color: textColor(),
-                              ),
+                              textStyle: textStyle,
                             )
                           : const SizedBox.shrink();
                     })

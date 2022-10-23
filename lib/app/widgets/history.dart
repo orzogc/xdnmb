@@ -356,6 +356,8 @@ class _BrowseHistoryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
+    final textStyle =
+        Theme.of(context).textTheme.caption?.apply(color: AppTheme.headerColor);
 
     return PostListRefresher(
       controller: controller,
@@ -412,10 +414,7 @@ class _BrowseHistoryBody extends StatelessWidget {
                               padding: const EdgeInsets.only(
                                   left: 10.0, top: 5.0, right: 10.0),
                               child: DefaultTextStyle.merge(
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .caption
-                                    ?.apply(color: AppTheme.headerColor),
+                                style: textStyle,
                                 child: OverflowBar(
                                   spacing: 5.0,
                                   alignment: MainAxisAlignment.spaceBetween,
@@ -540,6 +539,8 @@ class _ReplyHistoryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
+    final textStyle =
+        Theme.of(context).textTheme.caption?.apply(color: AppTheme.headerColor);
 
     return PostListRefresher(
       controller: controller,
@@ -594,10 +595,7 @@ class _ReplyHistoryBody extends StatelessWidget {
                                 padding: const EdgeInsets.only(
                                     left: 10.0, top: 5.0, right: 10.0),
                                 child: DefaultTextStyle.merge(
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .caption
-                                      ?.apply(color: AppTheme.headerColor),
+                                  style: textStyle,
                                   child: Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,

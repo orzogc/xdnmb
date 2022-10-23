@@ -1162,6 +1162,7 @@ class _EmoticonState extends State<_Emoticon> {
                     valueListenable: emoticons.emoticonsListenable,
                     // 这里可能有性能问题
                     builder: (context, value, child) => ResponsiveGridList(
+                      key: const PageStorageKey<String>('emoticons'),
                       minItemWidth: 80.0,
                       horizontalGridSpacing: 10.0,
                       verticalGridSpacing: 10.0,

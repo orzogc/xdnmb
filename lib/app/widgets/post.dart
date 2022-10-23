@@ -172,34 +172,32 @@ class PostDraft extends StatelessWidget {
             (content?.isNotEmpty ?? false));
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-      child: DefaultTextStyle.merge(
-        style: textStyle,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (title?.isNotEmpty ?? false) _PostTitle(title!),
-            if (name?.isNotEmpty ?? false) _PostName(name!),
-            if (content?.isNotEmpty ?? false)
-              contentMaxLines != null
-                  ? ExpandableText(
-                      content!,
-                      expandText: '展开',
-                      collapseText: '收起',
-                      linkColor: Get.isDarkMode
-                          ? Colors.white
-                          : AppTheme.primaryColorLight,
-                      maxLines: contentMaxLines!,
-                    )
-                  : Text(content!),
-          ],
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+        child: DefaultTextStyle.merge(
+          style: textStyle,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (title?.isNotEmpty ?? false) _PostTitle(title!),
+              if (name?.isNotEmpty ?? false) _PostName(name!),
+              if (content?.isNotEmpty ?? false)
+                contentMaxLines != null
+                    ? ExpandableText(
+                        content!,
+                        expandText: '展开',
+                        collapseText: '收起',
+                        linkColor: Get.isDarkMode
+                            ? Colors.white
+                            : AppTheme.primaryColorLight,
+                        maxLines: contentMaxLines!,
+                      )
+                    : Text(content!),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class PostContent extends StatelessWidget {
