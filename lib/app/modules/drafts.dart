@@ -48,18 +48,7 @@ class _Screenshot extends StatelessWidget {
   }
 }
 
-class PostDraftsController extends GetxController {
-  final List<PostDraftData> _deleted = [];
-
-  @override
-  void onClose() {
-    for (final draft in _deleted) {
-      draft.delete();
-    }
-
-    super.onClose();
-  }
-}
+class PostDraftsController extends GetxController {}
 
 class PostDraftsBinding implements Bindings {
   @override
@@ -68,6 +57,7 @@ class PostDraftsBinding implements Bindings {
   }
 }
 
+// TODO: 添加清空菜单
 class PostDraftsView extends GetView<PostDraftsController> {
   const PostDraftsView({super.key});
 
@@ -79,60 +69,54 @@ class PostDraftsView extends GetView<PostDraftsController> {
       appBar: AppBar(title: const Text('草稿')),
       body: drafts.length > 0
           ? LoaderOverlay(
-              child: ListView.builder(
-                itemCount: drafts.length,
-                itemBuilder: (context, index) {
-                  final draft = drafts.draft(drafts.length - index - 1);
-                  final isVisible = true.obs;
+              child: StatefulBuilder(
+                builder: (context, setState) => ListView.separated(
+                  itemCount: drafts.length,
+                  itemBuilder: (context, index) {
+                    final index_ = drafts.length - index - 1;
+                    final draft = drafts.draft(index_);
 
-                  return Obx(
-                    () => (draft != null && isVisible.value)
-                        ? Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              InkWell(
-                                onTap: () =>
-                                    Get.back<PostDraftData>(result: draft),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: PostDraft(
-                                        title: draft.title,
-                                        name: draft.name,
-                                        content: draft.content,
-                                        contentMaxLines: 8,
-                                      ),
-                                    ),
-                                    _Screenshot(draft),
-                                    IconButton(
-                                      onPressed: () => Get.dialog(
-                                        ConfirmCancelDialog(
-                                          content: '确定删除该草稿？',
-                                          onConfirm: () async {
-                                            controller._deleted.add(draft);
-                                            isVisible.value = false;
-
-                                            showToast('已删除该草稿');
-                                            Get.back();
-                                          },
-                                          onCancel: () => Get.back(),
-                                        ),
-                                      ),
-                                      icon: const Icon(Icons.delete_outline),
-                                    ),
-                                  ],
+                    return draft != null
+                        ? InkWell(
+                            key: ValueKey<int?>(drafts.draftKey(index_)),
+                            onTap: () => Get.back<PostDraftData>(result: draft),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: PostDraft(
+                                    title: draft.title,
+                                    name: draft.name,
+                                    content: draft.content,
+                                    contentMaxLines: 8,
+                                  ),
                                 ),
-                              ),
-                              if (index != drafts.length - 1)
-                                const Divider(height: 10.0, thickness: 1.0),
-                            ],
+                                _Screenshot(draft),
+                                IconButton(
+                                  onPressed: () => Get.dialog(
+                                    ConfirmCancelDialog(
+                                      content: '确定删除该草稿？',
+                                      onConfirm: () async {
+                                        await draft.delete();
+                                        setState(() {});
+
+                                        showToast('已删除该草稿');
+                                        Get.back();
+                                      },
+                                      onCancel: () => Get.back(),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.delete_outline),
+                                ),
+                              ],
+                            ),
                           )
-                        : const SizedBox.shrink(),
-                  );
-                },
+                        : const SizedBox.shrink();
+                  },
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 10.0, thickness: 1.0),
+                ),
               ),
             )
           : const Center(child: Text('没有草稿', style: AppTheme.boldRed)),

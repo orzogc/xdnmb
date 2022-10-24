@@ -272,6 +272,22 @@ class _AppSource extends StatelessWidget {
       );
 }
 
+class _AppLicense extends StatelessWidget {
+  const _AppLicense({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        title: const Text('开源许可证'),
+        subtitle: const Text('GNU Affero General Public License Version 3'),
+        onTap: () async => Get.dialog(
+          ConfirmCancelDialog(
+            content: await DefaultAssetBundle.of(context).loadString('LICENSE'),
+            onConfirm: () => Get.back(),
+          ),
+        ),
+      );
+}
+
 class _AppVersion extends StatelessWidget {
   const _AppVersion({super.key});
 
@@ -333,10 +349,7 @@ class SettingsView extends GetView<SettingsController> {
             ListTile(title: Text('作者'), subtitle: Text('Orzogc')),
             _AuthorSponsor(),
             _AppSource(),
-            ListTile(
-              title: Text('开源许可证'),
-              subtitle: Text('GNU Affero General Public License Version 3'),
-            ),
+            _AppLicense(),
             _AppVersion(),
           ],
         ),

@@ -146,81 +146,46 @@ class _List<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => itemCount > 0
-      ? ListView.builder(
+      ? ListView.separated(
           itemCount: itemCount,
           itemBuilder: (context, index) {
             final item = getItem(index);
-            final RxBool isVisible = true.obs;
 
-            return Obx(
-              () => (item != null && isVisible.value)
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ListTile(
-                          title: titleBuilder(item),
-                          subtitle: subtitleBuilder != null
-                              ? subtitleBuilder!(item)
-                              : null,
-                          trailing: IconButton(
-                            onPressed: () => Get.dialog(
-                              ConfirmCancelDialog(
-                                contentWidget: deleteDialogContent(item),
-                                onConfirm: () {
-                                  onDelete(item);
-                                  isVisible.value = false;
-                                  showToast(deleteToastContent(item));
-                                  Get.back();
-                                },
-                                onCancel: () => Get.back(),
-                              ),
-                            ),
-                            icon: const Icon(Icons.close),
-                          ),
+            return item != null
+                ? ListTile(
+                    key: ValueKey<T>(item),
+                    title: titleBuilder(item),
+                    subtitle:
+                        subtitleBuilder != null ? subtitleBuilder!(item) : null,
+                    trailing: IconButton(
+                      onPressed: () => Get.dialog(
+                        ConfirmCancelDialog(
+                          contentWidget: deleteDialogContent(item),
+                          onConfirm: () {
+                            onDelete(item);
+                            showToast(deleteToastContent(item));
+                            Get.back();
+                          },
+                          onCancel: () => Get.back(),
                         ),
-                        if (index != itemCount - 1)
-                          const Divider(height: 10.0, thickness: 1.0),
-                      ],
-                    )
-                  : const SizedBox.shrink(),
-            );
+                      ),
+                      icon: const Icon(Icons.close),
+                    ),
+                  )
+                : const SizedBox.shrink();
           },
+          separatorBuilder: (context, index) =>
+              const Divider(height: 10.0, thickness: 1.0),
         )
       : const Center(child: Text('没有黑名单', style: AppTheme.boldRed));
 }
 
-class _Body extends StatefulWidget {
+class _Body extends StatelessWidget {
   final int index;
 
-  const _Body({super.key, required this.index});
+  final VoidCallback refresh;
 
-  @override
-  State<_Body> createState() => _BodyState();
-}
-
-class _BodyState extends State<_Body> {
-  final List<BlockForumData> _deletedForumList = [];
-
-  final List<int> _deletedPostIdList = [];
-
-  final List<String> _deletedUserHashList = [];
-
-  @override
-  void dispose() {
-    final blacklist = BlacklistService.to;
-
-    for (final forum in _deletedForumList) {
-      blacklist.unblockForum(forum);
-    }
-    for (final postId in _deletedPostIdList) {
-      blacklist.unblockPost(postId);
-    }
-    for (final userHash in _deletedUserHashList) {
-      blacklist.unblockUser(userHash);
-    }
-
-    super.dispose();
-  }
+  const _Body({super.key, required this.index, required this.refresh});
 
   @override
   Widget build(BuildContext context) {
@@ -228,16 +193,20 @@ class _BodyState extends State<_Body> {
     final forums = ForumListService.to;
     final textStyle = Theme.of(context).textTheme.subtitle1;
 
-    switch (widget.index) {
+    switch (index) {
       case BlacklistView._forumIndex:
         return _List<BlockForumData>(
+          key: const PageStorageKey('blockedForums'),
           itemCount: blacklist.forumBlacklistLength,
           getItem: (index) => blacklist.blockedForum(index),
           titleBuilder: (forum) =>
               ForumName(forumId: forum.forumId, maxLines: 1),
           subtitleBuilder: (forum) => ForumName(
               forumId: forum.timelineId, isTimeline: true, maxLines: 1),
-          onDelete: (forum) => _deletedForumList.add(forum),
+          onDelete: (forum) async {
+            await blacklist.unblockForum(forum);
+            refresh();
+          },
           deleteDialogContent: (forum) {
             final forumName = forums.forumName(forum.forumId);
             final timelineName =
@@ -287,20 +256,28 @@ class _BodyState extends State<_Body> {
         );
       case BlacklistView._postIndex:
         return _List<int>(
+          key: const PageStorageKey('blockedPostIds'),
           itemCount: blacklist.postBlacklistLength,
           getItem: (index) => blacklist.blockedPost(index),
           titleBuilder: (postId) => Text('$postId'),
-          onDelete: (postId) => _deletedPostIdList.add(postId),
+          onDelete: (postId) async {
+            await blacklist.unblockPost(postId);
+            refresh();
+          },
           deleteDialogContent: (postId) =>
               Text('确定取消屏蔽 ${postId.toPostNumber()} ？'),
           deleteToastContent: (postId) => '取消屏蔽 ${postId.toPostNumber()}',
         );
       case BlacklistView._userIndex:
         return _List<String>(
+          key: const PageStorageKey('blockedUsers'),
           itemCount: blacklist.userBlacklistLength,
           getItem: (index) => blacklist.blockedUser(index),
           titleBuilder: (userHash) => Text(userHash),
-          onDelete: (userHash) => _deletedUserHashList.add(userHash),
+          onDelete: (userHash) async {
+            await blacklist.unblockUser(userHash);
+            refresh();
+          },
           deleteDialogContent: (userHash) => Text('确定取消屏蔽饼干 $userHash ？'),
           deleteToastContent: (userHash) => '取消屏蔽饼干 $userHash',
         );
@@ -365,7 +342,7 @@ class BlacklistView extends GetView<BlacklistController> {
               _AppBarPopupMenuButton(index: _index.value, refresh: _refresh),
             ],
           ),
-          body: _Body(index: _index.value),
+          body: _Body(index: _index.value, refresh: _refresh),
           bottomNavigationBar: _BottomBar(
             index: _index.value,
             onIndex: (index) => _index.value = index,

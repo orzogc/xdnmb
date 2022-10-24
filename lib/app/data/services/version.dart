@@ -109,8 +109,10 @@ class CheckAppVersionService extends GetxService {
   }
 
   Future<void> checkUpdate() async {
-    if (_lastCheckUpdate == null ||
-        DateTime.now().difference(_lastCheckUpdate!) >= _checkUpdatePeriod) {
+    if (!GetPlatform.isIOS &&
+        (_lastCheckUpdate == null ||
+            DateTime.now().difference(_lastCheckUpdate!) >=
+                _checkUpdatePeriod)) {
       await _getLatestVersion();
       if (await _hasNewVersion()) {
         await checkAppVersion();

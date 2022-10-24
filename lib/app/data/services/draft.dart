@@ -16,6 +16,8 @@ class PostDraftListService extends GetxService {
 
   PostDraftData? draft(int index) => _draftBox.getAt(index);
 
+  int? draftKey(int index) => _draftBox.keyAt(index);
+
   Future<int> addDraft(PostDraftData draft) => _draftBox.add(draft);
 
   @override

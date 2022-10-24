@@ -68,6 +68,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - LICENSE
     # https://letsencrypt.org/certs/lets-encrypt-r3.pem
     - assets/ca/lets-encrypt-r3.pem
 
