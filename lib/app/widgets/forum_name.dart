@@ -109,7 +109,7 @@ class ForumName extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   nameWidget,
-                  Text('废弃', style: textStyle?.merge(AppTheme.boldRed)),
+                  Text('隐藏', style: textStyle?.merge(AppTheme.boldRed)),
                 ],
               )
             : nameWidget;

@@ -11,6 +11,18 @@ import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'loading.dart';
 
+class _MinHeightIndicator extends StatelessWidget {
+  final Widget child;
+
+  const _MinHeightIndicator({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) => ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 50.0),
+        child: Center(child: child),
+      );
+}
+
 typedef FetchPage<T> = Future<List<T>> Function(int page);
 
 typedef GetFunctionCallback = void Function(VoidCallback function);
@@ -204,7 +216,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
     }
   }
 
-  Widget _errorWidgetBuilder(PagingController<int, T> controller) {
+  Widget _errorWidgetBuilder(PagingController<int, T> controller,
+      [bool showError = false]) {
     final user = UserService.to;
     final message = exceptionMessage(controller.error);
     showToast(message);
@@ -221,22 +234,65 @@ class _BiListViewState<T> extends State<BiListView<T>>
       },
       child: DefaultTextStyle.merge(
         style: AppTheme.boldRed,
-        child: Center(
+        child: _MinHeightIndicator(
           child: ValueListenableBuilder<Box>(
             valueListenable: user.browseCookieListenable,
-            builder: (context, value, child) => Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('错误：$message'),
-                const SizedBox(height: 20.0),
-                (!user.hasBrowseCookie && message.contains('饼干'))
-                    ? const Text('点击登陆X岛帐号')
-                    : const Text('点击重新尝试'),
-              ],
-            ),
+            builder: (context, value, child) {
+              final Widget text =
+                  (!user.hasBrowseCookie && message.contains('饼干'))
+                      ? const Text('点击登陆X岛帐号')
+                      : (showError
+                          ? const Text('点击重新尝试')
+                          : const Text('出现错误，点击重新尝试'));
+
+              return showError
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('错误：$message'),
+                        const SizedBox(height: 20.0),
+                        text,
+                      ],
+                    )
+                  : text;
+            },
           ),
         ),
       ),
+    );
+  }
+
+  Widget _noMoreItems(BuildContext context) {
+    if (widget.onNoMoreItems != null) {
+      widget.onNoMoreItems!();
+    }
+
+    return _MinHeightIndicator(
+      child: widget.lastPage == null
+          ? (widget.canLoadMoreAtBottom
+              ? GestureDetector(
+                  onTap: _loadMore,
+                  child: Center(
+                    child: Text(
+                      '上拉或点击刷新',
+                      style: TextStyle(
+                        color: specialTextColor(),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink())
+          : Center(
+              child: Text(
+                '已经抵达X岛的尽头',
+                style: TextStyle(
+                  color: specialTextColor(),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
     );
   }
 
@@ -296,55 +352,28 @@ class _BiListViewState<T> extends State<BiListView<T>>
     final pagingUpDelegate = PagedChildBuilderDelegate<T>(
       itemBuilder: widget.itemBuilder,
       firstPageErrorIndicatorBuilder: (context) =>
-          _errorWidgetBuilder(_pagingUpController!),
+          _errorWidgetBuilder(_pagingUpController!, true),
       newPageErrorIndicatorBuilder: (context) =>
           _errorWidgetBuilder(_pagingUpController!),
       firstPageProgressIndicatorBuilder: (context) =>
           const QuotationLoadingIndicator(),
-      newPageProgressIndicatorBuilder: (context) => const Quotation(),
+      newPageProgressIndicatorBuilder: (context) =>
+          const _MinHeightIndicator(child: Quotation(isTopCenter: false)),
       noItemsFoundIndicatorBuilder: (context) => const SizedBox.shrink(),
     );
 
     final pagingDownDelegate = PagedChildBuilderDelegate<T>(
       itemBuilder: widget.itemBuilder,
       firstPageErrorIndicatorBuilder: (context) =>
-          _errorWidgetBuilder(_pagingDownController!),
+          _errorWidgetBuilder(_pagingDownController!, true),
       newPageErrorIndicatorBuilder: (context) =>
           _errorWidgetBuilder(_pagingDownController!),
       firstPageProgressIndicatorBuilder: (context) =>
           const QuotationLoadingIndicator(),
-      newPageProgressIndicatorBuilder: (context) => const Quotation(),
+      newPageProgressIndicatorBuilder: (context) =>
+          const _MinHeightIndicator(child: Quotation(isTopCenter: false)),
       noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
-      noMoreItemsIndicatorBuilder: (context) {
-        if (widget.onNoMoreItems != null) {
-          widget.onNoMoreItems!();
-        }
-
-        return widget.lastPage == null
-            ? (widget.canLoadMoreAtBottom
-                ? GestureDetector(
-                    onTap: _loadMore,
-                    child: Center(
-                      child: Text(
-                        '上拉或点击刷新',
-                        style: TextStyle(
-                          color: specialTextColor(),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  )
-                : const SizedBox.shrink())
-            : Center(
-                child: Text(
-                  '已经抵达X岛的尽头',
-                  style: TextStyle(
-                    color: specialTextColor(),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              );
-      },
+      noMoreItemsIndicatorBuilder: _noMoreItems,
     );
 
     return Padding(

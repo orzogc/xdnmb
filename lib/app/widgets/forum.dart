@@ -229,7 +229,7 @@ class ForumBody extends StatelessWidget {
         key: ValueKey<int>(refresh),
         controller: anchorController,
         initialPage: controller.page,
-        // 板块的最大页固定为100
+        // 版块的最大页固定为100
         lastPage:
             controller.isTimeline ? forums.maxPage(id, isTimeline: true) : 100,
         fetch: (page) async {

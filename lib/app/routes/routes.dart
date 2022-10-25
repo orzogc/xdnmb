@@ -42,6 +42,14 @@ abstract class AppRoutes {
 
   static const String blacklistPath = '$settings$blacklist';
 
+  static const String basicSettings = '/${PathNames.basicSettings}';
+
+  static const String basicSettingsPath = '$settings$basicSettings';
+
+  static const String advancedSettings = '/${PathNames.advancedSettings}';
+
+  static const String advancedSettingsPath = '$settings$advancedSettings';
+
   static const String reorderForums = '/${PathNames.reorderForums}';
 
   /// 参数：postListType id title name content forumId imagePath isWatermark reportReason
@@ -147,6 +155,11 @@ abstract class AppRoutes {
 
   static Future<T?>? toBlacklist<T>() => Get.toNamed<T>(blacklistPath);
 
+  static Future<T?>? toBasicSettings<T>() => Get.toNamed<T>(basicSettingsPath);
+
+  static Future<T?>? toAdvancedSettings<T>() =>
+      Get.toNamed<T>(advancedSettingsPath);
+
   static Future<T?>? toReorderForums<T>() => Get.toNamed<T>(reorderForums);
 
   static Future<T?>? toEditPost<T>(
@@ -205,6 +218,10 @@ abstract class PathNames {
   static const String user = 'user';
 
   static const String blacklist = 'blacklist';
+
+  static const String basicSettings = 'basicSettings';
+
+  static const String advancedSettings = 'advancedSettings';
 
   static const String reorderForums = 'reorderForums';
 

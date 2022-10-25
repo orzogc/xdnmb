@@ -82,7 +82,7 @@ class CheckAppVersionService extends GetxService {
           if (GetPlatform.isLinux ||
               GetPlatform.isMacOS ||
               GetPlatform.isWindows) {
-            _showUpdateDialog(Urls.appRelease);
+            _showUpdateDialog(Urls.appLatestRelease);
           } else if (GetPlatform.isAndroid) {
             switch (SysInfo.kernelArchitecture) {
               case 'x86_64':

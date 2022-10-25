@@ -56,7 +56,7 @@ class UserService extends GetxService {
   bool get isLogin => userCookie != null;
 
   bool? get isUserCookieExpired => userCookieExpireDate != null
-      ? DateTime.now().compareTo(userCookieExpireDate!) >= 0
+      ? DateTime.now().isAfter(userCookieExpireDate!)
       : null;
 
   bool get isUserCookieValid => isLogin && !(isUserCookieExpired ?? true);
@@ -98,10 +98,15 @@ class UserService extends GetxService {
       debugPrint('XdnmbClient已经登陆过了');
     }
 
-    await client.userLogin(email: email, password: password, verify: verify);
-    if (client.isLogin) {
-      userCookie = client.xdnmbUserCookie!.toString();
-      userCookieExpireDate = client.xdnmbUserCookie!.expires;
+    try {
+      await client.userLogin(email: email, password: password, verify: verify);
+      if (client.isLogin) {
+        userCookie = client.xdnmbUserCookie!.toString();
+        userCookieExpireDate = client.xdnmbUserCookie!.expires;
+      }
+    } catch (e) {
+      logout();
+      rethrow;
     }
   }
 
@@ -197,7 +202,13 @@ class UserService extends GetxService {
     const storage = FlutterSecureStorage();
     late final List<int> key;
     if (await storage.containsKey(key: _secureKey)) {
-      key = base64.decode((await storage.read(key: _secureKey))!);
+      final storageKey = await storage.read(key: _secureKey);
+      if (storageKey != null) {
+        key = base64.decode(storageKey);
+      } else {
+        key = Hive.generateSecureKey();
+        await storage.write(key: _secureKey, value: base64.encode(key));
+      }
     } else {
       key = Hive.generateSecureKey();
       await storage.write(key: _secureKey, value: base64.encode(key));

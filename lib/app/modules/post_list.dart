@@ -188,6 +188,7 @@ void _refresh() {
   _BottomBar._bottomBarKey.currentState!.refresh();
 }
 
+// TODO: 提示sage，sage串不能回复
 class PostListAppBar extends StatefulWidget implements PreferredSizeWidget {
   static final GlobalKey<PostListAppBarState> appBarKey =
       GlobalKey<PostListAppBarState>();
@@ -832,7 +833,7 @@ class _PostListViewState extends State<PostListView>
                     SizedBox(height: bottomSheetHeight),
                 ],
               ),
-              drawerEdgeDragWidth: media.size.width / 2.0,
+              drawerEdgeDragWidth: media.size.width / 3.0,
               drawer: const AppDrawer(),
               endDrawer: const AppEndDrawer(),
               floatingActionButton: data.showGuide

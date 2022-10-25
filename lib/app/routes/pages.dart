@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 
+import '../modules/advanced_settings.dart';
+import '../modules/basic_settings.dart';
 import '../modules/blacklist.dart';
 import '../modules/cookie.dart';
 import '../modules/drafts.dart';
@@ -82,6 +84,18 @@ abstract class AppPages {
             page: () => BlacklistView(),
             binding: BlacklistBinding(),
             transition: Transition.rightToLeft),
+        // 基本设置页面
+        GetPage(
+            name: AppRoutes.basicSettings,
+            page: () => const BasicSettingsView(),
+            binding: BasicSettingsBinding(),
+            transition: Transition.rightToLeft),
+        // 高级设置页面
+        GetPage(
+            name: AppRoutes.advancedSettings,
+            page: () => const AdvancedSettingsView(),
+            binding: AdvancedSettingsBinding(),
+            transition: Transition.rightToLeft)
       ]);
 
   /// 版块排序页面

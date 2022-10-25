@@ -25,7 +25,8 @@ abstract class Urls {
   static const String appUpdateMessage =
       'https://nmb.ovear.info/orzogc/message.json';
 
-  static const String appRelease = 'https://github.com/orzogc/xdnmb/releases';
+  static const String appLatestRelease =
+      'https://github.com/orzogc/xdnmb/releases/latest';
 
   static const String appArmeabiv7aApk =
       'https://nmb.ovear.info/orzogc/xdnmb-latest-armeabi-v7a.apk';
