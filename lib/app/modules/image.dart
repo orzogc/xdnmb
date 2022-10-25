@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 import '../data/services/image.dart';
 import '../routes/routes.dart';
@@ -142,7 +143,7 @@ class _BottomOverlay extends StatelessWidget {
             final info = await manager.getFileFromCache(post!.imageUrl()!);
 
             final file = File(path);
-            if (await file.exists()) {
+            if (!GetPlatform.isIOS && await file.exists()) {
               bool isSame = true;
               if (info != null) {
                 if (await info.file.length() != await file.length()) {
@@ -156,8 +157,18 @@ class _BottomOverlay extends StatelessWidget {
             }
 
             if (info != null) {
-              await info.file.copy(path);
-              showToast('图片保存在 ${image.savePath}');
+              if(GetPlatform.isIOS) {
+                final saveResult = await ImageGallerySaver.saveImage(
+                  info.file.readAsBytesSync(), 
+                  quality: 100, name: fileName);
+                if (!saveResult['isSuccess']) {
+                  throw Exception(saveResult['error']);
+                }
+                showToast('图片保存到相册成功');
+              } else {
+                await info.file.copy(path);
+                showToast('图片保存在 ${image.savePath}');
+              }
             } else {
               showToast('读取缓存图片数据失败');
             }
