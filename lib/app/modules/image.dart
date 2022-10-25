@@ -268,6 +268,10 @@ class _Image<T extends Object> extends StatefulWidget {
 
 class _ImageState extends State<_Image>
     with SingleTickerProviderStateMixin<_Image> {
+  static const double _disposeLimit = 100.0;
+
+  static const double _disposeScale = 1.1;
+
   final TransformationController _transformationController =
       TransformationController();
 
@@ -276,6 +280,18 @@ class _ImageState extends State<_Image>
   late final AnimationController _animationController;
 
   int _rotationCount = 0;
+
+  Offset? _doubleTapPosition;
+
+  bool _toScaleUp = true;
+
+  double? _scale;
+
+  Offset? _initialPosition;
+
+  Offset? _currentPosition;
+
+  Offset? _positionDelta;
 
   void _onAnimate() {
     _transformationController.value = _animation!.value;
@@ -353,6 +369,71 @@ class _ImageState extends State<_Image>
     }
   }
 
+  void _onInteractionStart(ScaleStartDetails details) {
+    if (_animationController.isAnimating) {
+      _stopAnimate();
+    }
+
+    if (details.pointerCount == 1) {
+      _scale = _transformationController.value.getMaxScaleOnAxis();
+      _initialPosition = details.focalPoint;
+      _currentPosition = _initialPosition;
+    } else {
+      _scale = null;
+      _initialPosition = null;
+      _currentPosition = null;
+      _positionDelta = null;
+    }
+  }
+
+  // TODO: 增加透明效果
+  void _onInteractionUpdate(ScaleUpdateDetails details) {
+    if (details.pointerCount == 1 &&
+        _scale != null &&
+        _initialPosition != null &&
+        _currentPosition != null) {
+      if (mounted) {
+        final positionDelta = details.focalPoint - _currentPosition!;
+        setState(() {
+          _positionDelta = details.focalPoint - _initialPosition!;
+          _currentPosition = details.focalPoint;
+          _transformationController.value.translate(
+              positionDelta.dx / _scale!, positionDelta.dy / _scale!);
+        });
+      }
+    }
+  }
+
+  void _onInteractionEnd(ScaleEndDetails details) {
+    if (_scale != null &&
+        _positionDelta != null &&
+        _scale! < _disposeScale &&
+        (_positionDelta!.dx.abs() >= _disposeLimit ||
+            _positionDelta!.dy.abs() >= _disposeLimit)) {
+      Get.maybePop();
+    } else {
+      _scale = null;
+      _initialPosition = null;
+      _currentPosition = null;
+      _positionDelta = null;
+    }
+  }
+
+  void _onDoubleTapDown(TapDownDetails details) =>
+      _doubleTapPosition = details.globalPosition;
+
+  void _onDoubleTap() {
+    if (_doubleTapPosition != null) {
+      if (_toScaleUp) {
+        _animateScaleUp(_doubleTapPosition!.dx, _doubleTapPosition!.dy);
+        _toScaleUp = false;
+      } else {
+        _animateScaleDown(_doubleTapPosition!.dx, _doubleTapPosition!.dy);
+        _toScaleUp = true;
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -372,41 +453,25 @@ class _ImageState extends State<_Image>
   }
 
   @override
-  Widget build(BuildContext context) {
-    Offset? position;
-    bool toScaleUp = true;
-
-    return GestureDetector(
-      onDoubleTapDown: (details) => position = details.globalPosition,
-      onDoubleTap: () {
-        if (position != null) {
-          if (toScaleUp) {
-            _animateScaleUp(position!.dx, position!.dy);
-            toScaleUp = false;
-          } else {
-            _animateScaleDown(position!.dx, position!.dy);
-            toScaleUp = true;
-          }
-        }
-      },
-      child: SizedBox.expand(
+  Widget build(BuildContext context) => SizedBox.expand(
         child: InteractiveViewer(
           transformationController: _transformationController,
           boundaryMargin: const EdgeInsets.all(double.infinity),
+          panEnabled: false,
           maxScale: 10.0,
           minScale: 1.0,
-          onInteractionStart: (details) {
-            if (_animationController.isAnimating) {
-              _stopAnimate();
-            }
-          },
-          child: Image(
-            image: widget.provider,
+          onInteractionStart: _onInteractionStart,
+          onInteractionUpdate: _onInteractionUpdate,
+          onInteractionEnd: _onInteractionEnd,
+          child: GestureDetector(
+            onDoubleTapDown: _onDoubleTapDown,
+            onDoubleTap: _onDoubleTap,
+            child: Image(
+              image: widget.provider,
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class ImageController extends GetxController {

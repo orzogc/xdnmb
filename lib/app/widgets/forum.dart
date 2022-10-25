@@ -279,6 +279,7 @@ class ForumBody extends StatelessWidget {
               child: PostCard(
                 post: thread.thread.mainPost,
                 showFullTime: false,
+                showPostId: false,
                 showForumName: controller.isTimeline,
                 contentMaxLines: 8,
                 poUserHash: thread.thread.mainPost.userHash,

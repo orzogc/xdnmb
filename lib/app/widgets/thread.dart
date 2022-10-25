@@ -174,22 +174,31 @@ class ThreadAppBarTitle extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-            '${controller.id.toPostNumber()}${controller.isOnlyPoThread ? ' Po' : ''}'),
+        Obx(
+          () => Row(
+            children: [
+              Text(controller.id.toPostNumber()),
+              if (controller.isOnlyPoThread) const Flexible(child: Text('Po')),
+              if (controller.post?.isSage ?? false)
+                const Flexible(child: Text('SAGE', style: AppTheme.boldRed)),
+            ].withSpaceBetween(width: 5.0),
+          ),
+        ),
         DefaultTextStyle.merge(
           style: theme.textTheme.bodyText2!
               .apply(color: theme.colorScheme.onPrimary),
-          child: Row(
-            children: [
-              const Text('X岛 nmbxd.com '),
-              Obx(() {
-                final forumId = controller.post?.forumId;
+          child: Obx(
+            () {
+              final forumId = controller.post?.forumId;
 
-                return forumId != null
-                    ? Flexible(child: ForumName(forumId: forumId, maxLines: 1))
-                    : const SizedBox.shrink();
-              }),
-            ],
+              return Row(
+                children: [
+                  const Text('X岛 nmbxd.com'),
+                  if (forumId != null)
+                    Flexible(child: ForumName(forumId: forumId, maxLines: 1)),
+                ].withSpaceBetween(width: 5.0),
+              );
+            },
           ),
         ),
       ],

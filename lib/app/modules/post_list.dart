@@ -188,7 +188,6 @@ void _refresh() {
   _BottomBar._bottomBarKey.currentState!.refresh();
 }
 
-// TODO: 提示sage，sage串不能回复
 class PostListAppBar extends StatefulWidget implements PreferredSizeWidget {
   static final GlobalKey<PostListAppBarState> appBarKey =
       GlobalKey<PostListAppBarState>();

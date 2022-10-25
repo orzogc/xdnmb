@@ -43,6 +43,8 @@ import 'scroll.dart';
 import 'size.dart';
 import 'thread.dart';
 
+// TODO: sage串不能回复
+
 const double _defaultHeight = 200.0;
 
 class _ForumName extends StatelessWidget {

@@ -18,7 +18,7 @@ class _MinHeightIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 50.0),
+        constraints: const BoxConstraints(minHeight: 70.0),
         child: Center(child: child),
       );
 }
