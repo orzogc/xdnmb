@@ -4,7 +4,9 @@ import 'dart:typed_data';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart';
+import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 import '../data/services/image.dart';
 import 'extensions.dart';
@@ -62,12 +64,22 @@ Future<bool> saveImageData(Uint8List imageData,
   if (image.savePath != null) {
     try {
       final filename = _imageFilename(imageData);
-      final path = join(image.savePath!, filename);
-      final file = File(path);
-      await file.writeAsBytes(imageData);
+      if(GetPlatform.isIOS) {
+        final saveResult = await ImageGallerySaver.saveImage(
+          imageData, 
+          quality: 100, name: filename);
+        if (!saveResult['isSuccess']) {
+          throw Exception(saveResult['error']);
+        }
+        showToast('图片保存到相册成功');
+      } else {
+        final path = join(image.savePath!, filename);
+        final file = File(path);
+        await file.writeAsBytes(imageData);
 
-      if (isShowSuccessMessage) {
-        showToast('图片保存在 ${image.savePath}');
+        if (isShowSuccessMessage) {
+          showToast('图片保存在 ${image.savePath}');
+        }
       }
 
       return true;

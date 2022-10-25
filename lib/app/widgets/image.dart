@@ -94,8 +94,8 @@ class PickImage extends StatelessWidget {
             dialogTitle: 'xdnmb',
             initialDirectory:
                 (GetPlatform.isDesktop) ? data.pictureDirectory : null,
-            type: FileType.custom,
-            allowedExtensions: ['jif', 'jpeg', 'jpg', 'png'],
+            type: GetPlatform.isIOS ? FileType.image : FileType.custom,
+            allowedExtensions: GetPlatform.isIOS ? null : ['jif', 'jpeg', 'jpg', 'png'],
             lockParentWindow: true,
           );
 

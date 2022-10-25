@@ -906,6 +906,8 @@ class _Post extends StatelessWidget {
                     }
                   },
                   onError: (e) async {
+                    final picNotice = GetPlatform.isIOS ? 
+                      '图片已保存到相册' : '图片保存在 ${ImageService.to.savePath}';
                     if (title.isNotEmpty ||
                         name.isNotEmpty ||
                         content.isNotEmpty) {
@@ -918,7 +920,7 @@ class _Post extends StatelessWidget {
                           imageData != null &&
                           await saveImageData(imageData!)) {
                         showToast(
-                            '发串失败，内容已保存为草稿，图片保存在 ${ImageService.to.savePath} ：${exceptionMessage(e)}');
+                            '发串失败，内容已保存为草稿，$picNotice ：${exceptionMessage(e)}');
                       } else {
                         showToast('发串失败，内容已保存为草稿：${exceptionMessage(e)}');
                       }
@@ -927,7 +929,7 @@ class _Post extends StatelessWidget {
                           imageData != null &&
                           await saveImageData(imageData!)) {
                         showToast(
-                            '发串失败，图片保存在 ${ImageService.to.savePath} ：${exceptionMessage(e)}');
+                            '发串失败，$picNotice ：${exceptionMessage(e)}');
                       } else {
                         showToast('发串失败：${exceptionMessage(e)}');
                       }
