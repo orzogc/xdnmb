@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:path/path.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
+import '../data/services/image.dart';
 import '../data/services/persistent.dart';
 import '../modules/image.dart';
 import '../routes/routes.dart';
@@ -86,33 +87,38 @@ class PickImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = PersistentDataService.to;
+    final image = ImageService.to;
 
     return IconButton(
       onPressed: () async {
-        try {
-          final result = await FilePicker.platform.pickFiles(
-            dialogTitle: 'xdnmb',
-            initialDirectory:
-                (GetPlatform.isDesktop) ? data.pictureDirectory : null,
-            type: GetPlatform.isIOS ? FileType.image : FileType.custom,
-            allowedExtensions:
-                GetPlatform.isIOS ? null : ['jif', 'jpeg', 'jpg', 'png'],
-            lockParentWindow: true,
-          );
+        if (image.hasStoragePermission && image.hasPhotoLibraryPermission) {
+          try {
+            final result = await FilePicker.platform.pickFiles(
+              dialogTitle: 'xdnmb',
+              initialDirectory:
+                  GetPlatform.isDesktop ? data.pictureDirectory : null,
+              type: GetPlatform.isIOS ? FileType.image : FileType.custom,
+              allowedExtensions:
+                  GetPlatform.isIOS ? null : ['jif', 'jpeg', 'jpg', 'png'],
+              lockParentWindow: true,
+            );
 
-          if (result != null) {
-            final path = result.files.single.path;
-            if (path != null) {
-              if (GetPlatform.isDesktop) {
-                data.pictureDirectory = dirname(path);
+            if (result != null) {
+              final path = result.files.single.path;
+              if (path != null) {
+                if (GetPlatform.isDesktop) {
+                  data.pictureDirectory = dirname(path);
+                }
+                onPickImage(path);
+              } else {
+                showToast('无法获取图片具体路径');
               }
-              onPickImage(path);
-            } else {
-              showToast('无法获取图片具体路径');
             }
+          } catch (e) {
+            showToast('选取图片失败：$e');
           }
-        } catch (e) {
-          showToast('选取图片失败：$e');
+        } else {
+          showToast('没有权限读取图片');
         }
       },
       icon: const Icon(Icons.image),

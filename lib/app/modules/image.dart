@@ -137,7 +137,8 @@ class _BottomOverlay extends StatelessWidget {
 
   Future<void> _saveImage() async {
     if (imageKey.currentState != null) {
-      final savePath = ImageService.to.savePath;
+      final image = ImageService.to;
+      final savePath = image.savePath;
 
       try {
         if (post != null) {
@@ -148,13 +149,17 @@ class _BottomOverlay extends StatelessWidget {
           if (info != null) {
             debugPrint('缓存图片路径：${info.file.path}');
             if (GetPlatform.isIOS) {
-              final Map<String, dynamic> result =
-                  await ImageGallerySaver.saveFile(info.file.path,
-                      name: fileName);
-              if (result['isSuccess']) {
-                showToast('图片保存到相册成功');
+              if (image.hasPhotoLibraryPermission) {
+                final Map<String, dynamic> result =
+                    await ImageGallerySaver.saveFile(info.file.path,
+                        name: fileName);
+                if (result['isSuccess']) {
+                  showToast('图片保存到相册成功');
+                } else {
+                  showToast('图片保存到相册失败：${result['errorMessage']}');
+                }
               } else {
-                showToast('图片保存到相册失败：${result['errorMessage']}');
+                showToast('没有图库权限无法保存图片');
               }
             } else if (savePath != null) {
               final path = join(savePath, fileName);

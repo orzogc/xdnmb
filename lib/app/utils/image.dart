@@ -58,39 +58,45 @@ Image? getImage(Uint8List imageData) {
 }
 
 Future<bool> saveImageData(Uint8List imageData) async {
-  final savePath = ImageService.to.savePath;
+  final image = ImageService.to;
+  final savePath = image.savePath;
 
   try {
     final filename = _imageFilename(imageData);
 
     if (GetPlatform.isIOS) {
-      if (savePath != null) {
-        final path = join(savePath, filename);
-        final file = File(path);
-        await file.writeAsBytes(imageData);
+      if (image.hasPhotoLibraryPermission) {
+        if (savePath != null) {
+          final path = join(savePath, filename);
+          final file = File(path);
+          await file.writeAsBytes(imageData);
 
-        final Map<String, dynamic> result =
-            await ImageGallerySaver.saveFile(file.path, name: filename);
-        await file.delete();
-        if (result['isSuccess']) {
-          showToast('图片保存到相册成功');
-          return true;
+          final Map<String, dynamic> result =
+              await ImageGallerySaver.saveFile(file.path, name: filename);
+          await file.delete();
+          if (result['isSuccess']) {
+            showToast('图片保存到相册成功');
+            return true;
+          } else {
+            showToast('图片保存到相册失败：${result['errorMessage']}');
+            return false;
+          }
         } else {
-          showToast('图片保存到相册失败：${result['errorMessage']}');
-          return false;
+          final Map<String, dynamic> result = await ImageGallerySaver.saveImage(
+              imageData,
+              quality: 100,
+              name: filename);
+          if (result['isSuccess']) {
+            showToast('图片保存到相册成功');
+            return true;
+          } else {
+            showToast('图片保存到相册失败：${result['errorMessage']}');
+            return false;
+          }
         }
       } else {
-        final Map<String, dynamic> result = await ImageGallerySaver.saveImage(
-            imageData,
-            quality: 100,
-            name: filename);
-        if (result['isSuccess']) {
-          showToast('图片保存到相册成功');
-          return true;
-        } else {
-          showToast('图片保存到相册失败：${result['errorMessage']}');
-          return false;
-        }
+        showToast('没有图库权限无法保存图片');
+        return false;
       }
     } else if (savePath != null) {
       final path = join(savePath, filename);

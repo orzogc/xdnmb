@@ -10,22 +10,28 @@ class ImageService extends GetxService {
 
   String? savePath;
 
+  bool hasStoragePermission = false;
+
+  bool hasPhotoLibraryPermission = false;
+
   final RxBool isReady = false.obs;
 
   @override
   void onReady() async {
     super.onReady();
 
-    bool isGranted = true;
     if (GetPlatform.isAndroid || GetPlatform.isIOS) {
       PermissionStatus status = await Permission.storage.status;
       if (status.isDenied) {
         status = await Permission.storage.request();
       }
-      if (!status.isGranted) {
-        isGranted = false;
-        showToast('读取和保存图片需要存储权限');
+      if (status.isGranted) {
+        hasStoragePermission = true;
+      } else {
+        showToast('读写图片需要存储权限');
       }
+    } else {
+      hasStoragePermission = true;
     }
 
     if (GetPlatform.isIOS) {
@@ -33,12 +39,16 @@ class ImageService extends GetxService {
       if (status.isDenied) {
         status = await Permission.photos.request();
       }
-      if (!status.isGranted) {
-        showToast('读取图库图片需要图库权限');
+      if (status.isGranted) {
+        hasPhotoLibraryPermission = true;
+      } else {
+        showToast('读写图库图片需要图库权限');
       }
+    } else {
+      hasPhotoLibraryPermission = true;
     }
 
-    if (isGranted) {
+    if (hasStoragePermission) {
       try {
         savePath = await getPicturesPath();
       } catch (e) {
