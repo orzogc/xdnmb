@@ -57,7 +57,7 @@
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>To get images in the photo library</string>
+	<string>To get and save images in the photo library</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>LSApplicationQueriesSchemes</key>

@@ -116,11 +116,16 @@ class _BottomOverlay extends StatelessWidget {
     if (imageKey.currentState != null) {
       if (post != null) {
         final manager = XdnmbImageCacheManager();
-        final info = await manager.getFileFromCache(post!.imageUrl()!);
-        if (info != null) {
-          return await info.file.readAsBytes();
-        } else {
-          showToast('读取缓存图片数据失败');
+        try {
+          final info = await manager.getFileFromCache(post!.imageUrl()!);
+          if (info != null) {
+            debugPrint('缓存图片路径：${info.file.path}');
+            return await info.file.readAsBytes();
+          } else {
+            showToast('读取缓存图片数据失败');
+          }
+        } catch (e) {
+          showToast('读取缓存图片数据失败：$e');
         }
       } else {
         return imageData!;
@@ -141,11 +146,10 @@ class _BottomOverlay extends StatelessWidget {
 
           final info = await manager.getFileFromCache(post!.imageUrl()!);
           if (info != null) {
+            debugPrint('缓存图片路径：${info.file.path}');
             if (GetPlatform.isIOS) {
               final Map<String, dynamic> result =
-                  await ImageGallerySaver.saveImage(
-                      await info.file.readAsBytes(),
-                      quality: 100,
+                  await ImageGallerySaver.saveFile(info.file.path,
                       name: fileName);
               if (result['isSuccess']) {
                 showToast('图片保存到相册成功');

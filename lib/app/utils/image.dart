@@ -64,16 +64,33 @@ Future<bool> saveImageData(Uint8List imageData) async {
     final filename = _imageFilename(imageData);
 
     if (GetPlatform.isIOS) {
-      final Map<String, dynamic> result = await ImageGallerySaver.saveImage(
-          imageData,
-          quality: 100,
-          name: filename);
-      if (result['isSuccess']) {
-        showToast('图片保存到相册成功');
-        return true;
+      if (savePath != null) {
+        final path = join(savePath, filename);
+        final file = File(path);
+        await file.writeAsBytes(imageData);
+
+        final Map<String, dynamic> result =
+            await ImageGallerySaver.saveFile(file.path, name: filename);
+        await file.delete();
+        if (result['isSuccess']) {
+          showToast('图片保存到相册成功');
+          return true;
+        } else {
+          showToast('图片保存到相册失败：${result['errorMessage']}');
+          return false;
+        }
       } else {
-        showToast('图片保存到相册失败：${result['errorMessage']}');
-        return false;
+        final Map<String, dynamic> result = await ImageGallerySaver.saveImage(
+            imageData,
+            quality: 100,
+            name: filename);
+        if (result['isSuccess']) {
+          showToast('图片保存到相册成功');
+          return true;
+        } else {
+          showToast('图片保存到相册失败：${result['errorMessage']}');
+          return false;
+        }
       }
     } else if (savePath != null) {
       final path = join(savePath, filename);

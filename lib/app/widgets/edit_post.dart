@@ -1292,6 +1292,8 @@ class EditPostState extends State<EditPost> {
 
   bool isPosted = false;
 
+  bool get _isAtBottom => widget.height != null;
+
   EditPostController toController() => EditPostController(
       postListType: _postList.value.postListType,
       id: _postList.value.id!,
@@ -1375,7 +1377,7 @@ class EditPostState extends State<EditPost> {
                       icon: const Icon(Icons.edit_note),
                     ),
                   ),
-                  if (widget.height != null)
+                  if (_isAtBottom)
                     Flexible(
                       child: IconButton(
                         onPressed: () async {
@@ -1613,22 +1615,23 @@ class EditPostState extends State<EditPost> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        widget.height != null
-            ? _inputArea(context, widget.height!)
-            : Obx(
-                () {
-                  final fullHeight = MediaQuery.of(context).size.height -
-                      Scaffold.of(context).appBarMaxHeight!;
-                  final lessHeight =
-                      fullHeight - (data.keyboardHeight ?? _defaultHeight);
+        if (_isAtBottom)
+          _inputArea(context, widget.height!)
+        else
+          Obx(
+            () {
+              final fullHeight = MediaQuery.of(context).size.height -
+                  Scaffold.of(context).appBarMaxHeight!;
+              final lessHeight =
+                  fullHeight - (data.keyboardHeight ?? _defaultHeight);
 
-                  return (_showEmoticon.value || data.isKeyboardVisible.value)
-                      ? _inputArea(
-                          context, lessHeight > 0 ? lessHeight : _defaultHeight)
-                      : _inputArea(context,
-                          fullHeight > 0 ? fullHeight : _defaultHeight);
-                },
-              ),
+              return (_showEmoticon.value || data.isKeyboardVisible.value)
+                  ? _inputArea(
+                      context, lessHeight > 0 ? lessHeight : _defaultHeight)
+                  : _inputArea(
+                      context, fullHeight > 0 ? fullHeight : _defaultHeight);
+            },
+          ),
         Obx(
           () => _showEmoticon.value
               ? _Emoticon(onTap: insertText)
