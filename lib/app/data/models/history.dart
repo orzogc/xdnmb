@@ -5,7 +5,8 @@ import '../../utils/extensions.dart';
 
 part 'history.g.dart';
 
-@Collection()
+/// 应官方要求，本地不再保存图片地址相关字段
+@collection
 class BrowseHistory implements PostBase {
   @override
   final Id id;
@@ -59,12 +60,13 @@ class BrowseHistory implements PostBase {
 
   int? onlyPoBrowsePostId;
 
+  bool hasImage;
+
   BrowseHistory(
       {required this.id,
       required this.forumId,
       required this.replyCount,
-      this.image = '',
-      this.imageExtension = '',
+      String image = '',
       required DateTime postTime,
       required this.userHash,
       String name = '',
@@ -77,18 +79,22 @@ class BrowseHistory implements PostBase {
       this.browsePage,
       this.browsePostId,
       this.onlyPoBrowsePage,
-      this.onlyPoBrowsePostId})
+      this.onlyPoBrowsePostId,
+      bool hasImage = false})
       : assert((browsePage != null && browsePostId != null) ||
             (onlyPoBrowsePage != null && onlyPoBrowsePostId != null)),
         assert((browsePage != null && browsePostId != null) ||
             (browsePage == null && browsePostId == null)),
         assert((onlyPoBrowsePage != null && onlyPoBrowsePostId != null) ||
             (onlyPoBrowsePage == null && onlyPoBrowsePostId == null)),
+        image = '',
+        imageExtension = '',
         postTime = postTime.toUtc(),
         name = name != '无名氏' ? name : '',
         title = title != '无标题' ? title : '',
         content = content.isNotEmpty ? content : '分享图片',
-        browseTime = browseTime.toUtc();
+        browseTime = browseTime.toUtc(),
+        hasImage = image.isNotEmpty || hasImage;
 
   BrowseHistory.fromPost(
       {required Post mainPost,
@@ -100,8 +106,6 @@ class BrowseHistory implements PostBase {
             id: mainPost.id,
             forumId: mainPost.forumId,
             replyCount: mainPost.replyCount,
-            image: mainPost.image,
-            imageExtension: mainPost.imageExtension,
             postTime: mainPost.postTime,
             userHash: mainPost.userHash,
             name: mainPost.name,
@@ -114,7 +118,8 @@ class BrowseHistory implements PostBase {
             browsePage: !isOnlyPo ? browsePage : null,
             browsePostId: !isOnlyPo ? browsePostId : null,
             onlyPoBrowsePage: isOnlyPo ? browsePage : null,
-            onlyPoBrowsePostId: isOnlyPo ? browsePostId : null);
+            onlyPoBrowsePostId: isOnlyPo ? browsePostId : null,
+            hasImage: mainPost.hasImage());
 
   void update(
       {required Post mainPost,
@@ -124,10 +129,18 @@ class BrowseHistory implements PostBase {
       bool isOnlyPo = false}) {
     assert(id == mainPost.id, 'id must be the same');
 
+    if (isOnlyPo) {
+      onlyPoBrowsePage = browsePage;
+      onlyPoBrowsePostId = browsePostId;
+    } else {
+      this.browsePage = browsePage;
+      this.browsePostId = browsePostId;
+    }
+
     forumId = mainPost.forumId;
     replyCount = mainPost.replyCount;
-    image = mainPost.image;
-    imageExtension = mainPost.imageExtension;
+    image = '';
+    imageExtension = '';
     postTime = mainPost.postTime.toUtc();
     userHash = mainPost.userHash;
     name = mainPost.name != '无名氏' ? mainPost.name : '';
@@ -137,14 +150,7 @@ class BrowseHistory implements PostBase {
     isAdmin = mainPost.isAdmin;
     isHidden = mainPost.isHidden;
     this.browseTime = browseTime ?? DateTime.now().toUtc();
-
-    if (isOnlyPo) {
-      onlyPoBrowsePage = browsePage;
-      onlyPoBrowsePostId = browsePostId;
-    } else {
-      this.browsePage = browsePage;
-      this.browsePostId = browsePostId;
-    }
+    hasImage = mainPost.hasImage();
   }
 
   int? toIndex({bool isOnlyPo = false}) {
@@ -180,7 +186,8 @@ class BrowseHistory implements PostBase {
           browsePage == other.browsePage &&
           browsePostId == other.browsePostId &&
           onlyPoBrowsePage == other.onlyPoBrowsePage &&
-          onlyPoBrowsePostId == other.onlyPoBrowsePostId);
+          onlyPoBrowsePostId == other.onlyPoBrowsePostId &&
+          hasImage == other.hasImage);
 
   @ignore
   @override
@@ -202,5 +209,6 @@ class BrowseHistory implements PostBase {
       browsePage,
       browsePostId,
       onlyPoBrowsePage,
-      onlyPoBrowsePostId);
+      onlyPoBrowsePostId,
+      hasImage);
 }

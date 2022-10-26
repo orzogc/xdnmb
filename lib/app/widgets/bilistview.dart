@@ -268,10 +268,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
       widget.onNoMoreItems!();
     }
 
-    return _MinHeightIndicator(
-      child: widget.lastPage == null
-          ? (widget.canLoadMoreAtBottom
-              ? GestureDetector(
+    return widget.lastPage == null
+        ? (widget.canLoadMoreAtBottom
+            ? _MinHeightIndicator(
+                child: GestureDetector(
                   onTap: _loadMore,
                   child: Center(
                     child: Text(
@@ -282,18 +282,20 @@ class _BiListViewState<T> extends State<BiListView<T>>
                       ),
                     ),
                   ),
-                )
-              : const SizedBox.shrink())
-          : Center(
+                ),
+              )
+            : const SizedBox.shrink())
+        : _MinHeightIndicator(
+            child: Center(
               child: Text(
-                '已经抵达X岛的尽头',
+                '已抵达X岛的尽头',
                 style: TextStyle(
                   color: specialTextColor(),
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-    );
+          );
   }
 
   void _checkBoundary() {

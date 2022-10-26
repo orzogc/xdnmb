@@ -425,13 +425,14 @@ class _ThreadBodyState extends State<ThreadBody> {
   }
 
   void _saveHistoryAndJumpToIndex(Thread thread, int firstPage, int page) {
-    final settings = SettingsService.to;
     final history = PostHistoryService.to;
     final controller = widget.controller;
     final jumpToId = controller.jumpToId;
+    final isOnlyPoThread = controller.isOnlyPoThread;
 
     if (page == firstPage) {
-      final firstPost = page == 1
+      // TODO: browsePostId应该可以为null
+      final Post firstPost = page == 1
           ? thread.mainPost
           : (thread.replies.isNotEmpty
               ? thread.replies.first
@@ -441,22 +442,12 @@ class _ThreadBodyState extends State<ThreadBody> {
             mainPost: thread.mainPost,
             browsePage: page,
             browsePostId: firstPost.id,
-            isOnlyPo: controller.isOnlyPoThread);
+            isOnlyPo: isOnlyPoThread);
         history.saveBrowseHistory(_history!);
         _isToJump.value = false;
-      } else if (!_isToJump.value) {
-        // 除了第一次跳转，其他跳转都更新
-        _history!.update(
-            mainPost: thread.mainPost,
-            browsePage: page,
-            browsePostId: firstPost.id,
-            isOnlyPo: controller.isOnlyPoThread);
-        history.saveBrowseHistory(_history!);
-      } else if (jumpToId != null ||
-          (settings.isJumpToLastBrowsePage &&
-              settings.isJumpToLastBrowsePosition)) {
+      } else if (_isToJump.value) {
         final index = jumpToId?.toIndex(page) ??
-            _history!.toIndex(isOnlyPo: controller.isOnlyPoThread);
+            _history!.toIndex(isOnlyPo: isOnlyPoThread);
         if (index != null) {
           final postIds = thread.replies.map((post) => post.id);
           final id = index.getIdFromIndex();
@@ -480,6 +471,13 @@ class _ThreadBodyState extends State<ThreadBody> {
                           }
                         });
                       }
+                    } else {
+                      _history!.update(
+                          mainPost: thread.mainPost,
+                          browsePage: page,
+                          browsePostId: firstPost.id,
+                          isOnlyPo: isOnlyPoThread);
+                      history.saveBrowseHistory(_history!);
                     }
                   }
                 } catch (e) {
@@ -495,6 +493,14 @@ class _ThreadBodyState extends State<ThreadBody> {
                 },
               );
             });
+          } else if (page == 1 && thread.mainPost.id == id) {
+            _history!.update(
+                mainPost: thread.mainPost,
+                browsePage: page,
+                browsePostId: thread.mainPost.id,
+                isOnlyPo: isOnlyPoThread);
+            history.saveBrowseHistory(_history!);
+            _isToJump.value = false;
           } else {
             _isToJump.value = false;
           }
@@ -502,6 +508,12 @@ class _ThreadBodyState extends State<ThreadBody> {
           _isToJump.value = false;
         }
       } else {
+        _history!.update(
+            mainPost: thread.mainPost,
+            browsePage: page,
+            browsePostId: firstPost.id,
+            isOnlyPo: isOnlyPoThread);
+        history.saveBrowseHistory(_history!);
         _isToJump.value = false;
       }
     }

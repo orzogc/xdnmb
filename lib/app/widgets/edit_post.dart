@@ -733,7 +733,7 @@ class _Post extends StatelessWidget {
       required this.getContent,
       required this.onPost});
 
-  Future<void> savePost(PostData post) async {
+  Future<void> _savePost(PostData post) async {
     final history = PostHistoryService.to;
     final client = XdnmbClientService.to.client;
 
@@ -757,7 +757,7 @@ class _Post extends StatelessWidget {
     }
   }
 
-  Future<bool> getPostId(
+  Future<bool> _getPostId(
       {required int id, required ReplyData reply, required int page}) async {
     final history = PostHistoryService.to;
     final client = XdnmbClientService.to.client;
@@ -778,7 +778,7 @@ class _Post extends StatelessWidget {
     return false;
   }
 
-  Future<void> saveReply(ReplyData reply) async {
+  Future<void> _saveReply(ReplyData reply) async {
     final history = PostHistoryService.to;
     final client = XdnmbClientService.to.client;
 
@@ -789,8 +789,8 @@ class _Post extends StatelessWidget {
       final page = thread.mainPost.replyCount != 0
           ? (thread.mainPost.replyCount / 19).ceil()
           : 1;
-      if (!await getPostId(id: id, reply: reply, page: page) && page > 1) {
-        await getPostId(id: id, reply: reply, page: page - 1);
+      if (!await _getPostId(id: id, reply: reply, page: page) && page > 1) {
+        await _getPostId(id: id, reply: reply, page: page - 1);
       }
     } catch (e) {
       showToast('获取回串数据出错：${exceptionMessage(e)}');
@@ -869,7 +869,7 @@ class _Post extends StatelessWidget {
                           name: name,
                           title: title,
                           content: content);
-                      savePost(post);
+                      _savePost(post);
                     } else {
                       showToast('回串成功');
                       final reply = ReplyData(
@@ -880,7 +880,7 @@ class _Post extends StatelessWidget {
                           name: name,
                           title: title,
                           content: content);
-                      saveReply(reply);
+                      _saveReply(reply);
                     }
 
                     if (controller.postListType == postListType &&

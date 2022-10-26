@@ -8,6 +8,7 @@ import '../data/models/history.dart';
 import '../data/models/post.dart';
 import '../data/models/reply.dart';
 import '../data/services/history.dart';
+import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
@@ -346,6 +347,125 @@ class _HistoryDialog extends StatelessWidget {
   }
 }
 
+// TODO: 尽可能减少请求引用
+class _BrowseHistory extends StatefulWidget {
+  final BrowseHistory browse;
+
+  const _BrowseHistory(this.browse, {super.key});
+
+  @override
+  State<_BrowseHistory> createState() => _BrowseHistoryState();
+}
+
+class _BrowseHistoryState extends State<_BrowseHistory> {
+  String? _image;
+
+  String? _imageExtension;
+
+  final RxBool _isVisible = true.obs;
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<void>(
+        future: Future(() async {
+          if (widget.browse.hasImage) {
+            if (_image == null || _imageExtension == null) {
+              debugPrint('浏览记录的串 ${widget.browse.toPostNumber()} 有图片，开始获取其引用');
+              final reference = await XdnmbClientService.to.client
+                  .getReference(widget.browse.id);
+              _image = reference.image;
+              _imageExtension = reference.imageExtension;
+            }
+
+            if (_image != null && _imageExtension != null) {
+              widget.browse.image = _image!;
+              widget.browse.imageExtension = _imageExtension!;
+            }
+          }
+        }),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasError) {
+            debugPrint(
+                '获取串 ${widget.browse.toPostNumber()} 的引用出错：${snapshot.error}');
+          }
+
+          int? browsePage;
+          int? browsePostId;
+          if (widget.browse.browsePage != null) {
+            browsePage = widget.browse.browsePage;
+            browsePostId = widget.browse.browsePostId;
+          } else {
+            browsePage = widget.browse.onlyPoBrowsePage;
+            browsePostId = widget.browse.onlyPoBrowsePostId;
+          }
+
+          return Obx(
+            () => _isVisible.value
+                ? Card(
+                    key: ValueKey<int>(widget.browse.id),
+                    margin: const EdgeInsets.symmetric(vertical: 4.0),
+                    elevation: 1.5,
+                    child: InkWell(
+                      onTap: () => AppRoutes.toThread(
+                          mainPostId: widget.browse.id,
+                          mainPost: widget.browse),
+                      onLongPress: () => postListDialog(
+                        _HistoryDialog(
+                          mainPost: widget.browse,
+                          confirmDelete: false,
+                          onDelete: () async {
+                            await PostHistoryService.to
+                                .deleteBrowseHistory(widget.browse.id);
+                            showToast(
+                                '删除 ${widget.browse.id.toPostNumber()} 的浏览记录');
+                            _isVisible.value = false;
+                          },
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 10.0, top: 5.0, right: 10.0),
+                            child: DefaultTextStyle.merge(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .caption
+                                  ?.apply(color: AppTheme.headerColor),
+                              child: OverflowBar(
+                                spacing: 5.0,
+                                alignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '最后浏览时间：${formatTime(widget.browse.browseTime)}',
+                                  ),
+                                  if (browsePage != null &&
+                                      browsePostId != null)
+                                    Text(
+                                      '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          PostContent(
+                            post: widget.browse,
+                            showFullTime: false,
+                            showReplyCount: false,
+                            contentMaxLines: 8,
+                            poUserHash: widget.browse.userHash,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          );
+        },
+      );
+}
+
 class _BrowseHistoryBody extends StatelessWidget {
   static const _index = 0;
 
@@ -356,8 +476,6 @@ class _BrowseHistoryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
-    final textStyle =
-        Theme.of(context).textTheme.caption?.apply(color: AppTheme.headerColor);
 
     return PostListRefresher(
       controller: controller,
@@ -374,77 +492,7 @@ class _BrowseHistoryBody extends StatelessWidget {
               (page - 1) * _historyEachPage,
               page * _historyEachPage,
               controller._getDateRange(_BrowseHistoryBody._index)),
-          itemBuilder: (context, browse, index) {
-            final isVisible = true.obs;
-
-            int? browsePage;
-            int? browsePostId;
-            if (browse.browsePage != null) {
-              browsePage = browse.browsePage;
-              browsePostId = browse.browsePostId;
-            } else {
-              browsePage = browse.onlyPoBrowsePage;
-              browsePostId = browse.onlyPoBrowsePostId;
-            }
-
-            return Obx(
-              () => isVisible.value
-                  ? Card(
-                      key: ValueKey<int>(browse.id),
-                      margin: const EdgeInsets.symmetric(vertical: 4.0),
-                      elevation: 1.5,
-                      child: InkWell(
-                        onTap: () => AppRoutes.toThread(
-                            mainPostId: browse.id, mainPost: browse),
-                        onLongPress: () => postListDialog(
-                          _HistoryDialog(
-                            mainPost: browse,
-                            confirmDelete: false,
-                            onDelete: () async {
-                              await history.deleteBrowseHistory(browse.id);
-                              showToast('删除 ${browse.id.toPostNumber()} 的浏览记录');
-                              isVisible.value = false;
-                            },
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 10.0, top: 5.0, right: 10.0),
-                              child: DefaultTextStyle.merge(
-                                style: textStyle,
-                                child: OverflowBar(
-                                  spacing: 5.0,
-                                  alignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '最后浏览时间：${formatTime(browse.browseTime)}',
-                                    ),
-                                    if (browsePage != null &&
-                                        browsePostId != null)
-                                      Text(
-                                        '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            PostContent(
-                              post: browse,
-                              showFullTime: false,
-                              showReplyCount: false,
-                              contentMaxLines: 8,
-                              poUserHash: browse.userHash,
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            );
-          },
+          itemBuilder: (context, browse, index) => _BrowseHistory(browse),
           noItemsFoundBuilder: (context) => const Center(
             child: Text('没有浏览记录', style: AppTheme.boldRed),
           ),
@@ -452,6 +500,89 @@ class _BrowseHistoryBody extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PostHistory extends StatefulWidget {
+  final PostData mainPost;
+
+  const _PostHistory(this.mainPost, {super.key});
+
+  @override
+  State<_PostHistory> createState() => _PostHistoryState();
+}
+
+class _PostHistoryState extends State<_PostHistory> {
+  String? _image;
+
+  String? _imageExtension;
+
+  final RxBool _isVisible = true.obs;
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<void>(
+        future: Future(() async {
+          if (widget.mainPost.postId != null && widget.mainPost.hasImage) {
+            if (_image == null || _imageExtension == null) {
+              debugPrint(
+                  '主题记录的串 ${widget.mainPost.postId?.toPostNumber()} 有图片，开始获取其引用');
+              final reference = await XdnmbClientService.to.client
+                  .getReference(widget.mainPost.postId!);
+              _image = reference.image;
+              _imageExtension = reference.imageExtension;
+            }
+
+            if (_image != null && _imageExtension != null) {
+              widget.mainPost.image = _image;
+              widget.mainPost.imageExtension = _imageExtension;
+            }
+          }
+        }),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasError) {
+            debugPrint(
+                '获取串 ${widget.mainPost.postId?.toPostNumber()} 的引用出错：${snapshot.error}');
+          }
+
+          return Obx(
+            () => _isVisible.value
+                ? Card(
+                    key: ValueKey<int>(widget.mainPost.id),
+                    margin: const EdgeInsets.symmetric(vertical: 4.0),
+                    elevation: 1.5,
+                    child: PostCard(
+                      post: widget.mainPost.toPost(),
+                      showFullTime: false,
+                      showPostId: widget.mainPost.postId != null ? true : false,
+                      showReplyCount: false,
+                      contentMaxLines: 8,
+                      poUserHash: widget.mainPost.userHash,
+                      onTap: (post) {
+                        if (post.id > 0) {
+                          AppRoutes.toThread(
+                              mainPostId: post.id, mainPost: post);
+                        }
+                      },
+                      onLongPress: (post) => postListDialog(
+                        _HistoryDialog(
+                          mainPost: post,
+                          onDelete: () async {
+                            await PostHistoryService.to
+                                .deletePostData(widget.mainPost.id);
+                            widget.mainPost.postId != null
+                                ? showToast(
+                                    '删除主题 ${widget.mainPost.postId?.toPostNumber()} 的记录')
+                                : showToast('删除主题记录');
+                            _isVisible.value = false;
+                          },
+                        ),
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          );
+        },
+      );
 }
 
 class _PostHistoryBody extends StatelessWidget {
@@ -480,46 +611,7 @@ class _PostHistoryBody extends StatelessWidget {
               (page - 1) * _historyEachPage,
               page * _historyEachPage,
               controller._getDateRange(_PostHistoryBody._index)),
-          itemBuilder: (context, mainPost, index) {
-            final isVisible = true.obs;
-
-            return Obx(
-              () => isVisible.value
-                  ? Card(
-                      key: ValueKey<int>(mainPost.id),
-                      margin: const EdgeInsets.symmetric(vertical: 4.0),
-                      elevation: 1.5,
-                      child: PostCard(
-                        post: mainPost.toPost(),
-                        showFullTime: false,
-                        showPostId: mainPost.postId != null ? true : false,
-                        showReplyCount: false,
-                        contentMaxLines: 8,
-                        poUserHash: mainPost.userHash,
-                        onTap: (post) {
-                          if (post.id > 0) {
-                            AppRoutes.toThread(
-                                mainPostId: post.id, mainPost: post);
-                          }
-                        },
-                        onLongPress: (post) => postListDialog(
-                          _HistoryDialog(
-                            mainPost: post,
-                            onDelete: () async {
-                              await history.deletePostData(mainPost.id);
-                              mainPost.postId != null
-                                  ? showToast(
-                                      '删除主题 ${mainPost.postId!.toPostNumber()} 的记录')
-                                  : showToast('删除主题记录');
-                              isVisible.value = false;
-                            },
-                          ),
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            );
-          },
+          itemBuilder: (context, mainPost, index) => _PostHistory(mainPost),
           noItemsFoundBuilder: (context) => const Center(
             child: Text('没有主题记录', style: AppTheme.boldRed),
           ),
@@ -527,6 +619,123 @@ class _PostHistoryBody extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ReplyHistory extends StatefulWidget {
+  final ReplyData reply;
+
+  const _ReplyHistory(this.reply, {super.key});
+
+  @override
+  State<_ReplyHistory> createState() => _ReplyHistoryState();
+}
+
+class _ReplyHistoryState extends State<_ReplyHistory> {
+  String? _image;
+
+  String? _imageExtension;
+
+  final RxBool _isVisible = true.obs;
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<void>(
+        future: Future(() async {
+          if (widget.reply.postId != null && widget.reply.hasImage) {
+            if (_image == null || _imageExtension == null) {
+              debugPrint(
+                  '回复记录的串 ${widget.reply.postId?.toPostNumber()} 有图片，开始获取其引用');
+              final reference = await XdnmbClientService.to.client
+                  .getReference(widget.reply.postId!);
+              _image = reference.image;
+              _imageExtension = reference.imageExtension;
+            }
+
+            if (_image != null && _imageExtension != null) {
+              widget.reply.image = _image;
+              widget.reply.imageExtension = _imageExtension;
+            }
+          }
+        }),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasError) {
+            debugPrint(
+                '获取串 ${widget.reply.postId?.toPostNumber()} 的引用出错：${snapshot.error}');
+          }
+
+          return Obx(
+            () {
+              final post = widget.reply.toPost();
+
+              return _isVisible.value
+                  ? Card(
+                      key: ValueKey<int>(widget.reply.id),
+                      margin: const EdgeInsets.symmetric(vertical: 4.0),
+                      elevation: 1.5,
+                      child: InkWell(
+                        onTap: () => AppRoutes.toThread(
+                            mainPostId: widget.reply.mainPostId,
+                            page: widget.reply.page ?? 1,
+                            jumpToId: (widget.reply.page != null &&
+                                    widget.reply.postId != null)
+                                ? widget.reply.postId
+                                : null),
+                        onLongPress: () => postListDialog(_HistoryDialog(
+                            mainPost: widget.reply.toMainPost(),
+                            post: post,
+                            onDelete: () async {
+                              await PostHistoryService.to
+                                  .deletePostData(widget.reply.id);
+                              widget.reply.postId != null
+                                  ? showToast(
+                                      '删除回复 ${widget.reply.postId?.toPostNumber()} 的记录')
+                                  : showToast('删除回复记录');
+                              _isVisible.value = false;
+                            })),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 10.0, top: 5.0, right: 10.0),
+                              child: DefaultTextStyle.merge(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .caption
+                                    ?.apply(color: AppTheme.headerColor),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        '主串：${widget.reply.mainPostId.toPostNumber()}',
+                                      ),
+                                    ),
+                                    if (widget.reply.page != null)
+                                      Flexible(
+                                        child: Text('第 ${widget.reply.page} 页'),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            PostContent(
+                              post: post,
+                              showPostId:
+                                  widget.reply.postId != null ? true : false,
+                              showReplyCount: false,
+                              contentMaxLines: 8,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink();
+            },
+          );
+        },
+      );
 }
 
 class _ReplyHistoryBody extends StatelessWidget {
@@ -539,8 +748,6 @@ class _ReplyHistoryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
-    final textStyle =
-        Theme.of(context).textTheme.caption?.apply(color: AppTheme.headerColor);
 
     return PostListRefresher(
       controller: controller,
@@ -557,76 +764,7 @@ class _ReplyHistoryBody extends StatelessWidget {
               (page - 1) * _historyEachPage,
               page * _historyEachPage,
               controller._getDateRange(_ReplyHistoryBody._index)),
-          itemBuilder: (context, reply, index) {
-            final isVisible = true.obs;
-
-            return Obx(
-              () {
-                final post = reply.toPost();
-
-                return isVisible.value
-                    ? Card(
-                        key: ValueKey<int>(reply.id),
-                        margin: const EdgeInsets.symmetric(vertical: 4.0),
-                        elevation: 1.5,
-                        child: InkWell(
-                          onTap: () => AppRoutes.toThread(
-                              mainPostId: reply.mainPostId,
-                              page: reply.page ?? 1,
-                              jumpToId:
-                                  (reply.page != null && reply.postId != null)
-                                      ? reply.postId
-                                      : null),
-                          onLongPress: () => postListDialog(_HistoryDialog(
-                              mainPost: reply.toMainPost(),
-                              post: post,
-                              onDelete: () async {
-                                await history.deletePostData(reply.id);
-                                reply.postId != null
-                                    ? showToast(
-                                        '删除回复 ${reply.postId!.toPostNumber()} 的记录')
-                                    : showToast('删除回复记录');
-                                isVisible.value = false;
-                              })),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    left: 10.0, top: 5.0, right: 10.0),
-                                child: DefaultTextStyle.merge(
-                                  style: textStyle,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          '主串：${reply.mainPostId.toPostNumber()}',
-                                        ),
-                                      ),
-                                      if (reply.page != null)
-                                        Flexible(
-                                          child: Text('第 ${reply.page} 页'),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              PostContent(
-                                post: post,
-                                showPostId: reply.postId != null ? true : false,
-                                showReplyCount: false,
-                                contentMaxLines: 8,
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink();
-              },
-            );
-          },
+          itemBuilder: (context, reply, index) => _ReplyHistory(reply),
           noItemsFoundBuilder: (context) => const Center(
             child: Text('没有回复记录', style: AppTheme.boldRed),
           ),

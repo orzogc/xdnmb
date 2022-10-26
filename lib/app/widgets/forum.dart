@@ -27,6 +27,8 @@ import 'post.dart';
 import 'post_list.dart';
 import 'reference.dart';
 
+// TODO: 加大串间隔
+
 abstract class ForumTypeController extends PostListController {
   @override
   final int id;

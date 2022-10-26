@@ -27,53 +27,58 @@ const ReplyDataSchema = CollectionSchema(
       name: r'forumId',
       type: IsarType.long,
     ),
-    r'image': PropertySchema(
+    r'hasImage': PropertySchema(
       id: 2,
+      name: r'hasImage',
+      type: IsarType.bool,
+    ),
+    r'image': PropertySchema(
+      id: 3,
       name: r'image',
       type: IsarType.string,
     ),
     r'imageExtension': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'imageExtension',
       type: IsarType.string,
     ),
     r'isAdmin': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'isAdmin',
       type: IsarType.bool,
     ),
     r'mainPostId': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'mainPostId',
       type: IsarType.long,
     ),
     r'name': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'name',
       type: IsarType.string,
     ),
     r'page': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'page',
       type: IsarType.long,
     ),
     r'postId': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'postId',
       type: IsarType.long,
     ),
     r'postTime': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'postTime',
       type: IsarType.dateTime,
     ),
     r'title': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'title',
       type: IsarType.string,
     ),
     r'userHash': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'userHash',
       type: IsarType.string,
     )
@@ -149,16 +154,17 @@ void _replyDataSerialize(
 ) {
   writer.writeString(offsets[0], object.content);
   writer.writeLong(offsets[1], object.forumId);
-  writer.writeString(offsets[2], object.image);
-  writer.writeString(offsets[3], object.imageExtension);
-  writer.writeBool(offsets[4], object.isAdmin);
-  writer.writeLong(offsets[5], object.mainPostId);
-  writer.writeString(offsets[6], object.name);
-  writer.writeLong(offsets[7], object.page);
-  writer.writeLong(offsets[8], object.postId);
-  writer.writeDateTime(offsets[9], object.postTime);
-  writer.writeString(offsets[10], object.title);
-  writer.writeString(offsets[11], object.userHash);
+  writer.writeBool(offsets[2], object.hasImage);
+  writer.writeString(offsets[3], object.image);
+  writer.writeString(offsets[4], object.imageExtension);
+  writer.writeBool(offsets[5], object.isAdmin);
+  writer.writeLong(offsets[6], object.mainPostId);
+  writer.writeString(offsets[7], object.name);
+  writer.writeLong(offsets[8], object.page);
+  writer.writeLong(offsets[9], object.postId);
+  writer.writeDateTime(offsets[10], object.postTime);
+  writer.writeString(offsets[11], object.title);
+  writer.writeString(offsets[12], object.userHash);
 }
 
 ReplyData _replyDataDeserialize(
@@ -170,18 +176,19 @@ ReplyData _replyDataDeserialize(
   final object = ReplyData(
     content: reader.readString(offsets[0]),
     forumId: reader.readLong(offsets[1]),
-    image: reader.readStringOrNull(offsets[2]),
-    imageExtension: reader.readStringOrNull(offsets[3]),
-    isAdmin: reader.readBoolOrNull(offsets[4]) ?? false,
-    mainPostId: reader.readLong(offsets[5]),
-    name: reader.readStringOrNull(offsets[6]),
-    page: reader.readLongOrNull(offsets[7]),
-    postId: reader.readLongOrNull(offsets[8]),
-    postTime: reader.readDateTime(offsets[9]),
-    title: reader.readStringOrNull(offsets[10]),
-    userHash: reader.readString(offsets[11]),
+    hasImage: reader.readBoolOrNull(offsets[2]) ?? false,
+    image: reader.readStringOrNull(offsets[3]),
+    isAdmin: reader.readBoolOrNull(offsets[5]) ?? false,
+    mainPostId: reader.readLong(offsets[6]),
+    name: reader.readStringOrNull(offsets[7]),
+    page: reader.readLongOrNull(offsets[8]),
+    postId: reader.readLongOrNull(offsets[9]),
+    postTime: reader.readDateTime(offsets[10]),
+    title: reader.readStringOrNull(offsets[11]),
+    userHash: reader.readString(offsets[12]),
   );
   object.id = id;
+  object.imageExtension = reader.readStringOrNull(offsets[4]);
   return object;
 }
 
@@ -197,24 +204,26 @@ P _replyDataDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
-    case 5:
-      return (reader.readLong(offset)) as P;
-    case 6:
       return (reader.readStringOrNull(offset)) as P;
+    case 5:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
+    case 6:
+      return (reader.readLong(offset)) as P;
     case 7:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 8:
       return (reader.readLongOrNull(offset)) as P;
     case 9:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 10:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 11:
+      return (reader.readStringOrNull(offset)) as P;
+    case 12:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -590,6 +599,16 @@ extension ReplyDataQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ReplyData, ReplyData, QAfterFilterCondition> hasImageEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'hasImage',
+        value: value,
       ));
     });
   }
@@ -1657,6 +1676,18 @@ extension ReplyDataQuerySortBy on QueryBuilder<ReplyData, ReplyData, QSortBy> {
     });
   }
 
+  QueryBuilder<ReplyData, ReplyData, QAfterSortBy> sortByHasImage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasImage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ReplyData, ReplyData, QAfterSortBy> sortByHasImageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasImage', Sort.desc);
+    });
+  }
+
   QueryBuilder<ReplyData, ReplyData, QAfterSortBy> sortByImage() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'image', Sort.asc);
@@ -1801,6 +1832,18 @@ extension ReplyDataQuerySortThenBy
   QueryBuilder<ReplyData, ReplyData, QAfterSortBy> thenByForumIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'forumId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ReplyData, ReplyData, QAfterSortBy> thenByHasImage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasImage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ReplyData, ReplyData, QAfterSortBy> thenByHasImageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'hasImage', Sort.desc);
     });
   }
 
@@ -1952,6 +1995,12 @@ extension ReplyDataQueryWhereDistinct
     });
   }
 
+  QueryBuilder<ReplyData, ReplyData, QDistinct> distinctByHasImage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'hasImage');
+    });
+  }
+
   QueryBuilder<ReplyData, ReplyData, QDistinct> distinctByImage(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2036,6 +2085,12 @@ extension ReplyDataQueryProperty
   QueryBuilder<ReplyData, int, QQueryOperations> forumIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'forumId');
+    });
+  }
+
+  QueryBuilder<ReplyData, bool, QQueryOperations> hasImageProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'hasImage');
     });
   }
 

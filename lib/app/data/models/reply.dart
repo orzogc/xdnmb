@@ -3,7 +3,8 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 part 'reply.g.dart';
 
-@Collection()
+/// 应官方要求，本地不再保存图片地址相关字段
+@collection
 class ReplyData {
   Id id = Isar.autoIncrement;
 
@@ -33,23 +34,23 @@ class ReplyData {
 
   int? page;
 
+  bool hasImage;
+
   ReplyData(
       {required this.mainPostId,
       this.postId,
       required this.forumId,
       String? image,
-      String? imageExtension,
       required DateTime postTime,
       required this.userHash,
       String? name,
       String? title,
       required String content,
       this.isAdmin = false,
-      this.page})
-      : image = image != null ? (image.isNotEmpty ? image : null) : null,
-        imageExtension = imageExtension != null
-            ? (imageExtension.isNotEmpty ? imageExtension : null)
-            : null,
+      this.page,
+      bool hasImage = false})
+      : image = null,
+        imageExtension = null,
         postTime = postTime.toUtc(),
         name = name != null
             ? ((name.isNotEmpty && name != '无名氏') ? name : null)
@@ -57,22 +58,22 @@ class ReplyData {
         title = title != null
             ? ((title.isNotEmpty && title != '无标题') ? title : null)
             : null,
-        content = content.isNotEmpty ? content : '分享图片';
+        content = content.isNotEmpty ? content : '分享图片',
+        hasImage = (image != null && image.isNotEmpty) || hasImage;
 
   ReplyData.fromPost({required Post post, required int mainPostId, int? page})
       : this(
             mainPostId: mainPostId,
             postId: post.id,
             forumId: post.forumId,
-            image: post.image,
-            imageExtension: post.imageExtension,
             postTime: post.postTime,
             userHash: post.userHash,
             name: post.name,
             title: post.title,
             content: post.content,
             isAdmin: post.isAdmin,
-            page: page);
+            page: page,
+            hasImage: post.hasImage());
 
   Post toPost() => Post(
       id: postId ?? 0,
@@ -105,15 +106,15 @@ class ReplyData {
 
     postId = post.id;
     forumId = post.forumId;
-    image = post.image.isNotEmpty ? post.image : null;
-    imageExtension =
-        post.imageExtension.isNotEmpty ? post.imageExtension : null;
+    image = null;
+    imageExtension = null;
     postTime = post.postTime.toUtc();
     userHash = post.userHash;
     name = (post.name.isNotEmpty && post.name != '无名氏') ? post.name : null;
     title = (post.title.isNotEmpty && post.title != '无标题') ? post.title : null;
     content = post.content.isNotEmpty ? post.content : '分享图片';
     isAdmin = post.isAdmin;
+    hasImage = post.hasImage();
   }
 
   @override
@@ -132,10 +133,24 @@ class ReplyData {
           title == other.title &&
           content == other.content &&
           isAdmin == other.isAdmin &&
-          page == other.page);
+          page == other.page &&
+          hasImage == other.hasImage);
 
   @ignore
   @override
-  int get hashCode => Object.hash(id, mainPostId, postId, forumId, image,
-      imageExtension, postTime, userHash, name, title, content, isAdmin, page);
+  int get hashCode => Object.hash(
+      id,
+      mainPostId,
+      postId,
+      forumId,
+      image,
+      imageExtension,
+      postTime,
+      userHash,
+      name,
+      title,
+      content,
+      isAdmin,
+      page,
+      hasImage);
 }
