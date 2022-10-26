@@ -35,17 +35,21 @@ Future<void> getDatabasePath() async {
   }
 }
 
-/// 返回图片保存文件夹
-Future<String> getPicturesPath() async {
-  late final String path;
+/// 返回图片保存文件夹，iOS会返回`null`
+Future<String?> getPicturesPath() async {
+  // iOS保存在图库里
+  if (GetPlatform.isIOS) {
+    return null;
+  }
 
+  late final String path;
   if (GetPlatform.isAndroid) {
     // Android上图片保存在Pictures文件夹里
     final picturesPath = await ExternalPath.getExternalStoragePublicDirectory(
         ExternalPath.DIRECTORY_PICTURES);
     path = join(picturesPath, directoryName);
-  } else if (GetPlatform.isIOS || GetPlatform.isMacOS) {
-    // iOS和macOS上图片保存在应用文档文件夹里
+  } else if (GetPlatform.isMacOS) {
+    // macOS上图片保存在应用文档文件夹里
     final directory = await getApplicationDocumentsDirectory();
     path = directory.path;
   } else if (GetPlatform.isLinux) {

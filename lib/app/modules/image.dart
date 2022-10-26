@@ -5,9 +5,9 @@ import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:path/path.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 import '../data/services/image.dart';
 import '../routes/routes.dart';
@@ -132,54 +132,53 @@ class _BottomOverlay extends StatelessWidget {
 
   Future<void> _saveImage() async {
     if (imageKey.currentState != null) {
-      final image = ImageService.to;
-      if (image.savePath != null) {
-        try {
-          if (post != null) {
-            final fileName = post!.imageFile()!.replaceAll('/', '-');
-            final path = join(image.savePath!, fileName);
-            final manager = XdnmbImageCacheManager();
+      final savePath = ImageService.to.savePath;
 
-            final info = await manager.getFileFromCache(post!.imageUrl()!);
+      try {
+        if (post != null) {
+          final fileName = post!.imageFile()!.replaceAll('/', '-');
+          final manager = XdnmbImageCacheManager();
 
-            final file = File(path);
-            if (!GetPlatform.isIOS && await file.exists()) {
-              bool isSame = true;
-              if (info != null) {
+          final info = await manager.getFileFromCache(post!.imageUrl()!);
+          if (info != null) {
+            if (GetPlatform.isIOS) {
+              final Map<String, dynamic> result =
+                  await ImageGallerySaver.saveImage(
+                      await info.file.readAsBytes(),
+                      quality: 100,
+                      name: fileName);
+              if (result['isSuccess']) {
+                showToast('图片保存到相册成功');
+              } else {
+                showToast('图片保存到相册失败：${result['errorMessage']}');
+              }
+            } else if (savePath != null) {
+              final path = join(savePath, fileName);
+              final file = File(path);
+              if (await file.exists()) {
+                bool isSame = true;
                 if (await info.file.length() != await file.length()) {
                   isSame = false;
                 }
-              }
-              if (isSame) {
-                showToast('该图片已经保存在 ${image.savePath}');
-                return;
-              }
-            }
-
-            if (info != null) {
-              if(GetPlatform.isIOS) {
-                final saveResult = await ImageGallerySaver.saveImage(
-                  info.file.readAsBytesSync(), 
-                  quality: 100, name: fileName);
-                if (!saveResult['isSuccess']) {
-                  throw Exception(saveResult['error']);
+                if (isSame) {
+                  showToast('该图片已经保存在 $savePath');
+                  return;
                 }
-                showToast('图片保存到相册成功');
-              } else {
-                await info.file.copy(path);
-                showToast('图片保存在 ${image.savePath}');
               }
+
+              await info.file.copy(path);
+              showToast('图片保存在 $savePath');
             } else {
-              showToast('读取缓存图片数据失败');
+              showToast('没有存储权限无法保存图片');
             }
           } else {
-            saveImageData(imageData!);
+            showToast('读取缓存图片数据失败');
           }
-        } catch (e) {
-          showToast('保存图片失败：$e');
+        } else {
+          saveImageData(imageData!);
         }
-      } else {
-        showToast('没有存储权限无法保存图片');
+      } catch (e) {
+        showToast('保存图片失败：$e');
       }
     } else {
       showToast('图片正在加载，无法保存');

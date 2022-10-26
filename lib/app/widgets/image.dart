@@ -95,7 +95,8 @@ class PickImage extends StatelessWidget {
             initialDirectory:
                 (GetPlatform.isDesktop) ? data.pictureDirectory : null,
             type: GetPlatform.isIOS ? FileType.image : FileType.custom,
-            allowedExtensions: GetPlatform.isIOS ? null : ['jif', 'jpeg', 'jpg', 'png'],
+            allowedExtensions:
+                GetPlatform.isIOS ? null : ['jif', 'jpeg', 'jpg', 'png'],
             lockParentWindow: true,
           );
 
