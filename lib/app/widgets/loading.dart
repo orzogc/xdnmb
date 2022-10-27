@@ -7,24 +7,17 @@ typedef ThumbImageBuilder = Widget Function();
 
 // TODO: 加载语录
 class Quotation extends StatelessWidget {
-  final bool isTopCenter;
-
-  const Quotation({super.key, this.isTopCenter = true});
+  const Quotation({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final Widget text = Text(
-      '加载中',
-      style: TextStyle(color: specialTextColor(), fontWeight: FontWeight.bold),
-    );
-
-    return isTopCenter
-        ? Align(
-            alignment: Alignment.topCenter,
-            child: text,
-          )
-        : text;
-  }
+  Widget build(BuildContext context) => Align(
+        alignment: Alignment.topCenter,
+        child: Text(
+          '加载中',
+          style:
+              TextStyle(color: specialTextColor(), fontWeight: FontWeight.bold),
+        ),
+      );
 }
 
 class QuotationLoadingIndicator extends StatelessWidget {

@@ -321,94 +321,58 @@ class PostContent extends StatelessWidget {
   }
 }
 
-class PostCard extends StatelessWidget {
-  final PostBase post;
-
-  final bool showFullTime;
-
-  final bool showPostId;
-
-  final bool showForumName;
-
-  final bool showReplyCount;
-
-  final int? contentMaxLines;
-
-  // TODO: 自定义PO
-  final String? poUserHash;
-
+class PostInkWell extends PostContent {
   final PostGestureCallback? onTap;
 
   final PostGestureCallback? onLongPress;
-
-  final OnLinkTapCallback? onLinkTap;
-
-  final ImageDataCallback? onImagePainted;
 
   final MouseCursor? mouseCursor;
 
   final Color? hoverColor;
 
-  final bool displayImage;
-
-  final bool canReturnImageData;
-
-  final bool canTapHiddenText;
-
-  final Color? hiddenTextColor;
-
-  final bool isContentScrollable;
-
-  final OnPostIdCallback? onPostIdTap;
-
-  const PostCard(
+  const PostInkWell(
       {super.key,
-      required this.post,
-      this.showFullTime = true,
-      this.showPostId = true,
-      this.showForumName = true,
-      this.showReplyCount = true,
-      this.contentMaxLines,
-      this.poUserHash,
+      required super.post,
+      super.showFullTime = true,
+      super.showPostId = true,
+      super.showForumName = true,
+      super.showReplyCount = true,
+      super.contentMaxLines,
+      super.poUserHash,
       this.onTap,
       this.onLongPress,
-      this.onLinkTap,
-      this.onImagePainted,
+      super.onLinkTap,
+      super.onImagePainted,
       this.mouseCursor,
       this.hoverColor,
-      this.displayImage = true,
-      this.canReturnImageData = false,
-      this.canTapHiddenText = false,
-      this.hiddenTextColor,
-      this.isContentScrollable = false,
-      this.onPostIdTap})
+      super.displayImage = true,
+      super.canReturnImageData = false,
+      super.canTapHiddenText = false,
+      super.hiddenTextColor,
+      super.isContentScrollable = false,
+      super.onPostIdTap})
       : assert(onImagePainted == null || displayImage),
         assert(!canReturnImageData || (displayImage && onImagePainted != null));
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap != null ? () => onTap!(post) : null,
-      onLongPress: onLongPress != null ? () => onLongPress!(post) : null,
-      mouseCursor: mouseCursor,
-      hoverColor: hoverColor,
-      child: PostContent(
-        post: post,
-        showFullTime: showFullTime,
-        showPostId: showPostId,
-        showForumName: showForumName,
-        showReplyCount: showReplyCount,
-        contentMaxLines: contentMaxLines,
-        poUserHash: poUserHash,
-        onLinkTap: onLinkTap,
-        onImagePainted: onImagePainted,
-        displayImage: displayImage,
-        canReturnImageData: canReturnImageData,
-        canTapHiddenText: canTapHiddenText,
-        hiddenTextColor: hiddenTextColor,
-        isContentScrollable: isContentScrollable,
-        onPostIdTap: onPostIdTap,
-      ),
-    );
-  }
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap != null ? () => onTap!(post) : null,
+        onLongPress: onLongPress != null ? () => onLongPress!(post) : null,
+        mouseCursor: mouseCursor,
+        hoverColor: hoverColor,
+        child: super.build(context),
+      );
+}
+
+class PostCard extends StatelessWidget {
+  final Widget child;
+
+  const PostCard({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) => Card(
+        margin: const EdgeInsets.symmetric(vertical: 5.0),
+        elevation: 2.0,
+        child: child,
+      );
 }

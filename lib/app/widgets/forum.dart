@@ -5,7 +5,6 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/forum.dart';
-import '../data/models/page.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
@@ -15,6 +14,7 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
+import '../utils/misc.dart';
 import '../utils/navigation.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
@@ -26,8 +26,6 @@ import 'guide.dart';
 import 'post.dart';
 import 'post_list.dart';
 import 'reference.dart';
-
-// TODO: 加大串间隔
 
 abstract class ForumTypeController extends PostListController {
   @override
@@ -275,10 +273,8 @@ class ForumBody extends StatelessWidget {
             key: thread.toValueKey(),
             controller: anchorController,
             index: thread.toIndex(),
-            child: Card(
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
-              elevation: 1.5,
-              child: PostCard(
+            child: PostCard(
+              child: PostInkWell(
                 post: thread.thread.mainPost,
                 showFullTime: false,
                 showPostId: false,

@@ -115,7 +115,7 @@ class _DrawerHeader extends StatelessWidget {
         child: Row(
           children: [
             Text(
-              'X岛匿名版',
+              '霞岛',
               style: (theme.appBarTheme.titleTextStyle ??
                       theme.textTheme.headline6)
                   ?.apply(
@@ -318,7 +318,10 @@ class _DrawerBottom extends StatelessWidget {
               style: (theme.appBarTheme.titleTextStyle ??
                       theme.textTheme.headline6)
                   ?.merge(TextStyle(
-                      color: theme.primaryColor, fontWeight: FontWeight.bold)),
+                      color: Get.isDarkMode
+                          ? Colors.white
+                          : AppTheme.primaryColorLight,
+                      fontWeight: FontWeight.bold)),
             ),
           ),
           data.showGuide ? HistoryGuide(history) : history,

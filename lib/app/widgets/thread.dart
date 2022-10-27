@@ -7,7 +7,6 @@ import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/history.dart';
-import '../data/models/page.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/history.dart';
 import '../data/services/settings.dart';
@@ -17,6 +16,7 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
+import '../utils/misc.dart';
 import '../utils/navigation.dart';
 import '../utils/notify.dart';
 import '../utils/theme.dart';
@@ -431,7 +431,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     final isOnlyPoThread = controller.isOnlyPoThread;
 
     if (page == firstPage) {
-      // TODO: browsePostId应该可以为null
+      // TODO: browsePostId应该可以为null？
       final Post firstPost = page == 1
           ? thread.mainPost
           : (thread.replies.isNotEmpty
@@ -508,12 +508,15 @@ class _ThreadBodyState extends State<ThreadBody> {
           _isToJump.value = false;
         }
       } else {
-        _history!.update(
-            mainPost: thread.mainPost,
-            browsePage: page,
-            browsePostId: firstPost.id,
-            isOnlyPo: isOnlyPoThread);
-        history.saveBrowseHistory(_history!);
+        if (!_isNoMoreItems) {
+          _history!.update(
+              mainPost: thread.mainPost,
+              browsePage: page,
+              browsePostId: firstPost.id,
+              isOnlyPo: isOnlyPoThread);
+          history.saveBrowseHistory(_history!);
+        }
+
         _isToJump.value = false;
       }
     }
@@ -572,7 +575,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     final controller = widget.controller;
     final mainPost = controller.post;
 
-    final postCard = PostCard(
+    final postCard = PostInkWell(
       key: post.post is Tip ? UniqueKey() : null,
       post: post.post,
       showForumName: false,
@@ -595,7 +598,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
     return post.post is! Tip
         ? AnchorItemWrapper(
-            key: ValueKey<int>(post.toIndex()),
+            key: post.toValueKey(),
             controller: _anchorController,
             index: post.toIndex(),
             child: postCard,

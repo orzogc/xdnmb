@@ -1,4 +1,4 @@
-# xdnmb
+# 霞岛
 用[Flutter](https://flutter.dev/)实现的X岛匿名版客户端
 
 # TODO

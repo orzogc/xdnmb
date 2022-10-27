@@ -12,14 +12,16 @@ import '../utils/toast.dart';
 import 'loading.dart';
 
 class _MinHeightIndicator extends StatelessWidget {
+  static const double _minHeight = 90.0;
+
   final Widget child;
 
   const _MinHeightIndicator({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 70.0),
-        child: Center(child: child),
+        constraints: const BoxConstraints(minHeight: _minHeight),
+        child: child,
       );
 }
 
@@ -255,7 +257,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
                         text,
                       ],
                     )
-                  : text;
+                  : Align(alignment: Alignment.topCenter, child: text);
             },
           ),
         ),
@@ -271,22 +273,22 @@ class _BiListViewState<T> extends State<BiListView<T>>
     return widget.lastPage == null
         ? (widget.canLoadMoreAtBottom
             ? _MinHeightIndicator(
-                child: GestureDetector(
-                  onTap: _loadMore,
-                  child: Center(
-                    child: Text(
-                      '上拉或点击刷新',
-                      style: TextStyle(
-                        color: specialTextColor(),
-                        fontWeight: FontWeight.bold,
-                      ),
+                child: TextButton(
+                  style: TextButton.styleFrom(alignment: Alignment.topCenter),
+                  onPressed: _loadMore,
+                  child: Text(
+                    '上拉或点击刷新',
+                    style: TextStyle(
+                      color: specialTextColor(),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               )
             : const SizedBox.shrink())
         : _MinHeightIndicator(
-            child: Center(
+            child: Align(
+              alignment: Alignment.topCenter,
               child: Text(
                 '已抵达X岛的尽头',
                 style: TextStyle(
@@ -360,7 +362,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
       firstPageProgressIndicatorBuilder: (context) =>
           const QuotationLoadingIndicator(),
       newPageProgressIndicatorBuilder: (context) =>
-          const _MinHeightIndicator(child: Quotation(isTopCenter: false)),
+          const _MinHeightIndicator(child: Quotation()),
       noItemsFoundIndicatorBuilder: (context) => const SizedBox.shrink(),
     );
 
@@ -373,7 +375,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
       firstPageProgressIndicatorBuilder: (context) =>
           const QuotationLoadingIndicator(),
       newPageProgressIndicatorBuilder: (context) =>
-          const _MinHeightIndicator(child: Quotation(isTopCenter: false)),
+          const _MinHeightIndicator(child: Quotation()),
       noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
       noMoreItemsIndicatorBuilder: _noMoreItems,
     );

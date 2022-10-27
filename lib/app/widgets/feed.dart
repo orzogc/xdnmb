@@ -4,13 +4,13 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
-import '../data/models/page.dart';
 import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
+import '../utils/misc.dart';
 import '../utils/navigation.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -107,46 +107,42 @@ class FeedBody extends StatelessWidget {
       builder: (context, value, child) => PostListAnchorRefresher(
         controller: controller,
         builder: (context, anchorController, refresh) =>
-            BiListView<PostWithPage>(
+            BiListView<Visible<PostWithPage>>(
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
           controller: anchorController,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async =>
               (await client.getFeed(settings.feedId, page: page))
-                  .map((feed) => PostWithPage(feed, page))
+                  .map((feed) => Visible(PostWithPage(feed, page)))
                   .toList(),
-          itemBuilder: (context, feed, index) {
-            final isVisible = true.obs;
-
-            return Obx(
-              () => isVisible.value
-                  ? AnchorItemWrapper(
-                      key: feed.toValueKey(),
-                      controller: anchorController,
-                      index: feed.toIndex(),
-                      child: Card(
-                        margin: const EdgeInsets.symmetric(vertical: 4.0),
-                        elevation: 1.5,
-                        child: PostCard(
-                          post: feed.post,
-                          showFullTime: false,
-                          contentMaxLines: 8,
-                          poUserHash: feed.post.userHash,
-                          onTap: (post) => AppRoutes.toThread(
-                              mainPostId: feed.post.id, mainPost: feed.post),
-                          onLongPress: (post) => postListDialog(
-                            _FeedDialog(
-                              post: post,
-                              onDelete: () => isVisible.value = false,
-                            ),
+          itemBuilder: (context, feed, index) => Obx(
+            () => feed.isVisible.value
+                ? AnchorItemWrapper(
+                    key: feed.item.toValueKey(),
+                    controller: anchorController,
+                    index: feed.item.toIndex(),
+                    child: PostCard(
+                      child: PostInkWell(
+                        post: feed.item.post,
+                        showFullTime: false,
+                        showPostId: false,
+                        contentMaxLines: 8,
+                        poUserHash: feed.item.post.userHash,
+                        onTap: (post) => AppRoutes.toThread(
+                            mainPostId: feed.item.post.id,
+                            mainPost: feed.item.post),
+                        onLongPress: (post) => postListDialog(
+                          _FeedDialog(
+                            post: post,
+                            onDelete: () => feed.isVisible.value = false,
                           ),
                         ),
                       ),
-                    )
-                  : const SizedBox.shrink(),
-            );
-          },
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
           noItemsFoundBuilder: (context) => const Center(
             child: Text('没有订阅', style: AppTheme.boldRed),
           ),

@@ -91,7 +91,7 @@ class ReferenceCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            PostCard(
+                            PostInkWell(
                               post: post,
                               showForumName: false,
                               showReplyCount: false,
