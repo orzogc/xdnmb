@@ -22,6 +22,8 @@ import '../widgets/post.dart';
 import '../widgets/size.dart';
 import 'paint.dart';
 
+typedef _SetOpacityCallback = void Function(double opacity);
+
 const Duration _overlayDuration = Duration(milliseconds: 300);
 
 class _TopOverlay extends StatelessWidget {
@@ -277,9 +279,17 @@ class _BottomOverlay extends StatelessWidget {
 }
 
 class _Image<T extends Object> extends StatefulWidget {
+  final UniqueKey tag;
+
   final ImageProvider<T> provider;
 
-  const _Image({super.key, required this.provider});
+  final _SetOpacityCallback setOpacity;
+
+  const _Image(
+      {super.key,
+      required this.tag,
+      required this.provider,
+      required this.setOpacity});
 
   @override
   State<_Image> createState() => _ImageState();
@@ -290,6 +300,8 @@ class _ImageState extends State<_Image>
   static const double _disposeLimit = 100.0;
 
   static const double _disposeScale = 1.1;
+
+  static const double _opacityDistance = 500.0;
 
   final TransformationController _transformationController =
       TransformationController();
@@ -388,6 +400,15 @@ class _ImageState extends State<_Image>
     }
   }
 
+  void _setOpacity() {
+    if (_positionDelta != null) {
+      widget.setOpacity(
+          1.0 - (_positionDelta!.distance / _opacityDistance).clamp(0.0, 1.0));
+    } else {
+      widget.setOpacity(1.0);
+    }
+  }
+
   void _onInteractionStart(ScaleStartDetails details) {
     if (_animationController.isAnimating) {
       _stopAnimate();
@@ -405,7 +426,6 @@ class _ImageState extends State<_Image>
     }
   }
 
-  // TODO: 增加透明效果
   void _onInteractionUpdate(ScaleUpdateDetails details) {
     if (details.pointerCount == 1 &&
         _scale != null &&
@@ -418,6 +438,7 @@ class _ImageState extends State<_Image>
           _currentPosition = details.focalPoint;
           _transformationController.value.translate(
               positionDelta.dx / _scale!, positionDelta.dy / _scale!);
+          _setOpacity();
         });
       }
     }
@@ -435,6 +456,7 @@ class _ImageState extends State<_Image>
       _initialPosition = null;
       _currentPosition = null;
       _positionDelta = null;
+      _setOpacity();
     }
   }
 
@@ -485,9 +507,7 @@ class _ImageState extends State<_Image>
           child: GestureDetector(
             onDoubleTapDown: _onDoubleTapDown,
             onDoubleTap: _onDoubleTap,
-            child: Image(
-              image: widget.provider,
-            ),
+            child: Hero(tag: widget.tag, child: Image(image: widget.provider)),
           ),
         ),
       );
@@ -528,10 +548,13 @@ class ImageBinding implements Bindings {
 class ImageView extends GetView<ImageController> {
   final GlobalKey<_ImageState> _imageKey = GlobalKey();
 
+  final RxDouble opacity = 1.0.obs;
+
   ImageView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isLoaded = (controller.imageData.value != null).obs;
     const quotation = Quotation();
 
     return WillPopScope(
@@ -565,8 +588,6 @@ class ImageView extends GetView<ImageController> {
       },
       child: Obx(
         () {
-          final isLoaded = (controller.imageData.value != null).obs;
-
           _TopOverlay? topOverlay;
           if (controller.post.value != null) {
             topOverlay = _TopOverlay(
@@ -587,7 +608,7 @@ class ImageView extends GetView<ImageController> {
               });
 
           return Scaffold(
-            backgroundColor: Colors.black,
+            backgroundColor: Colors.black.withOpacity(opacity.value),
             body: Stack(
               children: [
                 GestureDetector(
@@ -626,23 +647,22 @@ class ImageView extends GetView<ImageController> {
                             imageBuilder: (context, imageProvider) {
                               isLoaded.value = true;
 
-                              return Hero(
+                              return _Image<CachedNetworkImageProvider>(
+                                key: _imageKey,
                                 tag: controller.tag,
-                                child: _Image<CachedNetworkImageProvider>(
-                                  key: _imageKey,
-                                  provider: imageProvider
-                                      as CachedNetworkImageProvider,
-                                ),
+                                provider:
+                                    imageProvider as CachedNetworkImageProvider,
+                                setOpacity: (value) =>
+                                    opacity.value = value.clamp(0.0, 1.0),
                               );
                             },
                           )
-                        : Hero(
+                        : _Image<MemoryImage>(
+                            key: _imageKey,
                             tag: controller.tag,
-                            child: _Image<MemoryImage>(
-                              key: _imageKey,
-                              provider:
-                                  MemoryImage(controller.imageData.value!),
-                            ),
+                            provider: MemoryImage(controller.imageData.value!),
+                            setOpacity: (value) =>
+                                opacity.value = value.clamp(0.0, 1.0),
                           ),
                   ),
                 ),

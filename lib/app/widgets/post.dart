@@ -146,7 +146,7 @@ class _PostSage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      const Text('SAGE', style: AppTheme.boldRed);
+      const Text('本串已经被SAGE', style: AppTheme.boldRed);
 }
 
 class PostDraft extends StatelessWidget {

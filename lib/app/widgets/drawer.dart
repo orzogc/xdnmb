@@ -317,11 +317,14 @@ class _DrawerBottom extends StatelessWidget {
               '赞助',
               style: (theme.appBarTheme.titleTextStyle ??
                       theme.textTheme.headline6)
-                  ?.merge(TextStyle(
-                      color: Get.isDarkMode
-                          ? Colors.white
-                          : AppTheme.primaryColorLight,
-                      fontWeight: FontWeight.bold)),
+                  ?.merge(
+                TextStyle(
+                  color: Get.isDarkMode
+                      ? Colors.white
+                      : AppTheme.primaryColorLight,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
           data.showGuide ? HistoryGuide(history) : history,

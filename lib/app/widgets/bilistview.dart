@@ -25,6 +25,13 @@ class _MinHeightIndicator extends StatelessWidget {
       );
 }
 
+class DumpItem extends StatelessWidget {
+  const DumpItem({super.key});
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
+}
+
 typedef FetchPage<T> = Future<List<T>> Function(int page);
 
 typedef GetFunctionCallback = void Function(VoidCallback function);
@@ -274,7 +281,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
         ? (widget.canLoadMoreAtBottom
             ? _MinHeightIndicator(
                 child: TextButton(
-                  style: TextButton.styleFrom(alignment: Alignment.topCenter),
+                  style: TextButton.styleFrom(
+                    alignment: Alignment.topCenter,
+                    padding: EdgeInsets.zero,
+                  ),
                   onPressed: _loadMore,
                   child: Text(
                     '上拉或点击刷新',
@@ -309,6 +319,17 @@ class _BiListViewState<T> extends State<BiListView<T>>
     } else {
       _isOutOfBoundary.value = false;
     }
+  }
+
+  Widget _itemBuilder(BuildContext context, T item, int index) {
+    final itemWidget = widget.itemBuilder(context, item, index);
+
+    return (widget.separator != null && itemWidget is! DumpItem)
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [itemWidget, widget.separator!],
+          )
+        : itemWidget;
   }
 
   @override
@@ -353,33 +374,6 @@ class _BiListViewState<T> extends State<BiListView<T>>
   Widget build(BuildContext context) {
     super.build(context);
 
-    final pagingUpDelegate = PagedChildBuilderDelegate<T>(
-      itemBuilder: widget.itemBuilder,
-      firstPageErrorIndicatorBuilder: (context) =>
-          _errorWidgetBuilder(_pagingUpController!, true),
-      newPageErrorIndicatorBuilder: (context) =>
-          _errorWidgetBuilder(_pagingUpController!),
-      firstPageProgressIndicatorBuilder: (context) =>
-          const QuotationLoadingIndicator(),
-      newPageProgressIndicatorBuilder: (context) =>
-          const _MinHeightIndicator(child: Quotation()),
-      noItemsFoundIndicatorBuilder: (context) => const SizedBox.shrink(),
-    );
-
-    final pagingDownDelegate = PagedChildBuilderDelegate<T>(
-      itemBuilder: widget.itemBuilder,
-      firstPageErrorIndicatorBuilder: (context) =>
-          _errorWidgetBuilder(_pagingDownController!, true),
-      newPageErrorIndicatorBuilder: (context) =>
-          _errorWidgetBuilder(_pagingDownController!),
-      firstPageProgressIndicatorBuilder: (context) =>
-          const QuotationLoadingIndicator(),
-      newPageProgressIndicatorBuilder: (context) =>
-          const _MinHeightIndicator(child: Quotation()),
-      noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
-      noMoreItemsIndicatorBuilder: _noMoreItems,
-    );
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5.0),
       child: EasyRefresh.builder(
@@ -416,27 +410,39 @@ class _BiListViewState<T> extends State<BiListView<T>>
               center: _downKey,
               slivers: [
                 if (widget.initialPage > 1)
-                  widget.separator != null
-                      ? PagedSliverList.separated(
-                          pagingController: _pagingUpController!,
-                          separatorBuilder: (context, index) =>
-                              widget.separator!,
-                          builderDelegate: pagingUpDelegate)
-                      : PagedSliverList(
-                          pagingController: _pagingUpController!,
-                          builderDelegate: pagingUpDelegate),
-                if (widget.initialPage > 1)
-                  SliverToBoxAdapter(child: widget.separator),
-                widget.separator != null
-                    ? PagedSliverList.separated(
-                        key: _downKey,
-                        pagingController: _pagingDownController!,
-                        separatorBuilder: (context, index) => widget.separator!,
-                        builderDelegate: pagingDownDelegate)
-                    : PagedSliverList(
-                        key: _downKey,
-                        pagingController: _pagingDownController!,
-                        builderDelegate: pagingDownDelegate),
+                  PagedSliverList(
+                    pagingController: _pagingUpController!,
+                    builderDelegate: PagedChildBuilderDelegate<T>(
+                      itemBuilder: _itemBuilder,
+                      firstPageErrorIndicatorBuilder: (context) =>
+                          _errorWidgetBuilder(_pagingUpController!, true),
+                      newPageErrorIndicatorBuilder: (context) =>
+                          _errorWidgetBuilder(_pagingUpController!),
+                      firstPageProgressIndicatorBuilder: (context) =>
+                          const QuotationLoadingIndicator(),
+                      newPageProgressIndicatorBuilder: (context) =>
+                          const _MinHeightIndicator(child: Quotation()),
+                      noItemsFoundIndicatorBuilder: (context) =>
+                          const SizedBox.shrink(),
+                    ),
+                  ),
+                PagedSliverList(
+                  key: _downKey,
+                  pagingController: _pagingDownController!,
+                  builderDelegate: PagedChildBuilderDelegate<T>(
+                    itemBuilder: _itemBuilder,
+                    firstPageErrorIndicatorBuilder: (context) =>
+                        _errorWidgetBuilder(_pagingDownController!, true),
+                    newPageErrorIndicatorBuilder: (context) =>
+                        _errorWidgetBuilder(_pagingDownController!),
+                    firstPageProgressIndicatorBuilder: (context) =>
+                        const QuotationLoadingIndicator(),
+                    newPageProgressIndicatorBuilder: (context) =>
+                        const _MinHeightIndicator(child: Quotation()),
+                    noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
+                    noMoreItemsIndicatorBuilder: _noMoreItems,
+                  ),
+                ),
               ],
             ),
           ),

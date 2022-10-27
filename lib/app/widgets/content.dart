@@ -224,18 +224,11 @@ class _ContentState extends State<Content> {
                     Floatable(
                       float: FCFloat.start,
                       padding: const EdgeInsets.only(right: 5.0),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) => ConstrainedBox(
-                          constraints: BoxConstraints(
-                              maxWidth: min(constraints.maxWidth / 3.0, 250.0),
-                              maxHeight: 250.0),
-                          child: ThumbImage(
-                            post: widget.post,
-                            poUserHash: widget.poUserHash,
-                            onImagePainted: widget.onImagePainted,
-                            canReturnImageData: widget.canReturnImageData,
-                          ),
-                        ),
+                      child: ThumbImage(
+                        post: widget.post,
+                        poUserHash: widget.poUserHash,
+                        onImagePainted: widget.onImagePainted,
+                        canReturnImageData: widget.canReturnImageData,
                       ),
                     ),
                     richText,

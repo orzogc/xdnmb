@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -18,6 +19,14 @@ import 'loading.dart';
 typedef ImageDataCallback = void Function(Uint8List imageData);
 
 class ThumbImage extends StatelessWidget {
+  static const double _minWidth = 50.0;
+
+  static const double _maxWidth = 250.0;
+
+  static const double _minHeight = 50.0;
+
+  static const double _maxHeight = 250.0;
+
   final PostBase post;
 
   final String? poUserHash;
@@ -50,26 +59,37 @@ class ThumbImage extends StatelessWidget {
               onImagePainted!(result);
             }
           },
-          child: Hero(
-            tag: _tag,
-            // 部分GIF略缩图显示会出错
-            child: Obx(
-              () => CachedNetworkImage(
-                imageUrl:
-                    _hasError.value ? post.imageUrl()! : post.thumbImageUrl()!,
-                fit: BoxFit.contain,
-                cacheManager: XdnmbImageCacheManager(),
-                progressIndicatorBuilder: loadingThumbImageIndicatorBuilder,
-                errorWidget: (context, url, error) {
-                  if (!_hasError.value) {
-                    WidgetsBinding.instance.addPostFrameCallback(
-                        (timeStamp) => _hasError.value = true);
-                  }
+          child: LayoutBuilder(
+            builder: (context, constraints) => ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: _minWidth,
+                maxWidth: min(constraints.maxWidth / 3.0, _maxWidth),
+                minHeight: _minHeight,
+                maxHeight: _maxHeight,
+              ),
+              child: Hero(
+                tag: _tag,
+                // 因为部分GIF略缩图显示会出错，所以小图加载错误就加载大图
+                child: Obx(
+                  () => CachedNetworkImage(
+                    imageUrl: _hasError.value
+                        ? post.imageUrl()!
+                        : post.thumbImageUrl()!,
+                    fit: BoxFit.contain,
+                    cacheManager: XdnmbImageCacheManager(),
+                    progressIndicatorBuilder: loadingThumbImageIndicatorBuilder,
+                    errorWidget: (context, url, error) {
+                      if (!_hasError.value) {
+                        WidgetsBinding.instance.addPostFrameCallback(
+                            (timeStamp) => _hasError.value = true);
+                      }
 
-                  return _hasError.value
-                      ? loadingImageErrorBuilder(context, url, error)
-                      : const SizedBox.shrink();
-                },
+                      return _hasError.value
+                          ? loadingImageErrorBuilder(context, url, error)
+                          : const SizedBox.shrink();
+                    },
+                  ),
+                ),
               ),
             ),
           ),

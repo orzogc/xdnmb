@@ -63,7 +63,8 @@ abstract class AppPages {
       name: AppRoutes.image,
       page: () => ImageView(),
       binding: ImageBinding(),
-      transition: Transition.fadeIn);
+      transition: Transition.fadeIn,
+      opaque: false);
 
   /// 设置页面
   static final GetPage settings = GetPage(

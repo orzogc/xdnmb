@@ -72,6 +72,10 @@ class _DumbPost implements PostBase {
   const _DumbPost();
 }
 
+class _DumpTip extends _DumbPost {
+  const _DumpTip();
+}
+
 abstract class ThreadTypeController extends PostListController {
   @override
   final int id;
@@ -558,6 +562,8 @@ class _ThreadBodyState extends State<ThreadBody> {
     // TODO: 提示tip是官方信息
     if (thread.tip != null) {
       posts.add(PostWithPage(thread.tip!, page));
+    } else {
+      posts.add(PostWithPage(const _DumpTip(), page));
     }
     if (thread.replies.isNotEmpty) {
       posts.addAll(thread.replies.map((post) => PostWithPage(post, page)));
@@ -567,7 +573,9 @@ class _ThreadBodyState extends State<ThreadBody> {
   }
 
   Widget _itemBuilder(BuildContext context, PostWithPage post) {
-    if (post.post is _DumbPost) {
+    if (post.post is _DumpTip) {
+      return const DumpItem();
+    } else if (post.post is _DumbPost) {
       return Center(child: Text('第${post.page}页 空页', style: AppTheme.boldRed));
     }
 

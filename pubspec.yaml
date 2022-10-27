@@ -1,7 +1,7 @@
 name: xdnmb
 description: An app for nmbxd.com.
 publish_to: 'none'
-version: 0.1.1+1
+version: 0.1.1-alpha+1
 
 environment:
   sdk: ">=2.18.2 <3.0.0"
@@ -71,6 +71,7 @@ flutter:
 
   assets:
     - LICENSE
+
     # https://letsencrypt.org/certs/lets-encrypt-r3.pem
     - assets/ca/lets-encrypt-r3.pem
 
@@ -79,6 +80,7 @@ flutter:
     - family: DiceIcon
       fonts:
         - asset: assets/fonts/DiceIcon.ttf
+
     # Noto font from Google
     - family: 'Noto Sans'
       fonts:
