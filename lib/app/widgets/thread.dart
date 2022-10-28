@@ -267,6 +267,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
                 onTap: () => showForumRuleDialog(mainPost.forumId!),
                 child: const Text('版规'),
               ),
+            const PopupMenuItem(onTap: bottomSheet, child: Text('回复')),
             PopupMenuItem(
               onTap: () async {
                 try {

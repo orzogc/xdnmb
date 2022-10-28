@@ -114,6 +114,7 @@ class ForumAppBarPopupMenuButton extends StatelessWidget {
               onTap: () => showForumRuleDialog(controller.id),
               child: const Text('版规'),
             ),
+          const PopupMenuItem(onTap: bottomSheet, child: Text('发串')),
         ],
       );
 }

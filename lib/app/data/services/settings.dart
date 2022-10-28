@@ -58,6 +58,12 @@ class SettingsService extends GetxService {
   set isWatermark(bool isWatermark) =>
       _settingsBox.put(Settings.isWatermark, isWatermark);
 
+  bool get hideFloatingButton =>
+      _settingsBox.get(Settings.hideFloatingButton, defaultValue: false);
+
+  set hideFloatingButton(bool hideFloatingButton) =>
+      _settingsBox.put(Settings.hideFloatingButton, hideFloatingButton);
+
   bool get isJumpToLastBrowsePage =>
       _settingsBox.get(Settings.isJumpToLastBrowsePage, defaultValue: true);
 
@@ -92,6 +98,8 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> showImageListenable;
 
   late final ValueListenable<Box> isWatermarkListenable;
+
+  late final ValueListenable<Box> hideFloatingButtonListenable;
 
   late final ValueListenable<Box> isJumpToLastBrowsePageListenable;
 
@@ -141,6 +149,8 @@ class SettingsService extends GetxService {
     showImageListenable = _settingsBox.listenable(keys: [Settings.showImage]);
     isWatermarkListenable =
         _settingsBox.listenable(keys: [Settings.isWatermark]);
+    hideFloatingButtonListenable =
+        _settingsBox.listenable(keys: [Settings.hideFloatingButton]);
     isJumpToLastBrowsePageListenable =
         _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePage]);
     isJumpToLastBrowsePositionListenable = _settingsBox.listenable(keys: [

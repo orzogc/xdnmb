@@ -300,7 +300,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
             child: Align(
               alignment: Alignment.topCenter,
               child: Text(
-                '已抵达X岛的尽头',
+                '已经抵达X岛的尽头',
                 style: TextStyle(
                   color: specialTextColor(),
                   fontWeight: FontWeight.bold,

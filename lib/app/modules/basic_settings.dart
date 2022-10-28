@@ -82,6 +82,27 @@ class _Watermark extends StatelessWidget {
   }
 }
 
+class _HideFloatingButton extends StatelessWidget {
+  const _HideFloatingButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.hideFloatingButtonListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('隐藏悬浮球'),
+        //subtitle: const Text('隐藏后点击右上角菜单发串和回串'),
+        trailing: Switch(
+          value: settings.hideFloatingButton,
+          onChanged: (value) => settings.hideFloatingButton = value,
+        ),
+      ),
+    );
+  }
+}
+
 class _AutoJumpPage extends StatelessWidget {
   const _AutoJumpPage({super.key});
 
@@ -246,6 +267,7 @@ class BasicSettingsView extends GetView<BasicSettingsController> {
             _InitialForum(),
             _ShowImage(),
             _Watermark(),
+            _HideFloatingButton(),
             _AutoJumpPage(),
             _AutoJumpPosition(),
             _AfterPostRefresh(),

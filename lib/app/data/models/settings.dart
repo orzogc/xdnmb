@@ -9,6 +9,8 @@ abstract class Settings {
 
   static const String isWatermark = 'isWatermark';
 
+  static const String hideFloatingButton = 'hideFloatingButton';
+
   static const String isJumpToLastBrowsePage = 'isJumpToLastBrowsePage';
 
   static const String isJumpToLastBrowsePosition = 'isJumpToLastBrowsePosition';

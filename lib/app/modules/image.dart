@@ -400,8 +400,10 @@ class _ImageState extends State<_Image>
     }
   }
 
-  void _setOpacity() {
-    if (_positionDelta != null) {
+  void _setOpacity([double? opacity]) {
+    if (opacity != null) {
+      widget.setOpacity(opacity);
+    } else if (_positionDelta != null) {
       widget.setOpacity(
           1.0 - (_positionDelta!.distance / _opacityDistance).clamp(0.0, 1.0));
     } else {
@@ -424,6 +426,8 @@ class _ImageState extends State<_Image>
       _currentPosition = null;
       _positionDelta = null;
     }
+
+    _setOpacity(1.0);
   }
 
   void _onInteractionUpdate(ScaleUpdateDetails details) {
@@ -438,7 +442,9 @@ class _ImageState extends State<_Image>
           _currentPosition = details.focalPoint;
           _transformationController.value.translate(
               positionDelta.dx / _scale!, positionDelta.dy / _scale!);
-          _setOpacity();
+          if (_scale! < _disposeScale) {
+            _setOpacity();
+          }
         });
       }
     }
@@ -456,7 +462,7 @@ class _ImageState extends State<_Image>
       _initialPosition = null;
       _currentPosition = null;
       _positionDelta = null;
-      _setOpacity();
+      _setOpacity(1.0);
     }
   }
 
@@ -499,7 +505,7 @@ class _ImageState extends State<_Image>
           transformationController: _transformationController,
           boundaryMargin: const EdgeInsets.all(double.infinity),
           panEnabled: false,
-          maxScale: 10.0,
+          maxScale: 25.0,
           minScale: 1.0,
           onInteractionStart: _onInteractionStart,
           onInteractionUpdate: _onInteractionUpdate,

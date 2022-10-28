@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 import '../data/models/draft.dart';
@@ -596,6 +597,13 @@ class _PostListBottomSheet extends StatelessWidget {
   }
 }
 
+void bottomSheet([EditPostController? controller]) {
+  final button = FloatingButton.buttonKey.currentState;
+  if (button != null && button.mounted && !button.hasBottomSheet) {
+    button.bottomSheet(controller);
+  }
+}
+
 class FloatingButton extends StatefulWidget {
   static final GlobalKey<FloatingButtonState> buttonKey =
       GlobalKey<FloatingButtonState>();
@@ -673,18 +681,26 @@ class FloatingButtonState extends State<FloatingButton> {
   }
 
   @override
-  Widget build(BuildContext context) => PostListController.get().canPost
-      ? Padding(
-          padding: EdgeInsets.only(bottom: hasBottomSheet ? 56.0 : 0.0),
-          child: FloatingActionButton(
-            tooltip: hasBottomSheet ? '收起' : '发串',
-            onPressed: bottomSheet,
-            child: Icon(
-              hasBottomSheet ? Icons.arrow_downward : Icons.edit,
-            ),
-          ),
-        )
-      : const SizedBox.shrink();
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.hideFloatingButtonListenable,
+      builder: (context, value, child) => (PostListController.get().canPost &&
+              (!settings.hideFloatingButton || hasBottomSheet))
+          ? Padding(
+              padding: EdgeInsets.only(bottom: hasBottomSheet ? 56.0 : 0.0),
+              child: FloatingActionButton(
+                tooltip: hasBottomSheet ? '收起' : '发串',
+                onPressed: bottomSheet,
+                child: Icon(
+                  hasBottomSheet ? Icons.arrow_downward : Icons.edit,
+                ),
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
 }
 
 class _BottomBar extends StatefulWidget {
