@@ -147,7 +147,7 @@ class _ForumsState extends State<_Forums> {
                       forums.hideForum(forum);
                     });
                     showToast(
-                        '隐藏版块 ${htmlToPlainText(context, forum.forumName)}');
+                        '隐藏版块 ${htmlToPlainText(context, forum.forumDisplayName)}');
                   }
                 },
                 icon: const Icon(Icons.visibility),
@@ -210,7 +210,7 @@ class _ForumsState extends State<_Forums> {
                         forums.displayForum(forum);
                       });
                       showToast(
-                          '取消隐藏版块 ${htmlToPlainText(context, forum.forumName)}');
+                          '取消隐藏版块 ${htmlToPlainText(context, forum.forumDisplayName)}');
                     }
                   },
                   icon: const Icon(Icons.visibility_off),

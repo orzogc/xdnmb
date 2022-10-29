@@ -75,7 +75,7 @@ class _Dialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final textStyle = Theme.of(context).textTheme.subtitle1;
     final client = XdnmbClientService.to;
-    final forumName = htmlToPlainText(context, forum.forumName);
+    final forumName = htmlToPlainText(context, forum.forumDisplayName);
 
     return SimpleDialog(
       children: [
@@ -165,7 +165,7 @@ class _ForumList extends StatelessWidget {
               ForumListGuide(
                 ListTile(
                   tileColor: theme.focusColor,
-                  title: Text(defaultForum.forumName),
+                  title: Text(defaultForum.forumDisplayName),
                 ),
               ),
             ],

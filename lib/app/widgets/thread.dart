@@ -199,7 +199,13 @@ class ThreadAppBarTitle extends StatelessWidget {
                 children: [
                   const Text('X岛 nmbxd.com'),
                   if (forumId != null)
-                    Flexible(child: ForumName(forumId: forumId, maxLines: 1)),
+                    Flexible(
+                      child: ForumName(
+                        forumId: forumId,
+                        isDisplay: false,
+                        maxLines: 1,
+                      ),
+                    ),
                 ].withSpaceBetween(width: 5.0),
               );
             },

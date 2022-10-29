@@ -82,6 +82,7 @@ class ForumAppBarTitle extends StatelessWidget {
         ForumName(
             forumId: controller.id,
             isTimeline: controller.isTimeline,
+            isDisplay: false,
             maxLines: 1),
         Text(
           'X岛 nmbxd.com',

@@ -56,6 +56,8 @@ class ForumName extends StatelessWidget {
 
   final bool isTimeline;
 
+  final bool isDisplay;
+
   final bool? isDeprecated;
 
   final String? leading;
@@ -72,6 +74,7 @@ class ForumName extends StatelessWidget {
       {super.key,
       required this.forumId,
       this.isTimeline = false,
+      this.isDisplay = true,
       this.isDeprecated,
       this.leading,
       this.trailing,
@@ -87,7 +90,8 @@ class ForumName extends StatelessWidget {
     return NotifyBuilder(
       animation: forums.updateForumNameNotifier,
       builder: (context, child) {
-        final name = forums.forumName(forumId, isTimeline: isTimeline);
+        final name = forums.forumName(forumId,
+            isTimeline: isTimeline, isDisplay: isDisplay);
         final Widget nameWidget = name != null
             ? ForumNameText(
                 forumName: name,
@@ -136,7 +140,7 @@ class _EditForumNameState extends State<EditForumName> {
   void initState() {
     super.initState();
 
-    _controller = TextEditingController(text: widget.forum.forumName);
+    _controller = TextEditingController(text: widget.forum.forumDisplayName);
   }
 
   @override

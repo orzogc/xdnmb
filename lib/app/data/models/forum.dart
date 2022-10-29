@@ -50,6 +50,11 @@ class ForumData extends HiveObject implements ForumBase {
   String get forumName =>
       (userDefinedName != null && userDefinedName!.isNotEmpty)
           ? userDefinedName!
+          : name;
+
+  String get forumDisplayName =>
+      (userDefinedName != null && userDefinedName!.isNotEmpty)
+          ? userDefinedName!
           : showName;
 
   ForumData(

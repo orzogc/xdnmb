@@ -38,22 +38,30 @@ class _ForumKey {
 class _ForumValue {
   final String name;
 
+  final String displayName;
+
   final int maxPage;
 
   final bool isDeprecated;
 
-  const _ForumValue(this.name, this.maxPage, this.isDeprecated);
+  const _ForumValue(
+      this.name, this.displayName, this.maxPage, this.isDeprecated);
 
   _ForumValue.fromForum(ForumData forum)
-      : this(forum.forumName, forum.maxPage, forum.isDeprecated);
+      : this(forum.forumName, forum.forumDisplayName, forum.maxPage,
+            forum.isDeprecated);
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is _ForumValue && name == other.name && maxPage == other.maxPage);
+      (other is _ForumValue &&
+          name == other.name &&
+          displayName == other.displayName &&
+          maxPage == other.maxPage &&
+          isDeprecated == other.isDeprecated);
 
   @override
-  int get hashCode => Object.hash(name, maxPage);
+  int get hashCode => Object.hash(name, displayName, maxPage, isDeprecated);
 }
 
 class ForumListService extends GetxService {
@@ -177,7 +185,7 @@ class ForumListService extends GetxService {
 
       if (newForums.isNotEmpty) {
         final newForumString =
-            newForums.map((forum) => forum.forumName).join(' ');
+            newForums.map((forum) => forum.forumDisplayName).join(' ');
         showToast('新版块：$newForumString');
 
         await _forumBox.addAll(newForums);
@@ -224,8 +232,11 @@ class ForumListService extends GetxService {
   }
 
   /// 返回版块名字，会自动请求未知版块的信息
-  String? forumName(int forumId, {bool isTimeline = false}) {
-    final name = _forumMap[_ForumKey(forumId, isTimeline)]?.name;
+  String? forumName(int forumId,
+      {bool isTimeline = false, bool isDisplay = true}) {
+    final name = isDisplay
+        ? _forumMap[_ForumKey(forumId, isTimeline)]?.displayName
+        : _forumMap[_ForumKey(forumId, isTimeline)]?.name;
     if (name != null) {
       return name;
     }
