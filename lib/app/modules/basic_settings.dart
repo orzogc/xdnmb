@@ -92,8 +92,7 @@ class _HideFloatingButton extends StatelessWidget {
     return ValueListenableBuilder<Box>(
       valueListenable: settings.hideFloatingButtonListenable,
       builder: (context, value, child) => ListTile(
-        title: const Text('隐藏悬浮球'),
-        //subtitle: const Text('隐藏后点击右上角菜单发串和回串'),
+        title: const Text('隐藏右下角的悬浮球'),
         trailing: Switch(
           value: settings.hideFloatingButton,
           onChanged: (value) => settings.hideFloatingButton = value,

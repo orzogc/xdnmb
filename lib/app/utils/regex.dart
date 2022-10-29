@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../routes/routes.dart';
 import 'extensions.dart';
 
+// TODO: 支持纯数字串号跳转
 abstract class Regex {
   static const String _postReference1 = r'(?:&gt;)*No\.([0-9]+)';
 

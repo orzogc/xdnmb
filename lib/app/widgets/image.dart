@@ -19,13 +19,13 @@ import 'loading.dart';
 typedef ImageDataCallback = void Function(Uint8List imageData);
 
 class ThumbImage extends StatelessWidget {
-  static const double _minWidth = 50.0;
+  static const double _minWidth = 70.0;
 
   static const double _maxWidth = 250.0;
 
-  static const double _minHeight = 50.0;
+  static const double _minHeight = _minWidth;
 
-  static const double _maxHeight = 250.0;
+  static const double _maxHeight = _maxWidth;
 
   final PostBase post;
 
