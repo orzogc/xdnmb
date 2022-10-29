@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
 import '../models/settings.dart';
+import 'image.dart';
 
 final ForumData defaultForum = ForumData(
     id: 1,
@@ -87,6 +88,12 @@ class SettingsService extends GetxService {
 
   set feedId(String feedId) => _settingsBox.put(Settings.feedId, feedId);
 
+  String? get saveImagePath =>
+      _settingsBox.get(Settings.saveImagePath, defaultValue: null);
+
+  set saveImagePath(String? directory) =>
+      _settingsBox.put(Settings.saveImagePath, directory);
+
   bool get fixMissingFont =>
       _settingsBox.get(Settings.fixMissingFont, defaultValue: false);
 
@@ -109,13 +116,18 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> feedIdListenable;
 
+  late final ValueListenable<Box> saveImagePathListenable;
+
   late final ValueListenable<Box> fixMissingFontListenable;
 
-  /// 是否修复字体，结果保存在[fixMissingFont]
-  static Future<void> getIsFixMissingFont() async {
+  static Future<void> getData() async {
     final box = await Hive.openBox(HiveBoxName.settings);
+    ImageService.savePath = box.get(Settings.saveImagePath, defaultValue: null);
+    // 是否修复字体，结果保存在[fixMissingFont]
     isFixMissingFont = box.get(Settings.fixMissingFont, defaultValue: false);
   }
+
+  void updateSaveImagePath() => saveImagePath = ImageService.savePath;
 
   Future<void> checkDarkMode() async {
     // 等待生效
@@ -160,8 +172,17 @@ class SettingsService extends GetxService {
     isAfterPostRefreshListenable =
         _settingsBox.listenable(keys: [Settings.isAfterPostRefresh]);
     feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
+    saveImagePathListenable =
+        _settingsBox.listenable(keys: [Settings.saveImagePath]);
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
+
+    _settingsBox.watch(key: Settings.saveImagePath).listen((event) {
+      debugPrint('saveImagePath change');
+      ImageService.savePath = saveImagePath;
+    });
+
+    updateSaveImagePath();
 
     isReady.value = true;
     await checkDarkMode();

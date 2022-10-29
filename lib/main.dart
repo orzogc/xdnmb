@@ -27,7 +27,7 @@ void main() async {
     debugPrint('初始化Hive失败：$e');
     return;
   }
-  await SettingsService.getIsFixMissingFont();
+  await SettingsService.getData();
 
   runApp(const _XdnmbApp());
 

@@ -103,7 +103,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
     controlFinishLoad: true,
   );
 
-  bool _isLoading = false;
+  final RxBool _isLoading = false.obs;
 
   bool _isRefreshing = false;
 
@@ -115,7 +115,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
   final RxBool _isOutOfBoundary = true.obs;
 
-  Future<void> _fetchUpPage(int page) async {
+  Future<void> _fetchUpPage(int page, [bool rethrowError = false]) async {
     final lastPage = widget.lastPage;
     if (lastPage != null && page > lastPage) {
       _pagingUpController?.appendPage([], page - 1);
@@ -136,14 +136,18 @@ class _BiListViewState<T> extends State<BiListView<T>>
             : _pagingUpController?.appendLastPage(list.reversed.toList());
       } catch (e) {
         debugPrint('up page获取$T列表失败：$e');
-        _pagingUpController?.error = e;
+        if (rethrowError) {
+          rethrow;
+        } else {
+          _pagingUpController?.error = e;
+        }
       }
     } else {
       _pagingUpController?.appendLastPage([]);
     }
   }
 
-  Future<void> _fetchDownPage(int page) async {
+  Future<void> _fetchDownPage(int page, [bool rethrowError = false]) async {
     final lastPage = widget.lastPage;
     if (lastPage != null && page > lastPage) {
       _pagingDownController?.appendLastPage([]);
@@ -156,7 +160,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
         List<T> list = await widget.fetch(page);
 
-        if (_isLoading && _pagingDownController?.itemList != null) {
+        if (_isLoading.value && _pagingDownController?.itemList != null) {
           _pagingDownController?.itemList!.removeRange(
               _itemListLength, (_pagingDownController?.itemList)!.length);
         }
@@ -177,7 +181,11 @@ class _BiListViewState<T> extends State<BiListView<T>>
             : _pagingDownController?.appendLastPage(list);
       } catch (e) {
         debugPrint('down page获取$T列表失败：$e');
-        _pagingDownController?.error = e;
+        if (rethrowError) {
+          rethrow;
+        } else {
+          _pagingDownController?.error = e;
+        }
       }
     } else {
       _pagingDownController?.appendPage([], page + 1);
@@ -200,9 +208,11 @@ class _BiListViewState<T> extends State<BiListView<T>>
           _pagingUpController?.itemList?.clear();
           _pagingDownController?.itemList?.clear();
 
-          await _fetchUpPage(widget.firstPage);
-          await _fetchDownPage(widget.firstPage + 1);
+          await _fetchUpPage(widget.firstPage, true);
+          await _fetchDownPage(widget.firstPage + 1, true);
         }
+      } catch (e) {
+        showToast('刷新出现错误：${exceptionMessage(e)}');
       } finally {
         _isRefreshing = false;
       }
@@ -210,17 +220,19 @@ class _BiListViewState<T> extends State<BiListView<T>>
   }
 
   Future<void> _loadMore() async {
-    if (!_isLoading) {
-      _isLoading = true;
+    if (!_isLoading.value) {
+      _isLoading.value = true;
 
       try {
         if (widget.onRefresh != null) {
           widget.onRefresh!();
         }
 
-        await _fetchDownPage(_lastPage);
+        await _fetchDownPage(_lastPage, true);
+      } catch (e) {
+        showToast('加载出现错误：${exceptionMessage(e)}');
       } finally {
-        _isLoading = false;
+        _isLoading.value = false;
       }
     }
   }
@@ -272,6 +284,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
     );
   }
 
+  // TODO: 出错后显示错误文字
   Widget _noMoreItems(BuildContext context) {
     if (widget.onNoMoreItems != null) {
       widget.onNoMoreItems!();
@@ -280,19 +293,23 @@ class _BiListViewState<T> extends State<BiListView<T>>
     return widget.lastPage == null
         ? (widget.canLoadMoreAtBottom
             ? _MinHeightIndicator(
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    alignment: Alignment.topCenter,
-                    padding: EdgeInsets.zero,
-                  ),
-                  onPressed: _loadMore,
-                  child: Text(
-                    '上拉或点击刷新',
-                    style: TextStyle(
-                      color: specialTextColor(),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                child: Obx(
+                  () => _isLoading.value
+                      ? const Quotation()
+                      : TextButton(
+                          style: TextButton.styleFrom(
+                            alignment: Alignment.topCenter,
+                            padding: EdgeInsets.zero,
+                          ),
+                          onPressed: _loadMore,
+                          child: Text(
+                            '上拉或点击刷新',
+                            style: TextStyle(
+                              color: specialTextColor(),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                 ),
               )
             : const SizedBox.shrink())
@@ -390,7 +407,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
         },
         onLoad: (widget.lastPage == null && widget.canLoadMoreAtBottom)
             ? () async {
-                if (!_isLoading) {
+                if (!_isLoading.value) {
                   await _loadMore();
                   _refreshController?.finishLoad();
                 }

@@ -19,5 +19,7 @@ abstract class Settings {
 
   static const String feedId = 'feedId';
 
+  static const String saveImagePath = 'saveImagePath';
+
   static const String fixMissingFont = 'fixMissingFont';
 }

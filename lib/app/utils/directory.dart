@@ -6,6 +6,8 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:xdg_directories/xdg_directories.dart';
 
+import '../data/services/image.dart';
+
 /// 文件夹名字
 const String directoryName = 'xdnmb';
 
@@ -35,37 +37,35 @@ Future<void> getDatabasePath() async {
   }
 }
 
-/// 返回图片保存文件夹
-Future<String> getPicturesPath() async {
-  late final String path;
-  if (GetPlatform.isAndroid) {
-    // Android上图片保存在Pictures文件夹里
-    final picturesPath = await ExternalPath.getExternalStoragePublicDirectory(
-        ExternalPath.DIRECTORY_PICTURES);
-    path = join(picturesPath, directoryName);
-  } else if (GetPlatform.isIOS || GetPlatform.isMacOS) {
-    // macOS上图片保存在应用文档文件夹里，iOS则为临时保存图片
-    final directory = await getApplicationDocumentsDirectory();
-    path = directory.path;
-  } else if (GetPlatform.isLinux) {
-    // Linux上图片保存在 ~/Pictures/xdnmb
-    final picturesPath = getUserDirectory('PICTURES')?.path ??
-        join(Platform.environment['HOME']!, 'Pictures');
-    path = join(picturesPath, directoryName);
-  } else if (GetPlatform.isWindows) {
-    // Windows上图片保存在文档下的xdnmb文件夹里
-    final directory = await getApplicationDocumentsDirectory();
-    path = join(directory.path, directoryName);
-  } else {
-    throw 'Unsupported platform: ${Platform.operatingSystem}';
+/// 获取默认图片保存文件夹
+Future<void> getDefaultSaveImagePath() async {
+  if (ImageService.savePath == null) {
+    if (GetPlatform.isAndroid) {
+      // Android上图片保存在Pictures文件夹里
+      ImageService.savePath =
+          await ExternalPath.getExternalStoragePublicDirectory(
+              ExternalPath.DIRECTORY_PICTURES);
+    } else if (GetPlatform.isIOS || GetPlatform.isMacOS) {
+      // macOS上图片保存在应用文档文件夹里，iOS则为临时保存图片
+      final directory = await getApplicationDocumentsDirectory();
+      ImageService.savePath = directory.path;
+    } else if (GetPlatform.isLinux) {
+      // Linux上图片保存在 ~/Pictures/xdnmb
+      final picturesPath = getUserDirectory('PICTURES')?.path ??
+          join(Platform.environment['HOME']!, 'Pictures');
+      ImageService.savePath = join(picturesPath, directoryName);
+    } else if (GetPlatform.isWindows) {
+      // Windows上图片保存在文档下的xdnmb文件夹里
+      final directory = await getApplicationDocumentsDirectory();
+      ImageService.savePath = join(directory.path, directoryName);
+    } else {
+      throw 'Unsupported platform: ${Platform.operatingSystem}';
+    }
   }
 
-  final directory = Directory(path);
-  if (await directory.exists()) {
-    return path;
-  } else {
-    final created = await directory.create(recursive: true);
-
-    return created.path;
+  // 文件夹不存在则新建文件夹
+  final directory = Directory(ImageService.savePath!);
+  if (!await directory.exists()) {
+    await directory.create(recursive: true);
   }
 }

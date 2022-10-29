@@ -58,14 +58,13 @@ Image? getImage(Uint8List imageData) {
 }
 
 Future<bool> saveImageData(Uint8List imageData) async {
-  final image = ImageService.to;
-  final savePath = image.savePath;
+  final savePath = ImageService.savePath;
 
   try {
     final filename = _imageFilename(imageData);
 
     if (GetPlatform.isIOS) {
-      if (image.hasPhotoLibraryPermission) {
+      if (ImageService.to.hasPhotoLibraryPermission) {
         if (savePath != null) {
           final path = join(savePath, filename);
           final file = File(path);

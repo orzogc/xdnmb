@@ -4,11 +4,12 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../utils/directory.dart';
 import '../../utils/toast.dart';
+import 'settings.dart';
 
 class ImageService extends GetxService {
   static ImageService get to => Get.find<ImageService>();
 
-  String? savePath;
+  static String? savePath;
 
   bool hasStoragePermission = false;
 
@@ -50,10 +51,15 @@ class ImageService extends GetxService {
 
     if (hasStoragePermission) {
       try {
-        savePath = await getPicturesPath();
+        await getDefaultSaveImagePath();
       } catch (e) {
-        showToast('获取图片保存文件夹失败：$e');
+        showToast('获取默认图片保存文件夹失败：$e');
       }
+    }
+
+    final settings = SettingsService.to;
+    if (settings.isReady.value) {
+      settings.updateSaveImagePath();
     }
 
     isReady.value = true;

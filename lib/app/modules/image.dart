@@ -26,7 +26,6 @@ typedef _SetOpacityCallback = void Function(double opacity);
 
 const Duration _overlayDuration = Duration(milliseconds: 300);
 
-// TODO: 有操作时自动隐藏
 class _TopOverlay extends StatelessWidget {
   final PostBase post;
 
@@ -139,8 +138,7 @@ class _BottomOverlay extends StatelessWidget {
 
   Future<void> _saveImage() async {
     if (imageKey.currentState != null) {
-      final image = ImageService.to;
-      final savePath = image.savePath;
+      final savePath = ImageService.savePath;
 
       try {
         if (post != null) {
@@ -151,7 +149,7 @@ class _BottomOverlay extends StatelessWidget {
           if (info != null) {
             debugPrint('缓存图片路径：${info.file.path}');
             if (GetPlatform.isIOS) {
-              if (image.hasPhotoLibraryPermission) {
+              if (ImageService.to.hasPhotoLibraryPermission) {
                 final Map<String, dynamic> result =
                     await ImageGallerySaver.saveFile(info.file.path,
                         name: fileName);
@@ -295,6 +293,7 @@ class _BottomOverlay extends StatelessWidget {
   }
 }
 
+// 增加保存和涂鸦？
 class _ImageDialog extends StatelessWidget {
   final bool fixWidth;
 

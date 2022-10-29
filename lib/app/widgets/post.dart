@@ -321,7 +321,9 @@ class PostContent extends StatelessWidget {
   }
 }
 
-class PostInkWell extends PostContent {
+class PostInkWell extends StatelessWidget {
+  final PostContent content;
+
   final PostGestureCallback? onTap;
 
   final PostGestureCallback? onLongPress;
@@ -330,37 +332,52 @@ class PostInkWell extends PostContent {
 
   final Color? hoverColor;
 
-  const PostInkWell(
+  PostInkWell(
       {super.key,
-      required super.post,
-      super.showFullTime = true,
-      super.showPostId = true,
-      super.showForumName = true,
-      super.showReplyCount = true,
-      super.contentMaxLines,
-      super.poUserHash,
+      required PostBase post,
+      bool showFullTime = true,
+      bool showPostId = true,
+      bool showForumName = true,
+      bool showReplyCount = true,
+      int? contentMaxLines,
+      String? poUserHash,
+      OnLinkTapCallback? onLinkTap,
+      ImageDataCallback? onImagePainted,
+      bool displayImage = true,
+      bool canReturnImageData = false,
+      bool canTapHiddenText = false,
+      Color? hiddenTextColor,
+      bool isContentScrollable = false,
+      OnPostIdCallback? onPostIdTap,
       this.onTap,
       this.onLongPress,
-      super.onLinkTap,
-      super.onImagePainted,
       this.mouseCursor,
-      this.hoverColor,
-      super.displayImage = true,
-      super.canReturnImageData = false,
-      super.canTapHiddenText = false,
-      super.hiddenTextColor,
-      super.isContentScrollable = false,
-      super.onPostIdTap})
-      : assert(onImagePainted == null || displayImage),
-        assert(!canReturnImageData || (displayImage && onImagePainted != null));
+      this.hoverColor})
+      : content = PostContent(
+            post: post,
+            showFullTime: showFullTime,
+            showPostId: showPostId,
+            showForumName: showForumName,
+            showReplyCount: showReplyCount,
+            contentMaxLines: contentMaxLines,
+            poUserHash: poUserHash,
+            onLinkTap: onLinkTap,
+            onImagePainted: onImagePainted,
+            displayImage: displayImage,
+            canReturnImageData: canReturnImageData,
+            canTapHiddenText: canTapHiddenText,
+            hiddenTextColor: hiddenTextColor,
+            isContentScrollable: isContentScrollable,
+            onPostIdTap: onPostIdTap);
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: onTap != null ? () => onTap!(post) : null,
-        onLongPress: onLongPress != null ? () => onLongPress!(post) : null,
+        onTap: onTap != null ? () => onTap!(content.post) : null,
+        onLongPress:
+            onLongPress != null ? () => onLongPress!(content.post) : null,
         mouseCursor: mouseCursor,
         hoverColor: hoverColor,
-        child: super.build(context),
+        child: content,
       );
 }
 

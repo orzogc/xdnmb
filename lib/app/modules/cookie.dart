@@ -382,13 +382,14 @@ class _Cookie extends StatelessWidget {
         Get.dialog(
           SimpleDialog(
             children: [
-              SimpleDialogOption(
-                onPressed: () {
-                  user.browseCookie = cookie.copy();
-                  Get.back();
-                },
-                child: Text('设为浏览用的饼干', style: textStyle),
-              ),
+              if (cookie.userHash != user.browseCookie?.userHash)
+                SimpleDialogOption(
+                  onPressed: () {
+                    user.browseCookie = cookie.copy();
+                    Get.back();
+                  },
+                  child: Text('设为浏览用的饼干', style: textStyle),
+                ),
               SimpleDialogOption(
                 onPressed: () async {
                   if (await _editNote() ?? false) {

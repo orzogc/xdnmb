@@ -908,7 +908,7 @@ class _Post extends StatelessWidget {
                   onError: (e) async {
                     final message = GetPlatform.isIOS
                         ? '图片保存在相册'
-                        : '图片保存在 ${ImageService.to.savePath} ';
+                        : '图片保存在 ${ImageService.savePath} ';
                     if (title.isNotEmpty ||
                         name.isNotEmpty ||
                         content.isNotEmpty) {

@@ -85,7 +85,8 @@ class ThumbImage extends StatelessWidget {
                       }
 
                       return _hasError.value
-                          ? loadingImageErrorBuilder(context, url, error)
+                          ? loadingImageErrorBuilder(context, url, error,
+                              showError: false)
                           : const SizedBox.shrink();
                     },
                   ),
