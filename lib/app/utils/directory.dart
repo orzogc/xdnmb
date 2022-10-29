@@ -41,21 +41,21 @@ Future<void> getDatabasePath() async {
 Future<void> getDefaultSaveImagePath() async {
   if (ImageService.savePath == null) {
     if (GetPlatform.isAndroid) {
-      // Android上图片保存在Pictures文件夹里
-      ImageService.savePath =
-          await ExternalPath.getExternalStoragePublicDirectory(
-              ExternalPath.DIRECTORY_PICTURES);
+      // Android上图片默认保存在Pictures/xdnmb文件夹里
+      final picturesPath = await ExternalPath.getExternalStoragePublicDirectory(
+          ExternalPath.DIRECTORY_PICTURES);
+      ImageService.savePath = join(picturesPath, directoryName);
     } else if (GetPlatform.isIOS || GetPlatform.isMacOS) {
-      // macOS上图片保存在应用文档文件夹里，iOS则为临时保存图片
+      // macOS上图片默认保存在应用文档文件夹里，iOS则为临时保存图片
       final directory = await getApplicationDocumentsDirectory();
       ImageService.savePath = directory.path;
     } else if (GetPlatform.isLinux) {
-      // Linux上图片保存在 ~/Pictures/xdnmb
+      // Linux上图片默认保存在 ~/Pictures/xdnmb
       final picturesPath = getUserDirectory('PICTURES')?.path ??
           join(Platform.environment['HOME']!, 'Pictures');
       ImageService.savePath = join(picturesPath, directoryName);
     } else if (GetPlatform.isWindows) {
-      // Windows上图片保存在文档下的xdnmb文件夹里
+      // Windows上图片默认保存在文档下的xdnmb文件夹里
       final directory = await getApplicationDocumentsDirectory();
       ImageService.savePath = join(directory.path, directoryName);
     } else {
