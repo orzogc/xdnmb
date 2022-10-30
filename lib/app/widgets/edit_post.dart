@@ -3,9 +3,11 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:align_positioned/align_positioned.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' as xdnmb_api;
 
@@ -400,6 +402,35 @@ class _Image extends StatelessWidget {
       );
 }
 
+typedef _OnCheckCallback = void Function(bool isCheck);
+
+class _AttachDeviceInfo extends StatelessWidget {
+  final bool isCheck;
+
+  final _OnCheckCallback onCheck;
+
+  const _AttachDeviceInfo(
+      {super.key, required this.isCheck, required this.onCheck});
+
+  @override
+  Widget build(BuildContext context) => Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 5.0),
+            child: Checkbox(
+              value: isCheck,
+              onChanged: (value) {
+                if (value != null) {
+                  onCheck(value);
+                }
+              },
+            ),
+          ),
+          const Text('附加应用和设备信息以便更好地解决问题'),
+        ],
+      );
+}
+
 class _ShowEmoticon extends StatelessWidget {
   final RxBool showEmoticon;
 
@@ -712,6 +743,8 @@ class _Post extends StatelessWidget {
 
   final bool isPainted;
 
+  final bool isAttachDeviceInfo;
+
   final _GetText getTitle;
 
   final _GetText getName;
@@ -728,6 +761,7 @@ class _Post extends StatelessWidget {
       this.imageData,
       this.reportReason,
       required this.isPainted,
+      required this.isAttachDeviceInfo,
       required this.getTitle,
       required this.getName,
       required this.getContent,
@@ -847,7 +881,21 @@ class _Post extends StatelessWidget {
                       image: image,
                       cookie: cookie.cookie(),
                     );
-                  } else {
+                  } else if (postListType.isThreadType) {
+                    if (postList.id == AppRoutes.feedbackId &&
+                        isAttachDeviceInfo) {
+                      final buffer = StringBuffer('霞岛版本：');
+                      final packageInfo = await PackageInfo.fromPlatform();
+                      buffer.writeln(packageInfo.version);
+
+                      final deviceInfo = await _getDeviceInfo();
+                      if (deviceInfo != null) {
+                        buffer.writeln('设备信息：$deviceInfo');
+                      }
+
+                      content = '$content\n\n${buffer.toString()}';
+                    }
+
                     await client.replyThread(
                       mainPostId: postList.id!,
                       content: content,
@@ -857,6 +905,8 @@ class _Post extends StatelessWidget {
                       image: image,
                       cookie: cookie.cookie(),
                     );
+                  } else {
+                    showToast('该页面无法发串');
                   }
                 }).then(
                   (value) {
@@ -1234,6 +1284,8 @@ class EditPost extends StatefulWidget {
 
   final String? reportReason;
 
+  final bool? isAttachDeviceInfo;
+
   const EditPost(
       {super.key,
       required this.postList,
@@ -1245,7 +1297,8 @@ class EditPost extends StatefulWidget {
       this.imagePath,
       this.imageData,
       this.isWatermark,
-      this.reportReason});
+      this.reportReason,
+      this.isAttachDeviceInfo});
 
   EditPost.fromController(
       {Key? key, required EditPostController controller, double? height})
@@ -1261,7 +1314,8 @@ class EditPost extends StatefulWidget {
             imagePath: controller.imagePath,
             imageData: controller.imageData,
             isWatermark: controller.isWatermark,
-            reportReason: controller.reportReason);
+            reportReason: controller.reportReason,
+            isAttachDeviceInfo: controller.isAttachDeviceInfo);
 
   @override
   State<EditPost> createState() => EditPostState();
@@ -1286,6 +1340,8 @@ class EditPostState extends State<EditPost> {
 
   late final RxnString _reportReason;
 
+  late final RxBool _isAttachDeviceInfo;
+
   late final RxBool _isExpanded;
 
   final RxBool _showEmoticon = false.obs;
@@ -1293,6 +1349,13 @@ class EditPostState extends State<EditPost> {
   bool isPosted = false;
 
   bool get _isAtBottom => widget.height != null;
+
+  bool get _canAttachDeviceInfo {
+    final postList = _postList.value;
+
+    return postList.postListType.isThreadType &&
+        postList.id == AppRoutes.feedbackId;
+  }
 
   EditPostController toController() => EditPostController(
       postListType: _postList.value.postListType,
@@ -1304,7 +1367,8 @@ class EditPostState extends State<EditPost> {
       imagePath: _imagePath.value,
       imageData: _imageData.value,
       isWatermark: _isWatermark.value,
-      reportReason: _reportReason.value);
+      reportReason: _reportReason.value,
+      isAttachDeviceInfo: _isAttachDeviceInfo.value);
 
   void insertText(String text, [int? offset]) =>
       _contentController.insertText(text, offset);
@@ -1391,7 +1455,8 @@ class EditPostState extends State<EditPost> {
                               imagePath: _imagePath.value,
                               imageData: _imageData.value,
                               isWatermark: _isWatermark.value,
-                              reportReason: _reportReason.value);
+                              reportReason: _reportReason.value,
+                              isAttachDeviceInfo: _isAttachDeviceInfo.value);
 
                           if (result is EditPostController && mounted) {
                             _forumId.value = result.forumId;
@@ -1403,6 +1468,8 @@ class EditPostState extends State<EditPost> {
                             _isWatermark.value = result.isWatermark ??
                                 SettingsService.to.isWatermark;
                             _reportReason.value = result.reportReason;
+                            _isAttachDeviceInfo.value =
+                                result.isAttachDeviceInfo ?? true;
                             _isExpanded.value =
                                 _titleController.text.isNotEmpty ||
                                     _nameController.text.isNotEmpty;
@@ -1515,6 +1582,13 @@ class EditPostState extends State<EditPost> {
                 ),
               ),
             ),
+            Obx(
+              () => _canAttachDeviceInfo
+                  ? _AttachDeviceInfo(
+                      isCheck: _isAttachDeviceInfo.value,
+                      onCheck: (isCheck) => _isAttachDeviceInfo.value = isCheck)
+                  : const SizedBox.shrink(),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1554,6 +1628,8 @@ class EditPostState extends State<EditPost> {
                       imageData: _imageData.value,
                       isPainted:
                           _imagePath.value == null && _imageData.value != null,
+                      isAttachDeviceInfo:
+                          _canAttachDeviceInfo && _isAttachDeviceInfo.value,
                       reportReason: (_postList.value.postListType.isForum &&
                               _forumId.value == EditPost.dutyRoomId)
                           ? _reportReason.value
@@ -1596,6 +1672,7 @@ class EditPostState extends State<EditPost> {
     _imageData = Rxn(widget.imageData);
     _isWatermark = (widget.isWatermark ?? SettingsService.to.isWatermark).obs;
     _reportReason = RxnString(widget.reportReason);
+    _isAttachDeviceInfo = (widget.isAttachDeviceInfo ?? true).obs;
   }
 
   @override
@@ -1649,4 +1726,40 @@ TextEditingController _initController(String? text) {
   }
 
   return controller;
+}
+
+Future<String?> _getDeviceInfo() async {
+  final deviceInfo = DeviceInfoPlugin();
+
+  if (GetPlatform.isAndroid) {
+    final info = await deviceInfo.androidInfo;
+    final version = info.version;
+
+    return 'Android ${info.brand} ${info.device} ${info.display} ${version.release} ${version.sdkInt}';
+  } else if (GetPlatform.isIOS) {
+    final info = await deviceInfo.iosInfo;
+    //final utsname = info.utsname;
+
+    // TODO: 需要确认需要哪些信息
+    return 'iOS ${info.data}';
+    //return 'iOS: ${info.localizedModel} ${info.model} ${info.name} ${info.systemName} ${info.systemVersion} ${utsname.machine} ${utsname.sysname} ${utsname.version}';
+  } else if (GetPlatform.isLinux) {
+    final info = await deviceInfo.linuxInfo;
+    final message = StringBuffer('Linux ${info.prettyName}');
+    if (info.variant != null) {
+      message.write(' ${info.variant}');
+    }
+
+    return message.toString();
+  } else if (GetPlatform.isMacOS) {
+    final info = await deviceInfo.macOsInfo;
+
+    return 'macOS ${info.model} ${info.arch} ${info.osRelease}';
+  } else if (GetPlatform.isWindows) {
+    final info = await deviceInfo.windowsInfo;
+
+    return 'Windows ${info.productName}';
+  }
+
+  return null;
 }

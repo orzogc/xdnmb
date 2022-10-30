@@ -28,6 +28,8 @@ class EditPostController extends GetxController {
 
   final String? reportReason;
 
+  final bool? isAttachDeviceInfo;
+
   EditPostController(
       {required this.postListType,
       required this.id,
@@ -38,7 +40,8 @@ class EditPostController extends GetxController {
       this.imagePath,
       this.imageData,
       this.isWatermark,
-      this.reportReason});
+      this.reportReason,
+      this.isAttachDeviceInfo});
 
   bool get hasText =>
       (title?.isNotEmpty ?? false) ||
@@ -68,6 +71,7 @@ class EditPostBinding implements Bindings {
       imageData: Get.arguments != null ? Get.arguments as Uint8List : null,
       isWatermark: Get.parameters['isWatermark'].tryParseBool(),
       reportReason: Get.parameters['reportReason'],
+      isAttachDeviceInfo: Get.parameters['isAttachDeviceInfo'].tryParseBool(),
     ));
   }
 }

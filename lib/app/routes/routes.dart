@@ -53,7 +53,8 @@ abstract class AppRoutes {
 
   static const String reorderForums = '/${PathNames.reorderForums}';
 
-  /// 参数：postListType id title name content forumId imagePath isWatermark reportReason
+  /// 参数：postListType id title name content forumId imagePath isWatermark
+  /// reportReason isAttachDeviceInfo
   static const String editPost = '/${PathNames.editPost}';
 
   static const String postDrafts = '/${PathNames.postDrafts}';
@@ -176,7 +177,8 @@ abstract class AppRoutes {
           String? imagePath,
           Uint8List? imageData,
           bool? isWatermark,
-          String? reportReason}) =>
+          String? reportReason,
+          bool? isAttachDeviceInfo}) =>
       Get.toNamed<T>(
         editPost,
         parameters: {
@@ -190,6 +192,8 @@ abstract class AppRoutes {
           if (isWatermark != null) 'isWatermark': '$isWatermark',
           if (reportReason != null && reportReason.isNotEmpty)
             'reportReason': reportReason,
+          if (isAttachDeviceInfo != null)
+            'isAttachDeviceInfo': '$isAttachDeviceInfo',
         },
         arguments: imageData,
       );

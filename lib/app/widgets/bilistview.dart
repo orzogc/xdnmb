@@ -212,7 +212,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
   }
 
   Future<void> _refresh() async {
-    if (!_isRefreshing) {
+    if (!_isRefreshing && !_isFetchingUp && !_isFetchingDown) {
       _isRefreshing = true;
 
       try {
@@ -239,7 +239,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
   }
 
   Future<void> _loadMore() async {
-    if (!_isLoadingMore.value) {
+    if (!_isLoadingMore.value && !_isFetchingDown) {
       _isLoadingMore.value = true;
 
       try {
