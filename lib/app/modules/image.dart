@@ -190,7 +190,7 @@ class _BottomOverlay extends StatelessWidget {
         showToast('保存图片失败：$e');
       }
     } else {
-      showToast('图片正在加载，无法保存');
+      showToast('图片正在加载或者加载失败，无法保存');
     }
   }
 
@@ -561,20 +561,83 @@ class _ImageState extends State<_Image>
           min(min(bodySize.width / _width!, bodySize.height / _height!), 1.0);
       final width = imageSize?.width ?? _width! * ratio;
       final height = imageSize?.height ?? _height! * ratio;
-
       final horizontal = max((bodySize.width - width) * 0.5, 0.0);
       final vertical = max((bodySize.height - height) * 0.5, 0.0);
 
-      translation.x = min(translation.x,
-          bodySize.width - horizontal * scale - _translationLimit);
-      translation.x = max(
-          translation.x, -((width + horizontal) * scale - _translationLimit));
-      translation.y = min(translation.y,
-          bodySize.height - vertical * scale - _translationLimit);
-      translation.y = max(
-          translation.y, -((height + vertical) * scale - _translationLimit));
+      switch (_rotationCount % 4) {
+        case 0:
+          translation.x = min(translation.x,
+              bodySize.width - horizontal * scale - _translationLimit);
+          translation.x = max(translation.x,
+              -((width + horizontal) * scale - _translationLimit));
+          translation.y = min(translation.y,
+              bodySize.height - vertical * scale - _translationLimit);
+          translation.y = max(translation.y,
+              -((height + vertical) * scale - _translationLimit));
+
+          break;
+        case 1:
+          translation.x = min(translation.x,
+              bodySize.width + (height + vertical) * scale - _translationLimit);
+          translation.x =
+              max(translation.x, vertical * scale + _translationLimit);
+          translation.y = min(translation.y,
+              bodySize.height - horizontal * scale - _translationLimit);
+          translation.y = max(translation.y,
+              -((width + horizontal) * scale - _translationLimit));
+
+          break;
+        case 2:
+          translation.x = min(
+              translation.x,
+              bodySize.width +
+                  (width + horizontal) * scale -
+                  _translationLimit);
+          translation.x =
+              max(translation.x, horizontal * scale + _translationLimit);
+          translation.y = min(
+              translation.y,
+              bodySize.height +
+                  (height + vertical) * scale -
+                  _translationLimit);
+          translation.y =
+              max(translation.y, vertical * scale + _translationLimit);
+
+          break;
+        case 3:
+          translation.x = min(translation.x,
+              bodySize.width - vertical * scale - _translationLimit);
+          translation.x = max(translation.x,
+              -((height + vertical) * scale - _translationLimit));
+          translation.y = min(
+              translation.y,
+              bodySize.height +
+                  (width + horizontal) * scale -
+                  _translationLimit);
+          translation.y =
+              max(translation.y, horizontal * scale + _translationLimit);
+
+          break;
+      }
 
       _transformationController.value.setTranslation(translation);
+    }
+  }
+
+  void _onDoubleTapDown(TapDownDetails details, double topPadding) =>
+      _doubleTapPosition = details.globalPosition - Offset(0, topPadding);
+
+  void _onDoubleTap() {
+    if (_doubleTapPosition != null && !_animationController.isAnimating) {
+      widget.hideOverlay();
+
+      if (_toScaleUp) {
+        _animateScaleUp(_doubleTapPosition!.dx, _doubleTapPosition!.dy);
+        _toScaleUp = false;
+      } else {
+        _animateScaleDown(_doubleTapPosition!.dx, _doubleTapPosition!.dy);
+        _toScaleUp = true;
+      }
     }
   }
 
@@ -693,23 +756,6 @@ class _ImageState extends State<_Image>
     } else {
       _resetPosition();
       _setOpacity(opacity: 1.0);
-    }
-  }
-
-  void _onDoubleTapDown(TapDownDetails details, double topPadding) =>
-      _doubleTapPosition = details.globalPosition - Offset(0, topPadding);
-
-  void _onDoubleTap() {
-    if (_doubleTapPosition != null && !_animationController.isAnimating) {
-      widget.hideOverlay();
-
-      if (_toScaleUp) {
-        _animateScaleUp(_doubleTapPosition!.dx, _doubleTapPosition!.dy);
-        _toScaleUp = false;
-      } else {
-        _animateScaleDown(_doubleTapPosition!.dx, _doubleTapPosition!.dy);
-        _toScaleUp = true;
-      }
     }
   }
 
@@ -847,39 +893,39 @@ class _ImageState extends State<_Image>
     }
 
     return SizedBox.expand(
-      child: InteractiveViewer(
-        transformationController: _transformationController,
-        boundaryMargin: const EdgeInsets.all(double.infinity),
-        constrained: _isConstrained,
-        panEnabled: false,
-        maxScale: 25.0,
-        minScale: 1.0,
-        onInteractionStart: _onInteractionStart,
-        onInteractionUpdate: (details) =>
-            _onInteractionUpdate(details, bodySize, imageSize),
-        onInteractionEnd: (details) =>
-            _onInteractionEnd(details, bodySize, imageSize),
-        child: GestureDetector(
-          onTap: widget.toggleOverlay,
-          onSecondaryTap: () {
-            widget.hideOverlay();
-            Get.maybePop();
-          },
-          onDoubleTapDown: (details) =>
-              _onDoubleTapDown(details, media.padding.top),
-          onDoubleTap: _onDoubleTap,
-          onLongPress: () {
-            widget.hideOverlay();
-            Get.dialog(
-              _ImageDialog(
-                fixWidth: _fixWidth,
-                fixHeight: _fixHeight,
-                setFixWidth: _setFixWidth,
-                setFixHeight: _setFixHeight,
-                cancelFixWidthOrHeight: _cancelFixWidthOrHeight,
-              ),
-            );
-          },
+      child: GestureDetector(
+        onTap: widget.toggleOverlay,
+        onSecondaryTap: () {
+          widget.hideOverlay();
+          Get.maybePop();
+        },
+        onDoubleTapDown: (details) =>
+            _onDoubleTapDown(details, media.padding.top),
+        onDoubleTap: _onDoubleTap,
+        onLongPress: () {
+          widget.hideOverlay();
+          Get.dialog(
+            _ImageDialog(
+              fixWidth: _fixWidth,
+              fixHeight: _fixHeight,
+              setFixWidth: _setFixWidth,
+              setFixHeight: _setFixHeight,
+              cancelFixWidthOrHeight: _cancelFixWidthOrHeight,
+            ),
+          );
+        },
+        child: InteractiveViewer(
+          transformationController: _transformationController,
+          boundaryMargin: const EdgeInsets.all(double.infinity),
+          constrained: _isConstrained,
+          panEnabled: false,
+          maxScale: 25.0,
+          minScale: 1.0,
+          onInteractionStart: _onInteractionStart,
+          onInteractionUpdate: (details) =>
+              _onInteractionUpdate(details, bodySize, imageSize),
+          onInteractionEnd: (details) =>
+              _onInteractionEnd(details, bodySize, imageSize),
           child: Hero(
             tag: widget.tag,
             child: Image(
@@ -952,12 +998,13 @@ class ImageView extends GetView<ImageController> {
     }
   }
 
+  void _setOpacity(double value) => opacity.value = value.clamp(0.0, 1.0);
+
   ImageView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final isLoaded = (controller.imageData.value != null).obs;
-    const quotation = Quotation();
 
     return WillPopScope(
       onWillPop: () async {
@@ -1011,6 +1058,19 @@ class ImageView extends GetView<ImageController> {
               },
               hideOverlay: _hideOverlay);
 
+          final thumbImage = CachedNetworkImage(
+            imageUrl: controller.post.value!.thumbImageUrl()!,
+            cacheManager: XdnmbImageCacheManager(),
+            imageBuilder: (context, imageProvider) =>
+                _Image<CachedNetworkImageProvider>(
+              tag: controller.tag,
+              provider: imageProvider as CachedNetworkImageProvider,
+              setOpacity: _setOpacity,
+              toggleOverlay: _toggleOverlay,
+              hideOverlay: _hideOverlay,
+            ),
+          );
+
           return Scaffold(
             backgroundColor: Colors.black.withOpacity(opacity.value),
             body: Stack(
@@ -1023,33 +1083,36 @@ class ImageView extends GetView<ImageController> {
                           imageUrl: controller.post.value!.imageUrl()!,
                           cacheManager: XdnmbImageCacheManager(),
                           progressIndicatorBuilder: (context, url, progress) =>
-                              loadingImageIndicatorBuilder(
-                            context,
-                            url,
-                            progress,
-                            quotation,
-                            () => Obx(
-                              () => !isLoaded.value
-                                  ? GestureDetector(
-                                      onTap: _toggleOverlay,
-                                      onSecondaryTap: () {
-                                        _hideOverlay();
-                                        Get.maybePop();
-                                      },
-                                      child: Hero(
-                                        tag: controller.tag,
-                                        child: CachedNetworkImage(
-                                          imageUrl: controller.post.value!
-                                              .thumbImageUrl()!,
-                                          cacheManager:
-                                              XdnmbImageCacheManager(),
-                                        ),
-                                      ),
-                                    )
-                                  : const SizedBox.shrink(),
-                            ),
+                              Stack(
+                            children: [
+                              Obx(
+                                () => !isLoaded.value
+                                    ? thumbImage
+                                    : const SizedBox.shrink(),
+                              ),
+                              const Align(
+                                alignment: Alignment.topCenter,
+                                child: Quotation(),
+                              ),
+                              if (progress.progress != null)
+                                Center(
+                                  child: CircularProgressIndicator(
+                                    value: progress.progress,
+                                  ),
+                                ),
+                            ],
                           ),
-                          errorWidget: loadingImageErrorBuilder,
+                          errorWidget: (context, url, error) => Stack(
+                            children: [
+                              thumbImage,
+                              Center(
+                                child: Text(
+                                  '图片加载失败: $error',
+                                  style: AppTheme.boldRed,
+                                ),
+                              ),
+                            ],
+                          ),
                           imageBuilder: (context, imageProvider) {
                             isLoaded.value = true;
 
@@ -1058,8 +1121,7 @@ class ImageView extends GetView<ImageController> {
                               tag: controller.tag,
                               provider:
                                   imageProvider as CachedNetworkImageProvider,
-                              setOpacity: (value) =>
-                                  opacity.value = value.clamp(0.0, 1.0),
+                              setOpacity: _setOpacity,
                               toggleOverlay: _toggleOverlay,
                               hideOverlay: _hideOverlay,
                             );
@@ -1069,8 +1131,7 @@ class ImageView extends GetView<ImageController> {
                           key: _imageKey,
                           tag: controller.tag,
                           provider: MemoryImage(controller.imageData.value!),
-                          setOpacity: (value) =>
-                              opacity.value = value.clamp(0.0, 1.0),
+                          setOpacity: _setOpacity,
                           toggleOverlay: _toggleOverlay,
                           hideOverlay: _hideOverlay,
                         ),

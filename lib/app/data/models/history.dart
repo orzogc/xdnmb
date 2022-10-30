@@ -62,6 +62,7 @@ class BrowseHistory implements PostBase {
 
   bool hasImage;
 
+  /// [image]是为了兼容旧版本，用来判断[hasImage]
   BrowseHistory(
       {required this.id,
       required this.forumId,

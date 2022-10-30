@@ -21,7 +21,6 @@ import '../utils/url.dart';
 import 'content.dart';
 import 'edit_post.dart';
 import 'forum_name.dart';
-import 'loading.dart';
 import 'scroll.dart';
 import 'thread.dart';
 

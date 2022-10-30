@@ -287,7 +287,6 @@ class _BiListViewState<T> extends State<BiListView<T>>
                 mainAxisAlignment: isAtCenter
                     ? MainAxisAlignment.center
                     : MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text('错误：$message'),
                   text,

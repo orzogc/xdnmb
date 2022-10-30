@@ -543,7 +543,6 @@ class _PostHistoryBody extends StatelessWidget {
                         key: ValueKey<int>(mainPost.item.id),
                         child: PostInkWell(
                           post: mainPost.item.toPost(),
-                          showFullTime: false,
                           showPostId:
                               mainPost.item.postId != null ? true : false,
                           showReplyCount: false,

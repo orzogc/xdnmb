@@ -40,7 +40,6 @@ import '../utils/toast.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
 import 'image.dart';
-import 'loading.dart';
 import 'scroll.dart';
 import 'size.dart';
 import 'thread.dart';
@@ -767,23 +766,36 @@ class _Post extends StatelessWidget {
       required this.getContent,
       required this.onPost});
 
-  Future<void> _savePost(PostData post) async {
+  Future<xdnmb_api.LastPost?> _getLastPost(String cookie) async {
+    try {
+      return await XdnmbClientService.to.client.getLastPost(cookie: cookie);
+    } catch (e) {
+      debugPrint('获取发布的新串数据出错：$e');
+      return null;
+    }
+  }
+
+  Future<void> _savePost(PostData post, String cookie) async {
     final history = PostHistoryService.to;
-    final client = XdnmbClientService.to.client;
 
     try {
       final id = await history.savePostData(post);
-      final forum = await client.getForum(post.forumId);
 
-      final threads = forum.where((thread) =>
-          thread.mainPost.userHash == post.userHash &&
-          thread.mainPost.postTime.difference(post.postTime).abs() <
-              _difference);
-      if (threads.isNotEmpty) {
-        final postData = await history.getPostData(id);
-        if (postData != null) {
-          postData.update(threads.first.mainPost);
-          await history.savePostData(postData);
+      final lastPost = await _getLastPost(cookie);
+      if (lastPost != null &&
+          lastPost.mainPostId == null &&
+          lastPost.userHash == post.userHash &&
+          lastPost.postTime.difference(post.postTime).abs() < _difference) {
+        await history.updatePostData(id, lastPost);
+      } else {
+        final forum = await XdnmbClientService.to.client
+            .getForum(post.forumId, cookie: cookie);
+        final threads = forum.where((thread) =>
+            thread.mainPost.userHash == post.userHash &&
+            thread.mainPost.postTime.difference(post.postTime).abs() <
+                _difference);
+        if (threads.isNotEmpty) {
+          await history.updatePostData(id, threads.first.mainPost);
         }
       }
     } catch (e) {
@@ -792,39 +804,44 @@ class _Post extends StatelessWidget {
   }
 
   Future<bool> _getPostId(
-      {required int id, required ReplyData reply, required int page}) async {
-    final history = PostHistoryService.to;
-    final client = XdnmbClientService.to.client;
-
-    final thread = await client.getThread(reply.mainPostId, page: page);
+      {required int id,
+      required ReplyData reply,
+      required int page,
+      required String cookie}) async {
+    final thread = await XdnmbClientService.to.client
+        .getThread(reply.mainPostId, page: page, cookie: cookie);
     final posts = thread.replies.where((post) =>
         post.userHash == reply.userHash &&
         (post.postTime.difference(reply.postTime).abs() < _difference));
     if (posts.isNotEmpty) {
-      final replyData = await history.getReplyData(id);
-      if (replyData != null) {
-        replyData.update(post: posts.last, page: page);
-        await history.saveReplyData(replyData);
-        return true;
-      }
+      return await PostHistoryService.to
+          .updateReplyData(id: id, post: posts.last, page: page);
     }
 
     return false;
   }
 
-  Future<void> _saveReply(ReplyData reply) async {
+  Future<void> _saveReply(ReplyData reply, String cookie) async {
     final history = PostHistoryService.to;
-    final client = XdnmbClientService.to.client;
 
     try {
       final id = await history.saveReplyData(reply);
-      final thread = await client.getThread(reply.mainPostId);
+      final thread = await XdnmbClientService.to.client
+          .getThread(reply.mainPostId, cookie: cookie);
+      final maxPage = thread.maxPage;
 
-      final page = thread.mainPost.replyCount != 0
-          ? (thread.mainPost.replyCount / 19).ceil()
-          : 1;
-      if (!await _getPostId(id: id, reply: reply, page: page) && page > 1) {
-        await _getPostId(id: id, reply: reply, page: page - 1);
+      if (!await _getPostId(
+              id: id, reply: reply, page: maxPage, cookie: cookie) &&
+          maxPage > 1 &&
+          !await _getPostId(
+              id: id, reply: reply, page: maxPage - 1, cookie: cookie)) {
+        final lastPost = await _getLastPost(cookie);
+        if (lastPost != null &&
+            lastPost.mainPostId == reply.mainPostId &&
+            lastPost.userHash == reply.userHash &&
+            lastPost.postTime.difference(reply.postTime).abs() < _difference) {
+          await history.updateReplyData(id: id, post: lastPost);
+        }
       }
     } catch (e) {
       showToast('获取回串数据出错：${exceptionMessage(e)}');
@@ -919,7 +936,7 @@ class _Post extends StatelessWidget {
                           name: name,
                           title: title,
                           content: content);
-                      _savePost(post);
+                      _savePost(post, cookie.cookie());
                     } else {
                       showToast('回串成功');
                       final reply = ReplyData(
@@ -930,7 +947,7 @@ class _Post extends StatelessWidget {
                           name: name,
                           title: title,
                           content: content);
-                      _saveReply(reply);
+                      _saveReply(reply, cookie.cookie());
                     }
 
                     if (controller.postListType == postListType &&

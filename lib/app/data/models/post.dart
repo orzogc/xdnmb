@@ -32,6 +32,7 @@ class PostData {
 
   bool hasImage;
 
+  /// [image]是为了兼容旧版本，用来判断[hasImage]
   PostData(
       {this.postId,
       required this.forumId,
@@ -80,9 +81,12 @@ class PostData {
       content: content,
       isAdmin: isAdmin);
 
-  void update(Post post) {
+  void update(PostBase post) {
+    if (post.forumId != null) {
+      forumId = post.forumId!;
+    }
+
     postId = post.id;
-    forumId = post.forumId;
     image = null;
     imageExtension = null;
     postTime = post.postTime.toUtc();

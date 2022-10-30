@@ -14,7 +14,6 @@ import '../modules/image.dart';
 import '../routes/routes.dart';
 import '../utils/image.dart';
 import '../utils/toast.dart';
-import 'loading.dart';
 
 typedef ImageDataCallback = void Function(Uint8List imageData);
 

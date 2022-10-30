@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
+import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../../utils/directory.dart';
 import '../../utils/extensions.dart';
@@ -78,7 +79,7 @@ class PostHistoryService extends GetxService {
             .findAll();
   }
 
-  Future<PostData?> getPostData(int id) => _postData.get(id);
+  Future<PostData?> _getPostData(int id) => _postData.get(id);
 
   Future<int> postDataCount([DateTimeRange? range]) {
     if (range != null) {
@@ -97,6 +98,16 @@ class PostHistoryService extends GetxService {
 
   Future<bool> deletePostData(int id) =>
       _isar.writeTxn(() => _postData.delete(id));
+
+  Future<void> updatePostData(int id, PostBase post) async {
+    final postData = await _getPostData(id);
+    if (postData != null) {
+      postData.update(post);
+      await savePostData(postData);
+    } else {
+      debugPrint('找不到PostData，id：$id');
+    }
+  }
 
   Future<void> clearPostData([DateTimeRange? range]) =>
       _isar.writeTxn(() async {
@@ -132,7 +143,7 @@ class PostHistoryService extends GetxService {
             .findAll();
   }
 
-  Future<ReplyData?> getReplyData(int id) => _replyData.get(id);
+  Future<ReplyData?> _getReplyData(int id) => _replyData.get(id);
 
   Future<int> replyDataCount([DateTimeRange? range]) {
     if (range != null) {
@@ -151,6 +162,24 @@ class PostHistoryService extends GetxService {
 
   Future<bool> deleteReplyData(int id) =>
       _isar.writeTxn(() => _replyData.delete(id));
+
+  Future<bool> updateReplyData(
+      {required int id,
+      required PostBase post,
+      int? mainPostId,
+      int? page}) async {
+    final replyData = await _getReplyData(id);
+    if (replyData != null) {
+      replyData.update(post: post, mainPostId: mainPostId, page: page);
+      await saveReplyData(replyData);
+
+      return true;
+    } else {
+      debugPrint('找不到ReplyData，id：$id');
+
+      return false;
+    }
+  }
 
   Future<void> clearReplyData([DateTimeRange? range]) =>
       _isar.writeTxn(() async {

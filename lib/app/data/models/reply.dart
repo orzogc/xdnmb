@@ -36,6 +36,7 @@ class ReplyData {
 
   bool hasImage;
 
+  /// [image]是为了兼容旧版本，用来判断[hasImage]
   ReplyData(
       {required this.mainPostId,
       this.postId,
@@ -96,16 +97,18 @@ class ReplyData {
       userHash: '',
       content: content);
 
-  void update({required Post post, int? mainPostId, int? page}) {
+  void update({required PostBase post, int? mainPostId, int? page}) {
     if (mainPostId != null) {
       this.mainPostId = mainPostId;
+    }
+    if (post.forumId != null) {
+      forumId = post.forumId!;
     }
     if (page != null) {
       this.page = page;
     }
 
     postId = post.id;
-    forumId = post.forumId;
     image = null;
     imageExtension = null;
     postTime = post.postTime.toUtc();

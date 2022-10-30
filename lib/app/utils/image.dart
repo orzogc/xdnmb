@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart' hide Image;
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:mime/mime.dart';
@@ -9,8 +10,10 @@ import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/image.dart';
+import '../widgets/loading.dart';
 import 'extensions.dart';
 import 'http_client.dart';
+import 'theme.dart';
 import 'time.dart';
 import 'toast.dart';
 
@@ -112,4 +115,27 @@ Future<bool> saveImageData(Uint8List imageData) async {
     showToast('保存图片失败：$e');
     return false;
   }
+}
+
+typedef ThumbImageBuilder = Widget Function();
+
+Widget loadingThumbImageIndicatorBuilder(
+        BuildContext context, String url, DownloadProgress progress) =>
+    progress.progress != null
+        ? CircularProgressIndicator(value: progress.progress)
+        : const SizedBox.shrink();
+
+// TODO: 点击重新加载？
+Widget loadingImageErrorBuilder(
+    BuildContext context, String? url, dynamic error,
+    {bool showError = true}) {
+  if (showError) {
+    showToast('图片加载失败: $error');
+  } else {
+    debugPrint(url != null ? '图片 $url 加载失败: $error' : '图片加载失败: $error');
+  }
+
+  return const Center(
+    child: Text('图片加载失败', style: AppTheme.boldRed),
+  );
 }
