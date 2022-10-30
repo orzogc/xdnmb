@@ -4,8 +4,10 @@ import 'package:get/get.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../modules/post_list.dart';
+import '../modules/settings.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
+import '../utils/notify.dart';
 import '../utils/regex.dart';
 import '../utils/stack.dart';
 import '../utils/theme.dart';
@@ -98,7 +100,11 @@ class _DrawerHeader extends StatelessWidget {
     );
 
     final setting = IconButton(
-      onPressed: AppRoutes.toSettings,
+      onPressed: () => AppRoutes.toSettings(SettingsController(closeDrawer: () {
+        final scaffold = Scaffold.of(context);
+        scaffold.closeDrawer();
+        scaffold.closeEndDrawer();
+      })),
       tooltip: '设置',
       icon: Icon(Icons.settings, color: theme.colorScheme.onPrimary),
     );
@@ -135,21 +141,19 @@ class _DrawerHeader extends StatelessWidget {
 }
 
 class _TabTitle extends StatelessWidget {
-  final int index;
+  final PostListController controller;
 
-  const _TabTitle(this.index, {super.key});
+  const _TabTitle(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = PostListController.get(index);
-
     late final Widget title;
     switch (controller.postListType) {
       case PostListType.thread:
       case PostListType.onlyPoThread:
         title = Obx(() {
-          final postId = (controller as ThreadTypeController).post?.id;
-          final forumId = controller.post?.forumId;
+          final postId = (controller as ThreadTypeController).id;
+          final forumId = (controller as ThreadTypeController).post?.forumId;
 
           return DefaultTextStyle.merge(
             style: Theme.of(context)
@@ -166,8 +170,7 @@ class _TabTitle extends StatelessWidget {
                       maxLines: 1,
                     ),
                   ),
-                if (postId != null)
-                  Flexible(child: Text(postId.toPostNumber())),
+                Flexible(child: Text(postId.toPostNumber())),
               ],
             ),
           );
@@ -211,47 +214,50 @@ class _TabList extends StatelessWidget {
         () => ListView.separated(
           key: const PageStorageKey<String>('tabList'),
           shrinkWrap: true,
-          itemCount: ControllerStack.length.value,
-          itemBuilder: (context, index) {
-            final controller = PostListController.get(index);
+          itemCount: ControllerStack.length,
+          itemBuilder: (context, index) => NotifyBuilder(
+            animation: ControllerStack.notifier,
+            builder: (context, child) {
+              final controller = PostListController.get(index);
 
-            final tab = ListTile(
-              key: ValueKey<int>(ControllerStack.getKeyId(index)),
-              onTap: () {
-                PostListPage.pageKey.currentState!.jumpToPage(index);
-                Get.back();
-              },
-              tileColor:
-                  index == ControllerStack.index ? theme.focusColor : null,
-              title: _TabTitle(index),
-              subtitle: controller.isThreadType
-                  ? Obx(() {
-                      final post = (controller as ThreadTypeController).post;
+              final tab = ListTile(
+                key: ValueKey<int>(ControllerStack.getKeyId(index)),
+                onTap: () {
+                  PostListPage.pageKey.currentState!.jumpToPage(index);
+                  Get.back();
+                },
+                tileColor:
+                    index == ControllerStack.index ? theme.focusColor : null,
+                title: _TabTitle(controller),
+                subtitle: controller.isThreadType
+                    ? Obx(() {
+                        final post = (controller as ThreadTypeController).post;
 
-                      return post != null
-                          ? Content(
-                              key: ValueKey<bool>(Get.isDarkMode),
-                              post: post,
-                              maxLines: 2,
-                              displayImage: false,
-                              textStyle: textStyle,
-                            )
-                          : const SizedBox.shrink();
-                    })
-                  : null,
-              trailing: ControllerStack.length.value > 1
-                  ? IconButton(
-                      onPressed: () {
-                        ControllerStack.removeControllersAt(index);
-                        PostListPage.pageKey.currentState!
-                            .jumpToPage(ControllerStack.index);
-                      },
-                      icon: const Icon(Icons.close))
-                  : null,
-            );
+                        return post != null
+                            ? Content(
+                                key: ValueKey<bool>(Get.isDarkMode),
+                                post: post,
+                                maxLines: 2,
+                                displayImage: false,
+                                textStyle: textStyle,
+                              )
+                            : const SizedBox.shrink();
+                      })
+                    : null,
+                trailing: ControllerStack.length > 1
+                    ? IconButton(
+                        onPressed: () {
+                          ControllerStack.removeControllersAt(index);
+                          PostListPage.pageKey.currentState!
+                              .jumpToPage(ControllerStack.index);
+                        },
+                        icon: const Icon(Icons.close))
+                    : null,
+              );
 
-            return (data.showGuide && index == 0) ? TabListGuide(tab) : tab;
-          },
+              return (data.showGuide && index == 0) ? TabListGuide(tab) : tab;
+            },
+          ),
           separatorBuilder: (BuildContext context, int index) =>
               const Divider(height: 10, thickness: 1),
         ),

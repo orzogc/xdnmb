@@ -8,6 +8,22 @@ import '../utils/toast.dart';
 import '../utils/url.dart';
 import '../widgets/dialog.dart';
 
+class _Feedback extends StatelessWidget {
+  final VoidCallback closeDrawer;
+
+  const _Feedback({super.key, required this.closeDrawer});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        title: const Text('反馈问题与建议'),
+        onTap: () {
+          Get.back();
+          closeDrawer();
+          AppRoutes.toFeedback();
+        },
+      );
+}
+
 class _AuthorSponsor extends StatelessWidget {
   const _AuthorSponsor({super.key});
 
@@ -75,12 +91,16 @@ class _AppVersion extends StatelessWidget {
       );
 }
 
-class SettingsController extends GetxController {}
+class SettingsController extends GetxController {
+  final VoidCallback closeDrawer;
+
+  SettingsController({required this.closeDrawer});
+}
 
 class SettingsBinding implements Bindings {
   @override
   void dependencies() {
-    Get.put(SettingsController());
+    Get.put(Get.arguments as SettingsController);
   }
 }
 
@@ -93,16 +113,19 @@ class SettingsView extends GetView<SettingsController> {
           title: const Text('设置'),
         ),
         body: ListView(
-          children: const [
-            ListTile(title: Text('饼干'), onTap: AppRoutes.toUser),
-            ListTile(title: Text('黑名单'), onTap: AppRoutes.toBlacklist),
-            ListTile(title: Text('基本设置'), onTap: AppRoutes.toBasicSettings),
-            ListTile(title: Text('高级设置'), onTap: AppRoutes.toAdvancedSettings),
-            ListTile(title: Text('作者'), subtitle: Text('Orzogc')),
-            _AuthorSponsor(),
-            _AppSource(),
-            _AppLicense(),
-            _AppVersion(),
+          children: [
+            const ListTile(title: Text('饼干'), onTap: AppRoutes.toUser),
+            const ListTile(title: Text('黑名单'), onTap: AppRoutes.toBlacklist),
+            const ListTile(
+                title: Text('基本设置'), onTap: AppRoutes.toBasicSettings),
+            const ListTile(
+                title: Text('高级设置'), onTap: AppRoutes.toAdvancedSettings),
+            _Feedback(closeDrawer: controller.closeDrawer),
+            const ListTile(title: Text('作者'), subtitle: Text('Orzogc')),
+            const _AuthorSponsor(),
+            const _AppSource(),
+            const _AppLicense(),
+            const _AppVersion(),
           ],
         ),
       );

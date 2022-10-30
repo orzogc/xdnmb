@@ -6,6 +6,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 import '../modules/image.dart';
 import '../modules/paint.dart';
 import '../modules/post_list.dart';
+import '../modules/settings.dart';
 import '../utils/stack.dart';
 
 abstract class AppRoutes {
@@ -61,6 +62,8 @@ abstract class AppRoutes {
 
   // TODO: 404
   static const String notFound = '/${PathNames.notFound}';
+
+  static const int feedbackId = 52940632;
 
   static String forumUrl(int forumId, {int page = 1}) =>
       '$forum?forumId=$forumId&page=$page';
@@ -149,7 +152,8 @@ abstract class AppRoutes {
   static Future<T?>? toImage<T>(ImageController controller) =>
       Get.toNamed<T>(image, arguments: controller);
 
-  static Future<T?>? toSettings<T>() => Get.toNamed<T>(settings);
+  static Future<T?>? toSettings<T>(SettingsController controller) =>
+      Get.toNamed<T>(settings, arguments: controller);
 
   static Future<T?>? toUser<T>() => Get.toNamed<T>(userPath);
 
@@ -194,6 +198,8 @@ abstract class AppRoutes {
 
   static Future<T?>? toPaint<T>([PaintController? controller]) =>
       Get.toNamed<T>(paint, arguments: controller);
+
+  static Future<T?>? toFeedback<T>() => toThread(mainPostId: feedbackId);
 }
 
 abstract class PathNames {

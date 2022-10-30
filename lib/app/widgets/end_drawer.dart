@@ -12,6 +12,8 @@ import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/navigation.dart';
+import '../utils/notify.dart';
+import '../utils/stack.dart';
 import '../utils/text.dart';
 import '../utils/toast.dart';
 import 'forum.dart';
@@ -170,52 +172,60 @@ class _ForumList extends StatelessWidget {
               ),
             ],
           )
-        : ValueListenableBuilder<HashMap<int, int>>(
-            valueListenable: forums.displayedForumIndexNotifier,
-            builder: (context, box, child) => ListView.builder(
-              key: const PageStorageKey<String>('forumList'),
-              padding: EdgeInsets.zero,
-              itemCount: forums.displayedForumsCount,
-              itemBuilder: (context, index) {
-                final forum = forums.displayedForum(index);
-                final controller = PostListController.get();
-                final forumId = controller.forumOrTimelineId;
-                final isTimeline = controller.isTimeline;
+        : NotifyBuilder(
+            animation: ControllerStack.notifier,
+            builder: (context, child) {
+              final controller = PostListController.get();
+              final forumId = controller.forumOrTimelineId;
+              final isTimeline = controller.isTimeline;
 
-                return forum != null
-                    ? ListTile(
-                        key: ValueKey<PostList>(PostList.fromForumData(forum)),
-                        onTap: () {
-                          if (forumId != forum.id) {
-                            if (forum.isTimeline) {
-                              AppRoutes.toTimeline(timelineId: forum.id);
-                            } else {
-                              AppRoutes.toForum(forumId: forum.id);
-                            }
-                          }
-                          Get.back();
-                        },
-                        onLongPress: () async {
-                          if (await Get.dialog<bool>(_Dialog(forum: forum)) ??
-                              false) {
-                            Get.back();
-                          }
-                        },
-                        tileColor: (forumId == forum.id &&
-                                isTimeline == forum.isTimeline)
-                            ? theme.focusColor
-                            : null,
-                        title: ForumName(
-                          forumId: forum.id,
-                          isTimeline: forum.isTimeline,
-                          isDeprecated: forum.isDeprecated,
-                          textStyle: theme.textTheme.bodyText1,
-                          maxLines: 1,
-                        ),
-                      )
-                    : const SizedBox.shrink();
-              },
-            ),
+              return ValueListenableBuilder<HashMap<int, int>>(
+                valueListenable: forums.displayedForumIndexNotifier,
+                builder: (context, box, child) => ListView.builder(
+                  key: const PageStorageKey<String>('forumList'),
+                  padding: EdgeInsets.zero,
+                  itemCount: forums.displayedForumsCount,
+                  itemBuilder: (context, index) {
+                    final forum = forums.displayedForum(index);
+
+                    return forum != null
+                        ? ListTile(
+                            key: ValueKey<PostList>(
+                                PostList.fromForumData(forum)),
+                            onTap: () {
+                              if (forumId != forum.id) {
+                                if (forum.isTimeline) {
+                                  AppRoutes.toTimeline(timelineId: forum.id);
+                                } else {
+                                  AppRoutes.toForum(forumId: forum.id);
+                                }
+                              }
+                              Get.back();
+                            },
+                            onLongPress: () async {
+                              if (await Get.dialog<bool>(
+                                      _Dialog(forum: forum)) ??
+                                  false) {
+                                Get.back();
+                              }
+                            },
+                            tileColor: (forumId == forum.id &&
+                                    isTimeline == forum.isTimeline)
+                                ? theme.focusColor
+                                : null,
+                            title: ForumName(
+                              forumId: forum.id,
+                              isTimeline: forum.isTimeline,
+                              isDeprecated: forum.isDeprecated,
+                              textStyle: theme.textTheme.bodyText1,
+                              maxLines: 1,
+                            ),
+                          )
+                        : const SizedBox.shrink();
+                  },
+                ),
+              );
+            },
           );
   }
 }

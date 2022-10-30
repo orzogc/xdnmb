@@ -183,119 +183,105 @@ class PostListBinding implements Bindings {
   }
 }
 
-void _refresh() {
-  PostListAppBar.appBarKey.currentState!.refresh();
-  FloatingButton.buttonKey.currentState!.refresh();
-  _BottomBar._bottomBarKey.currentState!.refresh();
-}
-
-class PostListAppBar extends StatefulWidget implements PreferredSizeWidget {
-  static final GlobalKey<PostListAppBarState> appBarKey =
-      GlobalKey<PostListAppBarState>();
-
-  const PostListAppBar({super.key});
-
-  @override
-  State<PostListAppBar> createState() => PostListAppBarState();
+class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _PostListAppBar({super.key});
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-}
-
-class PostListAppBarState extends State<PostListAppBar> {
-  void refresh() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final data = PersistentDataService.to;
     final scaffold = Scaffold.of(context);
-    final controller = PostListController.get();
 
-    Widget button = IconButton(
-      icon: const Icon(Icons.menu),
-      onPressed: () => scaffold.openDrawer(),
-    );
-    if (PostListPage.pageKey.currentState?._isBuilt == true) {
-      if (ControllerStack.controllersCount() > 1) {
-        button = BackButton(onPressed: () {
-          popOnce();
-          _refresh();
-        });
-      }
-    }
+    return NotifyBuilder(
+      animation: ControllerStack.notifier,
+      builder: (context, child) {
+        final controller = PostListController.get();
 
-    late final Widget title;
-    switch (controller.postListType) {
-      case PostListType.thread:
-      case PostListType.onlyPoThread:
-        title = ThreadAppBarTitle(controller as ThreadTypeController);
-        break;
-      case PostListType.forum:
-      case PostListType.timeline:
-        title = ForumAppBarTitle(controller as ForumTypeController);
-        break;
-      case PostListType.feed:
-        title = const FeedAppBarTitle();
-        break;
-      case PostListType.history:
-        title = Obx(() {
-          final controller_ = controller as HistoryController;
+        Widget button = IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => scaffold.openDrawer(),
+        );
+        if (PostListPage.pageKey.currentState?._isBuilt == true) {
+          if (ControllerStack.controllersCount() > 1) {
+            button = const BackButton(onPressed: popOnce);
+          }
+        }
 
-          return HistoryAppBarTitle(controller_,
-              key: ValueKey<HistoryBottomBarKey>(
-                  HistoryBottomBarKey.fromController(controller_)));
-        });
-        break;
-    }
+        late final Widget title;
+        switch (controller.postListType) {
+          case PostListType.thread:
+          case PostListType.onlyPoThread:
+            title = ThreadAppBarTitle(controller as ThreadTypeController);
+            break;
+          case PostListType.forum:
+          case PostListType.timeline:
+            title = ForumAppBarTitle(controller as ForumTypeController);
+            break;
+          case PostListType.feed:
+            title = const FeedAppBarTitle();
+            break;
+          case PostListType.history:
+            title = Obx(() {
+              final controller_ = controller as HistoryController;
 
-    return GestureDetector(
-      onTap:
-          controller.isThreadType ? controller.refresh : controller.refreshPage,
-      child: AppBar(
-        leading: button,
-        title: data.showGuide ? AppBarTitleGuide(title) : title,
-        actions: [
-          if (controller.isXdnmbApi)
-            controller.isThreadType
-                ? Obx(() {
-                    final post = (controller as ThreadTypeController).post;
+              return HistoryAppBarTitle(controller_,
+                  key: ValueKey<HistoryBottomBarKey>(
+                      HistoryBottomBarKey.fromController(controller_)));
+            });
+            break;
+        }
 
-                    return PageButton(
-                        controller: controller,
-                        maxPage: post?.replyCount != null
-                            ? (post!.replyCount! != 0
-                                ? (post.replyCount! / 19).ceil()
-                                : 1)
-                            : null);
-                  })
-                : data.showGuide
-                    ? AppBarPageButtonGuide(PageButton(controller: controller))
-                    : PageButton(controller: controller),
-          if (controller.isThreadType)
-            NotifyBuilder(
-                animation: controller,
-                builder: (context, child) => ThreadAppBarPopupMenuButton(
-                    controller as ThreadTypeController)),
-          if (controller.isForumType)
-            data.showGuide
-                ? AppBarMenuGuide(ForumAppBarPopupMenuButton(
-                    controller as ForumTypeController))
-                : ForumAppBarPopupMenuButton(controller as ForumTypeController),
-          if (controller.isHistory)
-            HistoryDateRangePicker(controller as HistoryController),
-          if (controller.isHistory)
-            HistoryAppBarPopupMenuButton(controller as HistoryController),
-        ],
-      ),
+        return GestureDetector(
+          onTap: controller.isThreadType
+              ? controller.refresh
+              : controller.refreshPage,
+          child: AppBar(
+            leading: button,
+            title: data.showGuide ? AppBarTitleGuide(title) : title,
+            actions: [
+              if (controller.isXdnmbApi)
+                controller.isThreadType
+                    ? Obx(() {
+                        final post = (controller as ThreadTypeController).post;
+
+                        return PageButton(
+                            controller: controller,
+                            maxPage: post?.replyCount != null
+                                ? (post!.replyCount! != 0
+                                    ? (post.replyCount! / 19).ceil()
+                                    : 1)
+                                : null);
+                      })
+                    : data.showGuide
+                        ? AppBarPageButtonGuide(
+                            PageButton(controller: controller))
+                        : PageButton(controller: controller),
+              if (controller.isThreadType)
+                NotifyBuilder(
+                    animation: controller,
+                    builder: (context, child) => ThreadAppBarPopupMenuButton(
+                        controller as ThreadTypeController)),
+              if (controller.isForumType)
+                data.showGuide
+                    ? AppBarMenuGuide(ForumAppBarPopupMenuButton(
+                        controller as ForumTypeController))
+                    : ForumAppBarPopupMenuButton(
+                        controller as ForumTypeController),
+              if (controller.isHistory)
+                HistoryDateRangePicker(controller as HistoryController),
+              if (controller.isHistory)
+                HistoryAppBarPopupMenuButton(controller as HistoryController),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
-Route buildRoute(PostListController controller) => GetPageRoute(
+Route _buildRoute(PostListController controller) => GetPageRoute(
       page: () {
         final hasBeenDarkMode = SettingsService.to.hasBeenDarkMode;
         final postListType = controller.postListType;
@@ -336,7 +322,7 @@ Route buildRoute(PostListController controller) => GetPageRoute(
       transition: Transition.rightToLeft,
     );
 
-Widget buildNavigator(int index) {
+Widget _buildNavigator(int index) {
   final controller = ControllerStack.getFirstController(index);
 
   debugPrint('build navigator: $index');
@@ -377,7 +363,7 @@ Widget buildNavigator(int index) {
     onGenerateInitialRoutes: (navigator, initialRoute) {
       final controller = PostListController.get(index);
 
-      return [buildRoute(controller)];
+      return [_buildRoute(controller)];
     },
     onGenerateRoute: (settings) {
       final uri = Uri.parse(settings.name!);
@@ -408,9 +394,8 @@ Widget buildNavigator(int index) {
       }
 
       ControllerStack.pushController(controller, index);
-      _refresh();
 
-      return buildRoute(controller);
+      return _buildRoute(controller);
     },
   );
 }
@@ -451,11 +436,9 @@ class PostListPageState extends State<PostListPage> {
   void jumpToPage(int page) {
     _pageController.jumpToPage(page);
     ControllerStack.index = page;
-
-    _refresh();
   }
 
-  void jumpToLast() => jumpToPage(ControllerStack.length.value - 1);
+  void jumpToLast() => jumpToPage(ControllerStack.length - 1);
 
   @override
   void initState() {
@@ -482,8 +465,8 @@ class PostListPageState extends State<PostListPage> {
       () => PageView.builder(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: ControllerStack.length.value,
-        itemBuilder: (context, index) => buildNavigator(index),
+        itemCount: ControllerStack.length,
+        itemBuilder: (context, index) => _buildNavigator(index),
       ),
     );
 
@@ -624,23 +607,6 @@ class FloatingButton extends StatefulWidget {
 class FloatingButtonState extends State<FloatingButton> {
   bool get hasBottomSheet => widget.bottomSheetController.value != null;
 
-  void refresh() {
-    if (mounted) {
-      final controller = PostListController.get();
-
-      setState(() {
-        if (hasBottomSheet) {
-          if (controller.canPost) {
-            EditPost.bottomSheetkey.currentState!.setPostList(
-                PostList.fromController(controller), controller.forumId);
-          } else {
-            widget.bottomSheetController.value!.close();
-          }
-        }
-      });
-    }
-  }
-
   void bottomSheet([EditPostController? controller]) {
     if (!hasBottomSheet) {
       widget.bottomSheetController.value = showBottomSheet(
@@ -684,50 +650,56 @@ class FloatingButtonState extends State<FloatingButton> {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.hideFloatingButtonListenable,
-      builder: (context, value, child) => (PostListController.get().canPost &&
-              (!settings.hideFloatingButton || hasBottomSheet))
-          ? Padding(
-              padding: EdgeInsets.only(bottom: hasBottomSheet ? 56.0 : 0.0),
-              child: FloatingActionButton(
-                tooltip: hasBottomSheet ? '收起' : '发串',
-                onPressed: bottomSheet,
-                child: Icon(
-                  hasBottomSheet ? Icons.arrow_downward : Icons.edit,
-                ),
-              ),
-            )
-          : const SizedBox.shrink(),
+    return NotifyBuilder(
+      animation: ControllerStack.notifier,
+      builder: (context, child) => ValueListenableBuilder<Box>(
+        valueListenable: settings.hideFloatingButtonListenable,
+        builder: (context, value, child) {
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+            if (hasBottomSheet) {
+              final controller = PostListController.get();
+              if (controller.canPost) {
+                EditPost.bottomSheetkey.currentState!.setPostList(
+                    PostList.fromController(controller), controller.forumId);
+              } else {
+                widget.bottomSheetController.value!.close();
+              }
+            }
+          });
+
+          return (PostListController.get().canPost &&
+                  (!settings.hideFloatingButton || hasBottomSheet))
+              ? Padding(
+                  padding: EdgeInsets.only(bottom: hasBottomSheet ? 56.0 : 0.0),
+                  child: FloatingActionButton(
+                    tooltip: hasBottomSheet ? '收起' : '发串',
+                    onPressed: bottomSheet,
+                    child: Icon(
+                      hasBottomSheet ? Icons.arrow_downward : Icons.edit,
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink();
+        },
+      ),
     );
   }
 }
 
-class _BottomBar extends StatefulWidget {
-  static final GlobalKey<_BottomBarState> _bottomBarKey =
-      GlobalKey<_BottomBarState>();
-
+class _BottomBar extends StatelessWidget {
   const _BottomBar({super.key});
 
   @override
-  State<_BottomBar> createState() => _BottomBarState();
-}
+  Widget build(BuildContext context) => NotifyBuilder(
+        animation: ControllerStack.notifier,
+        builder: (context, child) {
+          final controller = PostListController.get();
 
-class _BottomBarState extends State<_BottomBar> {
-  void refresh() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = PostListController.get();
-
-    return controller.isHistory
-        ? HistoryBottomBar(controller as HistoryController)
-        : const SizedBox.shrink();
-  }
+          return controller.isHistory
+              ? HistoryBottomBar(controller as HistoryController)
+              : const SizedBox.shrink();
+        },
+      );
 }
 
 class PostListView extends StatefulWidget {
@@ -753,7 +725,6 @@ class _PostListViewState extends State<PostListView>
     }
     if (postListkey()?.currentState?.canPop() ?? false) {
       popOnce();
-      _refresh();
 
       return false;
     }
@@ -840,7 +811,7 @@ class _PostListViewState extends State<PostListView>
             );
 
             final scaffold = Scaffold(
-              appBar: PostListAppBar(key: PostListAppBar.appBarKey),
+              appBar: const _PostListAppBar(),
               body: Column(
                 children: [
                   Expanded(child: PostListPage(key: PostListPage.pageKey)),
@@ -856,7 +827,7 @@ class _PostListViewState extends State<PostListView>
               floatingActionButton: data.showGuide
                   ? FloatingButtonGuide(floatingButton)
                   : floatingButton,
-              bottomNavigationBar: _BottomBar(key: _BottomBar._bottomBarKey),
+              bottomNavigationBar: const _BottomBar(),
             );
 
             return data.showGuide
