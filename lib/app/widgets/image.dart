@@ -43,11 +43,13 @@ class ThumbImage extends StatelessWidget {
       required this.post,
       this.poUserHash,
       this.onImagePainted,
-      this.canReturnImageData = false});
+      this.canReturnImageData = false})
+      : assert(post.hasImage());
 
   @override
   Widget build(BuildContext context) => post.hasImage()
       ? GestureDetector(
+          behavior: HitTestBehavior.translucent,
           onTap: () async {
             final result = await AppRoutes.toImage(ImageController(
                 tag: _tag,

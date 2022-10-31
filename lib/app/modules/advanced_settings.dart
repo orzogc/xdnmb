@@ -77,7 +77,7 @@ class _FixMissingFont extends StatelessWidget {
       valueListenable: settings.fixMissingFontListenable,
       builder: (context, value, child) => ListTile(
         title: const Text('修复字体显示'),
-        subtitle: const Text('字体显示不正常可以尝试开启此项，需要重启应用'),
+        subtitle: const Text('字体显示不正常可以尝试开启此项，更改后需要重启应用'),
         trailing: Switch(
           value: settings.fixMissingFont,
           onChanged: (value) => settings.fixMissingFont = value,

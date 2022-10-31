@@ -16,13 +16,10 @@ import '../utils/image.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
-import '../widgets/image.dart';
 import '../widgets/loading.dart';
 import '../widgets/post.dart';
 import '../widgets/size.dart';
 import 'paint.dart';
-
-typedef _SetOpacityCallback = void Function(double opacity);
 
 const Duration _overlayDuration = Duration(milliseconds: 300);
 
@@ -35,7 +32,7 @@ class _TopOverlay extends StatelessWidget {
 
   _TopOverlay({super.key, required this.post, this.poUserHash});
 
-  void toggle() => _isShowed.value = !_isShowed.value;
+  void _toggle() => _isShowed.value = !_isShowed.value;
 
   @override
   Widget build(BuildContext context) {
@@ -85,114 +82,31 @@ class _TopOverlay extends StatelessWidget {
 class _BottomOverlay extends StatelessWidget {
   final GlobalKey<_ImageState> imageKey;
 
-  final PostBase? post;
-
   final Uint8List? imageData;
 
   final bool isPainted;
 
   final bool canReturnImageData;
 
-  final ImageDataCallback onPaint;
-
   final VoidCallback hideOverlay;
+
+  final VoidCallback paint;
+
+  final VoidCallback saveImage;
 
   final RxBool _isShowed = false.obs;
 
   _BottomOverlay(
       {super.key,
       required this.imageKey,
-      this.post,
       this.imageData,
       required this.isPainted,
       this.canReturnImageData = false,
-      required this.onPaint,
-      required this.hideOverlay})
-      : assert((post != null && imageData == null) ||
-            (post == null && imageData != null));
+      required this.hideOverlay,
+      required this.paint,
+      required this.saveImage});
 
-  void toggle() => _isShowed.value = !_isShowed.value;
-
-  Future<Uint8List?> _loadImage() async {
-    if (imageKey.currentState != null) {
-      if (post != null) {
-        final manager = XdnmbImageCacheManager();
-        try {
-          final info = await manager.getFileFromCache(post!.imageUrl()!);
-          if (info != null) {
-            debugPrint('缓存图片路径：${info.file.path}');
-            return await info.file.readAsBytes();
-          } else {
-            showToast('读取缓存图片数据失败');
-          }
-        } catch (e) {
-          showToast('读取缓存图片数据失败：$e');
-        }
-      } else {
-        return imageData!;
-      }
-    }
-
-    return null;
-  }
-
-  Future<void> _saveImage() async {
-    if (imageKey.currentState != null) {
-      final savePath = ImageService.savePath;
-
-      try {
-        if (post != null) {
-          final fileName = post!.imageFile()!.replaceAll('/', '-');
-          final manager = XdnmbImageCacheManager();
-
-          final info = await manager.getFileFromCache(post!.imageUrl()!);
-          if (info != null) {
-            debugPrint('缓存图片路径：${info.file.path}');
-            if (GetPlatform.isIOS) {
-              if (ImageService.to.hasPhotoLibraryPermission) {
-                final Map<String, dynamic> result =
-                    await ImageGallerySaver.saveFile(info.file.path,
-                        name: fileName);
-                if (result['isSuccess']) {
-                  showToast('图片保存到相册成功');
-                } else {
-                  showToast('图片保存到相册失败：${result['errorMessage']}');
-                }
-              } else {
-                showToast('没有图库权限无法保存图片');
-              }
-            } else if (savePath != null) {
-              final path = join(savePath, fileName);
-              final file = File(path);
-              if (await file.exists()) {
-                bool isSame = true;
-                if (await info.file.length() != await file.length()) {
-                  isSame = false;
-                }
-                if (isSame) {
-                  showToast('该图片已经保存在 $savePath');
-                  return;
-                }
-              }
-
-              await info.file.copy(path);
-              showToast('图片保存在 $savePath');
-            } else {
-              showToast('没有存储权限无法保存图片');
-            }
-          } else {
-            showToast('读取缓存图片数据失败');
-          }
-        } else {
-          saveImageData(imageData!);
-        }
-      } catch (e) {
-        showToast('保存图片失败：$e');
-      }
-    } else {
-      showToast('图片正在加载或者加载失败，无法保存');
-    }
-  }
+  void _toggle() => _isShowed.value = !_isShowed.value;
 
   @override
   Widget build(BuildContext context) {
@@ -258,22 +172,13 @@ class _BottomOverlay extends StatelessWidget {
             ),
             Flexible(
               child: IconButton(
-                onPressed: () async {
-                  final data = await _loadImage();
-                  if (data != null) {
-                    final result =
-                        await AppRoutes.toPaint(PaintController(data));
-                    if (result is Uint8List) {
-                      onPaint(result);
-                    }
-                  }
-                },
+                onPressed: paint,
                 icon: Icon(Icons.brush, color: AppTheme.colorDark),
               ),
             ),
             Flexible(
               child: IconButton(
-                onPressed: _saveImage,
+                onPressed: saveImage,
                 icon: Icon(Icons.save_alt, color: AppTheme.colorDark),
               ),
             ),
@@ -293,7 +198,6 @@ class _BottomOverlay extends StatelessWidget {
   }
 }
 
-// 增加保存和涂鸦？
 class _ImageDialog extends StatelessWidget {
   final bool fixWidth;
 
@@ -305,13 +209,19 @@ class _ImageDialog extends StatelessWidget {
 
   final VoidCallback cancelFixWidthOrHeight;
 
+  final VoidCallback paint;
+
+  final VoidCallback saveImage;
+
   const _ImageDialog(
       {super.key,
       required this.fixWidth,
       required this.fixHeight,
       required this.setFixWidth,
       required this.setFixHeight,
-      required this.cancelFixWidthOrHeight})
+      required this.cancelFixWidthOrHeight,
+      required this.paint,
+      required this.saveImage})
       : assert(!(fixWidth && fixHeight));
 
   @override
@@ -322,36 +232,64 @@ class _ImageDialog extends StatelessWidget {
       children: [
         SimpleDialogOption(
           onPressed: () {
-            if (fixWidth) {
-              cancelFixWidthOrHeight();
-              showToast('退出适应宽度模式');
-            } else {
-              setFixWidth();
-              showToast('进入适应宽度模式');
-            }
-
+            saveImage();
             Get.back();
           },
-          child: Text(fixWidth ? '取消适应宽度' : '适应宽度', style: textStyle),
+          child: Text('保存', style: textStyle),
         ),
         SimpleDialogOption(
           onPressed: () {
-            if (fixHeight) {
-              cancelFixWidthOrHeight();
-              showToast('退出适应高度模式');
-            } else {
-              setFixHeight();
-              showToast('进入适应高度模式');
-            }
-
+            paint();
             Get.back();
           },
-          child: Text(fixHeight ? '取消适应高度' : '适应高度', style: textStyle),
+          child: Text('涂鸦', style: textStyle),
         ),
+        if (!fixWidth)
+          SimpleDialogOption(
+            onPressed: () {
+              setFixWidth();
+              showToast('进入适应宽度模式');
+
+              Get.back();
+            },
+            child: Text('适应宽度', style: textStyle),
+          )
+        else
+          SimpleDialogOption(
+            onPressed: () {
+              cancelFixWidthOrHeight();
+              showToast('退出适应宽度模式');
+
+              Get.back();
+            },
+            child: Text('取消适应宽度', style: textStyle),
+          ),
+        if (!fixHeight)
+          SimpleDialogOption(
+            onPressed: () {
+              setFixHeight();
+              showToast('进入适应高度模式');
+
+              Get.back();
+            },
+            child: Text('适应高度', style: textStyle),
+          )
+        else
+          SimpleDialogOption(
+            onPressed: () {
+              cancelFixWidthOrHeight();
+              showToast('退出适应高度模式');
+
+              Get.back();
+            },
+            child: Text('取消适应高度', style: textStyle),
+          ),
       ],
     );
   }
 }
+
+typedef _SetOpacityCallback = void Function(double opacity);
 
 class _Image<T extends Object> extends StatefulWidget {
   final UniqueKey tag;
@@ -360,17 +298,24 @@ class _Image<T extends Object> extends StatefulWidget {
 
   final _SetOpacityCallback setOpacity;
 
-  final VoidCallback toggleOverlay;
-
   final VoidCallback hideOverlay;
+
+  final bool canShowDialog;
+
+  final VoidCallback? paint;
+
+  final VoidCallback? saveImage;
 
   const _Image(
       {super.key,
       required this.tag,
       required this.provider,
       required this.setOpacity,
-      required this.toggleOverlay,
-      required this.hideOverlay});
+      required this.hideOverlay,
+      this.canShowDialog = false,
+      this.paint,
+      this.saveImage})
+      : assert(!canShowDialog || (paint != null && saveImage != null));
 
   @override
   State<_Image> createState() => _ImageState();
@@ -389,6 +334,8 @@ class _ImageState extends State<_Image>
   static const double _fixedMaxScale = _disposeScale;
 
   static const double _translationLimit = 70.0;
+
+  static const double _disposeDistanceFactor = 0.35;
 
   final TransformationController _transformationController =
       TransformationController();
@@ -526,8 +473,8 @@ class _ImageState extends State<_Image>
     if (_fixWidth && _isLimitMovement) {
       final translation = _transformationController.value.getTranslation();
 
-      if (translation.y >= 0) {
-        distance = translation.y;
+      if (_isConstrained || translation.y >= 0) {
+        distance = translation.y.abs();
       } else if (bodySize != null && imageSize != null) {
         final distance_ = -translation.y - (imageSize.height - bodySize.height);
         distance = distance_ > 0 ? distance_ : null;
@@ -535,8 +482,8 @@ class _ImageState extends State<_Image>
     } else if (_fixHeight && _isLimitMovement) {
       final translation = _transformationController.value.getTranslation();
 
-      if (translation.x >= 0) {
-        distance = translation.x;
+      if (_isConstrained || translation.x >= 0) {
+        distance = translation.x.abs();
       } else if (bodySize != null && imageSize != null) {
         final distance_ = -translation.x - (imageSize.width - bodySize.width);
         distance = distance_ > 0 ? distance_ : null;
@@ -561,9 +508,12 @@ class _ImageState extends State<_Image>
           min(min(bodySize.width / _width!, bodySize.height / _height!), 1.0);
       final width = imageSize?.width ?? _width! * ratio;
       final height = imageSize?.height ?? _height! * ratio;
+
+      // 图片两边离屏幕边缘的空白距离
       final horizontal = max((bodySize.width - width) * 0.5, 0.0);
       final vertical = max((bodySize.height - height) * 0.5, 0.0);
 
+      // 本质是围绕屏幕左上角顺时针旋转
       switch (_rotationCount % 4) {
         case 0:
           translation.x = min(translation.x,
@@ -725,7 +675,7 @@ class _ImageState extends State<_Image>
           !_isConstrained &&
           imageSize != null) {
         final translation = _transformationController.value.getTranslation();
-        final disposeDistance = bodySize.height * 0.4;
+        final disposeDistance = bodySize.height * _disposeDistanceFactor;
 
         if (translation.y > disposeDistance ||
             (translation.y < 0 &&
@@ -738,7 +688,7 @@ class _ImageState extends State<_Image>
           !_isConstrained &&
           imageSize != null) {
         final translation = _transformationController.value.getTranslation();
-        final disposeDistance = bodySize.width * 0.4;
+        final disposeDistance = bodySize.width * _disposeDistanceFactor;
 
         if (translation.x > disposeDistance ||
             (translation.x < 0 &&
@@ -889,31 +839,34 @@ class _ImageState extends State<_Image>
           // 宽度超出屏幕范围就取消限制
           _isConstrained = false;
         }
+      } else {
+        _isConstrained = true;
       }
+    } else {
+      _isConstrained = true;
     }
 
     return SizedBox.expand(
       child: GestureDetector(
-        onTap: widget.toggleOverlay,
-        onSecondaryTap: () {
-          widget.hideOverlay();
-          Get.maybePop();
-        },
         onDoubleTapDown: (details) =>
             _onDoubleTapDown(details, media.padding.top),
         onDoubleTap: _onDoubleTap,
-        onLongPress: () {
-          widget.hideOverlay();
-          Get.dialog(
-            _ImageDialog(
-              fixWidth: _fixWidth,
-              fixHeight: _fixHeight,
-              setFixWidth: _setFixWidth,
-              setFixHeight: _setFixHeight,
-              cancelFixWidthOrHeight: _cancelFixWidthOrHeight,
-            ),
-          );
-        },
+        onLongPress: widget.canShowDialog
+            ? () {
+                widget.hideOverlay();
+                Get.dialog(
+                  _ImageDialog(
+                    fixWidth: _fixWidth,
+                    fixHeight: _fixHeight,
+                    setFixWidth: _setFixWidth,
+                    setFixHeight: _setFixHeight,
+                    cancelFixWidthOrHeight: _cancelFixWidthOrHeight,
+                    paint: widget.paint!,
+                    saveImage: widget.saveImage!,
+                  ),
+                );
+              }
+            : null,
         child: InteractiveViewer(
           transformationController: _transformationController,
           boundaryMargin: const EdgeInsets.all(double.infinity),
@@ -966,7 +919,8 @@ class ImageController extends GetxController {
       this.poUserHash,
       Uint8List? imageData,
       this.canReturnImageData = false})
-      : assert((post != null && imageData == null) ||
+      : assert(post == null || post.hasImage()),
+        assert((post != null && imageData == null) ||
             (post == null && imageData != null)),
         post = Rxn(post),
         imageData = Rxn(imageData);
@@ -984,16 +938,112 @@ class ImageView extends GetView<ImageController> {
 
   final RxDouble opacity = 1.0.obs;
 
+  Future<Uint8List?> _loadImage() async {
+    if (_imageKey.currentState != null) {
+      final post = controller.post.value;
+
+      if (post != null) {
+        final manager = XdnmbImageCacheManager();
+        try {
+          final info = await manager.getFileFromCache(post.imageUrl()!);
+          if (info != null) {
+            debugPrint('缓存图片路径：${info.file.path}');
+            return await info.file.readAsBytes();
+          } else {
+            showToast('读取缓存图片数据失败');
+          }
+        } catch (e) {
+          showToast('读取缓存图片数据失败：$e');
+        }
+      } else {
+        return controller.imageData.value!;
+      }
+    }
+
+    return null;
+  }
+
+  Future<void> _paint() async {
+    final data = await _loadImage();
+    if (data != null) {
+      final result = await AppRoutes.toPaint(PaintController(data));
+      if (result is Uint8List) {
+        controller.post.value = null;
+        controller.imageData.value = result;
+        controller._isPainted = true;
+      }
+    }
+  }
+
+  Future<void> _saveImage() async {
+    if (_imageKey.currentState != null) {
+      final savePath = ImageService.savePath;
+      final post = controller.post.value;
+
+      try {
+        if (post != null) {
+          final fileName = post.imageFile()!.replaceAll('/', '-');
+          final manager = XdnmbImageCacheManager();
+
+          final info = await manager.getFileFromCache(post.imageUrl()!);
+          if (info != null) {
+            debugPrint('缓存图片路径：${info.file.path}');
+            if (GetPlatform.isIOS) {
+              if (ImageService.to.hasPhotoLibraryPermission) {
+                final Map<String, dynamic> result =
+                    await ImageGallerySaver.saveFile(info.file.path,
+                        name: fileName);
+                if (result['isSuccess']) {
+                  showToast('图片保存到相册成功');
+                } else {
+                  showToast('图片保存到相册失败：${result['errorMessage']}');
+                }
+              } else {
+                showToast('没有图库权限无法保存图片');
+              }
+            } else if (savePath != null) {
+              final path = join(savePath, fileName);
+              final file = File(path);
+              if (await file.exists()) {
+                bool isSame = true;
+                if (await info.file.length() != await file.length()) {
+                  isSame = false;
+                }
+                if (isSame) {
+                  showToast('该图片已经保存在 $savePath');
+                  return;
+                }
+              }
+
+              await info.file.copy(path);
+              showToast('图片保存在 $savePath');
+            } else {
+              showToast('没有存储权限无法保存图片');
+            }
+          } else {
+            showToast('读取缓存图片数据失败');
+          }
+        } else {
+          saveImageData(controller.imageData.value!);
+        }
+      } catch (e) {
+        showToast('保存图片失败：$e');
+      }
+    } else {
+      showToast('图片正在加载或者加载失败，无法保存');
+    }
+  }
+
   void _toggleOverlay() {
-    controller._topOverlay?.toggle();
-    controller._bottomOverlay?.toggle();
+    controller._topOverlay?._toggle();
+    controller._bottomOverlay?._toggle();
     controller._isShowOverlay = !controller._isShowOverlay;
   }
 
   void _hideOverlay() {
     if (controller._isShowOverlay) {
-      controller._topOverlay?.toggle();
-      controller._bottomOverlay?.toggle();
+      controller._topOverlay?._toggle();
+      controller._bottomOverlay?._toggle();
       controller._isShowOverlay = false;
     }
   }
@@ -1043,33 +1093,35 @@ class ImageView extends GetView<ImageController> {
             controller._topOverlay = _TopOverlay(
                 post: controller.post.value!,
                 poUserHash: controller.poUserHash);
+          } else {
+            controller._topOverlay = null;
           }
 
           controller._bottomOverlay = _BottomOverlay(
               imageKey: _imageKey,
-              post: controller.post.value,
               imageData: controller.imageData.value,
               isPainted: controller._isPainted,
               canReturnImageData: controller.canReturnImageData,
-              onPaint: (imageData) {
-                controller.post.value = null;
-                controller.imageData.value = imageData;
-                controller._isPainted = true;
-              },
-              hideOverlay: _hideOverlay);
-
-          final thumbImage = CachedNetworkImage(
-            imageUrl: controller.post.value!.thumbImageUrl()!,
-            cacheManager: XdnmbImageCacheManager(),
-            imageBuilder: (context, imageProvider) =>
-                _Image<CachedNetworkImageProvider>(
-              tag: controller.tag,
-              provider: imageProvider as CachedNetworkImageProvider,
-              setOpacity: _setOpacity,
-              toggleOverlay: _toggleOverlay,
               hideOverlay: _hideOverlay,
-            ),
-          );
+              paint: _paint,
+              saveImage: _saveImage);
+
+          final CachedNetworkImage? thumbImage = controller.post.value != null
+              ? CachedNetworkImage(
+                  imageUrl: controller.post.value!.thumbImageUrl()!,
+                  cacheManager: XdnmbImageCacheManager(),
+                  errorWidget: (context, url, error) =>
+                      loadingImageErrorBuilder(context, url, error,
+                          showError: false),
+                  imageBuilder: (context, imageProvider) =>
+                      _Image<CachedNetworkImageProvider>(
+                    tag: controller.tag,
+                    provider: imageProvider as CachedNetworkImageProvider,
+                    setOpacity: _setOpacity,
+                    hideOverlay: _hideOverlay,
+                  ),
+                )
+              : null;
 
           return Scaffold(
             backgroundColor: Colors.black.withOpacity(opacity.value),
@@ -1078,63 +1130,76 @@ class ImageView extends GetView<ImageController> {
                 Padding(
                   padding:
                       EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-                  child: controller.post.value != null
-                      ? CachedNetworkImage(
-                          imageUrl: controller.post.value!.imageUrl()!,
-                          cacheManager: XdnmbImageCacheManager(),
-                          progressIndicatorBuilder: (context, url, progress) =>
-                              Stack(
-                            children: [
-                              Obx(
-                                () => !isLoaded.value
-                                    ? thumbImage
-                                    : const SizedBox.shrink(),
-                              ),
-                              const Align(
-                                alignment: Alignment.topCenter,
-                                child: Quotation(),
-                              ),
-                              if (progress.progress != null)
-                                Center(
-                                  child: CircularProgressIndicator(
-                                    value: progress.progress,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: _toggleOverlay,
+                    onSecondaryTap: () {
+                      _hideOverlay();
+                      Get.maybePop();
+                    },
+                    child: (controller.post.value != null && thumbImage != null)
+                        ? CachedNetworkImage(
+                            imageUrl: controller.post.value!.imageUrl()!,
+                            cacheManager: XdnmbImageCacheManager(),
+                            progressIndicatorBuilder:
+                                (context, url, progress) => Stack(
+                              children: [
+                                Obx(
+                                  () => !isLoaded.value
+                                      ? thumbImage
+                                      : const SizedBox.shrink(),
+                                ),
+                                const Align(
+                                  alignment: Alignment.topCenter,
+                                  child: Quotation(),
+                                ),
+                                if (progress.progress != null)
+                                  Center(
+                                    child: CircularProgressIndicator(
+                                      value: progress.progress,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            errorWidget: (context, url, error) => Stack(
+                              children: [
+                                thumbImage,
+                                Align(
+                                  alignment: Alignment.topCenter,
+                                  child: Text(
+                                    '图片加载失败: $error',
+                                    style: AppTheme.boldRed,
                                   ),
                                 ),
-                            ],
-                          ),
-                          errorWidget: (context, url, error) => Stack(
-                            children: [
-                              thumbImage,
-                              Center(
-                                child: Text(
-                                  '图片加载失败: $error',
-                                  style: AppTheme.boldRed,
-                                ),
-                              ),
-                            ],
-                          ),
-                          imageBuilder: (context, imageProvider) {
-                            isLoaded.value = true;
+                              ],
+                            ),
+                            imageBuilder: (context, imageProvider) {
+                              isLoaded.value = true;
 
-                            return _Image<CachedNetworkImageProvider>(
-                              key: _imageKey,
-                              tag: controller.tag,
-                              provider:
-                                  imageProvider as CachedNetworkImageProvider,
-                              setOpacity: _setOpacity,
-                              toggleOverlay: _toggleOverlay,
-                              hideOverlay: _hideOverlay,
-                            );
-                          },
-                        )
-                      : _Image<MemoryImage>(
-                          key: _imageKey,
-                          tag: controller.tag,
-                          provider: MemoryImage(controller.imageData.value!),
-                          setOpacity: _setOpacity,
-                          toggleOverlay: _toggleOverlay,
-                          hideOverlay: _hideOverlay,
-                        ),
+                              return _Image<CachedNetworkImageProvider>(
+                                key: _imageKey,
+                                tag: controller.tag,
+                                provider:
+                                    imageProvider as CachedNetworkImageProvider,
+                                setOpacity: _setOpacity,
+                                hideOverlay: _hideOverlay,
+                                canShowDialog: true,
+                                paint: _paint,
+                                saveImage: _saveImage,
+                              );
+                            },
+                          )
+                        : _Image<MemoryImage>(
+                            key: _imageKey,
+                            tag: controller.tag,
+                            provider: MemoryImage(controller.imageData.value!),
+                            setOpacity: _setOpacity,
+                            hideOverlay: _hideOverlay,
+                            canShowDialog: true,
+                            paint: _paint,
+                            saveImage: _saveImage,
+                          ),
+                  ),
                 ),
                 if (controller.post.value != null &&
                     controller._topOverlay != null)

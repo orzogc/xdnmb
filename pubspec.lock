@@ -1178,7 +1178,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "14a15551d0d70bc4ff76ca6304f9343cf7dd1fe7"
+      resolved-ref: a8ecf35a6375175f74c708e867fa4724c0eca886
       url: "https://github.com/orzogc/xdnmb_api.git"
     source: git
     version: "0.1.0"

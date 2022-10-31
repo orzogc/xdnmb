@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../../utils/exception.dart';
+import '../../utils/http_client.dart';
 import '../../utils/toast.dart';
 import 'forum.dart';
 import 'persistent.dart';
@@ -18,7 +19,11 @@ class XdnmbClientService extends GetxService {
 
   final RxBool isReady = false.obs;
 
-  XdnmbClientService() : client = XdnmbApi();
+  XdnmbClientService()
+      : client = XdnmbApi(
+            client: XdnmbHttpClient.httpClient,
+            connectionTimeout: XdnmbHttpClient.connectionTimeout,
+            idleTimeout: XdnmbHttpClient.idleTimeout);
 
   Future<void> _updateForumList() async {
     final timelineList = await client.getTimelineList();
