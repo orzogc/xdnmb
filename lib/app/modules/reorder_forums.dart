@@ -123,78 +123,18 @@ class _ForumsState extends State<_Forums> {
     final forums = ForumListService.to;
     final theme = Theme.of(context);
 
-    return ListView(
-      children: [
-        ListTile(
-          title: Text('显示版块', style: theme.textTheme.headline6),
-        ),
-        ReorderableListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          buildDefaultDragHandles: false,
-          itemCount: _displayedForums.length,
-          itemBuilder: (context, index) {
-            final forum = _displayedForums[index];
-
-            return ListTile(
-              key: ValueKey<PostList>(PostList.fromForumData(forum)),
-              leading: IconButton(
-                onPressed: () {
-                  if (mounted) {
-                    setState(() {
-                      final forum = _displayedForums.removeAt(index);
-                      _hiddenForums.add(forum);
-                      forums.hideForum(forum);
-                    });
-                    showToast(
-                        '隐藏版块 ${htmlToPlainText(context, forum.forumDisplayName)}');
-                  }
-                },
-                icon: const Icon(Icons.visibility),
-              ),
-              title: ForumName(
-                forumId: forum.id,
-                isTimeline: forum.isTimeline,
-                isDeprecated: forum.isDeprecated,
-                textStyle: theme.textTheme.subtitle1,
-                maxLines: 1,
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    onPressed: () => Get.dialog(EditForumName(forum: forum)),
-                    icon: const Icon(
-                      Icons.edit,
-                    ),
-                  ),
-                  const SizedBox(width: 10.0),
-                  ReorderableDragStartListener(
-                    index: index,
-                    child: const Icon(Icons.drag_handle),
-                  ),
-                ],
-              ),
-            );
-          },
-          onReorder: (oldIndex, newIndex) {
-            if (mounted) {
-              setState(() {
-                if (oldIndex < newIndex) {
-                  newIndex -= 1;
-                }
-                final forum = _displayedForums.removeAt(oldIndex);
-                _displayedForums.insert(newIndex, forum);
-              });
-            }
-          },
-        ),
-        ListTile(
-          title: Text('隐藏版块', style: theme.textTheme.headline6),
-        ),
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(
+    return ReorderableListView.builder(
+      buildDefaultDragHandles: false,
+      header: ListTile(
+        title: Text('显示版块', style: theme.textTheme.headline6),
+      ),
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            title: Text('隐藏版块', style: theme.textTheme.headline6),
+          ),
+          ...List.generate(
             _hiddenForums.length,
             (index) {
               final forum = _hiddenForums[index];
@@ -228,9 +168,65 @@ class _ForumsState extends State<_Forums> {
                 ),
               );
             },
+          )
+        ],
+      ),
+      itemCount: _displayedForums.length,
+      itemBuilder: (context, index) {
+        final forum = _displayedForums[index];
+
+        return ListTile(
+          key: ValueKey<PostList>(PostList.fromForumData(forum)),
+          leading: IconButton(
+            onPressed: () {
+              if (mounted) {
+                setState(() {
+                  final forum = _displayedForums.removeAt(index);
+                  _hiddenForums.add(forum);
+                  forums.hideForum(forum);
+                });
+                showToast(
+                    '隐藏版块 ${htmlToPlainText(context, forum.forumDisplayName)}');
+              }
+            },
+            icon: const Icon(Icons.visibility),
           ),
-        ),
-      ],
+          title: ForumName(
+            forumId: forum.id,
+            isTimeline: forum.isTimeline,
+            isDeprecated: forum.isDeprecated,
+            textStyle: theme.textTheme.subtitle1,
+            maxLines: 1,
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () => Get.dialog(EditForumName(forum: forum)),
+                icon: const Icon(
+                  Icons.edit,
+                ),
+              ),
+              const SizedBox(width: 10.0),
+              ReorderableDragStartListener(
+                index: index,
+                child: const Icon(Icons.drag_handle),
+              ),
+            ],
+          ),
+        );
+      },
+      onReorder: (oldIndex, newIndex) {
+        if (mounted) {
+          setState(() {
+            if (oldIndex < newIndex) {
+              newIndex -= 1;
+            }
+            final forum = _displayedForums.removeAt(oldIndex);
+            _displayedForums.insert(newIndex, forum);
+          });
+        }
+      },
     );
   }
 }

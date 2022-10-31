@@ -10,7 +10,6 @@ import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/image.dart';
-import '../widgets/loading.dart';
 import 'extensions.dart';
 import 'http_client.dart';
 import 'theme.dart';
