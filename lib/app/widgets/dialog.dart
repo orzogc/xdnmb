@@ -198,7 +198,9 @@ class NoticeDialog extends StatelessWidget {
               Row(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(top: 5.0),
+                    padding: GetPlatform.isLinux
+                        ? const EdgeInsets.only(top: 5.0)
+                        : EdgeInsets.zero,
                     child: Obx(
                       () => Checkbox(
                         value: isCheck.value,

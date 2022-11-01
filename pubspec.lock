@@ -247,7 +247,7 @@ packages:
       name: easy_refresh
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.0.4+2"
+    version: "3.0.4+3"
   expandable_text:
     dependency: "direct main"
     description:
@@ -692,6 +692,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
+  media_scanner:
+    dependency: "direct main"
+    description:
+      name: media_scanner
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.1.0"
   meta:
     dependency: transitive
     description:
@@ -768,7 +775,7 @@ packages:
       name: path_provider_android
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.20"
+    version: "2.0.21"
   path_provider_ios:
     dependency: transitive
     description:

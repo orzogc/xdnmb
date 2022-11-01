@@ -3,34 +3,35 @@ import 'package:flutter/material.dart';
 import '../routes/routes.dart';
 import 'extensions.dart';
 
-// TODO: 支持纯数字串号跳转
 abstract class Regex {
   static const String _postReference1 = r'(?:&gt;)*No\.([0-9]+)';
 
   static const String _postReference2 = r'(?:&gt;)+([0-9]+)';
+
+  static const String _postReference3 = r'([0-9]{8,})';
 
   static const String _link =
       r'(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|www\.[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*)';
 
   static const String _postId = r'(^[0-9]+$)';
 
-  static const String _postReference3 = r'(?:>)*No\.([0-9]+)';
+  static const String _postReference4 = r'(?:>)*No\.([0-9]+)';
 
-  static const String _postReference4 = r'(?:>)+([0-9]+)';
+  static const String _postReference5 = r'(?:>)+([0-9]+)';
 
   static const String _hasHiddenTag = r'\[h\].+\[\/h\]';
 
   static const String _hiddenTag = r'(\[h\])|(\[\/h\])';
 
-  static const String _xdnmbHost = r'^www\.nmbxd[0-9]*\.com$';
+  static const String _xdnmbHost = r'^(?:www\.){0,1}nmbxd[0-9]*\.com$';
 
   static const String _xdnmbHtml = r'(.+)(?=\.html$)|(.+)';
 
   static final RegExp _textRegex =
-      RegExp('$_postReference1|$_postReference2|$_link');
+      RegExp('$_postReference1|$_postReference2|$_postReference3|$_link');
 
   static final RegExp _postIdRegex =
-      RegExp('$_postId|$_postReference3|$_postReference4');
+      RegExp('$_postId|$_postReference4|$_postReference5');
 
   static final RegExp _hasHiddenTagRegex = RegExp(_hasHiddenTag, dotAll: true);
 
@@ -57,8 +58,17 @@ abstract class Regex {
 
     text = text.replaceAllMapped(_textRegex, (match) {
       isReplaced = true;
-      final id = match[1] ?? match[2];
-      final link = match[3];
+      String? id = match[1] ?? match[2];
+
+      // 纯数字只有大于50000000才算是串号
+      if (id == null) {
+        final n = match[3];
+        if (n != null && int.parse(n) >= 50000000) {
+          id = n;
+        }
+      }
+
+      final link = match[4];
 
       return id != null
           ? '<a href="${AppRoutes.referenceUrl(int.parse(id))}" '

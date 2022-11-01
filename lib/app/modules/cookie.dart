@@ -495,7 +495,6 @@ class CookieView extends GetView<CookieController> {
                   ? ((user.isUserCookieExpired ?? true) ? 0 : 1)
                   : 2),
             ),
-            // TODO: 扫描饼干二维码？
             ListTile(
               onTap: () => Get.dialog(_AddCookieForm()),
               title: const Text('添加自定义饼干'),
@@ -549,7 +548,6 @@ class CookieView extends GetView<CookieController> {
                                 )
                               : null,
                         ),
-                        // TODO: 重试
                         if (snapshot.connectionState == ConnectionState.done &&
                             snapshot.hasError)
                           const Text('更新饼干列表出错', style: AppTheme.boldRed),

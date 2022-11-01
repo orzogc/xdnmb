@@ -12,7 +12,7 @@ import 'settings.dart';
 class XdnmbClientService extends GetxService {
   static XdnmbClientService get to => Get.find<XdnmbClientService>();
 
-  // TODO: timeout
+  // TODO: 允许用户设置timeout
   final XdnmbApi client;
 
   bool hasGotNotice = false;

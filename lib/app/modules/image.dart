@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:media_scanner/media_scanner.dart';
 import 'package:path/path.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
@@ -1004,18 +1005,17 @@ class ImageView extends GetView<ImageController> {
             } else if (savePath != null) {
               final path = join(savePath, fileName);
               final file = File(path);
-              if (await file.exists()) {
-                bool isSame = true;
-                if (await info.file.length() != await file.length()) {
-                  isSame = false;
-                }
-                if (isSame) {
-                  showToast('该图片已经保存在 $savePath');
-                  return;
-                }
+              if (await file.exists() &&
+                  await file.length() == await info.file.length()) {
+                showToast('该图片已经保存在 $savePath');
+                return;
               }
 
               await info.file.copy(path);
+              if (GetPlatform.isAndroid) {
+                MediaScanner.loadMedia(path: path);
+              }
+
               showToast('图片保存在 $savePath');
             } else {
               showToast('没有存储权限无法保存图片');

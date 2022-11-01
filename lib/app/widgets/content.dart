@@ -43,7 +43,7 @@ class _TextContentState extends State<TextContent> {
 
     _htmlText = HtmlText(
       context,
-      Regex.replaceHiddenTag(widget.text) ?? widget.text,
+      widget.text,
       onLinkTap: widget.onLinkTap,
       onText: (context, text) => Regex.onText(text),
       onTextRecursiveParse: true,
@@ -124,51 +124,53 @@ class _ContentState extends State<Content> {
   }
 
   void _setHiddenText() {
-    int index = 0;
-    _htmlText?.dispose();
+    if (_hasHiddenText) {
+      int index = 0;
+      _htmlText?.dispose();
 
-    _htmlText = HtmlText(
-      context,
-      _text!,
-      onLinkTap: widget.onLinkTap,
-      onText: (context, text) => Regex.onText(text),
-      onTextRecursiveParse: true,
-      onTags: onHiddenTag(
-        (context, element, textStyle) {
-          if (widget.canTapHiddenText) {
-            late final HiddenText text;
-            if (index == _hiddenTextList.length) {
-              text = HiddenText();
-              _hiddenTextList.add(text);
-            } else if (index < _hiddenTextList.length) {
-              text = _hiddenTextList[index];
+      _htmlText = HtmlText(
+        context,
+        _text!,
+        onLinkTap: widget.onLinkTap,
+        onText: (context, text) => Regex.onText(text),
+        onTextRecursiveParse: true,
+        onTags: onHiddenTag(
+          (context, element, textStyle) {
+            if (widget.canTapHiddenText) {
+              late final HiddenText text;
+              if (index == _hiddenTextList.length) {
+                text = HiddenText();
+                _hiddenTextList.add(text);
+              } else if (index < _hiddenTextList.length) {
+                text = _hiddenTextList[index];
+              } else {
+                debugPrint('无效的_hiddenTextList index：$index');
+                return null;
+              }
+              index++;
+
+              return getHiddenText(
+                context: context,
+                element: element,
+                textStyle: textStyle,
+                hiddenColor: widget.hiddenTextColor,
+                getHiddenText: () => text,
+                refresh: _refresh,
+                onLinkTap: widget.onLinkTap,
+              );
             } else {
-              debugPrint('无效的_hiddenTextList index：$index');
-              return null;
+              return getHiddenText(
+                context: context,
+                element: element,
+                textStyle: textStyle,
+                hiddenColor: widget.hiddenTextColor,
+              );
             }
-            index++;
-
-            return getHiddenText(
-              context: context,
-              element: element,
-              textStyle: textStyle,
-              hiddenColor: widget.hiddenTextColor,
-              getHiddenText: () => text,
-              refresh: _refresh,
-              onLinkTap: widget.onLinkTap,
-            );
-          } else {
-            return getHiddenText(
-              context: context,
-              element: element,
-              textStyle: textStyle,
-              hiddenColor: widget.hiddenTextColor,
-            );
-          }
-        },
-      ),
-      textStyle: widget.textStyle,
-    );
+          },
+        ),
+        textStyle: widget.textStyle,
+      );
+    }
   }
 
   @override
@@ -203,9 +205,7 @@ class _ContentState extends State<Content> {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    if (_hasHiddenText) {
-      _setHiddenText();
-    }
+    _setHiddenText();
 
     final richText = RichText(
       text: _htmlText!.toTextSpan(),

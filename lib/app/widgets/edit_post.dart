@@ -415,7 +415,9 @@ class _AttachDeviceInfo extends StatelessWidget {
   Widget build(BuildContext context) => Row(
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 5.0),
+            padding: GetPlatform.isLinux
+                ? const EdgeInsets.only(top: 5.0)
+                : EdgeInsets.zero,
             child: Checkbox(
               value: isCheck,
               onChanged: (value) {
