@@ -92,6 +92,8 @@ class HistoryController extends PostListController {
     ListenableNotifier(),
   ];
 
+  final RxInt _toIndex;
+
   @override
   PostListType get postListType => PostListType.history;
 
@@ -112,6 +114,7 @@ class HistoryController extends PostListController {
       required List<DateTimeRange?> dateRange})
       : _bottomBarIndex = bottomBarIndex.obs,
         _dateRange = Rx(dateRange),
+        _toIndex = bottomBarIndex.obs,
         super(page);
 
   ListenableNotifier _getNotifier([int? index]) {
@@ -754,14 +757,23 @@ class _HistoryBodyState extends State<HistoryBody> {
     return _images[postId];
   }
 
+  void _updateIndex() {
+    final page = _controller.page;
+    if (page != null) {
+      widget.controller.bottomBarIndex = page.round();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
 
     _controller = PageController(initialPage: widget.controller.bottomBarIndex);
-    _subscription = widget.controller._bottomBarIndex.listen((index) {
-      if (index >= 0 && index <= 2) {
-        _controller.jumpToPage(index);
+    _controller.addListener(_updateIndex);
+    _subscription = widget.controller._toIndex.listen((index) {
+      if (index >= 0 && index <= 2 && index != _controller.page) {
+        _controller.animateToPage(index,
+            duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
       }
     });
   }
@@ -769,63 +781,67 @@ class _HistoryBodyState extends State<HistoryBody> {
   @override
   void dispose() {
     _subscription.cancel();
+    _controller.removeListener(_updateIndex);
     _controller.dispose();
 
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          Obx(
-            () {
-              final range = widget.controller._getDateRange();
+  Widget build(BuildContext context) => PageView.builder(
+        controller: _controller,
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          late final Widget body;
+          switch (index) {
+            case _BrowseHistoryBody._index:
+              body = _BrowseHistoryBody(
+                  controller: widget.controller, getImage: _getImage);
+              break;
+            case _PostHistoryBody._index:
+              body = _PostHistoryBody(
+                  controller: widget.controller, getImage: _getImage);
+              break;
+            case _ReplyHistoryBody._index:
+              body = _ReplyHistoryBody(
+                  controller: widget.controller, getImage: _getImage);
+              break;
+            default:
+              body = const Center(
+                child: Text('未知记录', style: AppTheme.boldRed),
+              );
+          }
 
-              return range != null
-                  ? ListTile(
-                      title: Center(
-                        child: range.start != range.end
-                            ? Text(
-                                '${formatDay(range.start)} - ${formatDay(range.end)}',
-                              )
-                            : Text(formatDay(range.start)),
-                      ),
-                      trailing: IconButton(
-                        onPressed: () {
-                          widget.controller._setDateRange(null);
-                          //widget.controller.refreshPage();
-                        },
-                        icon: const Icon(Icons.close),
-                      ),
-                    )
-                  : const SizedBox.shrink();
-            },
-          ),
-          Expanded(
-            child: PageView.builder(
-              controller: _controller,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 3,
-              itemBuilder: (context, index) {
-                switch (index) {
-                  case _BrowseHistoryBody._index:
-                    return _BrowseHistoryBody(
-                        controller: widget.controller, getImage: _getImage);
-                  case _PostHistoryBody._index:
-                    return _PostHistoryBody(
-                        controller: widget.controller, getImage: _getImage);
-                  case _ReplyHistoryBody._index:
-                    return _ReplyHistoryBody(
-                        controller: widget.controller, getImage: _getImage);
-                  default:
-                    return const Center(
-                      child: Text('未知记录', style: AppTheme.boldRed),
-                    );
-                }
-              },
-            ),
-          )
-        ],
+          return Column(
+            children: [
+              Obx(
+                () {
+                  final range = widget.controller._getDateRange();
+
+                  return range != null
+                      ? ListTile(
+                          title: Center(
+                            child: range.start != range.end
+                                ? Text(
+                                    '${formatDay(range.start)} - ${formatDay(range.end)}',
+                                  )
+                                : Text(formatDay(range.start)),
+                          ),
+                          trailing: IconButton(
+                            onPressed: () {
+                              widget.controller._setDateRange(null);
+                              //widget.controller.refreshPage();
+                            },
+                            icon: const Icon(Icons.close),
+                          ),
+                        )
+                      : const SizedBox.shrink();
+                },
+              ),
+              Expanded(child: body),
+            ],
+          );
+        },
       );
 }
 
@@ -841,7 +857,7 @@ class HistoryBottomBar extends StatelessWidget {
           onTap: (value) {
             if (controller.bottomBarIndex != value) {
               popAllPopup();
-              controller.bottomBarIndex = value;
+              controller._toIndex.trigger(value);
             }
           },
           items: const [
