@@ -6,6 +6,7 @@ import 'package:hive/hive.dart';
 
 import '../data/services/settings.dart';
 import '../utils/toast.dart';
+import '../widgets/dialog.dart';
 
 class _SaveImagePath extends StatelessWidget {
   const _SaveImagePath({super.key});
@@ -66,6 +67,85 @@ class _SaveImagePath extends StatelessWidget {
   }
 }
 
+class _DrawerDragRatioDialog extends StatelessWidget {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  _DrawerDragRatioDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    String? ratioString;
+
+    return InputDialog(
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          decoration: const InputDecoration(labelText: '比例（0.1-0.5）'),
+          autofocus: true,
+          initialValue: '${settings.drawerEdgeDragWidthRatio}',
+          onSaved: (newValue) => ratioString = newValue,
+          validator: (value) {
+            if (value != null) {
+              if (value.isNotEmpty) {
+                final ratio = double.tryParse(value);
+                if (ratio != null) {
+                  if (ratio >= SettingsService.minDrawerEdgeDragWidthRatio &&
+                      ratio <= SettingsService.maxDrawerEdgeDragWidthRatio) {
+                    return null;
+                  } else {
+                    return '比例需要在${SettingsService.minDrawerEdgeDragWidthRatio}'
+                        '与${SettingsService.maxDrawerEdgeDragWidthRatio}之间';
+                  }
+                } else {
+                  return '请输入比例数字';
+                }
+              } else {
+                return '请输入比例';
+              }
+            } else {
+              return '请输入比例';
+            }
+          },
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              final ratio = double.parse(ratioString!);
+              settings.drawerEdgeDragWidthRatio = ratio;
+
+              Get.back();
+            }
+          },
+          child: const Text('确定'),
+        )
+      ],
+    );
+  }
+}
+
+class _DrawerDragRatio extends StatelessWidget {
+  const _DrawerDragRatio({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.drawerEdgeDragWidthRatioListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('划开侧边栏的范围占屏幕宽度的比例'),
+        trailing: Text('${settings.drawerEdgeDragWidthRatio * 100.0}%'),
+        onTap: () => Get.dialog(_DrawerDragRatioDialog()),
+      ),
+    );
+  }
+}
+
 class _FixMissingFont extends StatelessWidget {
   const _FixMissingFont({super.key});
 
@@ -107,6 +187,8 @@ class AdvancedSettingsView extends GetView<AdvancedSettingsController> {
         body: ListView(
           children: [
             if (!GetPlatform.isIOS) const _SaveImagePath(),
+            if (GetPlatform.isAndroid || GetPlatform.isIOS)
+              const _DrawerDragRatio(),
             const _FixMissingFont(),
           ],
         ),

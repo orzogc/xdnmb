@@ -280,7 +280,7 @@ class PostContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (post is Tip) Text('来自X岛官方的内容', style: headerTextStyle),
+          if (post is Tip) Text('来自X岛匿名版官方的内容', style: headerTextStyle),
           DefaultTextStyle.merge(
             style: headerTextStyle,
             child: Row(

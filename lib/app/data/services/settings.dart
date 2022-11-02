@@ -19,6 +19,9 @@ final ForumData defaultForum = ForumData(
 
 /// 设置服务
 class SettingsService extends GetxService {
+  static const double minDrawerEdgeDragWidthRatio = 0.1;
+  static const double maxDrawerEdgeDragWidthRatio = 0.5;
+
   static SettingsService get to => Get.find<SettingsService>();
 
   static bool isFixMissingFont = false;
@@ -26,6 +29,8 @@ class SettingsService extends GetxService {
   late final Box _settingsBox;
 
   final RxBool hasBeenDarkMode = false.obs;
+
+  late final RxDouble _drawerDragRatio;
 
   final RxBool isReady = false.obs;
 
@@ -94,6 +99,17 @@ class SettingsService extends GetxService {
   set saveImagePath(String? directory) =>
       _settingsBox.put(Settings.saveImagePath, directory);
 
+  double get drawerEdgeDragWidthRatio =>
+      (_settingsBox.get(Settings.drawerEdgeDragWidthRatio, defaultValue: 0.25)
+              as double)
+          .clamp(minDrawerEdgeDragWidthRatio, maxDrawerEdgeDragWidthRatio);
+
+  set drawerEdgeDragWidthRatio(double ratio) => _settingsBox.put(
+      Settings.drawerEdgeDragWidthRatio,
+      ratio.clamp(minDrawerEdgeDragWidthRatio, maxDrawerEdgeDragWidthRatio));
+
+  double get drawerDragRatio => _drawerDragRatio.value;
+
   bool get fixMissingFont =>
       _settingsBox.get(Settings.fixMissingFont, defaultValue: false);
 
@@ -117,6 +133,8 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> feedIdListenable;
 
   late final ValueListenable<Box> saveImagePathListenable;
+
+  late final ValueListenable<Box> drawerEdgeDragWidthRatioListenable;
 
   late final ValueListenable<Box> fixMissingFontListenable;
 
@@ -174,12 +192,20 @@ class SettingsService extends GetxService {
     feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
     saveImagePathListenable =
         _settingsBox.listenable(keys: [Settings.saveImagePath]);
+    drawerEdgeDragWidthRatioListenable =
+        _settingsBox.listenable(keys: [Settings.drawerEdgeDragWidthRatio]);
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
 
     _settingsBox.watch(key: Settings.saveImagePath).listen((event) {
       debugPrint('saveImagePath change');
       ImageService.savePath = saveImagePath;
+    });
+
+    _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
+    _settingsBox.watch(key: Settings.drawerEdgeDragWidthRatio).listen((event) {
+      debugPrint('drawerEdgeDragWidthRatio change');
+      _drawerDragRatio.value = drawerEdgeDragWidthRatio;
     });
 
     updateSaveImagePath();

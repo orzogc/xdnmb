@@ -821,7 +821,7 @@ class _PostListViewState extends State<PostListView>
               ),
               drawerEnableOpenDragGesture: !data.isKeyboardVisible.value,
               endDrawerEnableOpenDragGesture: !data.isKeyboardVisible.value,
-              drawerEdgeDragWidth: media.size.width / 4.0,
+              drawerEdgeDragWidth: media.size.width * settings.drawerDragRatio,
               drawer: const AppDrawer(),
               endDrawer: const AppEndDrawer(),
               floatingActionButton: data.showGuide
