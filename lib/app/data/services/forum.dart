@@ -81,6 +81,7 @@ class ForumListService extends GetxService {
 
   late HashMap<_ForumKey, _ForumValue> _forumMap;
 
+  /// 应用本次运行期间新增加的废弃版块ID，防止短时间内多次重复请求[_getHtmlForum]
   final HashSet<int> _deprecatedForumId = HashSet();
 
   int get displayedForumsCount => displayedForumIndexNotifier.value.length;
@@ -114,8 +115,8 @@ class ForumListService extends GetxService {
       _deprecatedForumId.add(forumId);
 
       try {
-        final client = XdnmbClientService.to.client;
-        final forum = await client.getHtmlForumInfo(forumId);
+        final forum =
+            await XdnmbClientService.to.client.getHtmlForumInfo(forumId);
         await addForum(ForumData.fromHtmlForum(forum));
         debugPrint('增加废弃版块：${forum.name}');
       } catch (e) {
@@ -268,6 +269,9 @@ class ForumListService extends GetxService {
       return null;
     }
   }
+
+  Future<void> updateForum(int index, ForumData forum) =>
+      _forumBox.putAt(index, forum);
 
   @override
   void onInit() async {

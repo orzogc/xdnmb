@@ -128,7 +128,6 @@ Widget loadingThumbImageIndicatorBuilder(
         ? CircularProgressIndicator(value: progress.progress)
         : const SizedBox.shrink();
 
-// TODO: 点击重新加载？
 Widget loadingImageErrorBuilder(
     BuildContext context, String? url, dynamic error,
     {bool showError = true}) {

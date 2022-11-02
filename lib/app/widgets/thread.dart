@@ -442,92 +442,93 @@ class _ThreadBodyState extends State<ThreadBody> {
     final isOnlyPoThread = controller.isOnlyPoThread;
 
     if (page == firstPage) {
-      // TODO: browsePostId应该可以为null？
-      final Post firstPost = page == 1
-          ? thread.mainPost
-          : (thread.replies.isNotEmpty
-              ? thread.replies.first
-              : thread.mainPost);
-      if (_history == null) {
-        _history = BrowseHistory.fromPost(
-            mainPost: thread.mainPost,
-            browsePage: page,
-            browsePostId: firstPost.id,
-            isOnlyPo: isOnlyPoThread);
-        history.saveBrowseHistory(_history!);
-        _isToJump.value = false;
-      } else if (_isToJump.value) {
-        final index = jumpToId?.toIndex(page) ??
-            _history!.toIndex(isOnlyPo: isOnlyPoThread);
-        if (index != null) {
-          final postIds = thread.replies.map((post) => post.id);
-          final id = index.getIdFromIndex();
-          if (postIds.contains(id)) {
-            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-              Future.delayed(const Duration(milliseconds: 50), () async {
-                try {
-                  if (_isToJump.value) {
-                    await _anchorController.scrollToIndex(
-                        index: index, scrollSpeed: 10.0);
+      if (page == 1 || thread.replies.isNotEmpty) {
+        final Post firstPost =
+            page == 1 ? thread.mainPost : thread.replies.first;
 
-                    if (firstPost.id != id) {
-                      while (_isToJump.value &&
-                          id != _browsePostId &&
-                          !_isNoMoreItems) {
-                        await Future.delayed(const Duration(milliseconds: 50),
-                            () async {
-                          if (_isToJump.value) {
-                            await _anchorController.scrollToIndex(
-                                index: index, scrollSpeed: 10.0);
-                          }
-                        });
-                      }
-                    } else {
-                      _history!.update(
-                          mainPost: thread.mainPost,
-                          browsePage: page,
-                          browsePostId: firstPost.id,
-                          isOnlyPo: isOnlyPoThread);
-                      history.saveBrowseHistory(_history!);
-                    }
-                  }
-                } catch (e) {
-                  showToast('跳转到串号 $id 失败：$e');
-                } finally {
-                  _isToJump.value = false;
-                }
-              }).timeout(
-                const Duration(seconds: 2),
-                onTimeout: () {
-                  showToast('跳转到串号 $id 超时');
-                  _isToJump.value = false;
-                },
-              );
-            });
-          } else if (page == 1 && thread.mainPost.id == id) {
-            _history!.update(
-                mainPost: thread.mainPost,
-                browsePage: page,
-                browsePostId: thread.mainPost.id,
-                isOnlyPo: isOnlyPoThread);
-            history.saveBrowseHistory(_history!);
-            _isToJump.value = false;
-          } else {
-            _isToJump.value = false;
-          }
-        } else {
-          _isToJump.value = false;
-        }
-      } else {
-        if (!_isNoMoreItems) {
-          _history!.update(
+        if (_history == null) {
+          _history = BrowseHistory.fromPost(
               mainPost: thread.mainPost,
               browsePage: page,
               browsePostId: firstPost.id,
               isOnlyPo: isOnlyPoThread);
           history.saveBrowseHistory(_history!);
-        }
+          _isToJump.value = false;
+        } else if (_isToJump.value) {
+          final index = jumpToId?.toIndex(page) ??
+              _history!.toIndex(isOnlyPo: isOnlyPoThread);
+          if (index != null) {
+            final postIds = thread.replies.map((post) => post.id);
+            final id = index.getIdFromIndex();
+            if (postIds.contains(id)) {
+              WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                Future.delayed(const Duration(milliseconds: 50), () async {
+                  try {
+                    if (_isToJump.value) {
+                      await _anchorController.scrollToIndex(
+                          index: index, scrollSpeed: 10.0);
 
+                      if (firstPost.id != id) {
+                        while (_isToJump.value &&
+                            id != _browsePostId &&
+                            !_isNoMoreItems) {
+                          await Future.delayed(const Duration(milliseconds: 50),
+                              () async {
+                            if (_isToJump.value) {
+                              await _anchorController.scrollToIndex(
+                                  index: index, scrollSpeed: 10.0);
+                            }
+                          });
+                        }
+                      } else {
+                        _history!.update(
+                            mainPost: thread.mainPost,
+                            browsePage: page,
+                            browsePostId: firstPost.id,
+                            isOnlyPo: isOnlyPoThread);
+                        history.saveBrowseHistory(_history!);
+                      }
+                    }
+                  } catch (e) {
+                    showToast('跳转到串号 $id 失败：$e');
+                  } finally {
+                    _isToJump.value = false;
+                  }
+                }).timeout(
+                  const Duration(seconds: 2),
+                  onTimeout: () {
+                    showToast('跳转到串号 $id 超时');
+                    _isToJump.value = false;
+                  },
+                );
+              });
+            } else if (page == 1 && thread.mainPost.id == id) {
+              _history!.update(
+                  mainPost: thread.mainPost,
+                  browsePage: page,
+                  browsePostId: thread.mainPost.id,
+                  isOnlyPo: isOnlyPoThread);
+              history.saveBrowseHistory(_history!);
+              _isToJump.value = false;
+            } else {
+              _isToJump.value = false;
+            }
+          } else {
+            _isToJump.value = false;
+          }
+        } else {
+          if (!_isNoMoreItems) {
+            _history!.update(
+                mainPost: thread.mainPost,
+                browsePage: page,
+                browsePostId: firstPost.id,
+                isOnlyPo: isOnlyPoThread);
+            history.saveBrowseHistory(_history!);
+          }
+
+          _isToJump.value = false;
+        }
+      } else {
         _isToJump.value = false;
       }
     }

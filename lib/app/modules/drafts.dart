@@ -12,6 +12,31 @@ import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/post.dart';
 
+class _PopupMenuButton extends StatelessWidget {
+  const _PopupMenuButton({super.key});
+
+  @override
+  Widget build(BuildContext context) => PopupMenuButton(
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            onTap: () => WidgetsBinding.instance.addPostFrameCallback(
+              (timeStamp) => Get.dialog(
+                ConfirmCancelDialog(
+                  content: '确定删除所有草稿？',
+                  onConfirm: () {
+                    PostDraftListService.to.clear();
+                    Get.back();
+                  },
+                  onCancel: () => Get.back(),
+                ),
+              ),
+            ),
+            child: const Text('清空'),
+          ),
+        ],
+      );
+}
+
 class _Screenshot extends StatelessWidget {
   final PostDraftData draft;
 
@@ -48,6 +73,69 @@ class _Screenshot extends StatelessWidget {
   }
 }
 
+class _DraftList extends StatelessWidget {
+  const _DraftList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final drafts = PostDraftListService.to;
+
+    return ValueListenableBuilder(
+      valueListenable: drafts.draftListListenable,
+      builder: (context, value, child) => drafts.length > 0
+          ? LoaderOverlay(
+              child: ListView.separated(
+                itemCount: drafts.length,
+                itemBuilder: (context, index) {
+                  final index_ = drafts.length - index - 1;
+                  final draft = drafts.draft(index_);
+
+                  return draft != null
+                      ? InkWell(
+                          key: ValueKey<int?>(drafts.draftKey(index_)),
+                          onTap: () => Get.back<PostDraftData>(result: draft),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: PostDraft(
+                                  title: draft.title,
+                                  name: draft.name,
+                                  content: draft.content,
+                                  contentMaxLines: 8,
+                                ),
+                              ),
+                              _Screenshot(draft),
+                              IconButton(
+                                onPressed: () => Get.dialog(
+                                  ConfirmCancelDialog(
+                                    content: '确定删除该草稿？',
+                                    onConfirm: () async {
+                                      await draft.delete();
+
+                                      showToast('已删除该草稿');
+                                      Get.back();
+                                    },
+                                    onCancel: () => Get.back(),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.delete_outline),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink();
+                },
+                separatorBuilder: (context, index) =>
+                    const Divider(height: 10.0, thickness: 1.0),
+              ),
+            )
+          : const Center(child: Text('没有草稿', style: AppTheme.boldRed)),
+    );
+  }
+}
+
 class PostDraftsController extends GetxController {}
 
 class PostDraftsBinding implements Bindings {
@@ -57,69 +145,15 @@ class PostDraftsBinding implements Bindings {
   }
 }
 
-// TODO: 添加清空菜单
 class PostDraftsView extends GetView<PostDraftsController> {
   const PostDraftsView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final drafts = PostDraftListService.to;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('草稿')),
-      body: drafts.length > 0
-          ? LoaderOverlay(
-              child: StatefulBuilder(
-                builder: (context, setState) => ListView.separated(
-                  itemCount: drafts.length,
-                  itemBuilder: (context, index) {
-                    final index_ = drafts.length - index - 1;
-                    final draft = drafts.draft(index_);
-
-                    return draft != null
-                        ? InkWell(
-                            key: ValueKey<int?>(drafts.draftKey(index_)),
-                            onTap: () => Get.back<PostDraftData>(result: draft),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: PostDraft(
-                                    title: draft.title,
-                                    name: draft.name,
-                                    content: draft.content,
-                                    contentMaxLines: 8,
-                                  ),
-                                ),
-                                _Screenshot(draft),
-                                IconButton(
-                                  onPressed: () => Get.dialog(
-                                    ConfirmCancelDialog(
-                                      content: '确定删除该草稿？',
-                                      onConfirm: () async {
-                                        await draft.delete();
-                                        setState(() {});
-
-                                        showToast('已删除该草稿');
-                                        Get.back();
-                                      },
-                                      onCancel: () => Get.back(),
-                                    ),
-                                  ),
-                                  icon: const Icon(Icons.delete_outline),
-                                ),
-                              ],
-                            ),
-                          )
-                        : const SizedBox.shrink();
-                  },
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 10.0, thickness: 1.0),
-                ),
-              ),
-            )
-          : const Center(child: Text('没有草稿', style: AppTheme.boldRed)),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: const Text('草稿'),
+          actions: const [_PopupMenuButton()],
+        ),
+        body: const _DraftList(),
+      );
 }

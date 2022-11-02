@@ -29,10 +29,7 @@ class _InitialForum extends StatelessWidget {
             child: ForumName(
               forumId: settings.initialForum.id,
               isTimeline: settings.initialForum.isTimeline,
-              textStyle: TextStyle(
-                color:
-                    Get.isDarkMode ? Colors.white : AppTheme.primaryColorLight,
-              ),
+              textStyle: TextStyle(color: AppTheme.highlightColor),
               maxLines: 1,
             ),
           ),

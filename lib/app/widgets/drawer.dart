@@ -207,7 +207,8 @@ class _TabList extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = PersistentDataService.to;
     final theme = Theme.of(context);
-    final textStyle = theme.textTheme.bodyText2?.apply(color: textColor());
+    final textStyle =
+        theme.textTheme.bodyText2?.apply(color: AppTheme.textColor);
 
     return Center(
       child: Obx(
@@ -325,9 +326,7 @@ class _DrawerBottom extends StatelessWidget {
                       theme.textTheme.headline6)
                   ?.merge(
                 TextStyle(
-                  color: Get.isDarkMode
-                      ? Colors.white
-                      : AppTheme.primaryColorLight,
+                  color: AppTheme.highlightColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),

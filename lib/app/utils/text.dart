@@ -56,7 +56,7 @@ TextSpan getHiddenText(
       overrideTextStyle: TextStyle(
         decoration: hiddenText._isVisible ? null : TextDecoration.lineThrough,
         decorationColor:
-            hiddenText._isVisible ? null : (hiddenColor ?? textColor()),
+            hiddenText._isVisible ? null : (hiddenColor ?? AppTheme.textColor),
         decorationThickness: hiddenText._isVisible ? null : (size.height + 5.0),
       ),
     );
@@ -75,7 +75,7 @@ TextSpan getHiddenText(
     textStyle: textStyle,
     overrideTextStyle: TextStyle(
       decoration: TextDecoration.lineThrough,
-      decorationColor: hiddenColor ?? textColor(),
+      decorationColor: hiddenColor ?? AppTheme.textColor,
       decorationThickness: size.height + 5.0,
     ),
   );

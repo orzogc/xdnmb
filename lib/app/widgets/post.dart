@@ -1,6 +1,5 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:html_to_text/html_to_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
@@ -11,6 +10,7 @@ import 'content.dart';
 import 'forum_name.dart';
 import 'image.dart';
 import 'scroll.dart';
+import 'tooltip.dart';
 
 typedef PostGestureCallback = void Function(PostBase post);
 
@@ -140,13 +140,17 @@ class _PostName extends StatelessWidget {
       );
 }
 
-// TODO: sage提示
 class _PostSage extends StatelessWidget {
   const _PostSage({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      const Text('本串已经被SAGE', style: AppTheme.boldRed);
+  Widget build(BuildContext context) => Row(
+        children: const [
+          Flexible(child: Text('本串已经被SAGE', style: AppTheme.boldRed)),
+          SizedBox(width: 5.0),
+          QuestionTooltip('被SAGE的串不会因为新回复而被顶上来，且一定时间后无法回复'),
+        ],
+      );
 }
 
 class PostDraft extends StatelessWidget {
@@ -188,9 +192,7 @@ class PostDraft extends StatelessWidget {
                         content!,
                         expandText: '展开',
                         collapseText: '收起',
-                        linkColor: Get.isDarkMode
-                            ? Colors.white
-                            : AppTheme.primaryColorLight,
+                        linkColor: AppTheme.highlightColor,
                         maxLines: contentMaxLines!,
                       )
                     : Text(content!),
@@ -257,6 +259,8 @@ class PostContent extends StatelessWidget {
     final forumId = post.forumId;
     final replyCount = post.replyCount;
     final isSage = post.isSage;
+    final headerTextStyle =
+        theme.textTheme.caption?.apply(color: AppTheme.headerColor);
 
     final content = Content(
       post: post,
@@ -276,8 +280,9 @@ class PostContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (post is Tip) Text('来自X岛官方的内容', style: headerTextStyle),
           DefaultTextStyle.merge(
-            style: theme.textTheme.caption?.apply(color: AppTheme.headerColor),
+            style: headerTextStyle,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

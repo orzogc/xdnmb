@@ -240,7 +240,6 @@ class ReorderForumsBinding implements Bindings {
   }
 }
 
-// TODO: 显示版规？
 class ReorderForumsView extends GetView<ReorderForumsController> {
   final GlobalKey<_ForumsState> _forumListKey = GlobalKey<_ForumsState>();
 

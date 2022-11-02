@@ -11,8 +11,10 @@ class Quotation extends StatelessWidget {
         alignment: Alignment.topCenter,
         child: Text(
           '加载中',
-          style:
-              TextStyle(color: specialTextColor(), fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppTheme.specialTextColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       );
 }

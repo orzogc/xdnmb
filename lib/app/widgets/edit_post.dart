@@ -43,8 +43,7 @@ import 'image.dart';
 import 'scroll.dart';
 import 'size.dart';
 import 'thread.dart';
-
-// TODO: sage串不能回复
+import 'tooltip.dart';
 
 const double _defaultHeight = 200.0;
 
@@ -91,10 +90,7 @@ class _ForumName extends StatelessWidget {
                 },
                 child: ForumNameText(
                   forumName: forumName,
-                  textStyle: TextStyle(
-                      color: Get.isDarkMode
-                          ? Colors.white
-                          : AppTheme.primaryColorLight),
+                  textStyle: TextStyle(color: AppTheme.highlightColor),
                   maxLines: 2,
                 ),
               )
@@ -427,7 +423,9 @@ class _AttachDeviceInfo extends StatelessWidget {
               },
             ),
           ),
-          const Text('附加应用和设备信息以便更好地解决问题'),
+          const Flexible(child: Text('附加应用和设备信息')),
+          const SizedBox(width: 5),
+          const QuestionTooltip('提供这些信息以便开发者更好地解决问题'),
         ],
       );
 }

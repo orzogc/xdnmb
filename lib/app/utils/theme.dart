@@ -3,11 +3,6 @@ import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
 
-Color specialTextColor() =>
-    Get.isDarkMode ? AppTheme.colorDark : AppTheme.primaryColorLight;
-
-Color textColor() => Get.isDarkMode ? AppTheme.colorDark : Colors.black;
-
 abstract class AppTheme {
   static final Color primaryColorLight = Colors.red.shade300;
 
@@ -147,6 +142,15 @@ abstract class AppTheme {
       overline: TextStyle(),
     ).apply(displayColor: colorDark, bodyColor: colorDark),
   );
+
+  static Color get specialTextColor =>
+      Get.isDarkMode ? AppTheme.colorDark : AppTheme.primaryColorLight;
+
+  static Color get textColor =>
+      Get.isDarkMode ? AppTheme.colorDark : Colors.black;
+
+  static Color get highlightColor =>
+      Get.isDarkMode ? Colors.white : AppTheme.primaryColorLight;
 }
 
 class _TextButtonDefaultOverlay extends MaterialStateProperty<Color?> {

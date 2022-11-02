@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/forum.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
+import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
@@ -212,7 +214,7 @@ class NoticeDialog extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text('不再提示此条公告', style: textStyle),
+                  Flexible(child: Text('不再提示此条公告', style: textStyle)),
                 ],
               ),
             Row(
@@ -237,7 +239,6 @@ class NoticeDialog extends StatelessWidget {
   }
 }
 
-// TODO: 废弃版块自动更新最新版规
 class ForumRuleDialog extends StatelessWidget {
   final int forumId;
 
@@ -245,49 +246,76 @@ class ForumRuleDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final forum = ForumListService.to.forum(forumId);
+    final forums = ForumListService.to;
 
-    return AlertDialog(
-      actionsPadding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
-      title: forum != null
-          ? ForumName(
-              forumId: forum.id,
-              trailing: ' 版规',
-              textStyle: Theme.of(context).textTheme.headline6,
-              maxLines: 1)
-          : const Text('版规'),
-      content: SingleChildScrollViewWithScrollbar(
-          child: TextContent(
-        text: forum?.message ?? '',
-        onLinkTap: (context, link, text) => parseUrl(url: link),
-        onImage: (context, image, element) => image != null
-            ? TextSpan(
-                children: [
-                  WidgetSpan(
-                    child: CachedNetworkImage(
-                      imageUrl: image,
-                      cacheManager: XdnmbImageCacheManager(),
-                      progressIndicatorBuilder:
-                          loadingThumbImageIndicatorBuilder,
-                      errorWidget: loadingImageErrorBuilder,
-                    ),
-                  ),
-                  const TextSpan(text: '\n'),
-                ],
-              )
-            : const TextSpan(),
-      )),
-      actions: [
-        TextButton(
-          onPressed: () => postListBack(),
-          child: Text(
-            '确定',
-            style: TextStyle(
-              fontSize: Theme.of(context).textTheme.subtitle1?.fontSize,
+    return FutureBuilder<void>(
+      future: Future(() async {
+        final entry = forums.forums.toList().asMap().entries.singleWhere(
+            (entry) => entry.value.isForum && entry.value.id == forumId);
+
+        if (entry.value.isDeprecated) {
+          final htmlForum =
+              await XdnmbClientService.to.client.getHtmlForumInfo(forumId);
+          final forum = ForumData.fromHtmlForum(htmlForum);
+          forum.userDefinedName = entry.value.userDefinedName;
+          forum.isHidden = entry.value.isHidden;
+          await forums.updateForum(entry.key, forum);
+
+          debugPrint('更新废弃版块成功');
+        }
+      }),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasError) {
+          debugPrint('更新版规出现错误：${snapshot.error}');
+        }
+
+        final forum = forums.forum(forumId);
+
+        return AlertDialog(
+          actionsPadding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
+          title: forum != null
+              ? ForumName(
+                  forumId: forum.id,
+                  trailing: ' 版规',
+                  textStyle: Theme.of(context).textTheme.headline6,
+                  maxLines: 1)
+              : const Text('版规'),
+          content: SingleChildScrollViewWithScrollbar(
+            child: TextContent(
+              text: forum?.message ?? '',
+              onLinkTap: (context, link, text) => parseUrl(url: link),
+              onImage: (context, image, element) => image != null
+                  ? TextSpan(
+                      children: [
+                        WidgetSpan(
+                          child: CachedNetworkImage(
+                            imageUrl: image,
+                            cacheManager: XdnmbImageCacheManager(),
+                            progressIndicatorBuilder:
+                                loadingThumbImageIndicatorBuilder,
+                            errorWidget: loadingImageErrorBuilder,
+                          ),
+                        ),
+                        const TextSpan(text: '\n'),
+                      ],
+                    )
+                  : const TextSpan(),
             ),
           ),
-        ),
-      ],
+          actions: [
+            TextButton(
+              onPressed: () => postListBack(),
+              child: Text(
+                '确定',
+                style: TextStyle(
+                  fontSize: Theme.of(context).textTheme.subtitle1?.fontSize,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

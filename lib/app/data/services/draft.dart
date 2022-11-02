@@ -12,6 +12,8 @@ class PostDraftListService extends GetxService {
 
   final RxBool isReady = false.obs;
 
+  late final ValueListenable<Box<PostDraftData>> draftListListenable;
+
   int get length => _draftBox.length;
 
   PostDraftData? draft(int index) => _draftBox.getAt(index);
@@ -20,11 +22,15 @@ class PostDraftListService extends GetxService {
 
   Future<int> addDraft(PostDraftData draft) => _draftBox.add(draft);
 
+  Future<int> clear() => _draftBox.clear();
+
   @override
   void onInit() async {
     super.onInit();
 
     _draftBox = await Hive.openBox<PostDraftData>(HiveBoxName.draft);
+
+    draftListListenable = _draftBox.listenable();
 
     isReady.value = true;
     debugPrint('读取草稿数据成功');

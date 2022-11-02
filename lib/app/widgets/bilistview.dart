@@ -319,7 +319,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
                           child: Text(
                             '上拉或点击刷新',
                             style: TextStyle(
-                              color: specialTextColor(),
+                              color: AppTheme.specialTextColor,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -333,7 +333,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
               child: Text(
                 '已经抵达X岛的尽头',
                 style: TextStyle(
-                  color: specialTextColor(),
+                  color: AppTheme.specialTextColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
