@@ -950,7 +950,7 @@ packages:
       name: showcaseview
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.1.8"
+    version: "2.0.0+1"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -990,7 +990,7 @@ packages:
       name: sqflite
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.2.0+2"
+    version: "2.2.0+3"
   sqflite_common:
     dependency: transitive
     description:
@@ -1185,7 +1185,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: a8ecf35a6375175f74c708e867fa4724c0eca886
+      resolved-ref: "527b8a762c80067de33c6ed421dd0f298c745a1f"
       url: "https://github.com/orzogc/xdnmb_api.git"
     source: git
     version: "0.1.0"

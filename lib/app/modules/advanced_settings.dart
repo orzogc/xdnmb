@@ -139,7 +139,7 @@ class _DrawerDragRatio extends StatelessWidget {
       valueListenable: settings.drawerEdgeDragWidthRatioListenable,
       builder: (context, value, child) => ListTile(
         title: const Text('划开侧边栏的范围占屏幕宽度的比例'),
-        trailing: Text('${settings.drawerEdgeDragWidthRatio * 100.0}%'),
+        trailing: Text('${settings.drawerEdgeDragWidthRatio}'),
         onTap: () => Get.dialog(_DrawerDragRatioDialog()),
       ),
     );

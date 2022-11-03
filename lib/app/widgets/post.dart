@@ -68,13 +68,15 @@ class _PostId extends StatelessWidget {
   const _PostId({super.key, required this.postId, this.onPostIdTap});
 
   @override
-  Widget build(BuildContext context) => MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: onPostIdTap != null ? () => onPostIdTap!(postId) : null,
-          child: Text(postId.toPostNumber()),
-        ),
-      );
+  Widget build(BuildContext context) => onPostIdTap != null
+      ? MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => onPostIdTap!(postId),
+            child: Text(postId.toPostNumber()),
+          ),
+        )
+      : Text(postId.toPostNumber());
 }
 
 class _PostReplyCount extends StatelessWidget {

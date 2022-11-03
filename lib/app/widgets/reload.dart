@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 typedef TapToReloadBuilder = Widget Function(
-    BuildContext context, Widget? child);
+    BuildContext context, WidgetBuilder? child);
 
 class TapToReload extends StatefulWidget {
   final TapToReloadBuilder builder;
 
-  final Widget? tapped;
+  final WidgetBuilder? tapped;
 
   const TapToReload({super.key, required this.builder, this.tapped});
 
@@ -19,13 +19,13 @@ class _TapToReloadState extends State<TapToReload> {
   Widget build(BuildContext context) => widget.tapped != null
       ? widget.builder(
           context,
-          GestureDetector(
+          (context) => GestureDetector(
             onTap: () {
               if (mounted) {
                 setState(() {});
               }
             },
-            child: widget.tapped,
+            child: widget.tapped!(context),
           ),
         )
       : GestureDetector(

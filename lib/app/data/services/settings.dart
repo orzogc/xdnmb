@@ -141,11 +141,15 @@ class SettingsService extends GetxService {
   static Future<void> getData() async {
     final box = await Hive.openBox(HiveBoxName.settings);
     ImageService.savePath = box.get(Settings.saveImagePath, defaultValue: null);
-    // 是否修复字体，结果保存在[fixMissingFont]
+    // 是否修复字体，结果保存在`fixMissingFont`
     isFixMissingFont = box.get(Settings.fixMissingFont, defaultValue: false);
   }
 
-  void updateSaveImagePath() => saveImagePath = ImageService.savePath;
+  void updateSaveImagePath() {
+    if (saveImagePath != ImageService.savePath) {
+      saveImagePath = ImageService.savePath;
+    }
+  }
 
   Future<void> checkDarkMode() async {
     // 等待生效

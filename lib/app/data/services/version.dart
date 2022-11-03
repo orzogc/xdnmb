@@ -34,6 +34,7 @@ class CheckAppVersionService extends GetxService {
         final Map<String, dynamic> data =
             json.decode(utf8.decode(response.bodyBytes));
         _latestVersion = data['version'];
+        debugPrint('成功获取应用最新版本：$_latestVersion');
       } catch (e) {
         showToast('获取应用最新版本出错：$e');
       }
@@ -69,6 +70,7 @@ class CheckAppVersionService extends GetxService {
 
       try {
         if (await _hasNewVersion()) {
+          debugPrint('开始获取版本更新信息');
           final response =
               await XdnmbHttpClient().get(Uri.parse(Urls.appUpdateMessage));
           final List<dynamic> list =

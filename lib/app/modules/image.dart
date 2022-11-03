@@ -1189,16 +1189,19 @@ class ImageView extends GetView<ImageController> {
                               );
                             },
                           )
-                        : _Image<MemoryImage>(
-                            key: _imageKey,
-                            tag: controller.tag,
-                            provider: MemoryImage(controller.imageData.value!),
-                            setOpacity: _setOpacity,
-                            hideOverlay: _hideOverlay,
-                            canShowDialog: true,
-                            paint: _paint,
-                            saveImage: _saveImage,
-                          ),
+                        : (controller.imageData.value != null
+                            ? _Image<MemoryImage>(
+                                key: _imageKey,
+                                tag: controller.tag,
+                                provider:
+                                    MemoryImage(controller.imageData.value!),
+                                setOpacity: _setOpacity,
+                                hideOverlay: _hideOverlay,
+                                canShowDialog: true,
+                                paint: _paint,
+                                saveImage: _saveImage,
+                              )
+                            : const SizedBox.shrink()),
                   ),
                 ),
                 if (controller.post.value != null &&

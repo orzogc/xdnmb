@@ -91,7 +91,7 @@ class EditPostView extends GetView<EditPostController> {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: Text(controller.postListType.isForumType ? '发新串' : '回串'),
+            title: Text(controller.postListType.isForumType ? '发表新串' : '回串'),
           ),
           body: EditPost.fromController(key: _editKey, controller: controller),
         ),

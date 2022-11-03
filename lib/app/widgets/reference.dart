@@ -38,6 +38,7 @@ class _Dialog extends StatelessWidget {
     return SimpleDialog(
       title: Text(post.id.toPostNumber()),
       children: [
+        Report(post.id),
         CopyPostId(post.id),
         CopyPostReference(post.id),
         CopyPostContent(post),
@@ -53,6 +54,8 @@ class _Dialog extends StatelessWidget {
 }
 
 class ReferenceCard extends StatelessWidget {
+  static const Widget _errorText = Text('加载失败，点击重试', style: AppTheme.boldRed);
+
   final int postId;
 
   /// 引用串的主串ID（非被引用串）
@@ -67,6 +70,7 @@ class ReferenceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final client = XdnmbClientService.to.client;
     final blacklist = BlacklistService.to;
+    Object? error;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -74,7 +78,11 @@ class ReferenceCard extends StatelessWidget {
         padding: const EdgeInsets.all(5.0),
         child: TapToReload(
           builder: (context, child) => FutureBuilder<HtmlReference>(
-            future: client.getHtmlReference(postId),
+            future: Future(() async {
+              debugPrint('获取串 ${postId.toPostNumber()} 的引用');
+
+              return client.getHtmlReference(postId);
+            }),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.done &&
                   snapshot.hasData) {
@@ -135,14 +143,24 @@ class ReferenceCard extends StatelessWidget {
               if (snapshot.connectionState == ConnectionState.done &&
                   snapshot.hasError) {
                 showToast(exceptionMessage(snapshot.error!));
+                error = snapshot.error!;
 
-                return child!;
+                return child!(context);
               }
 
               return const CircularProgressIndicator();
             },
           ),
-          tapped: const Text('加载失败，点击重试', style: AppTheme.boldRed),
+          tapped: (context) => error != null
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('错误：$error', style: AppTheme.boldRed),
+                    _errorText,
+                  ],
+                )
+              : _errorText,
         ),
       ),
     );

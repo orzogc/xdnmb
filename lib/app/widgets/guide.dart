@@ -199,22 +199,10 @@ class FeedGuide extends StatelessWidget {
   const FeedGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase.withWidget(
+  Widget build(BuildContext context) => Showcase(
         key: _key,
-        container: Container(
-          padding: const EdgeInsets.all(8.0),
-          decoration: BoxDecoration(
-              color: Colors.white, borderRadius: BorderRadius.circular(8.0)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('订阅', style: Theme.of(context).textTheme.headline6),
-              Text('点击查看订阅', style: Theme.of(context).textTheme.subtitle2),
-            ],
-          ),
-        ),
-        height: null,
-        width: 150,
+        title: '订阅',
+        description: '点击查看订阅',
         child: child,
       );
 }

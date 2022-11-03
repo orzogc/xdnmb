@@ -63,7 +63,6 @@ class ImageService extends GetxService {
     }
 
     isReady.value = true;
-
     debugPrint('更新图片服务成功');
   }
 

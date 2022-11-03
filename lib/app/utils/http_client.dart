@@ -1,47 +1,11 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 
-/* class _Address implements InternetAddress {
-  @override
-  final String address;
-
-  @override
-  final String host;
-
-  final Uint8List _rawAddress;
-
-  @override
-  bool get isLinkLocal => false;
-
-  @override
-  bool get isLoopback => false;
-
-  @override
-  bool get isMulticast => false;
-
-  @override
-  Uint8List get rawAddress => Uint8List.fromList(_rawAddress);
-
-  @override
-  Future<InternetAddress> reverse() {
-    throw UnimplementedError();
-  }
-
-  @override
-  InternetAddressType get type => InternetAddressType.IPv4;
-
-  _Address({required this.address, required this.host})
-      : _rawAddress = Uint8List.fromList(
-            address.split('.').map((n) => int.parse(n)).toList());
-} */
-
 class XdnmbHttpClient extends IOClient {
   static const Duration connectionTimeout = Duration(seconds: 15);
-
-  static final Duration _timeout =
-      connectionTimeout + const Duration(seconds: 1);
 
   static const Duration idleTimeout = Duration(seconds: 90);
 
@@ -50,7 +14,33 @@ class XdnmbHttpClient extends IOClient {
   static final HttpClient httpClient = HttpClient()
     ..connectionTimeout = connectionTimeout
     ..idleTimeout = idleTimeout
-    ..findProxy = HttpClient.findProxyFromEnvironment;
+    ..findProxy = HttpClient.findProxyFromEnvironment
+    ..connectionFactory = (url, proxyHost, proxyPort) {
+      late final Future<ConnectionTask<Socket>> connection;
+      if (url.isScheme('https') && proxyHost == null && proxyPort == null) {
+        connection =
+            SecureSocket.startConnect(url.host, HttpClient.defaultHttpsPort);
+      } else {
+        if (proxyHost != null && proxyPort != null) {
+          connection = Socket.startConnect(proxyHost, proxyPort);
+        } else {
+          connection =
+              Socket.startConnect(url.host, HttpClient.defaultHttpPort);
+        }
+      }
+
+      connection.then((task) {
+        final socket = task.socket;
+
+        socket.timeout(connectionTimeout, onTimeout: () {
+          task.cancel();
+
+          throw const SocketException('Connection timed out');
+        });
+      });
+
+      return connection;
+    };
 
   static final XdnmbHttpClient _client = XdnmbHttpClient._internal();
 
@@ -60,36 +50,11 @@ class XdnmbHttpClient extends IOClient {
 
   @override
   Future<IOStreamedResponse> send(BaseRequest request) {
+    debugPrint('send an HTTP request, url: ${request.url}');
+
     // 添加User-Agent
     request.headers[HttpHeaders.userAgentHeader] = _userAgent;
 
-    // 确保超时时间
-    return super.send(request).timeout(_timeout);
+    return super.send(request);
   }
 }
-
-/* ..connectionFactory = (url, proxyHost, proxyPort) {
-            InternetAddress? address;
-            if (url.host == 'image.nmb.best') {
-              address = _cdn;
-            }
-
-            if (url.isScheme('https') &&
-                proxyHost == null &&
-                proxyPort == null) {
-              return SecureSocket.startConnect(
-                  address ?? url.host, HttpClient.defaultHttpsPort,
-                  context: SecurityContext.defaultContext);
-              /* return Socket.startConnect(
-                  address ?? url.host, HttpClient.defaultHttpPort); */
-            } else if (url.isScheme('http')) {
-              if (proxyHost != null && proxyPort != null) {
-                return Socket.startConnect(proxyHost, proxyPort);
-              } else {
-                return Socket.startConnect(
-                    address ?? url.host, HttpClient.defaultHttpPort);
-              }
-            } else {
-              throw UnsupportedError('未知URI和proxy：$url $proxyHost $proxyPort');
-            }
-          } */

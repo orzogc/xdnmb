@@ -227,8 +227,10 @@ class NoticeDialog extends StatelessWidget {
                     }
                     postListBack();
                   },
-                  child: Text('确定',
-                      style: TextStyle(fontSize: textStyle?.fontSize)),
+                  child: Text(
+                    '确定',
+                    style: TextStyle(fontSize: textStyle?.fontSize),
+                  ),
                 ),
               ],
             ),
