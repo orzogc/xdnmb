@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
@@ -17,9 +18,15 @@ class PersistentDataService extends GetxService {
 
   static const Duration updateForumListInterval = Duration(hours: 6);
 
+  static bool isShowGuide = true;
+
   late final Box _dataBox;
 
   final RxBool isKeyboardVisible = false.obs;
+
+  final ValueNotifier<double> bottomHeight = ValueNotifier(0.0);
+
+  double _maxBottomHeight = 0.0;
 
   final RxBool isReady = false.obs;
 
@@ -66,6 +73,11 @@ class PersistentDataService extends GetxService {
 
   StreamSubscription<bool>? _keyboardSubscription;
 
+  static double _bottomHeight() => EdgeInsets.fromWindowPadding(
+          WidgetsBinding.instance.window.viewInsets,
+          WidgetsBinding.instance.window.devicePixelRatio)
+      .bottom;
+
   void saveNotice(Notice notice) {
     if (notice.isValid && this.notice != notice.content) {
       this.notice = notice.content;
@@ -89,17 +101,17 @@ class PersistentDataService extends GetxService {
 
   void updateKeyboardHeight() {
     if (GetPlatform.isMobile) {
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        if (isKeyboardVisible.value) {
-          final height = EdgeInsets.fromWindowPadding(
-                  WidgetsBinding.instance.window.viewInsets,
-                  WidgetsBinding.instance.window.devicePixelRatio)
-              .bottom;
-          if (height > 1.0 && keyboardHeight != height) {
-            keyboardHeight = height;
-          }
-        }
-      });
+      final height = _bottomHeight();
+
+      _maxBottomHeight = max(_maxBottomHeight, height);
+
+      if (bottomHeight.value > height &&
+          _maxBottomHeight > 0.0 &&
+          keyboardHeight != _maxBottomHeight) {
+        keyboardHeight = _maxBottomHeight;
+      }
+
+      bottomHeight.value = height;
     }
   }
 
@@ -108,8 +120,11 @@ class PersistentDataService extends GetxService {
     super.onInit();
 
     _dataBox = await Hive.openBox(HiveBoxName.data);
+    isShowGuide = showGuide;
 
     if (GetPlatform.isMobile) {
+      bottomHeight.value = _bottomHeight();
+
       _keyboardSubscription = KeyboardVisibilityController()
           .onChange
           .listen((visible) => isKeyboardVisible.value = visible);

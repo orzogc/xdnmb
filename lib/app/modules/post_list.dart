@@ -159,7 +159,6 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = PersistentDataService.to;
     final stacks = ControllerStacksService.to;
     final scaffold = Scaffold.of(context);
 
@@ -208,7 +207,9 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
               : controller.refreshPage,
           child: AppBar(
             leading: button,
-            title: data.showGuide ? AppBarTitleGuide(title) : title,
+            title: PersistentDataService.isShowGuide
+                ? AppBarTitleGuide(title)
+                : title,
             actions: [
               if (controller.isXdnmbApi)
                 controller.isThreadType
@@ -223,7 +224,7 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                                     : 1)
                                 : null);
                       })
-                    : data.showGuide
+                    : PersistentDataService.isShowGuide
                         ? AppBarPageButtonGuide(
                             PageButton(controller: controller))
                         : PageButton(controller: controller),
@@ -233,7 +234,7 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                     builder: (context, child) => ThreadAppBarPopupMenuButton(
                         controller as ThreadTypeController)),
               if (controller.isForumType)
-                data.showGuide
+                PersistentDataService.isShowGuide
                     ? AppBarMenuGuide(ForumAppBarPopupMenuButton(
                         controller as ForumTypeController))
                     : ForumAppBarPopupMenuButton(
@@ -892,13 +893,13 @@ class _PostListViewState extends State<PostListView>
               drawerEdgeDragWidth: media.size.width * settings.drawerDragRatio,
               drawer: const AppDrawer(),
               endDrawer: const AppEndDrawer(),
-              floatingActionButton: data.showGuide
+              floatingActionButton: PersistentDataService.isShowGuide
                   ? FloatingButtonGuide(floatingButton)
                   : floatingButton,
               bottomNavigationBar: const _BottomBar(),
             );
 
-            return data.showGuide
+            return PersistentDataService.isShowGuide
                 ? ShowCaseWidget(
                     onFinish: () {
                       if (Guide.isShowForumGuides) {

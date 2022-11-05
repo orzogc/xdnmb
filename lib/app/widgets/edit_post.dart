@@ -46,8 +46,6 @@ import 'size.dart';
 import 'thread.dart';
 import 'tooltip.dart';
 
-// TODO: 键盘多段收起导致的overflow
-
 const double _defaultHeight = 200.0;
 
 class _ForumName extends StatelessWidget {
@@ -1221,60 +1219,68 @@ class _EmoticonState extends State<_Emoticon> {
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
 
-    return Obx(
-      () => !data.isKeyboardVisible.value
-          ? SizedBox(
-              height: (data.keyboardHeight != null && data.keyboardHeight! > 0)
-                  ? data.keyboardHeight!
-                  : _defaultHeight,
-              child: Padding(
-                padding: const EdgeInsets.only(
-                    left: 20.0, right: 20.0, bottom: 10.0),
-                child: Scrollbar(
-                  controller: _controller,
-                  thumbVisibility: true,
-                  child: ValueListenableBuilder(
-                    valueListenable: emoticons.emoticonsListenable,
-                    // 这里可能有性能问题
-                    builder: (context, value, child) => ResponsiveGridList(
-                      key: const PageStorageKey<String>('emoticons'),
-                      minItemWidth: 80.0,
-                      horizontalGridSpacing: 10.0,
-                      verticalGridSpacing: 10.0,
-                      listViewBuilderOptions: ListViewBuilderOptions(
-                        controller: _controller,
-                        shrinkWrap: true,
+    return ValueListenableBuilder(
+      valueListenable: data.bottomHeight,
+      builder: (context, value, child) => Obx(
+        () {
+          final height =
+              (data.keyboardHeight != null && data.keyboardHeight! > 0)
+                  ? data.keyboardHeight! - value
+                  : _defaultHeight;
+
+          return !data.isKeyboardVisible.value
+              ? SizedBox(
+                  height: height,
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                        left: 20.0, right: 20.0, bottom: 10.0),
+                    child: Scrollbar(
+                      controller: _controller,
+                      thumbVisibility: true,
+                      child: ValueListenableBuilder(
+                        valueListenable: emoticons.emoticonsListenable,
+                        // 这里可能有性能问题
+                        builder: (context, value, child) => ResponsiveGridList(
+                          key: const PageStorageKey<String>('emoticons'),
+                          minItemWidth: 80.0,
+                          horizontalGridSpacing: 10.0,
+                          verticalGridSpacing: 10.0,
+                          listViewBuilderOptions: ListViewBuilderOptions(
+                            controller: _controller,
+                            shrinkWrap: true,
+                          ),
+                          children: [
+                            for (final emoticon in _list)
+                              TextButton(
+                                style: buttonStyle,
+                                onPressed: () => widget.onTap(
+                                    emoticon.text, emoticon.offset),
+                                child: Text(emoticon.name, style: textStyle),
+                              ),
+                            for (final emoticon in emoticons.emoticons)
+                              TextButton(
+                                style: buttonStyle,
+                                onPressed: () => widget.onTap(
+                                    emoticon.text, emoticon.offset),
+                                onLongPress: () =>
+                                    Get.dialog(_EmoticonDialog(emoticon)),
+                                child: Text(emoticon.name, style: textStyle),
+                              ),
+                            child!,
+                          ],
+                        ),
+                        child: TextButton(
+                          style: buttonStyle,
+                          onPressed: () => Get.dialog(const _EditEmoticon()),
+                          child: Text('自定义', style: textStyle),
+                        ),
                       ),
-                      children: [
-                        for (final emoticon in _list)
-                          TextButton(
-                            style: buttonStyle,
-                            onPressed: () =>
-                                widget.onTap(emoticon.text, emoticon.offset),
-                            child: Text(emoticon.name, style: textStyle),
-                          ),
-                        for (final emoticon in emoticons.emoticons)
-                          TextButton(
-                            style: buttonStyle,
-                            onPressed: () =>
-                                widget.onTap(emoticon.text, emoticon.offset),
-                            onLongPress: () =>
-                                Get.dialog(_EmoticonDialog(emoticon)),
-                            child: Text(emoticon.name, style: textStyle),
-                          ),
-                        child!,
-                      ],
-                    ),
-                    child: TextButton(
-                      style: buttonStyle,
-                      onPressed: () => Get.dialog(const _EditEmoticon()),
-                      child: Text('自定义', style: textStyle),
                     ),
                   ),
-                ),
-              ),
-            )
-          : const SizedBox.shrink(),
+                )
+              : SizedBox(height: height);
+        },
+      ),
     );
   }
 }
@@ -1406,6 +1412,8 @@ class EditPostState extends State<EditPost> {
   }
 
   Widget _inputArea(BuildContext context, double height) {
+    assert(height > 0.0);
+
     final textStyle = Theme.of(context).textTheme.bodyText2;
 
     final color = Get.isDarkMode
@@ -1707,35 +1715,39 @@ class EditPostState extends State<EditPost> {
 
   @override
   Widget build(BuildContext context) {
-    final data = PersistentDataService.to;
     debugPrint('build edit');
+    final data = PersistentDataService.to;
+    final fullHeight = MediaQuery.of(context).size.height -
+        Scaffold.of(context).appBarMaxHeight!;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (_isAtBottom)
-          _inputArea(context, widget.height!)
-        else
+    return ValueListenableBuilder<double>(
+      valueListenable: data.bottomHeight,
+      builder: (context, value, child) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_isAtBottom)
+            _inputArea(context, min(widget.height!, fullHeight - value))
+          else
+            Obx(
+              () {
+                final dynamicHeight = fullHeight - value;
+                final lessHeight =
+                    fullHeight - (data.keyboardHeight ?? _defaultHeight);
+
+                return (data.isKeyboardVisible.value || _showEmoticon.value)
+                    ? _inputArea(
+                        context, lessHeight > 0 ? lessHeight : _defaultHeight)
+                    : _inputArea(context,
+                        fullHeight > 0 ? dynamicHeight : _defaultHeight);
+              },
+            ),
           Obx(
-            () {
-              final fullHeight = MediaQuery.of(context).size.height -
-                  Scaffold.of(context).appBarMaxHeight!;
-              final lessHeight =
-                  fullHeight - (data.keyboardHeight ?? _defaultHeight);
-
-              return (_showEmoticon.value || data.isKeyboardVisible.value)
-                  ? _inputArea(
-                      context, lessHeight > 0 ? lessHeight : _defaultHeight)
-                  : _inputArea(
-                      context, fullHeight > 0 ? fullHeight : _defaultHeight);
-            },
+            () => _showEmoticon.value
+                ? _Emoticon(onTap: insertText)
+                : const SizedBox.shrink(),
           ),
-        Obx(
-          () => _showEmoticon.value
-              ? _Emoticon(onTap: insertText)
-              : const SizedBox.shrink(),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
