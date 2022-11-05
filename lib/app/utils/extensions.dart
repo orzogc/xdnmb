@@ -32,11 +32,11 @@ extension IntExtension on int {
 
   String toPostReference() => '>>${toPostNumber()}';
 
-  int toIndex(int page) => page << 32 | this;
+  int postIdToPostIndex(int page) => page << 32 | this;
 
-  int getPageFromIndex() => this >>> 32;
+  int getPageFromPostIndex() => this >>> 32;
 
-  int getIdFromIndex() => this & _int32Max;
+  int getPostIdFromPostIndex() => this & _int32Max;
 }
 
 extension PostExtension on PostBase {
@@ -44,7 +44,7 @@ extension PostExtension on PostBase {
 
   String toPostReference() => id.toPostReference();
 
-  int toIndex(int page) => id.toIndex(page);
+  int toIndex(int page) => id.postIdToPostIndex(page);
 
   ValueKey<int> toValueKey(int page) => ValueKey<int>(toIndex(page));
 }

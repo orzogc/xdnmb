@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/controller.dart';
 import '../data/models/history.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/history.dart';
@@ -86,11 +87,13 @@ abstract class ThreadTypeController extends PostListController {
 
   final Notifier _refreshNotifier = Notifier();
 
+  int? browsePostId;
+
   PostBase? get post => _post.value;
 
   set post(PostBase? post) => _post.value = post;
 
-  int? get jumpToId => null;
+  int? get jumpToId;
 
   ThreadTypeController(
       {required this.id,
@@ -106,7 +109,14 @@ abstract class ThreadTypeController extends PostListController {
           ? OnlyPoThreadController(id: post.id, page: page, post: post)
           : ThreadController(id: post.id, page: page, post: post);
 
-  ThreadTypeController copyPage();
+  ThreadTypeController copyPage([int? jumpToId]);
+
+  @override
+  void dispose() {
+    _refreshNotifier.dispose();
+
+    super.dispose();
+  }
 }
 
 class ThreadController extends ThreadTypeController {
@@ -123,16 +133,18 @@ class ThreadController extends ThreadTypeController {
       required int page,
       PostBase? post,
       bool cancelAutoJump = false,
-      this.jumpToId,
-      this.loadMore})
+      this.jumpToId})
       : super(id: id, page: page, post: post, cancelAutoJump: cancelAutoJump);
 
   @override
-  ThreadTypeController copyPage() =>
-      ThreadController(id: id, page: page, post: post);
+  ThreadTypeController copyPage([int? jumpToId]) =>
+      ThreadController(id: id, page: page, post: post, jumpToId: jumpToId);
 }
 
 class OnlyPoThreadController extends ThreadTypeController {
+  @override
+  final int? jumpToId;
+
   @override
   PostListType get postListType => PostListType.onlyPoThread;
 
@@ -140,12 +152,13 @@ class OnlyPoThreadController extends ThreadTypeController {
       {required int id,
       required int page,
       PostBase? post,
-      bool cancelAutoJump = false})
+      bool cancelAutoJump = false,
+      this.jumpToId})
       : super(id: id, page: page, post: post, cancelAutoJump: cancelAutoJump);
 
   @override
-  ThreadTypeController copyPage() =>
-      OnlyPoThreadController(id: id, page: page, post: post);
+  ThreadTypeController copyPage([int? jumpToId]) => OnlyPoThreadController(
+      id: id, page: page, post: post, jumpToId: jumpToId);
 }
 
 ThreadController threadController(
@@ -163,7 +176,8 @@ OnlyPoThreadController onlyPoThreadController(
         id: parameters['mainPostId'].tryParseInt() ?? 0,
         page: parameters['page'].tryParseInt() ?? 1,
         post: arguments is PostBase ? arguments : null,
-        cancelAutoJump: parameters['cancelAutoJump'].tryParseBool() ?? false);
+        cancelAutoJump: parameters['cancelAutoJump'].tryParseBool() ?? false,
+        jumpToId: parameters['jumpToId'].tryParseInt());
 
 class ThreadAppBarTitle extends StatelessWidget {
   final ThreadTypeController controller;
@@ -396,8 +410,6 @@ class ThreadBody extends StatefulWidget {
 class _ThreadBodyState extends State<ThreadBody> {
   static const Duration _saveBrowseHistoryPeriod = Duration(seconds: 2);
 
-  late int _browsePostId;
-
   bool _isSavingBrowseHistory = false;
 
   BrowseHistory? _history;
@@ -420,11 +432,12 @@ class _ThreadBodyState extends State<ThreadBody> {
       try {
         await Future.delayed(_saveBrowseHistoryPeriod, () async {
           final post = widget.controller.post;
-          if (post is Post) {
+          final browsePostId = widget.controller.browsePostId;
+          if (post is Post && browsePostId != null) {
             _history!.update(
                 mainPost: post,
                 browsePage: widget.controller.page,
-                browsePostId: _browsePostId,
+                browsePostId: browsePostId,
                 isOnlyPo: widget.controller.isOnlyPoThread);
             await PostHistoryService.to.saveBrowseHistory(_history!);
           }
@@ -455,11 +468,11 @@ class _ThreadBodyState extends State<ThreadBody> {
           history.saveBrowseHistory(_history!);
           _isToJump.value = false;
         } else if (_isToJump.value) {
-          final index = jumpToId?.toIndex(page) ??
+          final index = jumpToId?.postIdToPostIndex(page) ??
               _history!.toIndex(isOnlyPo: isOnlyPoThread);
           if (index != null) {
             final postIds = thread.replies.map((post) => post.id);
-            final id = index.getIdFromIndex();
+            final id = index.getPostIdFromPostIndex();
             if (postIds.contains(id)) {
               WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                 Future.delayed(const Duration(milliseconds: 50), () async {
@@ -470,7 +483,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
                       if (firstPost.id != id) {
                         while (_isToJump.value &&
-                            id != _browsePostId &&
+                            id != widget.controller.browsePostId &&
                             !_isNoMoreItems) {
                           await Future.delayed(const Duration(milliseconds: 50),
                               () async {
@@ -730,12 +743,10 @@ class _ThreadBodyState extends State<ThreadBody> {
   void initState() {
     super.initState();
 
-    _browsePostId = widget.controller.id;
-
     _anchorController = AnchorScrollController(
       onIndexChanged: (index, userScroll) {
-        widget.controller.page = index.getPageFromIndex();
-        _browsePostId = index.getIdFromIndex();
+        widget.controller.page = index.getPageFromPostIndex();
+        widget.controller.browsePostId = index.getPostIdFromPostIndex();
 
         _saveBrowseHistory();
       },

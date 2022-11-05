@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../data/services/stack.dart';
 import '../modules/post_list.dart';
 import 'extensions.dart';
-import 'stack.dart';
 
 GlobalKey<NavigatorState>? postListkey([int? index]) =>
-    Get.nestedKey(ControllerStack.getKeyId(index));
+    Get.nestedKey(ControllerStacksService.to.getKeyId(index));
 
 void postListBack<T>({
   T? result,
@@ -18,21 +18,10 @@ void postListBack<T>({
         result: result,
         closeOverlays: closeOverlays,
         canPop: canPop,
-        id: ControllerStack.getKeyId(index));
+        id: ControllerStacksService.to.getKeyId(index));
 
-void popOnce([int? index]) {
-  bool hasPopped = false;
-  Get.until((route) {
-    if (!hasPopped) {
-      if (route is! PopupRoute) {
-        ControllerStack.popController(index);
-      }
-      hasPopped = true;
-      return false;
-    }
-    return true;
-  }, id: ControllerStack.getKeyId(index));
-}
+void postListPop([int? index]) =>
+    Get.back(id: ControllerStacksService.to.getKeyId(index));
 
 void popAllPopup([int? index]) {
   Get.until((route) {
@@ -40,11 +29,11 @@ void popAllPopup([int? index]) {
       return false;
     }
     return true;
-  }, id: ControllerStack.getKeyId(index));
+  }, id: ControllerStacksService.to.getKeyId(index));
 }
 
 void openNewTabBackground(PostListController controller) =>
-    ControllerStack.addNewController(controller);
+    ControllerStacksService.to.addNewStack(controller);
 
 void openNewTab(PostListController controller) {
   openNewTabBackground(controller);

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -45,6 +47,12 @@ class SettingsService extends GetxService {
 
   set showNotice(bool showNotice) =>
       _settingsBox.put(Settings.showNotice, showNotice);
+
+  bool get isRestoreTabs =>
+      _settingsBox.get(Settings.isRestoreTabs, defaultValue: true);
+
+  set isRestoreTabs(bool isRestoreTabs) =>
+      _settingsBox.put(Settings.isRestoreTabs, isRestoreTabs);
 
   ForumData get initialForum =>
       _settingsBox.get(Settings.initialForum, defaultValue: defaultForum);
@@ -116,6 +124,8 @@ class SettingsService extends GetxService {
   set fixMissingFont(bool fixMissingFont) =>
       _settingsBox.put(Settings.fixMissingFont, fixMissingFont);
 
+  late final ValueListenable<Box> isRestoreTabsListenable;
+
   late final ValueListenable<Box> initialForumListenable;
 
   late final ValueListenable<Box> showImageListenable;
@@ -137,6 +147,10 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> drawerEdgeDragWidthRatioListenable;
 
   late final ValueListenable<Box> fixMissingFontListenable;
+
+  late final StreamSubscription<BoxEvent> _saveImagePathSubscription;
+
+  late final StreamSubscription<BoxEvent> _drawerEdgeDragWidthRatioSubscription;
 
   static Future<void> getData() async {
     final box = await Hive.openBox(HiveBoxName.settings);
@@ -178,8 +192,10 @@ class SettingsService extends GetxService {
       feedId = const Uuid().v4();
     }
 
-    initialForumListenable =
-        _settingsBox.listenable(keys: [Settings.initialForum]);
+    isRestoreTabsListenable =
+        _settingsBox.listenable(keys: [Settings.isRestoreTabs]);
+    initialForumListenable = _settingsBox
+        .listenable(keys: [Settings.isRestoreTabs, Settings.initialForum]);
     showImageListenable = _settingsBox.listenable(keys: [Settings.showImage]);
     isWatermarkListenable =
         _settingsBox.listenable(keys: [Settings.isWatermark]);
@@ -201,13 +217,16 @@ class SettingsService extends GetxService {
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
 
-    _settingsBox.watch(key: Settings.saveImagePath).listen((event) {
+    _saveImagePathSubscription =
+        _settingsBox.watch(key: Settings.saveImagePath).listen((event) {
       debugPrint('saveImagePath change');
       ImageService.savePath = saveImagePath;
     });
 
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
-    _settingsBox.watch(key: Settings.drawerEdgeDragWidthRatio).listen((event) {
+    _drawerEdgeDragWidthRatioSubscription = _settingsBox
+        .watch(key: Settings.drawerEdgeDragWidthRatio)
+        .listen((event) {
       debugPrint('drawerEdgeDragWidthRatio change');
       _drawerDragRatio.value = drawerEdgeDragWidthRatio;
     });
@@ -222,6 +241,8 @@ class SettingsService extends GetxService {
 
   @override
   void onClose() async {
+    await _saveImagePathSubscription.cancel();
+    await _drawerEdgeDragWidthRatioSubscription.cancel();
     await _settingsBox.close();
     isReady.value = false;
 

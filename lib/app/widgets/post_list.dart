@@ -74,7 +74,7 @@ class _PostListAnchorRefresherState extends State<PostListAnchorRefresher> {
 
     _anchorController = AnchorScrollController(
       onIndexChanged: (index, userScroll) =>
-          widget.controller.page = index.getPageFromIndex(),
+          widget.controller.page = index.getPageFromPostIndex(),
     );
 
     widget.controller.addListener(_addRefresh);

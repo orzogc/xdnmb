@@ -1,9 +1,12 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:showcaseview/showcaseview.dart';
 
+import '../data/models/controller.dart';
 import '../data/models/draft.dart';
 import '../data/models/forum.dart';
 import '../data/services/blacklist.dart';
@@ -13,6 +16,7 @@ import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/history.dart';
 import '../data/services/settings.dart';
+import '../data/services/stack.dart';
 import '../data/services/user.dart';
 import '../data/services/version.dart';
 import '../modules/edit_post.dart';
@@ -20,7 +24,6 @@ import '../routes/routes.dart';
 import '../utils/image.dart';
 import '../utils/navigation.dart';
 import '../utils/notify.dart';
-import '../utils/stack.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/page.dart';
@@ -34,69 +37,31 @@ import '../widgets/history.dart';
 import '../widgets/scroll.dart';
 import '../widgets/thread.dart';
 
-enum PostListType {
-  thread,
-  onlyPoThread,
-  forum,
-  timeline,
-  feed,
-  history;
-
-  bool get isThread => this == thread;
-
-  bool get isOnlyPoThread => this == onlyPoThread;
-
-  bool get isForum => this == forum;
-
-  bool get isTimeline => this == timeline;
-
-  bool get isFeed => this == feed;
-
-  bool get isHistory => this == history;
-
-  bool get isThreadType => isThread || isOnlyPoThread;
-
-  bool get isForumType => isForum || isTimeline;
-
-  bool get hasForumId => isThreadType || isForum;
-
-  bool get canPost => isThreadType || isForumType;
-
-  bool get isXdnmbApi => isThreadType || isForumType || isFeed;
-}
-
 class PostList {
   final PostListType postListType;
 
   final int? id;
 
-  final int page;
+  const PostList({required this.postListType, this.id});
 
-  const PostList({required this.postListType, this.id, this.page = 1});
+  PostList.fromController(PostListController controller)
+      : this(postListType: controller.postListType, id: controller.id);
 
-  PostList.fromController(PostListController controller, [int? page])
-      : this(
-            postListType: controller.postListType,
-            id: controller.id,
-            page: page ?? controller.page);
-
-  PostList.fromForumData(ForumData forum, [int page = 1])
+  PostList.fromForumData(ForumData forum)
       : this(
             postListType:
                 forum.isTimeline ? PostListType.timeline : PostListType.forum,
-            id: forum.id,
-            page: page);
+            id: forum.id);
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PostList &&
           postListType == other.postListType &&
-          id == other.id &&
-          page == other.page);
+          id == other.id);
 
   @override
-  int get hashCode => Object.hash(postListType, id, page);
+  int get hashCode => Object.hash(postListType, id);
 }
 
 abstract class PostListController extends ChangeNotifier {
@@ -141,7 +106,7 @@ abstract class PostListController extends ChangeNotifier {
   PostListController(int page) : _page = page.obs;
 
   static PostListController get([int? index]) =>
-      ControllerStack.getController(index);
+      ControllerStacksService.to.getController(index);
 
   void refresh() => notifyListeners();
 
@@ -179,7 +144,10 @@ class PostListBinding implements Bindings {
         throw '未知URI: $uri';
     }
 
-    ControllerStack.pushController(controller);
+    final stacks = ControllerStacksService.to;
+    if (stacks.isReady.value && stacks.length >= 1) {
+      stacks.pushController(controller);
+    }
   }
 }
 
@@ -192,21 +160,22 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final data = PersistentDataService.to;
+    final stacks = ControllerStacksService.to;
     final scaffold = Scaffold.of(context);
 
     return NotifyBuilder(
-      animation: ControllerStack.notifier,
+      animation: stacks.notifier,
       builder: (context, child) {
         final controller = PostListController.get();
 
-        Widget button = IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => scaffold.openDrawer(),
-        );
-        if (PostListPage.pageKey.currentState?._isBuilt == true) {
-          if (ControllerStack.controllersCount() > 1) {
-            button = const BackButton(onPressed: popOnce);
-          }
+        late final Widget button;
+        if (stacks.controllersCount() > 1) {
+          button = const BackButton(onPressed: postListPop);
+        } else {
+          button = IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => scaffold.openDrawer(),
+          );
         }
 
         late final Widget title;
@@ -281,123 +250,170 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-Route _buildRoute(PostListController controller) => GetPageRoute(
-      page: () {
-        final hasBeenDarkMode = SettingsService.to.hasBeenDarkMode;
-        final postListType = controller.postListType;
+class _PostListPage<T> extends Page<T> {
+  final PostListController controller;
 
-        late final Widget body;
-        switch (postListType) {
-          case PostListType.thread:
-          case PostListType.onlyPoThread:
-            body = ThreadBody(controller as ThreadTypeController);
-            break;
-          case PostListType.forum:
-          case PostListType.timeline:
-            body = ForumBody(controller as ForumTypeController);
-            break;
-          case PostListType.feed:
-            body = FeedBody(controller as FeedController);
-            break;
-          case PostListType.history:
-            body = HistoryBody(controller as HistoryController);
-            break;
-        }
+  final bool maintainState;
 
-        return Obx(
-          () {
-            final theme = Get.theme;
+  const _PostListPage(
+      {super.key, required this.controller, this.maintainState = true});
 
-            return Material(
-              color: hasBeenDarkMode.value
-                  ? (postListType.isThreadType
-                      ? theme.cardColor
-                      : theme.scaffoldBackgroundColor)
-                  : theme.scaffoldBackgroundColor,
-              child: body,
-            );
-          },
-        );
-      },
-      transition: Transition.rightToLeft,
-    );
+  Route<T> _buildRoute() => GetPageRoute(
+        settings: this,
+        transition: Transition.rightToLeft,
+        maintainState: maintainState,
+        page: () {
+          final hasBeenDarkMode = SettingsService.to.hasBeenDarkMode;
+          final postListType = controller.postListType;
 
-Widget _buildNavigator(int index) {
-  final controller = ControllerStack.getFirstController(index);
+          late final Widget body;
+          switch (postListType) {
+            case PostListType.thread:
+            case PostListType.onlyPoThread:
+              body = ThreadBody(controller as ThreadTypeController);
+              break;
+            case PostListType.forum:
+            case PostListType.timeline:
+              body = ForumBody(controller as ForumTypeController);
+              break;
+            case PostListType.feed:
+              body = FeedBody(controller as FeedController);
+              break;
+            case PostListType.history:
+              body = HistoryBody(controller as HistoryController);
+              break;
+          }
 
-  debugPrint('build navigator: $index');
+          return Obx(
+            () {
+              final theme = Get.theme;
 
-  late final String initialRoute;
-  switch (controller.postListType) {
-    case PostListType.thread:
-      initialRoute = AppRoutes.threadUrl(controller.id!,
-          page: controller.page,
-          cancelAutoJump: (controller as ThreadTypeController).cancelAutoJump,
-          jumpToId: controller.jumpToId);
-      break;
-    case PostListType.onlyPoThread:
-      initialRoute = AppRoutes.onlyPoThreadUrl(controller.id!,
-          page: controller.page,
-          cancelAutoJump: (controller as ThreadTypeController).cancelAutoJump);
-      break;
-    case PostListType.forum:
-      initialRoute = AppRoutes.forumUrl(controller.id!, page: controller.page);
-      break;
-    case PostListType.timeline:
-      initialRoute =
-          AppRoutes.timelineUrl(controller.id!, page: controller.page);
-      break;
-    case PostListType.feed:
-      initialRoute = AppRoutes.feedUrl(page: controller.page);
-      break;
-    case PostListType.history:
-      initialRoute = AppRoutes.historyUrl(
-          index: (controller as HistoryController).bottomBarIndex,
-          page: controller.page);
-      break;
-  }
+              return Material(
+                color: hasBeenDarkMode.value
+                    ? (postListType.isThreadType
+                        ? theme.cardColor
+                        : theme.scaffoldBackgroundColor)
+                    : theme.scaffoldBackgroundColor,
+                child: body,
+              );
+            },
+          );
+        },
+      );
 
-  return Navigator(
-    key: Get.nestedKey(ControllerStack.getKeyId(index)),
-    initialRoute: initialRoute,
-    onGenerateInitialRoutes: (navigator, initialRoute) {
-      final controller = PostListController.get(index);
+  @override
+  Route<T> createRoute(BuildContext context) => _buildRoute();
+}
 
-      return [_buildRoute(controller)];
-    },
-    onGenerateRoute: (settings) {
-      final uri = Uri.parse(settings.name!);
-      final parameters = uri.queryParameters;
+class _PageKey {
+  final int key;
 
-      late final PostListController controller;
-      switch (uri.path) {
-        case AppRoutes.thread:
-          controller = threadController(parameters, settings.arguments);
-          break;
-        case AppRoutes.onlyPoThread:
-          controller = onlyPoThreadController(parameters, settings.arguments);
-          break;
-        case AppRoutes.forum:
-          controller = forumController(parameters);
-          break;
-        case AppRoutes.timeline:
-          controller = timelineController(parameters);
-          break;
-        case AppRoutes.feed:
-          controller = feedController(parameters);
-          break;
-        case AppRoutes.history:
-          controller = historyController(parameters);
-          break;
-        default:
-          throw '未知PostList';
+  final bool maintainState;
+
+  const _PageKey(this.key, this.maintainState);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is _PageKey &&
+          key == other.key &&
+          maintainState == other.maintainState);
+
+  @override
+  int get hashCode => Object.hash(key, maintainState);
+}
+
+/// 根据[DefaultTransitionDelegate]修改
+class _PostListTransitionDelegate<T> extends TransitionDelegate<T> {
+  /// Creates a transition delegate.
+  const _PostListTransitionDelegate();
+
+  @override
+  Iterable<RouteTransitionRecord> resolve({
+    required List<RouteTransitionRecord> newPageRouteHistory,
+    required Map<RouteTransitionRecord?, RouteTransitionRecord>
+        locationToExitingPageRoute,
+    required Map<RouteTransitionRecord?, List<RouteTransitionRecord>>
+        pageRouteToPagelessRoutes,
+  }) {
+    final List<RouteTransitionRecord> results = <RouteTransitionRecord>[];
+    // This method will handle the exiting route and its corresponding pageless
+    // route at this location. It will also recursively check if there is any
+    // other exiting routes above it and handle them accordingly.
+    void handleExitingRoute(RouteTransitionRecord? location, bool isLast) {
+      final RouteTransitionRecord? exitingPageRoute =
+          locationToExitingPageRoute[location];
+      if (exitingPageRoute == null) {
+        return;
       }
+      if (exitingPageRoute.isWaitingForExitingDecision) {
+        final bool hasPagelessRoute =
+            pageRouteToPagelessRoutes.containsKey(exitingPageRoute);
+        final bool isLastExitingPageRoute =
+            isLast && !locationToExitingPageRoute.containsKey(exitingPageRoute);
+        if (isLastExitingPageRoute && !hasPagelessRoute) {
+          exitingPageRoute.markForPop(exitingPageRoute.route.currentResult);
+        } else {
+          exitingPageRoute
+              .markForComplete(exitingPageRoute.route.currentResult);
+        }
+        if (hasPagelessRoute) {
+          final List<RouteTransitionRecord> pagelessRoutes =
+              pageRouteToPagelessRoutes[exitingPageRoute]!;
+          for (final RouteTransitionRecord pagelessRoute in pagelessRoutes) {
+            // It is possible that a pageless route that belongs to an exiting
+            // page-based route does not require exiting decision. This can
+            // happen if the page list is updated right after a Navigator.pop.
+            if (pagelessRoute.isWaitingForExitingDecision) {
+              if (isLastExitingPageRoute &&
+                  pagelessRoute == pagelessRoutes.last) {
+                pagelessRoute.markForPop(pagelessRoute.route.currentResult);
+              } else {
+                pagelessRoute
+                    .markForComplete(pagelessRoute.route.currentResult);
+              }
+            }
+          }
+        }
+      }
+      results.add(exitingPageRoute);
 
-      ControllerStack.pushController(controller, index);
+      // It is possible there is another exiting route above this exitingPageRoute.
+      handleExitingRoute(exitingPageRoute, isLast);
+    }
 
-      return _buildRoute(controller);
-    },
-  );
+    // Handles exiting route in the beginning of list.
+    handleExitingRoute(null, newPageRouteHistory.isEmpty);
+
+    for (final RouteTransitionRecord pageRoute in newPageRouteHistory) {
+      final bool isLastIteration = newPageRouteHistory.last == pageRoute;
+      if (pageRoute.isWaitingForEnteringDecision) {
+        // 根据controller判断是否同一个route
+        final isSame = locationToExitingPageRoute.values.any((record) {
+          final locationPage = record.route.settings;
+          final newPage = pageRoute.route.settings;
+
+          if (locationPage is _PostListPage && newPage is _PostListPage) {
+            return locationPage.controller == newPage.controller;
+          }
+
+          return false;
+        });
+
+        if (!isSame &&
+            !locationToExitingPageRoute.containsKey(pageRoute) &&
+            isLastIteration) {
+          pageRoute.markForPush();
+        } else {
+          pageRoute.markForAdd();
+        }
+      }
+      results.add(pageRoute);
+      handleExitingRoute(pageRoute, isLastIteration);
+    }
+
+    return results;
+  }
 }
 
 class PostListPage extends StatefulWidget {
@@ -411,9 +427,9 @@ class PostListPage extends StatefulWidget {
 }
 
 class PostListPageState extends State<PostListPage> {
-  final PageController _pageController = PageController();
+  late final PageController _pageController;
 
-  bool _isBuilt = false;
+  final HashMap<int, bool> _maintainStateMap = HashMap();
 
   void _openDrawer() => Scaffold.of(context).openDrawer();
 
@@ -435,17 +451,59 @@ class PostListPageState extends State<PostListPage> {
 
   void jumpToPage(int page) {
     _pageController.jumpToPage(page);
-    ControllerStack.index = page;
+    ControllerStacksService.to.index = page;
   }
 
-  void jumpToLast() => jumpToPage(ControllerStack.length - 1);
+  void jumpToLast() => jumpToPage(ControllerStacksService.to.length - 1);
+
+  Widget _buildNavigator(int index) {
+    final stacks = ControllerStacksService.to;
+
+    debugPrint('build navigator: $index');
+
+    return NotifyBuilder(
+      animation: stacks.getStackNotifier(index),
+      builder: (context, child) {
+        final controllers = stacks.getControllers(index);
+        if (controllers.isNotEmpty) {
+          final key = controllers.last.key;
+          final maintainState = _maintainStateMap[key];
+          if (maintainState != null && !maintainState) {
+            _maintainStateMap[key] = true;
+          }
+        }
+
+        return Navigator(
+          key: Get.nestedKey(stacks.getKeyId(index)),
+          transitionDelegate: const _PostListTransitionDelegate(),
+          pages: [
+            for (final controller in controllers)
+              _PostListPage(
+                key: ValueKey(_PageKey(
+                    controller.key, _maintainStateMap[controller.key] ?? true)),
+                controller: controller.controller,
+                maintainState: _maintainStateMap[controller.key] ?? true,
+              ),
+          ],
+          onPopPage: (route, result) {
+            stacks.popController(index);
+
+            return route.didPop(result);
+          },
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance
-        .addPostFrameCallback((timeStamp) => _isBuilt = true);
+    final stacks = ControllerStacksService.to;
+    _pageController = PageController(initialPage: stacks.index);
+    for (final key in stacks.getControllerKeys()) {
+      _maintainStateMap[key] = false;
+    }
   }
 
   @override
@@ -465,7 +523,7 @@ class PostListPageState extends State<PostListPage> {
       () => PageView.builder(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: ControllerStack.length,
+        itemCount: ControllerStacksService.to.length,
         itemBuilder: (context, index) => _buildNavigator(index),
       ),
     );
@@ -646,41 +704,53 @@ class FloatingButtonState extends State<FloatingButton> {
     }
   }
 
+  void _refreshBottomSheet() {
+    if (hasBottomSheet) {
+      final controller = PostListController.get();
+      if (controller.canPost) {
+        EditPost.bottomSheetkey.currentState!.setPostList(
+            PostList.fromController(controller), controller.forumId);
+      } else {
+        widget.bottomSheetController.value!.close();
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    ControllerStacksService.to.notifier.addListener(_refreshBottomSheet);
+  }
+
+  @override
+  void dispose() {
+    ControllerStacksService.to.notifier.removeListener(_refreshBottomSheet);
+
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
     return NotifyBuilder(
-      animation: ControllerStack.notifier,
+      animation: ControllerStacksService.to.notifier,
       builder: (context, child) => ValueListenableBuilder<Box>(
         valueListenable: settings.hideFloatingButtonListenable,
-        builder: (context, value, child) {
-          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-            if (hasBottomSheet) {
-              final controller = PostListController.get();
-              if (controller.canPost) {
-                EditPost.bottomSheetkey.currentState!.setPostList(
-                    PostList.fromController(controller), controller.forumId);
-              } else {
-                widget.bottomSheetController.value!.close();
-              }
-            }
-          });
-
-          return (PostListController.get().canPost &&
-                  (!settings.hideFloatingButton || hasBottomSheet))
-              ? Padding(
-                  padding: EdgeInsets.only(bottom: hasBottomSheet ? 56.0 : 0.0),
-                  child: FloatingActionButton(
-                    tooltip: hasBottomSheet ? '收起' : '发串',
-                    onPressed: bottomSheet,
-                    child: Icon(
-                      hasBottomSheet ? Icons.arrow_downward : Icons.edit,
-                    ),
+        builder: (context, value, child) => (PostListController.get().canPost &&
+                (!settings.hideFloatingButton || hasBottomSheet))
+            ? Padding(
+                padding: EdgeInsets.only(bottom: hasBottomSheet ? 56.0 : 0.0),
+                child: FloatingActionButton(
+                  tooltip: hasBottomSheet ? '收起' : '发串',
+                  onPressed: bottomSheet,
+                  child: Icon(
+                    hasBottomSheet ? Icons.arrow_downward : Icons.edit,
                   ),
-                )
-              : const SizedBox.shrink();
-        },
+                ),
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }
@@ -691,7 +761,7 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => NotifyBuilder(
-        animation: ControllerStack.notifier,
+        animation: ControllerStacksService.to.notifier,
         builder: (context, child) {
           final controller = PostListController.get();
 
@@ -724,7 +794,7 @@ class _PostListViewState extends State<PostListView>
       return false;
     }
     if (postListkey()?.currentState?.canPop() ?? false) {
-      popOnce();
+      postListPop();
 
       return false;
     }
@@ -770,6 +840,7 @@ class _PostListViewState extends State<PostListView>
     final forums = ForumListService.to;
     final history = PostHistoryService.to;
     final settings = SettingsService.to;
+    final stacks = ControllerStacksService.to;
     final user = UserService.to;
 
     return WillPopScope(
@@ -783,12 +854,9 @@ class _PostListViewState extends State<PostListView>
               forums.isReady.value &&
               history.isReady.value &&
               settings.isReady.value &&
+              stacks.isReady.value &&
               user.isReady.value) {
             if (_isInitial) {
-              ControllerStack.replaceLastController(
-                  ForumTypeController.fromForumData(
-                      forum: settings.initialForum));
-
               //data.showGuide = true;
 
               // 出现用户指导时更新和公告延后显示

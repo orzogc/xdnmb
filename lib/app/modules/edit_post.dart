@@ -3,9 +3,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../data/models/controller.dart';
 import '../utils/extensions.dart';
 import '../widgets/edit_post.dart';
-import 'post_list.dart';
 
 class EditPostController extends GetxController {
   final PostListType postListType;

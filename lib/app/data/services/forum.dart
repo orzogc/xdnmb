@@ -291,6 +291,7 @@ class ForumListService extends GetxService {
   @override
   void onClose() async {
     await _forumBox.close();
+    updateForumNameNotifier.dispose();
     isReady.value = false;
 
     super.onClose();

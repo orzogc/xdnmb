@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -76,6 +77,12 @@ class UserService extends GetxService {
   late final ValueListenable<Box> postCookieListenable;
 
   late final ValueListenable<Box<CookieData>> cookiesListenable;
+
+  late final StreamSubscription<BoxEvent> _userCookieSubscription;
+
+  late final StreamSubscription<BoxEvent> _browseCookieSubscription;
+
+  late final StreamSubscription<BoxEvent> _cookiesBoxSubscription;
 
   void updateClient() {
     final client = XdnmbClientService.to.client;
@@ -221,7 +228,8 @@ class UserService extends GetxService {
 
     updateClient();
 
-    _userBox.watch(key: User.userCookie).listen((event) {
+    _userCookieSubscription =
+        _userBox.watch(key: User.userCookie).listen((event) {
       debugPrint('userCookie change');
       final cookie = event.value as String?;
       final client = XdnmbClientService.to.client;
@@ -232,7 +240,8 @@ class UserService extends GetxService {
       }
     });
 
-    _userBox.watch(key: User.browseCookie).listen((event) {
+    _browseCookieSubscription =
+        _userBox.watch(key: User.browseCookie).listen((event) {
       debugPrint('browseCookie change');
       final cookie = event.value as CookieData?;
       final client = XdnmbClientService.to.client;
@@ -246,7 +255,7 @@ class UserService extends GetxService {
 
     updateBrowseCookie();
     updatePostCookie();
-    _cookiesBox.watch().listen((event) {
+    _cookiesBoxSubscription = _cookiesBox.watch().listen((event) {
       debugPrint('_cookiesBox change');
       updateBrowseCookie();
       updatePostCookie();
@@ -264,6 +273,9 @@ class UserService extends GetxService {
 
   @override
   void onClose() async {
+    await _userCookieSubscription.cancel();
+    await _browseCookieSubscription.cancel();
+    await _cookiesBoxSubscription.cancel();
     await _userBox.close();
     await _cookiesBox.close();
     isReady.value = false;

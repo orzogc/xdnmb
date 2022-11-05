@@ -1,13 +1,18 @@
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/controller.dart';
+import '../data/services/stack.dart';
 import '../modules/image.dart';
 import '../modules/paint.dart';
-import '../modules/post_list.dart';
 import '../modules/settings.dart';
-import '../utils/stack.dart';
+import '../widgets/feed.dart';
+import '../widgets/forum.dart';
+import '../widgets/history.dart';
+import '../widgets/thread.dart';
 
 abstract class AppRoutes {
   /// 参数：forumId和page
@@ -19,7 +24,7 @@ abstract class AppRoutes {
   /// 参数：mainPostId、page、cancelAutoJump和jumpToId，arguments为主串Post
   static const String thread = '/${PathNames.thread}';
 
-  /// 参数：mainPostId、page和cancelAutoJump，arguments为主串Post
+  /// 参数：mainPostId、page、cancelAutoJump和jumpToId，arguments为主串Post
   static const String onlyPoThread = '/${PathNames.onlyPoThread}';
 
   /// 参数：postId
@@ -79,8 +84,10 @@ abstract class AppRoutes {
           : '$thread?mainPostId=$mainPostId&page=$page&cancelAutoJump=$cancelAutoJump';
 
   static String onlyPoThreadUrl(int mainPostId,
-          {int page = 1, bool cancelAutoJump = false}) =>
-      '$onlyPoThread?mainPostId=$mainPostId&page=$page&cancelAutoJump=$cancelAutoJump';
+          {int page = 1, bool cancelAutoJump = false, int? jumpToId}) =>
+      jumpToId != null
+          ? '$onlyPoThread?mainPostId=$mainPostId&page=$page&cancelAutoJump=$cancelAutoJump&jumpToId=$jumpToId'
+          : '$onlyPoThread?mainPostId=$mainPostId&page=$page&cancelAutoJump=$cancelAutoJump';
 
   static String feedUrl({int page = 1}) => '$feed?page=$page';
 
@@ -89,66 +96,47 @@ abstract class AppRoutes {
 
   static String referenceUrl(int postId) => '$reference?postId=$postId';
 
-  static Future<T?>? toForum<T>({required int forumId, int page = 1}) =>
-      Get.toNamed<T>(
-        forum,
-        id: ControllerStack.getKeyId(),
-        parameters: {'forumId': '$forumId', 'page': '$page'},
-      );
+  static void toForum<T>({required int forumId, int page = 1}) =>
+      ControllerStacksService.to
+          .pushController(ForumController(id: forumId, page: page));
 
-  static Future<T?>? toTimeline<T>({required int timelineId, int page = 1}) =>
-      Get.toNamed<T>(
-        timeline,
-        id: ControllerStack.getKeyId(),
-        parameters: {'timelineId': '$timelineId', 'page': '$page'},
-      );
+  static void toTimeline<T>({required int timelineId, int page = 1}) =>
+      ControllerStacksService.to
+          .pushController(TimelineController(id: timelineId, page: page));
 
-  static Future<T?>? toThread<T>(
+  static void toThread<T>(
           {required int mainPostId,
           int page = 1,
           bool cancelAutoJump = false,
           int? jumpToId,
           PostBase? mainPost}) =>
-      Get.toNamed<T>(
-        thread,
-        id: ControllerStack.getKeyId(),
-        arguments: mainPost,
-        parameters: {
-          'mainPostId': '$mainPostId',
-          'page': '$page',
-          'cancelAutoJump': '$cancelAutoJump',
-          if (jumpToId != null) 'jumpToId': '$jumpToId',
-        },
-      );
+      ControllerStacksService.to.pushController(ThreadController(
+          id: mainPostId,
+          page: page,
+          post: mainPost,
+          cancelAutoJump: cancelAutoJump,
+          jumpToId: jumpToId));
 
-  static Future<T?>? toOnlyPoThread<T>(
+  static void toOnlyPoThread<T>(
           {required int mainPostId,
           int page = 1,
           bool cancelAutoJump = false,
+          int? jumpToId,
           PostBase? mainPost}) =>
-      Get.toNamed<T>(
-        onlyPoThread,
-        id: ControllerStack.getKeyId(),
-        arguments: mainPost,
-        parameters: {
-          'mainPostId': '$mainPostId',
-          'page': '$page',
-          'cancelAutoJump': '$cancelAutoJump',
-        },
-      );
+      ControllerStacksService.to.pushController(OnlyPoThreadController(
+          id: mainPostId,
+          page: page,
+          post: mainPost,
+          cancelAutoJump: cancelAutoJump,
+          jumpToId: jumpToId));
 
-  static Future<T?>? toFeed<T>({int page = 1}) => Get.toNamed<T>(
-        feed,
-        id: ControllerStack.getKeyId(),
-        parameters: {'page': '$page'},
-      );
+  static void toFeed<T>({int page = 1}) =>
+      ControllerStacksService.to.pushController(FeedController(page));
 
-  static Future<T?>? toHistory<T>({int index = 0, int page = 1}) =>
-      Get.toNamed<T>(
-        history,
-        id: ControllerStack.getKeyId(),
-        parameters: {'index': '$index', 'page': '$page'},
-      );
+  static void toHistory<T>(
+          {int index = 0, int page = 1, List<DateTimeRange?>? dateRange}) =>
+      ControllerStacksService.to.pushController(HistoryController(
+          page: page, bottomBarIndex: index, dateRange: dateRange));
 
   static Future<T?>? toImage<T>(ImageController controller) =>
       Get.toNamed<T>(image, arguments: controller);
@@ -203,7 +191,7 @@ abstract class AppRoutes {
   static Future<T?>? toPaint<T>([PaintController? controller]) =>
       Get.toNamed<T>(paint, arguments: controller);
 
-  static Future<T?>? toFeedback<T>() => toThread(mainPostId: feedbackId);
+  static void toFeedback<T>() => toThread(mainPostId: feedbackId);
 }
 
 abstract class PathNames {

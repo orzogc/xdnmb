@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../data/models/controller.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
+import '../data/services/stack.dart';
 import '../modules/post_list.dart';
 import '../modules/settings.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/notify.dart';
 import '../utils/regex.dart';
-import '../utils/stack.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
@@ -206,6 +207,7 @@ class _TabList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = PersistentDataService.to;
+    final stacks = ControllerStacksService.to;
     final theme = Theme.of(context);
     final textStyle =
         theme.textTheme.bodyText2?.apply(color: AppTheme.textColor);
@@ -215,20 +217,19 @@ class _TabList extends StatelessWidget {
         () => ListView.separated(
           key: const PageStorageKey<String>('tabList'),
           shrinkWrap: true,
-          itemCount: ControllerStack.length,
+          itemCount: stacks.length,
           itemBuilder: (context, index) => NotifyBuilder(
-            animation: ControllerStack.notifier,
+            animation: stacks.getStackNotifier(index),
             builder: (context, child) {
               final controller = PostListController.get(index);
 
               final tab = ListTile(
-                key: ValueKey<int>(ControllerStack.getKeyId(index)),
+                key: ValueKey<int>(stacks.getKeyId(index)),
                 onTap: () {
                   PostListPage.pageKey.currentState!.jumpToPage(index);
                   Get.back();
                 },
-                tileColor:
-                    index == ControllerStack.index ? theme.focusColor : null,
+                tileColor: index == stacks.index ? theme.focusColor : null,
                 title: _TabTitle(controller),
                 subtitle: controller.isThreadType
                     ? Obx(() {
@@ -245,12 +246,12 @@ class _TabList extends StatelessWidget {
                             : const SizedBox.shrink();
                       })
                     : null,
-                trailing: ControllerStack.length > 1
+                trailing: stacks.length > 1
                     ? IconButton(
                         onPressed: () {
-                          ControllerStack.removeControllersAt(index);
+                          stacks.removeStackAt(index);
                           PostListPage.pageKey.currentState!
-                              .jumpToPage(ControllerStack.index);
+                              .jumpToPage(stacks.index);
                         },
                         icon: const Icon(Icons.close))
                     : null,

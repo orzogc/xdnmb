@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/controller.dart';
 import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';

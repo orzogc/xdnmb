@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/controller.dart';
 import '../data/models/forum.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/forum.dart';

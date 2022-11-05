@@ -156,7 +156,10 @@ class ReferenceCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('错误：$error', style: AppTheme.boldRed),
+                    Text(
+                      '错误：${exceptionMessage(error!)}',
+                      style: AppTheme.boldRed,
+                    ),
                     _errorText,
                   ],
                 )

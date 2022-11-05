@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/controller.dart';
 import '../data/models/history.dart';
 import '../data/models/post.dart';
 import '../data/models/reply.dart';
@@ -111,9 +112,9 @@ class HistoryController extends PostListController {
   HistoryController(
       {required int page,
       int bottomBarIndex = 0,
-      required List<DateTimeRange?> dateRange})
+      List<DateTimeRange?>? dateRange})
       : _bottomBarIndex = bottomBarIndex.obs,
-        _dateRange = Rx(dateRange),
+        _dateRange = Rx(dateRange ?? List.filled(3, null)),
         _toIndex = bottomBarIndex.obs,
         super(page);
 
@@ -145,13 +146,21 @@ class HistoryController extends PostListController {
     dateRange[index ?? bottomBarIndex] = range;
     _notify(index);
   }
+
+  @override
+  void dispose() {
+    for (final notifier in _notifiers) {
+      notifier.dispose();
+    }
+
+    super.dispose();
+  }
 }
 
 HistoryController historyController(Map<String, String?> parameters) =>
     HistoryController(
         page: parameters['page'].tryParseInt() ?? 1,
-        bottomBarIndex: parameters['index'].tryParseInt() ?? 0,
-        dateRange: List.filled(3, null));
+        bottomBarIndex: parameters['index'].tryParseInt() ?? 0);
 
 class HistoryAppBarTitle extends StatelessWidget {
   final HistoryController controller;

@@ -8,6 +8,7 @@ import 'history.dart';
 import 'image.dart';
 import 'persistent.dart';
 import 'settings.dart';
+import 'stack.dart';
 import 'time.dart';
 import 'user.dart';
 import 'version.dart';
@@ -19,6 +20,7 @@ Bindings servicesBindings() => BindingsBuilder(() {
       Get.put(SettingsService());
       Get.put(UserService());
       Get.put(PersistentDataService());
+      Get.put(ControllerStacksService());
       Get.put(ImageService());
       Get.put(ForumListService());
       Get.put(BlacklistService());

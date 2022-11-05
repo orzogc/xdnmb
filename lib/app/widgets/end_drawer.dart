@@ -8,12 +8,12 @@ import '../data/models/forum.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
+import '../data/services/stack.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/navigation.dart';
 import '../utils/notify.dart';
-import '../utils/stack.dart';
 import '../utils/text.dart';
 import '../utils/toast.dart';
 import 'forum.dart';
@@ -173,7 +173,7 @@ class _ForumList extends StatelessWidget {
             ],
           )
         : NotifyBuilder(
-            animation: ControllerStack.notifier,
+            animation: ControllerStacksService.to.notifier,
             builder: (context, child) {
               final controller = PostListController.get();
               final forumId = controller.forumOrTimelineId;

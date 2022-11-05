@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:get/get.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive/hive.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../../widgets/dialog.dart';
@@ -56,6 +58,14 @@ class PersistentDataService extends GetxService {
   set updateForumListTime(DateTime? time) =>
       _dataBox.put(PersistentData.updateForumListTime, time);
 
+  int get controllerStackListIndex =>
+      _dataBox.get(PersistentData.controllerStackListIndex, defaultValue: 0);
+
+  set controllerStackListIndex(int index) =>
+      _dataBox.put(PersistentData.controllerStackListIndex, index);
+
+  StreamSubscription<bool>? _keyboardSubscription;
+
   void saveNotice(Notice notice) {
     if (notice.isValid && this.notice != notice.content) {
       this.notice = notice.content;
@@ -100,7 +110,7 @@ class PersistentDataService extends GetxService {
     _dataBox = await Hive.openBox(HiveBoxName.data);
 
     if (GetPlatform.isMobile) {
-      KeyboardVisibilityController()
+      _keyboardSubscription = KeyboardVisibilityController()
           .onChange
           .listen((visible) => isKeyboardVisible.value = visible);
     }
@@ -113,6 +123,7 @@ class PersistentDataService extends GetxService {
   @override
   void onClose() async {
     await _dataBox.close();
+    await _keyboardSubscription?.cancel();
     isReady.value = false;
 
     super.onClose();

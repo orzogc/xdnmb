@@ -8,6 +8,26 @@ import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
 
+class _RestoreTabs extends StatelessWidget {
+  const _RestoreTabs({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder(
+      valueListenable: settings.isRestoreTabsListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('应用启动后恢复标签页'),
+        trailing: Switch(
+          value: settings.isRestoreTabs,
+          onChanged: (value) => settings.isRestoreTabs = value,
+        ),
+      ),
+    );
+  }
+}
+
 class _InitialForum extends StatelessWidget {
   const _InitialForum({super.key});
 
@@ -18,18 +38,36 @@ class _InitialForum extends StatelessWidget {
     return ValueListenableBuilder<Box>(
       valueListenable: settings.initialForumListenable,
       builder: (context, value, child) => ListTile(
-        title: const Text('应用启动后显示的版块'),
+        title: Text(
+          '应用启动后显示的版块',
+          style: TextStyle(
+            color: settings.isRestoreTabs
+                ? Get.isDarkMode
+                    ? AppTheme.primaryColorDark
+                    : Colors.grey
+                : null,
+          ),
+        ),
         trailing: TextButton(
-          onPressed: () => Get.dialog(SelectForum(onSelect: (forum) {
-            settings.initialForum = forum.copy();
-            Get.back();
-          })),
+          onPressed: settings.isRestoreTabs
+              ? null
+              : () => Get.dialog(
+                    SelectForum(
+                      onSelect: (forum) {
+                        settings.initialForum = forum.copy();
+                        Get.back();
+                      },
+                    ),
+                  ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 150),
             child: ForumName(
               forumId: settings.initialForum.id,
               isTimeline: settings.initialForum.isTimeline,
-              textStyle: TextStyle(color: AppTheme.highlightColor),
+              textStyle: TextStyle(
+                  color: settings.isRestoreTabs
+                      ? Colors.grey
+                      : AppTheme.highlightColor),
               maxLines: 1,
             ),
           ),
@@ -260,6 +298,7 @@ class BasicSettingsView extends GetView<BasicSettingsController> {
         ),
         body: ListView(
           children: const [
+            _RestoreTabs(),
             _InitialForum(),
             _ShowImage(),
             _Watermark(),

@@ -4,13 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/controller.dart';
 import '../data/models/forum.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
-import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
@@ -287,22 +287,24 @@ class ForumRuleDialog extends StatelessWidget {
             child: TextContent(
               text: forum?.message ?? '',
               onLinkTap: (context, link, text) => parseUrl(url: link),
-              onImage: (context, image, element) => image != null
-                  ? TextSpan(
-                      children: [
-                        WidgetSpan(
-                          child: CachedNetworkImage(
-                            imageUrl: image,
-                            cacheManager: XdnmbImageCacheManager(),
-                            progressIndicatorBuilder:
-                                loadingThumbImageIndicatorBuilder,
-                            errorWidget: loadingImageErrorBuilder,
-                          ),
-                        ),
-                        const TextSpan(text: '\n'),
-                      ],
-                    )
-                  : const TextSpan(),
+              onImage: SettingsService.to.showImage
+                  ? ((context, image, element) => image != null
+                      ? TextSpan(
+                          children: [
+                            WidgetSpan(
+                              child: CachedNetworkImage(
+                                imageUrl: image,
+                                cacheManager: XdnmbImageCacheManager(),
+                                progressIndicatorBuilder:
+                                    loadingThumbImageIndicatorBuilder,
+                                errorWidget: loadingImageErrorBuilder,
+                              ),
+                            ),
+                            const TextSpan(text: '\n'),
+                          ],
+                        )
+                      : const TextSpan())
+                  : null,
             ),
           ),
           actions: [

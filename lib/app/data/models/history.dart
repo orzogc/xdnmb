@@ -156,11 +156,11 @@ class BrowseHistory implements PostBase {
 
   int? toIndex({bool isOnlyPo = false}) {
     if (isOnlyPo && onlyPoBrowsePage != null && onlyPoBrowsePostId != null) {
-      return onlyPoBrowsePostId!.toIndex(onlyPoBrowsePage!);
+      return onlyPoBrowsePostId!.postIdToPostIndex(onlyPoBrowsePage!);
     }
 
     if (!isOnlyPo && browsePage != null && browsePostId != null) {
-      return browsePostId!.toIndex(browsePage!);
+      return browsePostId!.postIdToPostIndex(browsePage!);
     }
 
     return null;

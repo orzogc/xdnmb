@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
+import '../data/models/controller.dart';
 import '../data/models/cookie.dart';
 import '../data/models/emoticon.dart';
 import '../data/models/draft.dart';
@@ -15,4 +17,8 @@ Future<void> initHive() async {
   Hive.registerAdapter<PostDraftData>(PostDraftDataAdapter());
   Hive.registerAdapter<EmoticonData>(EmoticonDataAdapter());
   Hive.registerAdapter<BlockForumData>(BlockForumDataAdapter());
+  Hive.registerAdapter<DateTimeRange>(DateTimeRangeAdapter());
+  Hive.registerAdapter<PostBaseData>(PostBaseDataAdapter());
+  Hive.registerAdapter<PostListType>(PostListTypeAdapter());
+  Hive.registerAdapter<PostListControllerData>(PostListControllerDataAdapter());
 }
