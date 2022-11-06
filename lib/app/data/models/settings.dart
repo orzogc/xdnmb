@@ -27,5 +27,9 @@ abstract class Settings {
 
   static const String drawerEdgeDragWidthRatio = 'drawerEdgeDragWidthRatio';
 
+  static const String imageDisposeDistance = 'imageDisposeDistance';
+
+  static const String fixedImageDisposeRatio = 'fixedImageDisposeRatio';
+
   static const String fixMissingFont = 'fixMissingFont';
 }

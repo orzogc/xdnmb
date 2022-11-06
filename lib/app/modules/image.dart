@@ -11,6 +11,7 @@ import 'package:path/path.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/services/image.dart';
+import '../data/services/settings.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/image.dart';
@@ -324,8 +325,6 @@ class _Image<T extends Object> extends StatefulWidget {
 
 class _ImageState extends State<_Image>
     with SingleTickerProviderStateMixin<_Image> {
-  static const double _disposeLimit = 120.0;
-
   static const double _disposeScale = 1.1;
 
   static const double _opacityDistance = 500.0;
@@ -336,14 +335,16 @@ class _ImageState extends State<_Image>
 
   static const double _translationLimit = 70.0;
 
-  static const double _disposeDistanceFactor = 0.35;
-
   final TransformationController _transformationController =
       TransformationController();
 
   Animation<Matrix4>? _animation;
 
   late final AnimationController _animationController;
+
+  late final double _disposeLimit;
+
+  late final double _disposeDistanceFactor;
 
   int _rotationCount = 0;
 
@@ -676,11 +677,12 @@ class _ImageState extends State<_Image>
           !_isConstrained &&
           imageSize != null) {
         final translation = _transformationController.value.getTranslation();
-        final disposeDistance = bodySize.height * _disposeDistanceFactor;
+        final disposeDistance =
+            (bodySize.height - _translationLimit) * _disposeDistanceFactor;
 
-        if (translation.y > disposeDistance ||
+        if (translation.y >= disposeDistance ||
             (translation.y < 0 &&
-                -translation.y - (imageSize.height - bodySize.height) >
+                -translation.y - (imageSize.height - bodySize.height) >=
                     disposeDistance)) {
           Get.maybePop();
         }
@@ -689,11 +691,12 @@ class _ImageState extends State<_Image>
           !_isConstrained &&
           imageSize != null) {
         final translation = _transformationController.value.getTranslation();
-        final disposeDistance = bodySize.width * _disposeDistanceFactor;
+        final disposeDistance =
+            (bodySize.width - _translationLimit) * _disposeDistanceFactor;
 
-        if (translation.x > disposeDistance ||
+        if (translation.x >= disposeDistance ||
             (translation.x < 0 &&
-                -translation.x - (imageSize.width - bodySize.width) >
+                -translation.x - (imageSize.width - bodySize.width) >=
                     disposeDistance)) {
           Get.maybePop();
         }
@@ -782,8 +785,12 @@ class _ImageState extends State<_Image>
   void initState() {
     super.initState();
 
+    final settings = SettingsService.to;
+
     _animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 300));
+    _disposeLimit = settings.imageDisposeDistance.toDouble();
+    _disposeDistanceFactor = settings.fixedImageDisposeRatio;
 
     _imageStream = widget.provider.resolve(const ImageConfiguration());
     _imageStream?.addListener(ImageStreamListener(_updateImage));
@@ -1013,7 +1020,7 @@ class ImageView extends GetView<ImageController> {
 
               await info.file.copy(path);
               if (GetPlatform.isAndroid) {
-                MediaScanner.loadMedia(path: path);
+                await MediaScanner.loadMedia(path: path);
               }
 
               showToast('图片保存在 $savePath');

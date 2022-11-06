@@ -95,7 +95,7 @@ class _DrawerDragRatioDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
-    String? ratioString;
+    String? ratio;
 
     return InputDialog(
       content: Form(
@@ -104,24 +104,20 @@ class _DrawerDragRatioDialog extends StatelessWidget {
           decoration: const InputDecoration(labelText: '比例（0.1-0.5）'),
           autofocus: true,
           initialValue: '${settings.drawerEdgeDragWidthRatio}',
-          onSaved: (newValue) => ratioString = newValue,
+          onSaved: (newValue) => ratio = newValue,
           validator: (value) {
-            if (value != null) {
-              if (value.isNotEmpty) {
-                final ratio = double.tryParse(value);
-                if (ratio != null) {
-                  if (ratio >= SettingsService.minDrawerEdgeDragWidthRatio &&
-                      ratio <= SettingsService.maxDrawerEdgeDragWidthRatio) {
-                    return null;
-                  } else {
-                    return '比例需要在${SettingsService.minDrawerEdgeDragWidthRatio}'
-                        '与${SettingsService.maxDrawerEdgeDragWidthRatio}之间';
-                  }
+            if (value != null && value.isNotEmpty) {
+              final ratio = double.tryParse(value);
+              if (ratio != null) {
+                if (ratio >= SettingsService.minDrawerEdgeDragWidthRatio &&
+                    ratio <= SettingsService.maxDrawerEdgeDragWidthRatio) {
+                  return null;
                 } else {
-                  return '请输入比例数字';
+                  return '比例必须在${SettingsService.minDrawerEdgeDragWidthRatio}'
+                      '与${SettingsService.maxDrawerEdgeDragWidthRatio}之间';
                 }
               } else {
-                return '请输入比例';
+                return '请输入比例数字';
               }
             } else {
               return '请输入比例';
@@ -135,8 +131,7 @@ class _DrawerDragRatioDialog extends StatelessWidget {
             if (_formKey.currentState!.validate()) {
               _formKey.currentState!.save();
 
-              final ratio = double.parse(ratioString!);
-              settings.drawerEdgeDragWidthRatio = ratio;
+              settings.drawerEdgeDragWidthRatio = double.parse(ratio!);
 
               Get.back();
             }
@@ -161,6 +156,150 @@ class _DrawerDragRatio extends StatelessWidget {
         title: const Text('划开侧边栏的范围占屏幕宽度的比例'),
         trailing: Text('${settings.drawerEdgeDragWidthRatio}'),
         onTap: () => Get.dialog(_DrawerDragRatioDialog()),
+      ),
+    );
+  }
+}
+
+class _ImageDisposeDistanceDialog extends StatelessWidget {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  _ImageDisposeDistanceDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    String? distance;
+
+    return InputDialog(
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          decoration: const InputDecoration(labelText: '距离'),
+          autofocus: true,
+          initialValue: '${settings.imageDisposeDistance}',
+          onSaved: (newValue) => distance = newValue,
+          validator: (value) {
+            if (value != null && value.isNotEmpty) {
+              final distance = int.tryParse(value);
+              if (distance != null) {
+                if (distance >= 0) {
+                  return null;
+                } else {
+                  return '距离必须大于等于0';
+                }
+              } else {
+                return '请输入距离数字（整数）';
+              }
+            } else {
+              return '请输入距离';
+            }
+          },
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              settings.imageDisposeDistance = int.parse(distance!);
+
+              Get.back();
+            }
+          },
+          child: const Text('确定'),
+        ),
+      ],
+    );
+  }
+}
+
+class _ImageDisposeDistance extends StatelessWidget {
+  const _ImageDisposeDistance({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.imageDisposeDistanceListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('非适应模式下移动未放大的图片导致返回的最小距离'),
+        trailing: Text('${settings.imageDisposeDistance}'),
+        onTap: () => Get.dialog(_ImageDisposeDistanceDialog()),
+      ),
+    );
+  }
+}
+
+class _FixedImageDisposeRatioDialog extends StatelessWidget {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  _FixedImageDisposeRatioDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    String? ratio;
+
+    return InputDialog(
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          decoration: const InputDecoration(labelText: '比例（0.0-1.0）'),
+          autofocus: true,
+          initialValue: '${settings.fixedImageDisposeRatio}',
+          onSaved: (newValue) => ratio = newValue,
+          validator: (value) {
+            if (value != null && value.isNotEmpty) {
+              final ratio = double.tryParse(value);
+              if (ratio != null) {
+                if (ratio >= 0.0 && ratio <= 1.0) {
+                  return null;
+                } else {
+                  return '比例必须在0与1之间';
+                }
+              } else {
+                return '请输入比例数字';
+              }
+            } else {
+              return '请输入比例';
+            }
+          },
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              settings.fixedImageDisposeRatio = double.parse(ratio!);
+
+              Get.back();
+            }
+          },
+          child: const Text('确定'),
+        )
+      ],
+    );
+  }
+}
+
+class _FixedImageDisposeRatio extends StatelessWidget {
+  const _FixedImageDisposeRatio({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder(
+      valueListenable: settings.fixedImageDisposeRatioListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('适应模式下移动未缩放的大图导致返回的最小距离占屏幕高度/宽度的比例'),
+        trailing: Text('${settings.fixedImageDisposeRatio}'),
+        onTap: () => Get.dialog(_FixedImageDisposeRatioDialog()),
       ),
     );
   }
@@ -209,6 +348,8 @@ class AdvancedSettingsView extends GetView<AdvancedSettingsController> {
             if (!GetPlatform.isIOS) const _SaveImagePath(),
             const _AddBlueIslandEmoticons(),
             if (GetPlatform.isMobile) const _DrawerDragRatio(),
+            const _ImageDisposeDistance(),
+            const _FixedImageDisposeRatio(),
             const _FixMissingFont(),
           ],
         ),

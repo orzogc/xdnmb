@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ final ForumData defaultForum = ForumData(
 /// 设置服务
 class SettingsService extends GetxService {
   static const double minDrawerEdgeDragWidthRatio = 0.1;
+
   static const double maxDrawerEdgeDragWidthRatio = 0.5;
 
   static SettingsService get to => Get.find<SettingsService>();
@@ -122,13 +124,27 @@ class SettingsService extends GetxService {
       Settings.drawerEdgeDragWidthRatio,
       ratio.clamp(minDrawerEdgeDragWidthRatio, maxDrawerEdgeDragWidthRatio));
 
-  double get drawerDragRatio => _drawerDragRatio.value;
+  int get imageDisposeDistance => max(
+      _settingsBox.get(Settings.imageDisposeDistance, defaultValue: 120), 0);
+
+  set imageDisposeDistance(int distance) =>
+      _settingsBox.put(Settings.imageDisposeDistance, max(distance, 0));
+
+  double get fixedImageDisposeRatio =>
+      (_settingsBox.get(Settings.fixedImageDisposeRatio, defaultValue: 0.35)
+              as double)
+          .clamp(0.0, 1.0);
+
+  set fixedImageDisposeRatio(double ratio) =>
+      _settingsBox.put(Settings.fixedImageDisposeRatio, ratio.clamp(0.0, 1.0));
 
   bool get fixMissingFont =>
       _settingsBox.get(Settings.fixMissingFont, defaultValue: false);
 
   set fixMissingFont(bool fixMissingFont) =>
       _settingsBox.put(Settings.fixMissingFont, fixMissingFont);
+
+  double get drawerDragRatio => _drawerDragRatio.value;
 
   late final ValueListenable<Box> isRestoreTabsListenable;
 
@@ -153,6 +169,10 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> addBlueIslandEmoticonsListenable;
 
   late final ValueListenable<Box> drawerEdgeDragWidthRatioListenable;
+
+  late final ValueListenable<Box> imageDisposeDistanceListenable;
+
+  late final ValueListenable<Box> fixedImageDisposeRatioListenable;
 
   late final ValueListenable<Box> fixMissingFontListenable;
 
@@ -224,6 +244,10 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.addBlueIslandEmoticons]);
     drawerEdgeDragWidthRatioListenable =
         _settingsBox.listenable(keys: [Settings.drawerEdgeDragWidthRatio]);
+    imageDisposeDistanceListenable =
+        _settingsBox.listenable(keys: [Settings.imageDisposeDistance]);
+    fixedImageDisposeRatioListenable =
+        _settingsBox.listenable(keys: [Settings.fixedImageDisposeRatio]);
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
 

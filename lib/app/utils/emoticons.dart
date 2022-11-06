@@ -27,16 +27,16 @@ final List<EmoticonData> blueIslandEmoticons = [
   EmoticonData(name: '(|||^ヮ^)', text: '(|||^ヮ^)'),
   EmoticonData(name: '(|||ˇヮˇ)', text: '(|||ˇヮˇ)'),
   EmoticonData(name: '(　↺ω↺)', text: '(　↺ω↺)'),
-  EmoticonData(name: '`ー´) `д´) `д´)', text: '`ー´) `д´) `д´)'),
+  EmoticonData(name: ' `ー´) `д´) `д´)', text: ' `ー´) `д´) `д´)'),
   EmoticonData(name: '接☆龙☆大☆成☆功', text: '接☆龙☆大☆成☆功'),
   EmoticonData(name: 'ᑭ`д´)ᓀ ∑ᑭ(`ヮ´ )ᑫ', text: 'ᑭ`д´)ᓀ ∑ᑭ(`ヮ´ )ᑫ'),
   EmoticonData(name: '乚 (^ω^ ﾐэ)Э好钩我咬', text: '乚 (^ω^ ﾐэ)Э好钩我咬'),
-  EmoticonData(name: '乚(`ヮ´ ﾐэ)Э', text: '乚(`ヮ´ ﾐэ)Э'),
+  EmoticonData(name: '乚(`ヮ´  ﾐэ)Э', text: '乚(`ヮ´  ﾐэ)Э'),
   EmoticonData(name: '( ﾟ∀。ﾐэ)Э三三三三　乚', text: '( ﾟ∀。ﾐэ)Э三三三三　乚'),
   EmoticonData(name: '(ˇωˇ ﾐэ)Э三三三三　乚', text: '(ˇωˇ ﾐэ)Э三三三三　乚'),
   EmoticonData(name: '( へ ﾟ∀ﾟ)べ摔低低', text: '( へ ﾟ∀ﾟ)べ摔低低'),
   EmoticonData(name: '(ベ ˇωˇ)べ 摔低低', text: '(ベ ˇωˇ)べ 摔低低'),
-  EmoticonData(name: '呼伦悲尔', text: '( ﾉд`ﾟ);´д`) ´_ゝ`)'),
+  EmoticonData(name: '呼伦悲尔', text: '( ﾉд`ﾟ);´д`) ´_ゝ`) '),
   EmoticonData(name: '鄂尔多厮', text: 'Σ( ﾟдﾟ)´ﾟДﾟ)　ﾟдﾟ)))'),
   EmoticonData(name: '智利', text: '( ﾟ∀。)∀。)∀。)'),
   EmoticonData(name: '阴山山脉', text: '(　ˇωˇ )◕∀◕｡)^ω^)'),
@@ -47,14 +47,14 @@ final List<EmoticonData> blueIslandEmoticons = [
   EmoticonData(name: 'UK酱', text: r'''\ ︵
 ᐕ)⁾⁾
 '''),
-  EmoticonData(name: '白羊', text: r'''╭◜◝ ͡ ◜◝ J J
+  EmoticonData(name: '白羊', text: r'''╭◜◝ ͡ ◜◝ J J
 (　　　　 `д´) 　“咩！”
 ╰◟д ◞ ͜ ◟д◞
 '''),
-  EmoticonData(name: '兔兔', text: r'''    /)　/)
+  EmoticonData(name: '兔兔', text: r'''     /)　/)
 c(　╹^╹)
 '''),
-  EmoticonData(name: 'neko', text: r"""　　       　∧,,　
+  EmoticonData(name: 'neko', text: r"""　　       　∧,,　
 　　　　ヾ ｀. ､`フ
 　　　(,｀'´ヽ､､ﾂﾞ
 　 (ヽｖ'　　　`''ﾞつ
@@ -65,38 +65,37 @@ c(　╹^╹)
 """),
   EmoticonData(name: '给你', text: r'''（\_/）
 (・_・)
- / 　>
-'''),
+ / 　>'''),
   EmoticonData(name: '举高高', text: r'''　　　　_∧＿∧_ 　　　　
-            ((∀｀/ 　) 　　
-　       /⌒　　 ／ 　　
-         /(__ノ＼_ノ 　　
-          (_ノ ||| 举高高~~
+            ((∀｀/ 　) 　　
+　       /⌒　　 ／ 　　
+         /(__ノ＼_ノ 　　
+          (_ノ ||| 举高高~~
 　∧＿∧　∧＿∧
- (( ・∀・ ))・∀・) )
- `＼　　 ∧ 　　ノ
+ (( ・∀・ ))・∀・) )
+ `＼　　 ∧ 　　ノ
 　/　｜/　　｜
 （＿ノ＿)_ノL＿)
 '''),
   EmoticonData(name: '举糕糕', text: r'''举糕糕~
 　　☆☆☆☆☆☆☆☆
- 　╭┻┻┻┻┻┻┻┻╮
- 　┃╱╲╱╲╱╲╱╲┃
- ╭┻━━━━━━━━┻╮
- ┃╱╲╱╲╱╲╱╲╱╲┃
- ┗━━━━━━━━━━┛
- 　　　∧＿∧　∧＿∧
+ 　╭┻┻┻┻┻┻┻┻╮
+ 　┃╱╲╱╲╱╲╱╲┃
+ ╭┻━━━━━━━━┻╮
+ ┃╱╲╱╲╱╲╱╲╱╲┃
+ ┗━━━━━━━━━━┛
+ 　　　∧＿∧　∧＿∧
 　　(( ・∀・ ))・∀・) )
- 　　`＼　　 ∧ 　　ノ
+ 　　`＼　　 ∧ 　　ノ
 　　　/　　｜/　　｜
- 　　（＿ノ＿)_ノL＿)
+ 　　（＿ノ＿)_ノL＿)
 '''),
-  EmoticonData(name: 'Happy肥肥Day', text: r'''. 　　　　   　.★ * ★.. 　
- 　.*★　*.　*..*　　　★ 　
- 　★　　　　　　 ★ 　　
-     ‘*. *'　 ʜᴀᴘᴘʏ 肥肥 ᴅᴀʏ 　　　
-         ‘★.　　 ★’ 　　　　 　　
-               ‘*..★
+  EmoticonData(name: 'Happy肥肥Day', text: r'''. 　　　　   　.★ * ★.. 　
+ 　.*★　*.　*..*　　　★ 　
+ 　★　　　　　　 ★ 　　
+     ‘*. *'　 ʜᴀᴘᴘʏ 肥肥 ᴅᴀʏ 　　　
+         ‘★.　　 ★’ 　　　　 　　
+               ‘*..★
 ┊┊┊┊☆☆☆☆☆☆☆☆┊┊┊┊
 ┊┊┊╭┻┻┻┻┻┻┻┻╮┊┊┊
 ┊┊┊┃╱╲╱╲╱╲╱╲┃┊┊┊
@@ -104,7 +103,7 @@ c(　╹^╹)
 ┊┊┃╱╲╱╲╱╲╱╲╱╲┃┊┊
 ╱▔┗━━━━━━━━━━┛▔╲
 '''),
-  EmoticonData(name: '举高高2', text: r'''              _∧＿∧_
+  EmoticonData(name: '举高高2', text: r'''              _∧＿∧_
 　　　 ((∀｀/ 　)
 　　　 /⌒　　 ／
 　 /(__ノ＼_ノ(((ヽ
@@ -120,7 +119,7 @@ c(　╹^╹)
 '''),
   EmoticonData(name: '催更喵gkd', text: r'''　　　　　　＿＿＿
 　　　　　／＞　　フ
-　　　　　| 　_　 _ l 我是一只催更的
+　　　　　|  　_　 _ l 我是一只催更的
 　 　　　／` ミ＿xノ 喵喵酱
 　　 　 /　　　 　 | gkdgkd
 　　　 /　 ヽ　　 ﾉ
@@ -131,7 +130,7 @@ c(　╹^╹)
 '''),
   EmoticonData(name: '巴拉巴拉', text: r'''　∧＿∧
 （｡･ω･｡)つ━☆・*。
-⊂　　 ノ 　　　・゜+.
+ ⊂　　 ノ 　　　・゜+.
 　しーＪ　　　°。+ *´¨)
 　　　 　　.· ´¸.·*´¨) ¸.·*¨)
 　　　　　　　 　(¸.·´ (¸.·’*

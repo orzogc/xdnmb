@@ -5,6 +5,7 @@ import '../modules/post_list.dart';
 import '../utils/extensions.dart';
 import '../utils/navigation.dart';
 import 'dialog.dart';
+import 'thread.dart';
 
 class _JumpPageDialog extends StatefulWidget {
   final int page;
@@ -98,9 +99,7 @@ class _JumpPageDialogState extends State<_JumpPageDialog> {
 class PageButton extends StatefulWidget {
   final PostListController controller;
 
-  final int? maxPage;
-
-  const PageButton({super.key, required this.controller, this.maxPage});
+  const PageButton({super.key, required this.controller});
 
   @override
   State<PageButton> createState() => _PageButtonState();
@@ -118,8 +117,17 @@ class _PageButtonState extends State<PageButton> {
         if (!isShowDialog) {
           isShowDialog = true;
           try {
+            int? maxPage;
+            if (widget.controller is ThreadTypeController) {
+              final replyCount =
+                  (widget.controller as ThreadTypeController).post?.replyCount;
+              maxPage = replyCount != null
+                  ? (replyCount > 0 ? (replyCount / 19).ceil() : 1)
+                  : null;
+            }
+
             final page = await postListDialog<int>(_JumpPageDialog(
-                page: widget.controller.page, maxPage: widget.maxPage));
+                page: widget.controller.page, maxPage: maxPage));
             if (page != null) {
               widget.controller.refreshPage(page);
             }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -93,10 +95,32 @@ class _FeedDialog extends StatelessWidget {
       );
 }
 
-class FeedBody extends StatelessWidget {
+class FeedBody extends StatefulWidget {
   final FeedController controller;
 
   const FeedBody(this.controller, {super.key});
+
+  @override
+  State<FeedBody> createState() => _FeedBodyState();
+}
+
+class _FeedBodyState extends State<FeedBody> {
+  late final StreamSubscription<int> _pageSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pageSubscription =
+        widget.controller.listenPage((page) => widget.controller.trySave());
+  }
+
+  @override
+  void dispose() {
+    _pageSubscription.cancel();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,12 +130,12 @@ class FeedBody extends StatelessWidget {
     return ValueListenableBuilder<Box>(
       valueListenable: settings.feedIdListenable,
       builder: (context, value, child) => PostListAnchorRefresher(
-        controller: controller,
+        controller: widget.controller,
         builder: (context, anchorController, refresh) =>
             BiListView<Visible<PostWithPage>>(
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
           controller: anchorController,
-          initialPage: controller.page,
+          initialPage: widget.controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async =>
               (await client.getFeed(settings.feedId, page: page))

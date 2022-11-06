@@ -105,7 +105,7 @@ Future<bool> saveImageData(Uint8List imageData) async {
       final file = File(path);
       await file.writeAsBytes(imageData);
       if (GetPlatform.isAndroid) {
-        MediaScanner.loadMedia(path: path);
+        await MediaScanner.loadMedia(path: path);
       }
 
       showToast('图片保存在 $savePath');

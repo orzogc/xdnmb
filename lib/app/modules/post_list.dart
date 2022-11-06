@@ -226,22 +226,9 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                 : title,
             actions: [
               if (controller.isXdnmbApi)
-                controller.isThreadType
-                    ? Obx(() {
-                        final post = (controller as ThreadTypeController).post;
-
-                        return PageButton(
-                            controller: controller,
-                            maxPage: post?.replyCount != null
-                                ? (post!.replyCount! != 0
-                                    ? (post.replyCount! / 19).ceil()
-                                    : 1)
-                                : null);
-                      })
-                    : PersistentDataService.isShowGuide
-                        ? AppBarPageButtonGuide(
-                            PageButton(controller: controller))
-                        : PageButton(controller: controller),
+                PersistentDataService.isShowGuide
+                    ? AppBarPageButtonGuide(PageButton(controller: controller))
+                    : PageButton(controller: controller),
               if (controller.isThreadType)
                 NotifyBuilder(
                     animation: controller,
