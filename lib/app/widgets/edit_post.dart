@@ -30,6 +30,7 @@ import '../modules/image.dart';
 import '../modules/paint.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
+import '../utils/emoticons.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/image.dart';
@@ -777,6 +778,7 @@ class _Post extends StatelessWidget {
   }
 
   Future<void> _savePost(PostData post, String cookie) async {
+    debugPrint('开始获取发布的新串数据');
     final history = PostHistoryService.to;
 
     try {
@@ -797,14 +799,18 @@ class _Post extends StatelessWidget {
                 _difference);
         if (threads.isNotEmpty) {
           await history.updatePostData(id, threads.first.mainPost);
+        } else {
+          showToast('获取发布的新串数据失败');
         }
       }
+
+      debugPrint('获取发布的新串数据成功');
     } catch (e) {
       showToast('获取发布的新串数据出错：${exceptionMessage(e)}');
     }
   }
 
-  Future<bool> _getPostId(
+  Future<bool> _getPost(
       {required int id,
       required ReplyData reply,
       required int page,
@@ -822,29 +828,75 @@ class _Post extends StatelessWidget {
     return false;
   }
 
-  // TODO: 应该优先利用已有接口
+  Future<bool> _getPostPage(
+      {required int id,
+      required xdnmb_api.LastPost lastPost,
+      required int page,
+      required String cookie}) async {
+    final thread = await XdnmbClientService.to.client
+        .getThread(lastPost.mainPostId!, page: page, cookie: cookie);
+    final posts = thread.replies.where((post) => post.id == lastPost.id);
+    if (posts.isNotEmpty) {
+      if (posts.length > 1) {
+        debugPrint('postId出现重复');
+      }
+
+      return await PostHistoryService.to
+          .updateReplyData(id: id, post: posts.last, page: page);
+    }
+
+    return false;
+  }
+
   Future<void> _saveReply(ReplyData reply, String cookie) async {
+    debugPrint('开始获取回串数据');
     final history = PostHistoryService.to;
+    final client = XdnmbClientService.to.client;
 
     try {
       final id = await history.saveReplyData(reply);
-      final thread = await XdnmbClientService.to.client
-          .getThread(reply.mainPostId, cookie: cookie);
-      final maxPage = thread.maxPage;
 
-      if (!await _getPostId(
-              id: id, reply: reply, page: maxPage, cookie: cookie) &&
-          maxPage > 1 &&
-          !await _getPostId(
-              id: id, reply: reply, page: maxPage - 1, cookie: cookie)) {
-        final lastPost = await _getLastPost(cookie);
-        if (lastPost != null &&
-            lastPost.mainPostId == reply.mainPostId &&
-            lastPost.userHash == reply.userHash &&
-            lastPost.postTime.difference(reply.postTime).abs() < _difference) {
-          await history.updateReplyData(id: id, post: lastPost);
+      final lastPost = await _getLastPost(cookie);
+      if (lastPost != null &&
+          lastPost.mainPostId == reply.mainPostId &&
+          lastPost.userHash == reply.userHash &&
+          lastPost.postTime.difference(reply.postTime).abs() < _difference) {
+        await history.updateReplyData(id: id, post: lastPost);
+        final thread = await client.getThread(reply.mainPostId, cookie: cookie);
+        final maxPage = thread.maxPage;
+
+        if (!await _getPostPage(
+            id: id, lastPost: lastPost, page: maxPage, cookie: cookie)) {
+          if (maxPage > 1) {
+            if (!await _getPostPage(
+                id: id,
+                lastPost: lastPost,
+                page: maxPage - 1,
+                cookie: cookie)) {
+              showToast('获取回串数据失败');
+            }
+          } else {
+            showToast('获取回串数据失败');
+          }
+        }
+      } else {
+        final thread = await client.getThread(reply.mainPostId, cookie: cookie);
+        final maxPage = thread.maxPage;
+
+        if (!await _getPost(
+            id: id, reply: reply, page: maxPage, cookie: cookie)) {
+          if (maxPage > 1) {
+            if (!await _getPost(
+                id: id, reply: reply, page: maxPage - 1, cookie: cookie)) {
+              showToast('获取回串数据失败');
+            }
+          } else {
+            showToast('获取回串数据失败');
+          }
         }
       }
+
+      debugPrint('获取回串数据成功');
     } catch (e) {
       showToast('获取回串数据出错：${exceptionMessage(e)}');
     }
@@ -1179,9 +1231,18 @@ class _Emoticon extends StatefulWidget {
 }
 
 class _EmoticonState extends State<_Emoticon> {
-  static final Iterable<EmoticonData> _list = xdnmb_api.Emoticon.list
+  static final Iterable<EmoticonData> _emoticonList = xdnmb_api.Emoticon.list
       .getRange(0, xdnmb_api.Emoticon.list.length - 3)
       .map((emoticon) => EmoticonData(name: emoticon.name, text: emoticon.text))
+      .followedBy([
+    EmoticonData(name: '防剧透', text: '[h][/h]', offset: 3),
+    EmoticonData(name: '全角空格', text: '　'),
+  ]);
+
+  static final Iterable<EmoticonData> _emoticonList2 = xdnmb_api.Emoticon.list
+      .getRange(0, xdnmb_api.Emoticon.list.length - 3)
+      .map((emoticon) => EmoticonData(name: emoticon.name, text: emoticon.text))
+      .followedBy(blueIslandEmoticons)
       .followedBy([
     EmoticonData(name: '防剧透', text: '[h][/h]', offset: 3),
     EmoticonData(name: '全角空格', text: '　'),
@@ -1250,7 +1311,10 @@ class _EmoticonState extends State<_Emoticon> {
                             shrinkWrap: true,
                           ),
                           children: [
-                            for (final emoticon in _list)
+                            for (final emoticon
+                                in SettingsService.to.addBlueIslandEmoticons
+                                    ? _emoticonList2
+                                    : _emoticonList)
                               TextButton(
                                 style: buttonStyle,
                                 onPressed: () => widget.onTap(

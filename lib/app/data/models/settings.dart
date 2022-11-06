@@ -23,6 +23,8 @@ abstract class Settings {
 
   static const String saveImagePath = 'saveImagePath';
 
+  static const String addBlueIslandEmoticons = 'addBlueIslandEmoticons';
+
   static const String drawerEdgeDragWidthRatio = 'drawerEdgeDragWidthRatio';
 
   static const String fixMissingFont = 'fixMissingFont';

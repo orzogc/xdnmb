@@ -425,6 +425,8 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   int _maxPage = 1;
 
+  late final StreamSubscription<int> _pageSubscription;
+
   Future<void> _saveBrowseHistory() async {
     if (!_isSavingBrowseHistory) {
       _isSavingBrowseHistory = true;
@@ -753,6 +755,8 @@ class _ThreadBodyState extends State<ThreadBody> {
     );
 
     widget.controller.addListener(_addRefresh);
+    _pageSubscription =
+        widget.controller.listenPage((page) => widget.controller.trySave());
 
     final replyCount = widget.controller.post?.replyCount;
     if (replyCount != null) {
@@ -766,6 +770,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     _anchorController.dispose();
     widget.controller.removeListener(_cancelJump);
     widget.controller.removeListener(_addRefresh);
+    _pageSubscription.cancel();
 
     super.dispose();
   }

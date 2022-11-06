@@ -31,7 +31,12 @@ class ControllerData {
 
   final PostListController controller;
 
-  const ControllerData(this.key, this.controller);
+  ControllerData(this.key, this.controller) {
+    controller.save = _save;
+  }
+
+  void _save() => ControllerStacksService.to._controllerBox
+      .put(key, PostListControllerData.fromController(controller));
 
   void _dispose() => controller.dispose();
 }
@@ -210,7 +215,6 @@ class ControllerStacksService extends GetxService {
         }
       }
 
-      int index = 0;
       for (final entry in keysMap.entries) {
         bool isAdded = false;
         for (final key in entry.value) {
@@ -220,14 +224,12 @@ class ControllerStacksService extends GetxService {
               addNewStack(controller.toController());
               isAdded = true;
             } else {
-              pushController(controller.toController(), index);
+              pushController(controller.toController(), _stacks.length - 1);
             }
           } else {
             debugPrint('控制器key不存在：$entry');
           }
         }
-
-        index++;
       }
 
       _currentStackIndex = PersistentDataService.to.controllerStackListIndex;

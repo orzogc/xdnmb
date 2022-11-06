@@ -107,6 +107,12 @@ class SettingsService extends GetxService {
   set saveImagePath(String? directory) =>
       _settingsBox.put(Settings.saveImagePath, directory);
 
+  bool get addBlueIslandEmoticons =>
+      _settingsBox.get(Settings.addBlueIslandEmoticons, defaultValue: true);
+
+  set addBlueIslandEmoticons(bool addBlueIslandEmoticons) =>
+      _settingsBox.put(Settings.addBlueIslandEmoticons, addBlueIslandEmoticons);
+
   double get drawerEdgeDragWidthRatio =>
       (_settingsBox.get(Settings.drawerEdgeDragWidthRatio, defaultValue: 0.25)
               as double)
@@ -143,6 +149,8 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> feedIdListenable;
 
   late final ValueListenable<Box> saveImagePathListenable;
+
+  late final ValueListenable<Box> addBlueIslandEmoticonsListenable;
 
   late final ValueListenable<Box> drawerEdgeDragWidthRatioListenable;
 
@@ -212,6 +220,8 @@ class SettingsService extends GetxService {
     feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
     saveImagePathListenable =
         _settingsBox.listenable(keys: [Settings.saveImagePath]);
+    addBlueIslandEmoticonsListenable =
+        _settingsBox.listenable(keys: [Settings.addBlueIslandEmoticons]);
     drawerEdgeDragWidthRatioListenable =
         _settingsBox.listenable(keys: [Settings.drawerEdgeDragWidthRatio]);
     fixMissingFontListenable =

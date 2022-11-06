@@ -737,7 +737,11 @@ class HistoryBody extends StatefulWidget {
 class _HistoryBodyState extends State<HistoryBody> {
   late final PageController _controller;
 
-  late final StreamSubscription<int?> _subscription;
+  late final StreamSubscription<int> _bottomBarIndexSubscription;
+
+  late final StreamSubscription<List<DateTimeRange?>> _dateRangeSubscription;
+
+  late final StreamSubscription<int> _toIndexSubscription;
 
   final HashMap<int, _Image?> _images = HashMap();
 
@@ -777,9 +781,14 @@ class _HistoryBodyState extends State<HistoryBody> {
   void initState() {
     super.initState();
 
+    _bottomBarIndexSubscription = widget.controller._bottomBarIndex
+        .listen((index) => widget.controller.trySave());
+    _dateRangeSubscription = widget.controller._dateRange
+        .listen((list) => widget.controller.trySave());
+
     _controller = PageController(initialPage: widget.controller.bottomBarIndex);
     _controller.addListener(_updateIndex);
-    _subscription = widget.controller._toIndex.listen((index) {
+    _toIndexSubscription = widget.controller._toIndex.listen((index) {
       if (index >= 0 && index <= 2 && index != _controller.page) {
         _controller.animateToPage(index,
             duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
@@ -789,7 +798,9 @@ class _HistoryBodyState extends State<HistoryBody> {
 
   @override
   void dispose() {
-    _subscription.cancel();
+    _bottomBarIndexSubscription.cancel();
+    _dateRangeSubscription.cancel();
+    _toIndexSubscription.cancel();
     _controller.removeListener(_updateIndex);
     _controller.dispose();
 

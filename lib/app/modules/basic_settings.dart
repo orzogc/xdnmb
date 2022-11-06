@@ -15,7 +15,7 @@ class _RestoreTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder(
+    return ValueListenableBuilder<Box>(
       valueListenable: settings.isRestoreTabsListenable,
       builder: (context, value, child) => ListTile(
         title: const Text('应用启动后恢复标签页'),

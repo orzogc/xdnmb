@@ -247,7 +247,7 @@ packages:
       name: easy_refresh
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.0.4+3"
+    version: "3.0.4+4"
   expandable_text:
     dependency: "direct main"
     description:
@@ -546,7 +546,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: d62da8f9539fc29f4af3160e87c203413d2474fe
+      resolved-ref: "5853300fbf5f7ce30aac972cb2a925781161a328"
       url: "https://github.com/orzogc/html_to_text.git"
     source: git
     version: "0.1.0"
@@ -1172,7 +1172,7 @@ packages:
       name: win32
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.0.1"
+    version: "3.1.0"
   xdg_directories:
     dependency: "direct main"
     description:
@@ -1185,7 +1185,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "527b8a762c80067de33c6ed421dd0f298c745a1f"
+      resolved-ref: "997c3f3b17e8eb7e6c8e2742dc029c1c8f98bea7"
       url: "https://github.com/orzogc/xdnmb_api.git"
     source: git
     version: "0.1.0"
@@ -1211,5 +1211,5 @@ packages:
     source: hosted
     version: "3.1.1"
 sdks:
-  dart: ">=2.18.2 <3.0.0"
+  dart: ">=2.18.4 <3.0.0"
   flutter: ">=3.3.0"

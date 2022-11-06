@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
@@ -64,8 +65,12 @@ class PostList {
   int get hashCode => Object.hash(postListType, id);
 }
 
+typedef OnPageCallback = void Function(int page);
+
 abstract class PostListController extends ChangeNotifier {
   final RxInt _page;
+
+  VoidCallback? save;
 
   PostListType get postListType;
 
@@ -114,6 +119,15 @@ abstract class PostListController extends ChangeNotifier {
     this.page = page;
     refresh();
   }
+
+  void trySave() {
+    if (save != null) {
+      save!();
+    }
+  }
+
+  StreamSubscription<int> listenPage(OnPageCallback onPage) =>
+      _page.listen(onPage);
 }
 
 class PostListBinding implements Bindings {

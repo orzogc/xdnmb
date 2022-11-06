@@ -15,7 +15,7 @@ class _SaveImagePath extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    final Widget widget = ValueListenableBuilder(
+    final Widget widget = ValueListenableBuilder<Box>(
       valueListenable: settings.saveImagePathListenable,
       builder: (context, value, child) => ListTile(
         title: const Text('图片保存位置'),
@@ -64,6 +64,26 @@ class _SaveImagePath extends StatelessWidget {
             },
           )
         : widget;
+  }
+}
+
+class _AddBlueIslandEmoticons extends StatelessWidget {
+  const _AddBlueIslandEmoticons({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.addBlueIslandEmoticonsListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('添加蓝岛颜文字'),
+        trailing: Switch(
+          value: settings.addBlueIslandEmoticons,
+          onChanged: (value) => settings.addBlueIslandEmoticons = value,
+        ),
+      ),
+    );
   }
 }
 
@@ -187,8 +207,8 @@ class AdvancedSettingsView extends GetView<AdvancedSettingsController> {
         body: ListView(
           children: [
             if (!GetPlatform.isIOS) const _SaveImagePath(),
-            if (GetPlatform.isAndroid || GetPlatform.isIOS)
-              const _DrawerDragRatio(),
+            const _AddBlueIslandEmoticons(),
+            if (GetPlatform.isMobile) const _DrawerDragRatio(),
             const _FixMissingFont(),
           ],
         ),
