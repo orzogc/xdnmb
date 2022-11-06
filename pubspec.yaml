@@ -1,7 +1,7 @@
 name: xdnmb
 description: An app for nmbxd.com.
 publish_to: 'none'
-version: 0.1.2-alpha+2
+version: 0.1.2+3
 
 environment:
   sdk: ">=2.18.4 <3.0.0"
