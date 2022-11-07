@@ -147,8 +147,11 @@ Map<String, String> _getParameters(
 
 int? _getId(Map<String, String> parameters) => parameters['id'].tryParseInt();
 
-int _getPage(Map<String, String> parameters) =>
-    max(parameters['page'].tryParseInt() ?? 1, 1);
+int? _getPage(Map<String, String> parameters) {
+  final page = parameters['page'].tryParseInt();
+
+  return page != null ? max(page, 1) : null;
+}
 
 void _parseXdnmbWeb(
     String url, List<String> paths, Map<String, String> queries) {
@@ -164,7 +167,7 @@ void _parseXdnmbWeb(
           final forum = ForumListService.to.findForum(name);
           if (forum != null) {
             final page = _getPage(parameters);
-            AppRoutes.toForum(forumId: forum.id, page: page);
+            AppRoutes.toForum(forumId: forum.id, page: page ?? 1);
           } else {
             debugPrint('未知的链接：$url');
           }
@@ -179,7 +182,9 @@ void _parseXdnmbWeb(
         if (postId != null) {
           final page = _getPage(parameters);
           AppRoutes.toThread(
-              mainPostId: postId, page: page, cancelAutoJump: true);
+              mainPostId: postId,
+              page: page ?? 1,
+              cancelAutoJump: page != null);
         } else {
           debugPrint('未知的链接：$url');
         }
@@ -204,7 +209,7 @@ void _parseXdnmbForum(
       case 'timeline.html':
         final id = _getId(parameters);
         final page = _getPage(parameters);
-        AppRoutes.toTimeline(timelineId: id ?? 1, page: page);
+        AppRoutes.toTimeline(timelineId: id ?? 1, page: page ?? 1);
 
         break;
       case 'showf':
@@ -212,7 +217,7 @@ void _parseXdnmbForum(
         final id = _getId(parameters);
         if (id != null && id > 0) {
           final page = _getPage(parameters);
-          AppRoutes.toForum(forumId: id, page: page);
+          AppRoutes.toForum(forumId: id, page: page ?? 1);
         } else {
           debugPrint('未知的链接：$url');
         }
@@ -223,7 +228,8 @@ void _parseXdnmbForum(
         final id = _getId(parameters);
         if (id != null && id > 0) {
           final page = _getPage(parameters);
-          AppRoutes.toThread(mainPostId: id, page: page, cancelAutoJump: true);
+          AppRoutes.toThread(
+              mainPostId: id, page: page ?? 1, cancelAutoJump: page != null);
         } else {
           debugPrint('未知的链接：$url');
         }
@@ -235,7 +241,7 @@ void _parseXdnmbForum(
         if (id != null && id > 0) {
           final page = _getPage(parameters);
           AppRoutes.toOnlyPoThread(
-              mainPostId: id, page: page, cancelAutoJump: true);
+              mainPostId: id, page: page ?? 1, cancelAutoJump: page != null);
         } else {
           debugPrint('未知的链接：$url');
         }
@@ -244,7 +250,7 @@ void _parseXdnmbForum(
       case 'feed':
       case 'feed.html':
         final page = _getPage(parameters);
-        AppRoutes.toFeed(page: page);
+        AppRoutes.toFeed(page: page ?? 1);
 
         break;
       default:

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
+import '../../utils/notify.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
 
@@ -17,33 +18,44 @@ class BlacklistService extends GetxService {
 
   late final Box<String> _userBlacklistBox;
 
-  final RxBool isReady = false.obs;
-
   late final HashSet<BlockForumData> forumBlacklist;
 
   late final HashSet<int> postBlacklist;
 
   late final HashSet<String> userBlacklist;
 
+  final Notifier forumBlacklistNotifier = Notifier();
+
+  final Notifier postAndUserBlacklistNotifier = Notifier();
+
+  final RxBool isReady = false.obs;
+
   int get forumBlacklistLength => _forumBlacklistBox.length;
 
-  bool hasForum(BlockForumData forum) => forumBlacklist.contains(forum);
+  bool hasForum({required int forumId, required int timelineId}) =>
+      forumBlacklist
+          .contains(BlockForumData(forumId: forumId, timelineId: timelineId));
 
   Future<void> clearForumBlacklist() async {
     await _forumBlacklistBox.clear();
     forumBlacklist.clear();
+    forumBlacklistNotifier.notify();
   }
 
   BlockForumData? blockedForum(int index) => _forumBlacklistBox.getAt(index);
 
-  Future<void> blockForum(BlockForumData forum) async {
+  Future<void> blockForum(
+      {required int forumId, required int timelineId}) async {
+    final forum = BlockForumData(forumId: forumId, timelineId: timelineId);
     await _forumBlacklistBox.add(forum);
     forumBlacklist.add(forum);
+    forumBlacklistNotifier.notify();
   }
 
   Future<void> unblockForum(BlockForumData forum) async {
     await forum.delete();
     forumBlacklist.remove(forum);
+    forumBlacklistNotifier.notify();
   }
 
   int get postBlacklistLength => _postBlacklistBox.length;
@@ -53,6 +65,7 @@ class BlacklistService extends GetxService {
   Future<void> clearPostBlacklist() async {
     await _postBlacklistBox.clear();
     postBlacklist.clear();
+    postAndUserBlacklistNotifier.notify();
   }
 
   int? blockedPost(int index) => _postBlacklistBox.getAt(index);
@@ -60,11 +73,13 @@ class BlacklistService extends GetxService {
   Future<void> blockPost(int postId) async {
     await _postBlacklistBox.put(postId, postId);
     postBlacklist.add(postId);
+    postAndUserBlacklistNotifier.notify();
   }
 
   Future<void> unblockPost(int postId) async {
     await _postBlacklistBox.delete(postId);
     postBlacklist.remove(postId);
+    postAndUserBlacklistNotifier.notify();
   }
 
   int get userBlacklistLength => _userBlacklistBox.length;
@@ -74,6 +89,7 @@ class BlacklistService extends GetxService {
   Future<void> clearUserBlacklist() async {
     await _userBlacklistBox.clear();
     userBlacklist.clear();
+    postAndUserBlacklistNotifier.notify();
   }
 
   String? blockedUser(int index) => _userBlacklistBox.getAt(index);
@@ -81,11 +97,13 @@ class BlacklistService extends GetxService {
   Future<void> blockUser(String userHash) async {
     await _userBlacklistBox.put(userHash, userHash);
     userBlacklist.add(userHash);
+    postAndUserBlacklistNotifier.notify();
   }
 
   Future<void> unblockUser(String userHash) async {
     await _userBlacklistBox.delete(userHash);
     userBlacklist.remove(userHash);
+    postAndUserBlacklistNotifier.notify();
   }
 
   @override

@@ -22,6 +22,7 @@ import '../data/services/user.dart';
 import '../data/services/version.dart';
 import '../modules/edit_post.dart';
 import '../routes/routes.dart';
+import '../utils/extensions.dart';
 import '../utils/image.dart';
 import '../utils/navigation.dart';
 import '../utils/notify.dart';
@@ -195,7 +196,14 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
         switch (controller.postListType) {
           case PostListType.thread:
           case PostListType.onlyPoThread:
-            title = ThreadAppBarTitle(controller as ThreadTypeController);
+            final mainPost = (controller as ThreadTypeController).post;
+            // 检查主串或饼干有没有被屏蔽
+            if (mainPost != null && mainPost.isBlocked()) {
+              WidgetsBinding.instance
+                  .addPostFrameCallback((timeStamp) => controller.refresh());
+            }
+
+            title = ThreadAppBarTitle(controller);
             break;
           case PostListType.forum:
           case PostListType.timeline:

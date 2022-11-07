@@ -17,6 +17,7 @@ import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/misc.dart';
 import '../utils/navigation.dart';
+import '../utils/notify.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -169,9 +170,8 @@ class _BlockForum extends StatelessWidget {
         ));
 
         if (result ?? false) {
-          await BlacklistService.to.blockForum(
-              BlockForumData(forumId: forumId, timelineId: controller.id));
-          controller.refreshPage();
+          await BlacklistService.to
+              .blockForum(forumId: forumId, timelineId: controller.id);
 
           final forumText = htmlToPlainText(
               Get.context!, ForumListService.to.forumName(forumId) ?? '');
@@ -199,10 +199,8 @@ class _ForumDialog extends StatelessWidget {
           Report(post.id),
           if (controller.isTimeline && post.forumId != null)
             _BlockForum(controller: controller, forumId: post.forumId!),
-          if (!post.isAdmin)
-            BlockPost(postId: post.id, onBlock: controller.refreshPage),
-          if (!post.isAdmin)
-            BlockUser(userHash: post.userHash, onBlock: controller.refreshPage),
+          if (!post.isAdmin) BlockPost(postId: post.id),
+          if (!post.isAdmin) BlockUser(userHash: post.userHash),
           CopyPostId(post.id),
           CopyPostReference(post.id),
           CopyPostContent(post),
@@ -246,21 +244,10 @@ class ForumBody extends StatelessWidget {
           }
 
           final threads = controller.isTimeline
-              ? (await client.getTimeline(id, page: page)
-                    ..retainWhere((thread) =>
-                        thread.mainPost.isAdmin ||
-                        !(blacklist.hasForum(BlockForumData(
-                                forumId: thread.mainPost.forumId,
-                                timelineId: id)) ||
-                            blacklist.hasPost(thread.mainPost.id) ||
-                            blacklist.hasUser(thread.mainPost.userHash))))
+              ? (await client.getTimeline(id, page: page))
                   .map((thread) => ThreadWithPage(thread, page))
                   .toList()
-              : (await client.getForum(id, page: page)
-                    ..retainWhere((thread) =>
-                        thread.mainPost.isAdmin ||
-                        !(blacklist.hasPost(thread.mainPost.id) ||
-                            blacklist.hasUser(thread.mainPost.userHash))))
+              : (await client.getForum(id, page: page))
                   .map((thread) => ThreadWithPage(thread, page))
                   .toList();
 
@@ -272,27 +259,43 @@ class ForumBody extends StatelessWidget {
           return threads;
         },
         itemBuilder: (context, thread, index) {
-          final item = AnchorItemWrapper(
-            key: thread.toValueKey(),
-            controller: anchorController,
-            index: thread.toIndex(),
-            child: PostCard(
-              child: PostInkWell(
-                post: thread.thread.mainPost,
-                showFullTime: false,
-                showPostId: false,
-                showForumName: controller.isTimeline,
-                contentMaxLines: 8,
-                poUserHash: thread.thread.mainPost.userHash,
-                onTap: (post) => AppRoutes.toThread(
-                    mainPostId: thread.thread.mainPost.id,
-                    mainPost: thread.thread.mainPost),
-                onLongPress: (post) => postListDialog(
-                  _ForumDialog(controller: controller, post: post),
-                ),
-              ),
-            ),
+          final mainPost = thread.thread.mainPost;
+
+          final Widget card = NotifyBuilder(
+            animation: blacklist.postAndUserBlacklistNotifier,
+            builder: (context, child) => !mainPost.isBlocked()
+                ? AnchorItemWrapper(
+                    key: thread.toValueKey(),
+                    controller: anchorController,
+                    index: thread.toIndex(),
+                    child: PostCard(
+                      child: PostInkWell(
+                        post: mainPost,
+                        showFullTime: false,
+                        showPostId: false,
+                        showForumName: controller.isTimeline,
+                        contentMaxLines: 8,
+                        poUserHash: mainPost.userHash,
+                        onTap: (post) => AppRoutes.toThread(
+                            mainPostId: mainPost.id, mainPost: mainPost),
+                        onLongPress: (post) => postListDialog(
+                          _ForumDialog(controller: controller, post: post),
+                        ),
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
           );
+
+          final Widget item = controller.isTimeline
+              ? NotifyBuilder(
+                  animation: blacklist.forumBlacklistNotifier,
+                  builder: (context, child) => !blacklist.hasForum(
+                          forumId: mainPost.forumId, timelineId: id)
+                      ? card
+                      : const SizedBox.shrink(),
+                )
+              : card;
 
           return data.showGuide &&
                   controller.isTimeline == defaultForum.isTimeline &&

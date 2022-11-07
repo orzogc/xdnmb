@@ -448,9 +448,9 @@ class Report extends StatelessWidget {
 class BlockPost extends StatelessWidget {
   final int postId;
 
-  final VoidCallback onBlock;
+  final VoidCallback? onBlock;
 
-  const BlockPost({super.key, required this.postId, required this.onBlock});
+  const BlockPost({super.key, required this.postId, this.onBlock});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
@@ -463,7 +463,10 @@ class BlockPost extends StatelessWidget {
 
           if (result ?? false) {
             await BlacklistService.to.blockPost(postId);
-            onBlock();
+            if (onBlock != null) {
+              onBlock!();
+            }
+
             showToast('屏蔽串号 ${postId.toPostNumber()}');
             postListBack();
           }
@@ -475,9 +478,9 @@ class BlockPost extends StatelessWidget {
 class BlockUser extends StatelessWidget {
   final String userHash;
 
-  final VoidCallback onBlock;
+  final VoidCallback? onBlock;
 
-  const BlockUser({super.key, required this.userHash, required this.onBlock});
+  const BlockUser({super.key, required this.userHash, this.onBlock});
 
   @override
   Widget build(BuildContext context) {
@@ -491,7 +494,10 @@ class BlockUser extends StatelessWidget {
 
         if (result ?? false) {
           await BlacklistService.to.blockUser(userHash);
-          onBlock();
+          if (onBlock != null) {
+            onBlock!();
+          }
+
           showToast('屏蔽饼干 $userHash');
           postListBack();
         }

@@ -7,6 +7,7 @@ import '../data/services/xdnmb_client.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
+import '../utils/notify.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
@@ -69,7 +70,6 @@ class ReferenceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final client = XdnmbClientService.to.client;
-    final blacklist = BlacklistService.to;
     Object? error;
 
     return Card(
@@ -88,55 +88,59 @@ class ReferenceCard extends StatelessWidget {
                   snapshot.hasData) {
                 final post = snapshot.data!;
                 final mainPostId = post.mainPostId;
-                final isVisible = (post.isAdmin ||
-                        !(blacklist.hasPost(postId) ||
-                            blacklist.hasUser(post.userHash)))
-                    .obs;
 
-                return Obx(
-                  () => isVisible.value
-                      ? Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            PostInkWell(
-                              post: post,
-                              showForumName: false,
-                              showReplyCount: false,
-                              poUserHash: poUserHash,
-                              onTap: (post) {},
-                              onLongPress: (post) => postListDialog(
-                                  _Dialog(post: post, mainPostId: mainPostId)),
-                              onLinkTap: (context, link, text) => parseUrl(
-                                  url: link,
-                                  mainPostId: this.mainPostId,
-                                  poUserHash: poUserHash),
-                              mouseCursor: SystemMouseCursors.basic,
-                              hoverColor: Theme.of(context).cardColor,
-                              canTapHiddenText: true,
-                              isContentScrollable: true,
-                            ),
-                            if (mainPostId != null &&
-                                mainPostId != this.mainPostId)
-                              Padding(
-                                padding: const EdgeInsets.all(10.0),
-                                child: TextButton(
-                                  onPressed: () => AppRoutes.toThread(
-                                      mainPostId: mainPostId,
-                                      mainPost:
-                                          post.id == mainPostId ? post : null),
-                                  child: const Text('跳转原串'),
+                return NotifyBuilder(
+                  animation: BlacklistService.to.postAndUserBlacklistNotifier,
+                  builder: (context, child) {
+                    final isVisible = (!post.isBlocked()).obs;
+
+                    return Obx(
+                      () => isVisible.value
+                          ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                PostInkWell(
+                                  post: post,
+                                  showForumName: false,
+                                  showReplyCount: false,
+                                  poUserHash: poUserHash,
+                                  onTap: (post) {},
+                                  onLongPress: (post) => postListDialog(_Dialog(
+                                      post: post, mainPostId: mainPostId)),
+                                  onLinkTap: (context, link, text) => parseUrl(
+                                      url: link,
+                                      mainPostId: this.mainPostId,
+                                      poUserHash: poUserHash),
+                                  mouseCursor: SystemMouseCursors.basic,
+                                  hoverColor: Theme.of(context).cardColor,
+                                  canTapHiddenText: true,
+                                  isContentScrollable: true,
                                 ),
+                                if (mainPostId != null &&
+                                    mainPostId != this.mainPostId)
+                                  Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: TextButton(
+                                      onPressed: () => AppRoutes.toThread(
+                                          mainPostId: mainPostId,
+                                          mainPost: post.id == mainPostId
+                                              ? post
+                                              : null),
+                                      child: const Text('跳转原串'),
+                                    ),
+                                  ),
+                              ],
+                            )
+                          : GestureDetector(
+                              onTap: () => isVisible.value = true,
+                              child: const Text(
+                                '本串已被屏蔽，点击查看内容',
+                                style: AppTheme.boldRed,
                               ),
-                          ],
-                        )
-                      : GestureDetector(
-                          onTap: () => isVisible.value = true,
-                          child: const Text(
-                            '本串已被屏蔽，点击查看内容',
-                            style: AppTheme.boldRed,
-                          ),
-                        ),
+                            ),
+                    );
+                  },
                 );
               }
 

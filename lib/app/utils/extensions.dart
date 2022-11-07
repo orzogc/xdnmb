@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/services/blacklist.dart';
+
 const int _int32Max = 4294967295;
 
 extension ParseStringExtension on String? {
@@ -47,6 +49,12 @@ extension PostExtension on PostBase {
   int toIndex(int page) => id.postIdToPostIndex(page);
 
   ValueKey<int> toValueKey(int page) => ValueKey<int>(toIndex(page));
+
+  bool isBlocked() {
+    final blacklist = BlacklistService.to;
+
+    return !isAdmin && (blacklist.hasPost(id) || blacklist.hasUser(userHash));
+  }
 }
 
 extension TextEditingControllerExtension on TextEditingController {

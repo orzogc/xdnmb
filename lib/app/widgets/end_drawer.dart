@@ -193,7 +193,8 @@ class _ForumList extends StatelessWidget {
                             key: ValueKey<PostList>(
                                 PostList.fromForumData(forum)),
                             onTap: () {
-                              if (forumId != forum.id) {
+                              if (!controller.isForumType ||
+                                  forumId != forum.id) {
                                 if (forum.isTimeline) {
                                   AppRoutes.toTimeline(timelineId: forum.id);
                                 } else {
