@@ -93,7 +93,7 @@ class HistoryController extends PostListController {
     ListenableNotifier(),
   ];
 
-  final RxInt _toIndex;
+  final PageController _controller;
 
   @override
   PostListType get postListType => PostListType.history;
@@ -113,9 +113,10 @@ class HistoryController extends PostListController {
       {required int page,
       int bottomBarIndex = 0,
       List<DateTimeRange?>? dateRange})
-      : _bottomBarIndex = bottomBarIndex.obs,
+      : assert(bottomBarIndex >= 0 && bottomBarIndex <= 2),
+        _bottomBarIndex = bottomBarIndex.obs,
         _dateRange = Rx(dateRange ?? List.filled(3, null)),
-        _toIndex = bottomBarIndex.obs,
+        _controller = PageController(initialPage: bottomBarIndex),
         super(page);
 
   ListenableNotifier _getNotifier([int? index]) {
@@ -152,6 +153,7 @@ class HistoryController extends PostListController {
     for (final notifier in _notifiers) {
       notifier.dispose();
     }
+    _controller.dispose();
 
     super.dispose();
   }
@@ -171,46 +173,51 @@ class HistoryAppBarTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
 
-    return FutureBuilder<int?>(future: Future(() {
-      switch (controller.bottomBarIndex) {
-        case _BrowseHistoryBody._index:
-          return history.browseHistoryCount(controller._getDateRange());
-        case _PostHistoryBody._index:
-          return history.postDataCount(controller._getDateRange());
-        case _ReplyHistoryBody._index:
-          return history.replyDataCount(controller._getDateRange());
-        default:
-          debugPrint('未知bottomBarIndex：${controller.bottomBarIndex}');
-          return null;
-      }
-    }), builder: (context, snapshot) {
-      late final String text;
-      switch (controller.bottomBarIndex) {
-        case _BrowseHistoryBody._index:
-          text = '浏览';
-          break;
-        case _PostHistoryBody._index:
-          text = '主题';
-          break;
-        case _ReplyHistoryBody._index:
-          text = '回复';
-          break;
-        default:
-          text = '历史记录';
-      }
+    return FutureBuilder<int?>(
+      future: Future(
+        () {
+          switch (controller.bottomBarIndex) {
+            case _BrowseHistoryBody._index:
+              return history.browseHistoryCount(controller._getDateRange());
+            case _PostHistoryBody._index:
+              return history.postDataCount(controller._getDateRange());
+            case _ReplyHistoryBody._index:
+              return history.replyDataCount(controller._getDateRange());
+            default:
+              debugPrint('未知bottomBarIndex：${controller.bottomBarIndex}');
+              return null;
+          }
+        },
+      ),
+      builder: (context, snapshot) {
+        late final String text;
+        switch (controller.bottomBarIndex) {
+          case _BrowseHistoryBody._index:
+            text = '浏览';
+            break;
+          case _PostHistoryBody._index:
+            text = '主题';
+            break;
+          case _ReplyHistoryBody._index:
+            text = '回复';
+            break;
+          default:
+            text = '历史记录';
+        }
 
-      if (snapshot.connectionState == ConnectionState.done &&
-          snapshot.hasData) {
-        return Text('$text（${snapshot.data}）');
-      }
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
+          return Text('$text（${snapshot.data}）');
+        }
 
-      if (snapshot.connectionState == ConnectionState.done &&
-          snapshot.hasError) {
-        showToast('读取历史记录失败：${snapshot.error}');
-      }
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasError) {
+          showToast('读取历史记录失败：${snapshot.error}');
+        }
 
-      return Text(text);
-    });
+        return Text(text);
+      },
+    );
   }
 }
 
@@ -735,13 +742,9 @@ class HistoryBody extends StatefulWidget {
 }
 
 class _HistoryBodyState extends State<HistoryBody> {
-  late final PageController _controller;
-
   late final StreamSubscription<int> _bottomBarIndexSubscription;
 
   late final StreamSubscription<List<DateTimeRange?>> _dateRangeSubscription;
-
-  late final StreamSubscription<int> _toIndexSubscription;
 
   final HashMap<int, _Image?> _images = HashMap();
 
@@ -771,7 +774,7 @@ class _HistoryBodyState extends State<HistoryBody> {
   }
 
   void _updateIndex() {
-    final page = _controller.page;
+    final page = widget.controller._controller.page;
     if (page != null) {
       widget.controller.bottomBarIndex = page.round();
     }
@@ -786,30 +789,21 @@ class _HistoryBodyState extends State<HistoryBody> {
     _dateRangeSubscription = widget.controller._dateRange
         .listen((list) => widget.controller.trySave());
 
-    _controller = PageController(initialPage: widget.controller.bottomBarIndex);
-    _controller.addListener(_updateIndex);
-    _toIndexSubscription = widget.controller._toIndex.listen((index) {
-      if (index >= 0 && index <= 2 && index != _controller.page) {
-        _controller.animateToPage(index,
-            duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
-      }
-    });
+    widget.controller._controller.addListener(_updateIndex);
   }
 
   @override
   void dispose() {
     _bottomBarIndexSubscription.cancel();
     _dateRangeSubscription.cancel();
-    _toIndexSubscription.cancel();
-    _controller.removeListener(_updateIndex);
-    _controller.dispose();
+    widget.controller._controller.removeListener(_updateIndex);
 
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) => PageView.builder(
-        controller: _controller,
+        controller: widget.controller._controller,
         itemCount: 3,
         itemBuilder: (context, index) {
           late final Widget body;
@@ -877,7 +871,9 @@ class HistoryBottomBar extends StatelessWidget {
           onTap: (value) {
             if (controller.bottomBarIndex != value) {
               popAllPopup();
-              controller._toIndex.trigger(value);
+              controller._controller.animateToPage(value,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeIn);
             }
           },
           items: const [

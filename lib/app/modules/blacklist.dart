@@ -6,7 +6,6 @@ import '../data/models/forum.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/forum.dart';
 import '../utils/extensions.dart';
-import '../utils/navigation.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -299,7 +298,6 @@ class _BottomBar extends StatelessWidget {
         currentIndex: index,
         onTap: (value) {
           if (index != value) {
-            popAllPopup();
             onIndex(value);
           }
         },
@@ -311,7 +309,33 @@ class _BottomBar extends StatelessWidget {
       );
 }
 
-class BlacklistController extends GetxController {}
+class BlacklistController extends GetxController {
+  final PageController _controller = PageController();
+
+  final RxInt _index = 0.obs;
+
+  void _updateIndex() {
+    final page = _controller.page;
+    if (page != null) {
+      _index.value = page.round();
+    }
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+
+    _controller.addListener(_updateIndex);
+  }
+
+  @override
+  void onClose() {
+    _controller.removeListener(_updateIndex);
+    _controller.dispose();
+
+    super.onClose();
+  }
+}
 
 class BlacklistBinding implements Bindings {
   @override
@@ -327,25 +351,33 @@ class BlacklistView extends GetView<BlacklistController> {
 
   static const int _userIndex = 2;
 
-  final RxInt _index = 0.obs;
+  const BlacklistView({super.key});
 
-  BlacklistView({super.key});
-
-  void _refresh() => _index.refresh();
+  void _refresh() => controller._index.refresh();
 
   @override
   Widget build(BuildContext context) => Obx(
         () => Scaffold(
           appBar: AppBar(
-            title: _AppBarTitle(index: _index.value),
+            title: _AppBarTitle(index: controller._index.value),
             actions: [
-              _AppBarPopupMenuButton(index: _index.value, refresh: _refresh),
+              _AppBarPopupMenuButton(
+                  index: controller._index.value, refresh: _refresh),
             ],
           ),
-          body: _Body(index: _index.value, refresh: _refresh),
+          body: PageView.builder(
+            controller: controller._controller,
+            itemCount: 3,
+            itemBuilder: (context, index) =>
+                _Body(index: index, refresh: _refresh),
+          ),
           bottomNavigationBar: _BottomBar(
-            index: _index.value,
-            onIndex: (index) => _index.value = index,
+            index: controller._index.value,
+            onIndex: (index) => controller._controller.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeIn,
+            ),
           ),
         ),
       );

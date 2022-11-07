@@ -82,7 +82,7 @@ abstract class AppPages {
         // 黑名单页面
         GetPage(
             name: AppRoutes.blacklist,
-            page: () => BlacklistView(),
+            page: () => const BlacklistView(),
             binding: BlacklistBinding(),
             transition: Transition.rightToLeft),
         // 基本设置页面
