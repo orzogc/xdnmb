@@ -260,16 +260,16 @@ class PostListControllerData extends HiveObject {
     }
   }
 
-  PostListController toController() {
+  PostListController toController([bool isRetainForumPage = true]) {
     switch (postListType) {
       case PostListType.thread:
         return ThreadController(id: id!, page: page, post: post);
       case PostListType.onlyPoThread:
         return OnlyPoThreadController(id: id!, page: page, post: post);
       case PostListType.forum:
-        return ForumController(id: id!, page: page);
+        return ForumController(id: id!, page: isRetainForumPage ? page : 1);
       case PostListType.timeline:
-        return TimelineController(id: id!, page: page);
+        return TimelineController(id: id!, page: isRetainForumPage ? page : 1);
       case PostListType.feed:
         return FeedController(page);
       case PostListType.history:

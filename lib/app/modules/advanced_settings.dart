@@ -87,6 +87,26 @@ class _AddBlueIslandEmoticons extends StatelessWidget {
   }
 }
 
+class _RestoreForumPage extends StatelessWidget {
+  const _RestoreForumPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.restoreForumPageListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('恢复标签页时恢复时间线/版块的页数'),
+        trailing: Switch(
+          value: settings.restoreForumPage,
+          onChanged: (value) => settings.restoreForumPage = value,
+        ),
+      ),
+    );
+  }
+}
+
 class _DrawerDragRatioDialog extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -347,6 +367,7 @@ class AdvancedSettingsView extends GetView<AdvancedSettingsController> {
           children: [
             if (!GetPlatform.isIOS) const _SaveImagePath(),
             const _AddBlueIslandEmoticons(),
+            const _RestoreForumPage(),
             if (GetPlatform.isMobile) const _DrawerDragRatio(),
             const _ImageDisposeDistance(),
             const _FixedImageDisposeRatio(),

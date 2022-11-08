@@ -64,9 +64,13 @@ class XdnmbClientService extends GetxService {
     }
 
     try {
-      debugPrint('开始更新X岛服务');
-
       await client.updateUrls();
+    } catch (e) {
+      debugPrint('更新X岛链接失败：$e');
+    }
+
+    try {
+      debugPrint('开始更新X岛版块');
 
       if (data.isReady.value) {
         if (data.updateForumListTime != null) {
@@ -88,9 +92,9 @@ class XdnmbClientService extends GetxService {
         await _updateForumList();
       }
 
-      debugPrint('更新X岛服务成功');
+      debugPrint('更新X岛版块成功');
     } catch (e) {
-      showToast('更新X岛服务失败：${exceptionMessage(e)}');
+      showToast('更新X岛版块失败：${exceptionMessage(e)}');
     }
 
     isReady.value = true;

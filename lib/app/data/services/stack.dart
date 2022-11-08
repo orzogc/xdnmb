@@ -221,10 +221,13 @@ class ControllerStacksService extends GetxService {
           final controller = map[_hiveKey(entry.key, key)];
           if (controller != null) {
             if (!isAdded) {
-              addNewStack(controller.toController());
+              addNewStack(
+                  controller.toController(SettingsService.isRestoreForumPage));
               isAdded = true;
             } else {
-              pushController(controller.toController(), _stacks.length - 1);
+              pushController(
+                  controller.toController(SettingsService.isRestoreForumPage),
+                  _stacks.length - 1);
             }
           } else {
             debugPrint('控制器key不存在：$entry');

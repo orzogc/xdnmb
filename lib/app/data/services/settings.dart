@@ -30,6 +30,8 @@ class SettingsService extends GetxService {
 
   static bool isFixMissingFont = false;
 
+  static bool isRestoreForumPage = false;
+
   late final Box _settingsBox;
 
   final RxBool hasBeenDarkMode = false.obs;
@@ -106,8 +108,10 @@ class SettingsService extends GetxService {
   String? get saveImagePath =>
       _settingsBox.get(Settings.saveImagePath, defaultValue: null);
 
-  set saveImagePath(String? directory) =>
-      _settingsBox.put(Settings.saveImagePath, directory);
+  set saveImagePath(String? directory) {
+    _settingsBox.put(Settings.saveImagePath, directory);
+    ImageService.savePath = directory;
+  }
 
   bool get addBlueIslandEmoticons =>
       _settingsBox.get(Settings.addBlueIslandEmoticons, defaultValue: true);
@@ -115,14 +119,25 @@ class SettingsService extends GetxService {
   set addBlueIslandEmoticons(bool addBlueIslandEmoticons) =>
       _settingsBox.put(Settings.addBlueIslandEmoticons, addBlueIslandEmoticons);
 
+  bool get restoreForumPage =>
+      _settingsBox.get(Settings.restoreForumPage, defaultValue: false);
+
+  set restoreForumPage(bool restoreForumPage) {
+    _settingsBox.put(Settings.restoreForumPage, restoreForumPage);
+    isRestoreForumPage = restoreForumPage;
+  }
+
   double get drawerEdgeDragWidthRatio =>
       (_settingsBox.get(Settings.drawerEdgeDragWidthRatio, defaultValue: 0.25)
               as double)
           .clamp(minDrawerEdgeDragWidthRatio, maxDrawerEdgeDragWidthRatio);
 
-  set drawerEdgeDragWidthRatio(double ratio) => _settingsBox.put(
-      Settings.drawerEdgeDragWidthRatio,
-      ratio.clamp(minDrawerEdgeDragWidthRatio, maxDrawerEdgeDragWidthRatio));
+  set drawerEdgeDragWidthRatio(double ratio) {
+    ratio =
+        ratio.clamp(minDrawerEdgeDragWidthRatio, maxDrawerEdgeDragWidthRatio);
+    _settingsBox.put(Settings.drawerEdgeDragWidthRatio, ratio);
+    _drawerDragRatio.value = ratio;
+  }
 
   int get imageDisposeDistance => max(
       _settingsBox.get(Settings.imageDisposeDistance, defaultValue: 120), 0);
@@ -168,6 +183,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> addBlueIslandEmoticonsListenable;
 
+  late final ValueListenable<Box> restoreForumPageListenable;
+
   late final ValueListenable<Box> drawerEdgeDragWidthRatioListenable;
 
   late final ValueListenable<Box> imageDisposeDistanceListenable;
@@ -176,15 +193,13 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> fixMissingFontListenable;
 
-  late final StreamSubscription<BoxEvent> _saveImagePathSubscription;
-
-  late final StreamSubscription<BoxEvent> _drawerEdgeDragWidthRatioSubscription;
-
   static Future<void> getData() async {
     final box = await Hive.openBox(HiveBoxName.settings);
     ImageService.savePath = box.get(Settings.saveImagePath, defaultValue: null);
     // 是否修复字体，结果保存在`fixMissingFont`
     isFixMissingFont = box.get(Settings.fixMissingFont, defaultValue: false);
+    isRestoreForumPage =
+        box.get(Settings.restoreForumPage, defaultValue: false);
   }
 
   void updateSaveImagePath() {
@@ -242,6 +257,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.saveImagePath]);
     addBlueIslandEmoticonsListenable =
         _settingsBox.listenable(keys: [Settings.addBlueIslandEmoticons]);
+    restoreForumPageListenable =
+        _settingsBox.listenable(keys: [Settings.restoreForumPage]);
     drawerEdgeDragWidthRatioListenable =
         _settingsBox.listenable(keys: [Settings.drawerEdgeDragWidthRatio]);
     imageDisposeDistanceListenable =
@@ -251,19 +268,7 @@ class SettingsService extends GetxService {
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
 
-    _saveImagePathSubscription =
-        _settingsBox.watch(key: Settings.saveImagePath).listen((event) {
-      debugPrint('saveImagePath change');
-      ImageService.savePath = saveImagePath;
-    });
-
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
-    _drawerEdgeDragWidthRatioSubscription = _settingsBox
-        .watch(key: Settings.drawerEdgeDragWidthRatio)
-        .listen((event) {
-      debugPrint('drawerEdgeDragWidthRatio change');
-      _drawerDragRatio.value = drawerEdgeDragWidthRatio;
-    });
 
     updateSaveImagePath();
 
@@ -275,8 +280,6 @@ class SettingsService extends GetxService {
 
   @override
   void onClose() async {
-    await _saveImagePathSubscription.cancel();
-    await _drawerEdgeDragWidthRatioSubscription.cancel();
     await _settingsBox.close();
     isReady.value = false;
 

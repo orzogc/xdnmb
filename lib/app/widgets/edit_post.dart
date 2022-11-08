@@ -919,7 +919,7 @@ class _Post extends StatelessWidget {
                 return;
               }
 
-              String content = getContent();
+              final content = getContent();
 
               if (content.isNotEmpty || imageData != null) {
                 final client = XdnmbClientService.to.client;
@@ -927,25 +927,26 @@ class _Post extends StatelessWidget {
                 final title = getTitle();
                 final name = getName();
                 final cookie = user.postCookie!;
+                String postContent = content;
 
                 Future(() async {
                   xdnmb_api.Image? image;
                   if (imageData != null) {
                     image = getImage(imageData!);
                     if (image == null) {
-                      throw ('无效的图片格式');
+                      throw '无效的图片格式';
                     }
                   }
 
                   if (postListType.isForumType) {
                     if (postListType.isForum &&
                         forumId == EditPost.dutyRoomId) {
-                      content = '举报理由：$reportReason\n$content';
+                      postContent = '举报理由：$reportReason\n$postContent';
                     }
 
                     await client.postNewThread(
                       forumId: forumId!,
-                      content: content,
+                      content: postContent,
                       name: name.isNotEmpty ? name : null,
                       title: title.isNotEmpty ? title : null,
                       watermark: isWatermark,
@@ -964,12 +965,12 @@ class _Post extends StatelessWidget {
                         buffer.writeln('设备信息：$deviceInfo');
                       }
 
-                      content = '$content\n\n${buffer.toString()}';
+                      postContent = '$postContent\n\n${buffer.toString()}';
                     }
 
                     await client.replyThread(
                       mainPostId: postList.id!,
-                      content: content,
+                      content: postContent,
                       name: name.isNotEmpty ? name : null,
                       title: title.isNotEmpty ? title : null,
                       watermark: isWatermark,
@@ -989,7 +990,7 @@ class _Post extends StatelessWidget {
                           userHash: cookie.name,
                           name: name,
                           title: title,
-                          content: content);
+                          content: postContent);
                       _savePost(post, cookie.cookie());
                     } else {
                       showToast('回串成功');
@@ -1000,7 +1001,7 @@ class _Post extends StatelessWidget {
                           userHash: cookie.name,
                           name: name,
                           title: title,
-                          content: content);
+                          content: postContent);
                       _saveReply(reply, cookie.cookie());
                     }
 

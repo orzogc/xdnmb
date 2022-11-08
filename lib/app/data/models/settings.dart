@@ -25,6 +25,8 @@ abstract class Settings {
 
   static const String addBlueIslandEmoticons = 'addBlueIslandEmoticons';
 
+  static const String restoreForumPage = 'restoreForumPage';
+
   static const String drawerEdgeDragWidthRatio = 'drawerEdgeDragWidthRatio';
 
   static const String imageDisposeDistance = 'imageDisposeDistance';

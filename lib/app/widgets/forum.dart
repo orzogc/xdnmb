@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -210,10 +212,32 @@ class _ForumDialog extends StatelessWidget {
       );
 }
 
-class ForumBody extends StatelessWidget {
+class ForumBody extends StatefulWidget {
   final ForumTypeController controller;
 
   const ForumBody(this.controller, {super.key});
+
+  @override
+  State<ForumBody> createState() => _ForumBodyState();
+}
+
+class _ForumBodyState extends State<ForumBody> {
+  late final StreamSubscription<int> _pageSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pageSubscription =
+        widget.controller.listenPage((page) => widget.controller.trySave());
+  }
+
+  @override
+  void dispose() {
+    _pageSubscription.cancel();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -221,6 +245,7 @@ class ForumBody extends StatelessWidget {
     final forums = ForumListService.to;
     final blacklist = BlacklistService.to;
     final data = PersistentDataService.to;
+    final controller = widget.controller;
     final id = controller.id;
 
     return PostListAnchorRefresher(
@@ -261,9 +286,16 @@ class ForumBody extends StatelessWidget {
         itemBuilder: (context, thread, index) {
           final mainPost = thread.thread.mainPost;
 
-          final Widget card = NotifyBuilder(
-            animation: blacklist.postAndUserBlacklistNotifier,
-            builder: (context, child) => !mainPost.isBlocked()
+          final Widget item = NotifyBuilder(
+            animation: Listenable.merge([
+              if (controller.isTimeline) blacklist.forumBlacklistNotifier,
+              blacklist.postAndUserBlacklistNotifier,
+            ]),
+            builder: (context, child) => !((controller.isTimeline &&
+                        !mainPost.isAdmin &&
+                        blacklist.hasForum(
+                            forumId: mainPost.forumId, timelineId: id)) ||
+                    mainPost.isBlocked())
                 ? AnchorItemWrapper(
                     key: thread.toValueKey(),
                     controller: anchorController,
@@ -286,16 +318,6 @@ class ForumBody extends StatelessWidget {
                   )
                 : const SizedBox.shrink(),
           );
-
-          final Widget item = controller.isTimeline
-              ? NotifyBuilder(
-                  animation: blacklist.forumBlacklistNotifier,
-                  builder: (context, child) => !blacklist.hasForum(
-                          forumId: mainPost.forumId, timelineId: id)
-                      ? card
-                      : const SizedBox.shrink(),
-                )
-              : card;
 
           return data.showGuide &&
                   controller.isTimeline == defaultForum.isTimeline &&

@@ -40,7 +40,7 @@ class _XdnmbApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GetMaterialApp(
-        title: 'X岛',
+        title: '霞岛',
         initialBinding: servicesBindings(),
         getPages: getPages,
         // 默认打开综合线
