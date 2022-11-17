@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../../widgets/dialog.dart';
@@ -18,7 +19,9 @@ class PersistentDataService extends GetxService {
 
   static const Duration updateForumListInterval = Duration(hours: 6);
 
-  static bool isShowGuide = true;
+  static late final bool isFirstLaunched;
+
+  static late final bool isShowGuide;
 
   late final Box _dataBox;
 
@@ -29,6 +32,12 @@ class PersistentDataService extends GetxService {
   double _maxBottomHeight = 0.0;
 
   final RxBool isReady = false.obs;
+
+  bool get firstLaunched =>
+      _dataBox.get(PersistentData.firstLaunched, defaultValue: true);
+
+  set firstLaunched(bool firstLaunched) =>
+      _dataBox.put(PersistentData.firstLaunched, firstLaunched);
 
   String get notice => _dataBox.get(PersistentData.notice, defaultValue: '');
 
@@ -54,10 +63,20 @@ class PersistentDataService extends GetxService {
   set diceUpper(int upper) => _dataBox.put(PersistentData.diceUpper, upper);
 
   bool get showGuide =>
+      !SettingsService.isBackdropUI &&
       _dataBox.get(PersistentData.showGuide, defaultValue: true);
 
   set showGuide(bool showGuide) =>
       _dataBox.put(PersistentData.showGuide, showGuide);
+
+  bool get showBackdropGuide =>
+      SettingsService.isBackdropUI &&
+      _dataBox.get(PersistentData.showBackdropGuide, defaultValue: true);
+
+  set showBackdropGuide(bool showBackdropGuide) =>
+      _dataBox.put(PersistentData.showBackdropGuide, showBackdropGuide);
+
+  bool get shouldShowGuide => showBackdropGuide || showGuide;
 
   DateTime? get updateForumListTime =>
       _dataBox.get(PersistentData.updateForumListTime, defaultValue: null);
@@ -71,7 +90,15 @@ class PersistentDataService extends GetxService {
   set controllerStackListIndex(int index) =>
       _dataBox.put(PersistentData.controllerStackListIndex, index);
 
+  late final ValueListenable<Box> showGuideListenable;
+
   StreamSubscription<bool>? _keyboardSubscription;
+
+  static Future<void> getData() async {
+    final box = await Hive.openBox(HiveBoxName.data);
+
+    isFirstLaunched = box.get(PersistentData.firstLaunched, defaultValue: true);
+  }
 
   static double _bottomHeight() => EdgeInsets.fromWindowPadding(
           WidgetsBinding.instance.window.viewInsets,
@@ -91,11 +118,14 @@ class PersistentDataService extends GetxService {
   Future<void> showNotice() async {
     if (SettingsService.to.showNotice) {
       final client = XdnmbClientService.to;
-      while (!client.hasGotNotice) {
-        debugPrint('正在等待获取公告');
+      while (!client.finishGettingNotice) {
+        debugPrint('正在等待获取X岛公告');
         await Future.delayed(const Duration(milliseconds: 500));
       }
-      await showNoticeDialog(showCheckbox: true);
+
+      if (notice.isNotEmpty) {
+        await showNoticeDialog(showCheckbox: true);
+      }
     }
   }
 
@@ -120,7 +150,9 @@ class PersistentDataService extends GetxService {
     super.onInit();
 
     _dataBox = await Hive.openBox(HiveBoxName.data);
-    isShowGuide = showGuide;
+    isShowGuide = shouldShowGuide;
+    showGuideListenable = _dataBox.listenable(
+        keys: [PersistentData.showGuide, PersistentData.showBackdropGuide]);
 
     if (GetPlatform.isMobile) {
       bottomHeight.value = _bottomHeight();

@@ -16,6 +16,7 @@ class _MinHeightIndicator extends StatelessWidget {
 
   final Widget child;
 
+  // ignore: unused_element
   const _MinHeightIndicator({super.key, required this.child});
 
   @override

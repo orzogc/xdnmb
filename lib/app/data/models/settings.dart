@@ -34,4 +34,6 @@ abstract class Settings {
   static const String fixedImageDisposeRatio = 'fixedImageDisposeRatio';
 
   static const String fixMissingFont = 'fixMissingFont';
+
+  static const String backdropUI = 'backdropUI';
 }

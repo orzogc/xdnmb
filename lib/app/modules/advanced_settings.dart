@@ -9,6 +9,7 @@ import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 
 class _SaveImagePath extends StatelessWidget {
+  // ignore: unused_element
   const _SaveImagePath({super.key});
 
   @override
@@ -68,6 +69,7 @@ class _SaveImagePath extends StatelessWidget {
 }
 
 class _AddBlueIslandEmoticons extends StatelessWidget {
+  // ignore: unused_element
   const _AddBlueIslandEmoticons({super.key});
 
   @override
@@ -88,6 +90,7 @@ class _AddBlueIslandEmoticons extends StatelessWidget {
 }
 
 class _RestoreForumPage extends StatelessWidget {
+  // ignore: unused_element
   const _RestoreForumPage({super.key});
 
   @override
@@ -110,6 +113,7 @@ class _RestoreForumPage extends StatelessWidget {
 class _DrawerDragRatioDialog extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // ignore: unused_element
   _DrawerDragRatioDialog({super.key});
 
   @override
@@ -164,6 +168,7 @@ class _DrawerDragRatioDialog extends StatelessWidget {
 }
 
 class _DrawerDragRatio extends StatelessWidget {
+  // ignore: unused_element
   const _DrawerDragRatio({super.key});
 
   @override
@@ -184,6 +189,7 @@ class _DrawerDragRatio extends StatelessWidget {
 class _ImageDisposeDistanceDialog extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // ignore: unused_element
   _ImageDisposeDistanceDialog({super.key});
 
   @override
@@ -236,6 +242,7 @@ class _ImageDisposeDistanceDialog extends StatelessWidget {
 }
 
 class _ImageDisposeDistance extends StatelessWidget {
+  // ignore: unused_element
   const _ImageDisposeDistance({super.key});
 
   @override
@@ -256,6 +263,7 @@ class _ImageDisposeDistance extends StatelessWidget {
 class _FixedImageDisposeRatioDialog extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // ignore: unused_element
   _FixedImageDisposeRatioDialog({super.key});
 
   @override
@@ -308,6 +316,7 @@ class _FixedImageDisposeRatioDialog extends StatelessWidget {
 }
 
 class _FixedImageDisposeRatio extends StatelessWidget {
+  // ignore: unused_element
   const _FixedImageDisposeRatio({super.key});
 
   @override
@@ -326,6 +335,7 @@ class _FixedImageDisposeRatio extends StatelessWidget {
 }
 
 class _FixMissingFont extends StatelessWidget {
+  // ignore: unused_element
   const _FixMissingFont({super.key});
 
   @override
@@ -346,6 +356,28 @@ class _FixMissingFont extends StatelessWidget {
   }
 }
 
+class _BackdropUI extends StatelessWidget {
+  // ignore: unused_element
+  const _BackdropUI({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder(
+      valueListenable: settings.backdropUIListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('应用Backdrop UI'),
+        subtitle: const Text('更改后需要重启应用'),
+        trailing: Switch(
+          value: settings.backdropUI,
+          onChanged: (value) => settings.backdropUI = value,
+        ),
+      ),
+    );
+  }
+}
+
 class AdvancedSettingsController extends GetxController {}
 
 class AdvancedSettingsBinding implements Bindings {
@@ -359,20 +391,24 @@ class AdvancedSettingsView extends GetView<AdvancedSettingsController> {
   const AdvancedSettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('高级设置'),
-        ),
-        body: ListView(
-          children: [
-            if (!GetPlatform.isIOS) const _SaveImagePath(),
-            const _AddBlueIslandEmoticons(),
-            const _RestoreForumPage(),
-            if (GetPlatform.isMobile) const _DrawerDragRatio(),
-            const _ImageDisposeDistance(),
-            const _FixedImageDisposeRatio(),
-            const _FixMissingFont(),
-          ],
+  Widget build(BuildContext context) => SafeArea(
+        top: false,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('高级设置'),
+          ),
+          body: ListView(
+            children: [
+              if (!GetPlatform.isIOS) const _SaveImagePath(),
+              const _AddBlueIslandEmoticons(),
+              const _RestoreForumPage(),
+              if (GetPlatform.isMobile) const _DrawerDragRatio(),
+              const _ImageDisposeDistance(),
+              const _FixedImageDisposeRatio(),
+              const _FixMissingFont(),
+              if (!GetPlatform.isIOS) const _BackdropUI(),
+            ],
+          ),
         ),
       );
 }

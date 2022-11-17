@@ -58,9 +58,11 @@ class ImageService extends GetxService {
     }
 
     final settings = SettingsService.to;
-    if (settings.isReady.value) {
-      settings.updateSaveImagePath();
+    while (!settings.isReady.value) {
+      debugPrint('正在等待读取设置数据');
+      await Future.delayed(const Duration(milliseconds: 100));
     }
+    settings.updateSaveImagePath();
 
     isReady.value = true;
     debugPrint('更新图片服务成功');

@@ -57,6 +57,7 @@ class _ForumName extends StatelessWidget {
   final ForumCallback onForum;
 
   const _ForumName(
+      // ignore: unused_element
       {super.key,
       required this.postListType,
       required this.forumId,
@@ -107,6 +108,7 @@ class _ReportReasonDialog extends StatelessWidget {
 
   final String? text;
 
+  // ignore: unused_element
   _ReportReasonDialog({super.key, this.text});
 
   @override
@@ -156,6 +158,7 @@ class _ReportReason extends StatelessWidget {
 
   final RxnString _userDefined;
 
+  // ignore: unused_element
   _ReportReason({super.key, this.reportReason, required this.onReportReason})
       : _value = RxnString(reportReason),
         _userDefined = RxnString(xdnmb_api.ReportReason.list
@@ -241,7 +244,10 @@ class _WatermarkDialog extends StatelessWidget {
   final _WatermarkCallback onWatermark;
 
   _WatermarkDialog(
-      {super.key, required bool isWatermark, required this.onWatermark})
+      // ignore: unused_element
+      {super.key,
+      required bool isWatermark,
+      required this.onWatermark})
       : isWatermark = isWatermark.obs;
 
   @override
@@ -301,6 +307,8 @@ class _WatermarkDialog extends StatelessWidget {
 }
 
 class _Image extends StatelessWidget {
+  final double maxWidth;
+
   final double maxHeight;
 
   final String? imagePath;
@@ -320,7 +328,9 @@ class _Image extends StatelessWidget {
   final UniqueKey _tag = UniqueKey();
 
   _Image(
+      // ignore: unused_element
       {super.key,
+      required this.maxWidth,
       required this.maxHeight,
       this.imagePath,
       this.imageData,
@@ -360,9 +370,7 @@ class _Image extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
-        constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width / 3.0,
-            maxHeight: maxHeight),
+        constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
         child: AlignPositioned.relative(
           alignment: Alignment.topRight,
           container: GestureDetector(
@@ -407,7 +415,10 @@ class _AttachDeviceInfo extends StatelessWidget {
   final _OnCheckCallback onCheck;
 
   const _AttachDeviceInfo(
-      {super.key, required this.isCheck, required this.onCheck});
+      // ignore: unused_element
+      {super.key,
+      required this.isCheck,
+      required this.onCheck});
 
   @override
   Widget build(BuildContext context) => Row(
@@ -435,6 +446,7 @@ class _AttachDeviceInfo extends StatelessWidget {
 class _ShowEmoticon extends StatelessWidget {
   final RxBool showEmoticon;
 
+  // ignore: unused_element
   const _ShowEmoticon(this.showEmoticon, {super.key});
 
   @override
@@ -460,6 +472,7 @@ typedef _InsertTextCallback = void Function(String text, [int? offset]);
 class _DiceDialog extends StatefulWidget {
   final _InsertTextCallback onDice;
 
+  // ignore: unused_element
   const _DiceDialog({super.key, required this.onDice});
 
   @override
@@ -605,6 +618,7 @@ class _DiceDialogState extends State<_DiceDialog> {
 class _Dice extends StatelessWidget {
   final _InsertTextCallback onDice;
 
+  // ignore: unused_element
   const _Dice({super.key, required this.onDice});
 
   @override
@@ -619,6 +633,7 @@ class _Paint extends StatelessWidget {
 
   final ImageDataCallback onImage;
 
+  // ignore: unused_element
   const _Paint({super.key, this.imageData, required this.onImage});
 
   @override
@@ -646,6 +661,7 @@ class _SaveDraft extends StatelessWidget {
   final _GetText getContent;
 
   const _SaveDraft(
+      // ignore: unused_element
       {super.key,
       required this.getTitle,
       required this.getName,
@@ -672,6 +688,7 @@ class _SaveDraft extends StatelessWidget {
 }
 
 class _Cookie extends StatelessWidget {
+  // ignore: unused_element
   const _Cookie({super.key});
 
   @override
@@ -755,6 +772,7 @@ class _Post extends StatelessWidget {
   final VoidCallback onPost;
 
   const _Post(
+      // ignore: unused_element
       {super.key,
       required this.postList,
       this.forumId,
@@ -1078,6 +1096,7 @@ class _Post extends StatelessWidget {
 class _EditEmoticon extends StatefulWidget {
   final EmoticonData? emoticon;
 
+  // ignore: unused_element
   const _EditEmoticon({super.key, this.emoticon});
 
   @override
@@ -1187,6 +1206,7 @@ class _EditEmoticonState extends State<_EditEmoticon> {
 class _EmoticonDialog extends StatelessWidget {
   final EmoticonData emoticon;
 
+  // ignore: unused_element
   const _EmoticonDialog(this.emoticon, {super.key});
 
   @override
@@ -1225,6 +1245,7 @@ class _EmoticonDialog extends StatelessWidget {
 class _Emoticon extends StatefulWidget {
   final _InsertTextCallback onTap;
 
+  // ignore: unused_element
   const _Emoticon({super.key, required this.onTap});
 
   @override
@@ -1542,10 +1563,10 @@ class EditPostState extends State<EditPost> {
                           final result = await AppRoutes.toEditPost(
                               postListType: _postList.value.postListType,
                               id: _postList.value.id!,
+                              forumId: _forumId.value,
                               title: _titleController.text,
                               name: _nameController.text,
                               content: _contentController.text,
-                              forumId: _forumId.value,
                               imagePath: _imagePath.value,
                               imageData: _imageData.value,
                               isWatermark: _isWatermark.value,
@@ -1625,6 +1646,7 @@ class EditPostState extends State<EditPost> {
                                 if (_imagePath.value != null ||
                                     _imageData.value != null)
                                   _Image(
+                                    maxWidth: constraints.maxWidth / 3.0,
                                     maxHeight: constraints.maxHeight,
                                     imagePath: _imagePath.value,
                                     imageData: _imageData.value,
@@ -1781,9 +1803,12 @@ class EditPostState extends State<EditPost> {
   @override
   Widget build(BuildContext context) {
     debugPrint('build edit');
+
     final data = PersistentDataService.to;
-    final fullHeight = MediaQuery.of(context).size.height -
-        Scaffold.of(context).appBarMaxHeight!;
+    final media = MediaQuery.of(context);
+    final fullHeight = media.size.height -
+        Scaffold.of(context).appBarMaxHeight! -
+        media.padding.bottom;
 
     return ValueListenableBuilder<double>(
       valueListenable: data.bottomHeight,
@@ -1791,7 +1816,8 @@ class EditPostState extends State<EditPost> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (_isAtBottom)
-            _inputArea(context, min(widget.height!, fullHeight - value))
+            _inputArea(
+                context, max(min(widget.height!, fullHeight - value), 0.0))
           else
             Obx(
               () {
@@ -1800,10 +1826,8 @@ class EditPostState extends State<EditPost> {
                     fullHeight - (data.keyboardHeight ?? _defaultHeight);
 
                 return (data.isKeyboardVisible.value || _showEmoticon.value)
-                    ? _inputArea(
-                        context, lessHeight > 0 ? lessHeight : _defaultHeight)
-                    : _inputArea(context,
-                        fullHeight > 0 ? dynamicHeight : _defaultHeight);
+                    ? _inputArea(context, max(lessHeight, 0.0))
+                    : _inputArea(context, max(dynamicHeight, 0.0));
               },
             ),
           Obx(

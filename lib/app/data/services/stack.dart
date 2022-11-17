@@ -259,10 +259,6 @@ class ControllerStacksService extends GetxService {
       await Future.delayed(const Duration(milliseconds: 100));
     }
 
-    if (settings.isRestoreTabs) {
-      index = data.controllerStackListIndex;
-    }
-
     await _buildStacks();
 
     isReady.value = true;

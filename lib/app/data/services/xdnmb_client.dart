@@ -15,7 +15,7 @@ class XdnmbClientService extends GetxService {
   // TODO: 允许用户设置timeout
   final XdnmbApi client;
 
-  bool hasGotNotice = false;
+  bool finishGettingNotice = false;
 
   final RxBool isReady = false.obs;
 
@@ -35,9 +35,15 @@ class XdnmbClientService extends GetxService {
     final forumMap = {for (final forum in forumList.forumList) forum.id: forum};
 
     final forums = ForumListService.to;
-    if (forums.isReady.value) {
-      await forums.updateForums(timelineMap, forumMap);
+
+    while (!forums.isReady.value) {
+      debugPrint('正在等待读取版块数据');
+      await Future.delayed(const Duration(milliseconds: 100));
     }
+
+    await forums.updateForums(timelineMap, forumMap);
+
+    PersistentDataService.to.updateForumListTime = DateTime.now();
   }
 
   @override
@@ -45,22 +51,41 @@ class XdnmbClientService extends GetxService {
     super.onReady();
 
     final data = PersistentDataService.to;
+    final settings = SettingsService.to;
 
     try {
       debugPrint('开始获取X岛公告');
 
-      final notice = await client.getNotice();
+      late final Notice notice;
+      if (PersistentDataService.isFirstLaunched) {
+        while (true) {
+          debugPrint('正在获取X岛公告');
 
-      if (data.isReady.value && SettingsService.to.isReady.value) {
-        debugPrint('保存公告');
-        data.saveNotice(notice);
+          try {
+            notice = await client.getNotice();
+            break;
+          } catch (e) {
+            debugPrint('获取X岛公告失败：${exceptionMessage(e)}');
+            await Future.delayed(const Duration(seconds: 5));
+          }
+        }
+      } else {
+        notice = await client.getNotice();
       }
+
+      while (!(data.isReady.value && settings.isReady.value)) {
+        debugPrint('正在等待读取数据和设置');
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+
+      debugPrint('保存X岛公告');
+      data.saveNotice(notice);
 
       debugPrint('获取X岛公告成功');
     } catch (e) {
       showToast('获取X岛公告失败：${exceptionMessage(e)}');
     } finally {
-      hasGotNotice = true;
+      finishGettingNotice = true;
     }
 
     try {
@@ -70,31 +95,36 @@ class XdnmbClientService extends GetxService {
     }
 
     try {
-      debugPrint('开始更新X岛版块');
+      debugPrint('开始更新X岛版块列表');
 
-      if (data.isReady.value) {
-        if (data.updateForumListTime != null) {
-          if (DateTime.now().difference(data.updateForumListTime!) >=
-              PersistentDataService.updateForumListInterval) {
-            debugPrint('版块列表过期，更新版块列表');
+      if (PersistentDataService.isFirstLaunched) {
+        while (true) {
+          debugPrint('正在获取X岛版块列表');
+
+          try {
             await _updateForumList();
-            data.updateForumListTime = DateTime.now();
-          } else {
-            debugPrint('版块列表未过期，取消更新');
+            break;
+          } catch (e) {
+            debugPrint('获取X岛版块列表失败：${exceptionMessage(e)}');
+            await Future.delayed(const Duration(seconds: 5));
           }
-        } else {
-          debugPrint('没有更新记录，更新版块列表');
+        }
+      } else if (data.updateForumListTime != null) {
+        if (DateTime.now().difference(data.updateForumListTime!) >=
+            PersistentDataService.updateForumListInterval) {
+          debugPrint('版块列表过期，更新X岛版块列表');
           await _updateForumList();
-          data.updateForumListTime = DateTime.now();
+        } else {
+          debugPrint('版块列表未过期，取消更新');
         }
       } else {
-        debugPrint('更新版块列表');
+        debugPrint('没有更新记录，更新X岛版块列表');
         await _updateForumList();
       }
 
-      debugPrint('更新X岛版块成功');
+      debugPrint('更新X岛版块列表成功');
     } catch (e) {
-      showToast('更新X岛版块失败：${exceptionMessage(e)}');
+      showToast('更新X岛版块列表失败：${exceptionMessage(e)}');
     }
 
     isReady.value = true;

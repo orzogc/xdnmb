@@ -12,6 +12,7 @@ class _JumpPageDialog extends StatefulWidget {
 
   final int? maxPage;
 
+  // ignore: unused_element
   const _JumpPageDialog({super.key, required this.page, this.maxPage});
 
   @override

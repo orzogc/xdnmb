@@ -330,6 +330,7 @@ class _HistoryDialog extends StatelessWidget {
   final VoidCallback onDelete;
 
   const _HistoryDialog(
+      // ignore: unused_element
       {super.key,
       required this.mainPost,
       this.post,
@@ -387,7 +388,10 @@ class _BrowseHistoryBody extends StatelessWidget {
   final _GetImageCallback getImage;
 
   const _BrowseHistoryBody(
-      {super.key, required this.controller, required this.getImage});
+      // ignore: unused_element
+      {super.key,
+      required this.controller,
+      required this.getImage});
 
   @override
   Widget build(BuildContext context) {
@@ -516,7 +520,10 @@ class _PostHistoryBody extends StatelessWidget {
   final _GetImageCallback getImage;
 
   const _PostHistoryBody(
-      {super.key, required this.controller, required this.getImage});
+      // ignore: unused_element
+      {super.key,
+      required this.controller,
+      required this.getImage});
 
   @override
   Widget build(BuildContext context) {
@@ -609,7 +616,10 @@ class _ReplyHistoryBody extends StatelessWidget {
   final _GetImageCallback getImage;
 
   const _ReplyHistoryBody(
-      {super.key, required this.controller, required this.getImage});
+      // ignore: unused_element
+      {super.key,
+      required this.controller,
+      required this.getImage});
 
   @override
   Widget build(BuildContext context) {
@@ -685,23 +695,22 @@ class _ReplyHistoryBody extends StatelessWidget {
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.only(
-                                      left: 10.0, top: 5.0, right: 10.0),
+                                    left: 10.0,
+                                    top: 5.0,
+                                    right: 10.0,
+                                  ),
                                   child: DefaultTextStyle.merge(
                                     style: textStyle,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                    child: OverflowBar(
+                                      spacing: 5.0,
+                                      alignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Flexible(
-                                          child: Text(
-                                            '主串：${reply.item.mainPostId.toPostNumber()}',
-                                          ),
+                                        Text(
+                                          '主串：${reply.item.mainPostId.toPostNumber()}',
                                         ),
                                         if (reply.item.page != null)
-                                          Flexible(
-                                            child: Text(
-                                              '第 ${reply.item.page} 页',
-                                            ),
+                                          Text(
+                                            '第 ${reply.item.page} 页',
                                           ),
                                       ],
                                     ),

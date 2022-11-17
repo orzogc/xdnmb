@@ -9,6 +9,7 @@ import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
 
 class _RestoreTabs extends StatelessWidget {
+  // ignore: unused_element
   const _RestoreTabs({super.key});
 
   @override
@@ -29,6 +30,7 @@ class _RestoreTabs extends StatelessWidget {
 }
 
 class _InitialForum extends StatelessWidget {
+  // ignore: unused_element
   const _InitialForum({super.key});
 
   @override
@@ -78,6 +80,7 @@ class _InitialForum extends StatelessWidget {
 }
 
 class _ShowImage extends StatelessWidget {
+  // ignore: unused_element
   const _ShowImage({super.key});
 
   @override
@@ -98,6 +101,7 @@ class _ShowImage extends StatelessWidget {
 }
 
 class _Watermark extends StatelessWidget {
+  // ignore: unused_element
   const _Watermark({super.key});
 
   @override
@@ -118,6 +122,7 @@ class _Watermark extends StatelessWidget {
 }
 
 class _HideFloatingButton extends StatelessWidget {
+  // ignore: unused_element
   const _HideFloatingButton({super.key});
 
   @override
@@ -138,6 +143,7 @@ class _HideFloatingButton extends StatelessWidget {
 }
 
 class _AutoJumpPage extends StatelessWidget {
+  // ignore: unused_element
   const _AutoJumpPage({super.key});
 
   @override
@@ -159,6 +165,7 @@ class _AutoJumpPage extends StatelessWidget {
 }
 
 class _AutoJumpPosition extends StatelessWidget {
+  // ignore: unused_element
   const _AutoJumpPosition({super.key});
 
   @override
@@ -191,6 +198,7 @@ class _AutoJumpPosition extends StatelessWidget {
 }
 
 class _AfterPostRefresh extends StatelessWidget {
+  // ignore: unused_element
   const _AfterPostRefresh({super.key});
 
   @override
@@ -213,6 +221,7 @@ class _AfterPostRefresh extends StatelessWidget {
 class _EditFeedId extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // ignore: unused_element
   _EditFeedId({super.key});
 
   @override
@@ -258,6 +267,7 @@ class _EditFeedId extends StatelessWidget {
 }
 
 class _FeedId extends StatelessWidget {
+  // ignore: unused_element
   const _FeedId({super.key});
 
   @override
@@ -292,22 +302,25 @@ class BasicSettingsView extends GetView<BasicSettingsController> {
   const BasicSettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('基本设置'),
-        ),
-        body: ListView(
-          children: const [
-            _RestoreTabs(),
-            _InitialForum(),
-            _ShowImage(),
-            _Watermark(),
-            _HideFloatingButton(),
-            _AutoJumpPage(),
-            _AutoJumpPosition(),
-            _AfterPostRefresh(),
-            _FeedId(),
-          ],
+  Widget build(BuildContext context) => SafeArea(
+        top: false,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('基本设置'),
+          ),
+          body: ListView(
+            children: const [
+              _RestoreTabs(),
+              _InitialForum(),
+              _ShowImage(),
+              _Watermark(),
+              _HideFloatingButton(),
+              _AutoJumpPage(),
+              _AutoJumpPosition(),
+              _AfterPostRefresh(),
+              _FeedId(),
+            ],
+          ),
         ),
       );
 }

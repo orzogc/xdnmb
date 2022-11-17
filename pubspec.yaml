@@ -1,7 +1,7 @@
 name: xdnmb
 description: An app for nmbxd.com.
 publish_to: 'none'
-version: 0.1.3-alpha+3
+version: 0.2.0-alpha+3
 
 environment:
   sdk: ">=2.18.4 <3.0.0"
@@ -39,21 +39,22 @@ dependencies:
     git: https://github.com/hui-z/image_gallery_saver.git
   image_painter: ^0.4.6
   infinite_scroll_pagination: ^3.2.0
-  isar: ^3.0.2
-  isar_flutter_libs: ^3.0.2
+  isar: ^3.0.4
+  isar_flutter_libs: ^3.0.4
   loader_overlay: ^2.1.0
   media_scanner: ^2.1.0
   mime: ^1.0.2
-  package_info_plus: ^3.0.1
+  package_info_plus: ^3.0.2
   path: ^1.8.2
   path_provider: ^2.0.11
   permission_handler: ^10.2.0
   responsive_grid_list: ^1.3.0
   screenshot: ^1.2.3
   showcaseview: ^2.0.0+1
+  swipeable_page_route: ^0.2.6
   system_info2: ^2.0.4
   url_launcher: ^6.1.6
-  uuid: ^3.0.6
+  uuid: ^3.0.7
   version: ^3.0.2
   xdg_directories: ^0.2.0+2
   xdnmb_api:
@@ -66,7 +67,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   hive_generator: ^2.0.0
-  isar_generator: ^3.0.2
+  isar_generator: ^3.0.4
 
 flutter:
   uses-material-design: true
@@ -78,10 +79,13 @@ flutter:
     - assets/ca/lets-encrypt-r3.pem
 
   fonts:
-    # Font from https://www.fluttericon.com/
+    # Icon from https://www.fluttericon.com/
     - family: DiceIcon
       fonts:
         - asset: assets/fonts/DiceIcon.ttf
+    - family: HeartIcon
+      fonts:
+        - asset: assets/fonts/HeartIcon.ttf
 
     # Noto font from Google
     - family: 'Noto Sans'

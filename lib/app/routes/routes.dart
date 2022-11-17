@@ -2,13 +2,23 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/controller.dart';
+import '../data/services/settings.dart';
 import '../data/services/stack.dart';
+import '../modules/advanced_settings.dart';
+import '../modules/basic_settings.dart';
+import '../modules/blacklist.dart';
+import '../modules/cookie.dart';
+import '../modules/drafts.dart';
+import '../modules/edit_post.dart';
 import '../modules/image.dart';
 import '../modules/paint.dart';
+import '../modules/reorder_forums.dart';
 import '../modules/settings.dart';
+import '../utils/extensions.dart';
 import '../widgets/feed.dart';
 import '../widgets/forum.dart';
 import '../widgets/history.dart';
@@ -142,26 +152,61 @@ abstract class AppRoutes {
       Get.toNamed<T>(image, arguments: controller);
 
   static Future<T?>? toSettings<T>(SettingsController controller) =>
-      Get.toNamed<T>(settings, arguments: controller);
+      SettingsService.isBackdropUI
+          ? Get.push<T>(SwipeablePageRoute<T>(builder: (context) {
+              Get.put(controller);
 
-  static Future<T?>? toUser<T>() => Get.toNamed<T>(userPath);
+              return const SettingsView();
+            }))
+          : Get.toNamed<T>(settings, arguments: controller);
 
-  static Future<T?>? toBlacklist<T>() => Get.toNamed<T>(blacklistPath);
+  static Future<T?>? toUser<T>() => SettingsService.isBackdropUI
+      ? Get.push<T>(SwipeablePageRoute<T>(builder: (context) {
+          Get.put(CookieController());
 
-  static Future<T?>? toBasicSettings<T>() => Get.toNamed<T>(basicSettingsPath);
+          return const CookieView();
+        }))
+      : Get.toNamed<T>(userPath);
 
-  static Future<T?>? toAdvancedSettings<T>() =>
-      Get.toNamed<T>(advancedSettingsPath);
+  static Future<T?>? toBlacklist<T>() => SettingsService.isBackdropUI
+      ? Get.push<T>(SwipeablePageRoute<T>(builder: (context) {
+          Get.put(BlacklistController());
 
-  static Future<T?>? toReorderForums<T>() => Get.toNamed<T>(reorderForums);
+          return const BlacklistView();
+        }))
+      : Get.toNamed<T>(blacklistPath);
+
+  static Future<T?>? toBasicSettings<T>() => SettingsService.isBackdropUI
+      ? Get.push<T>(SwipeablePageRoute<T>(builder: (context) {
+          Get.put(BasicSettingsController());
+
+          return const BasicSettingsView();
+        }))
+      : Get.toNamed<T>(basicSettingsPath);
+
+  static Future<T?>? toAdvancedSettings<T>() => SettingsService.isBackdropUI
+      ? Get.push<T>(SwipeablePageRoute<T>(builder: (context) {
+          Get.put(AdvancedSettingsBinding());
+
+          return const AdvancedSettingsView();
+        }))
+      : Get.toNamed<T>(advancedSettingsPath);
+
+  static Future<T?>? toReorderForums<T>() => SettingsService.isBackdropUI
+      ? Get.push<T>(SwipeablePageRoute<T>(builder: (context) {
+          Get.put(ReorderForumsController());
+
+          return ReorderForumsView();
+        }))
+      : Get.toNamed<T>(reorderForums);
 
   static Future<T?>? toEditPost<T>(
           {required PostListType postListType,
           required int id,
+          int? forumId,
           String? title,
           String? name,
           String? content,
-          int? forumId,
           String? imagePath,
           Uint8List? imageData,
           bool? isWatermark,
@@ -186,7 +231,13 @@ abstract class AppRoutes {
         arguments: imageData,
       );
 
-  static Future<T?>? toPostDrafts<T>() => Get.toNamed<T>(postDrafts);
+  static Future<T?>? toPostDrafts<T>() => SettingsService.isBackdropUI
+      ? Get.push<T>(SwipeablePageRoute<T>(builder: (context) {
+          Get.put(PostDraftsController());
+
+          return const PostDraftsView();
+        }))
+      : Get.toNamed<T>(postDrafts);
 
   static Future<T?>? toPaint<T>([PaintController? controller]) =>
       Get.toNamed<T>(paint, arguments: controller);

@@ -15,6 +15,7 @@ import '../widgets/forum_name.dart';
 class _AppBarTitle extends StatelessWidget {
   final int index;
 
+  // ignore: unused_element
   const _AppBarTitle({super.key, required this.index});
 
   @override
@@ -44,7 +45,10 @@ class _AppBarPopupMenuButton extends StatelessWidget {
   final VoidCallback refresh;
 
   const _AppBarPopupMenuButton(
-      {super.key, required this.index, required this.refresh});
+      // ignore: unused_element
+      {super.key,
+      required this.index,
+      required this.refresh});
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +188,7 @@ class _Body extends StatelessWidget {
 
   final VoidCallback refresh;
 
+  // ignore: unused_element
   const _Body({super.key, required this.index, required this.refresh});
 
   @override
@@ -291,6 +296,7 @@ class _BottomBar extends StatelessWidget {
 
   final _IndexCallback<void> onIndex;
 
+  // ignore: unused_element
   const _BottomBar({super.key, required this.index, required this.onIndex});
 
   @override
@@ -356,27 +362,30 @@ class BlacklistView extends GetView<BlacklistController> {
   void _refresh() => controller._index.refresh();
 
   @override
-  Widget build(BuildContext context) => Obx(
-        () => Scaffold(
-          appBar: AppBar(
-            title: _AppBarTitle(index: controller._index.value),
-            actions: [
-              _AppBarPopupMenuButton(
-                  index: controller._index.value, refresh: _refresh),
-            ],
-          ),
-          body: PageView.builder(
-            controller: controller._controller,
-            itemCount: 3,
-            itemBuilder: (context, index) =>
-                _Body(index: index, refresh: _refresh),
-          ),
-          bottomNavigationBar: _BottomBar(
-            index: controller._index.value,
-            onIndex: (index) => controller._controller.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeIn,
+  Widget build(BuildContext context) => SafeArea(
+        top: false,
+        child: Obx(
+          () => Scaffold(
+            appBar: AppBar(
+              title: _AppBarTitle(index: controller._index.value),
+              actions: [
+                _AppBarPopupMenuButton(
+                    index: controller._index.value, refresh: _refresh),
+              ],
+            ),
+            body: PageView.builder(
+              controller: controller._controller,
+              itemCount: 3,
+              itemBuilder: (context, index) =>
+                  _Body(index: index, refresh: _refresh),
+            ),
+            bottomNavigationBar: _BottomBar(
+              index: controller._index.value,
+              onIndex: (index) => controller._controller.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeIn,
+              ),
             ),
           ),
         ),

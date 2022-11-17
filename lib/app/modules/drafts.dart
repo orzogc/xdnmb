@@ -13,6 +13,7 @@ import '../widgets/dialog.dart';
 import '../widgets/post.dart';
 
 class _PopupMenuButton extends StatelessWidget {
+  // ignore: unused_element
   const _PopupMenuButton({super.key});
 
   @override
@@ -40,6 +41,7 @@ class _PopupMenuButton extends StatelessWidget {
 class _Screenshot extends StatelessWidget {
   final PostDraftData draft;
 
+  // ignore: unused_element
   const _Screenshot(this.draft, {super.key});
 
   @override
@@ -74,6 +76,7 @@ class _Screenshot extends StatelessWidget {
 }
 
 class _DraftList extends StatelessWidget {
+  // ignore: unused_element
   const _DraftList({super.key});
 
   @override
@@ -149,11 +152,14 @@ class PostDraftsView extends GetView<PostDraftsController> {
   const PostDraftsView({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('草稿'),
-          actions: const [_PopupMenuButton()],
+  Widget build(BuildContext context) => SafeArea(
+        top: false,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('草稿'),
+            actions: const [_PopupMenuButton()],
+          ),
+          body: const _DraftList(),
         ),
-        body: const _DraftList(),
       );
 }

@@ -117,6 +117,9 @@ extension GetExtension on GetInterface {
       global(id).currentState?.maybePop<T>(result);
     }
   }
+
+  Future<T?>? push<T>(Route<T> route, [int? id]) =>
+      Get.global(id).currentState?.push<T>(route);
 }
 
 extension DateTimeExtension on DateTime {

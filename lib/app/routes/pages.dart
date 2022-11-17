@@ -11,7 +11,6 @@ import '../modules/paint.dart';
 import '../modules/post_list.dart';
 import '../modules/reorder_forums.dart';
 import '../modules/settings.dart';
-
 import 'routes.dart';
 
 /// 应用页面
@@ -104,7 +103,7 @@ abstract class AppPages {
       name: AppRoutes.reorderForums,
       page: () => ReorderForumsView(),
       binding: ReorderForumsBinding(),
-      transition: Transition.leftToRight);
+      transition: Transition.rightToLeft);
 
   /// 发串编辑页面
   static final GetPage editPost = GetPage(

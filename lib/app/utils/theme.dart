@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 import '../data/services/settings.dart';
 
@@ -76,6 +77,18 @@ abstract class AppTheme {
         selectedLabelStyle:
             const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
         unselectedLabelStyle: const TextStyle(fontSize: 14.0)),
+    indicatorColor: Colors.blue,
+    pageTransitionsTheme: PageTransitionsTheme(builders: {
+      TargetPlatform.android: SettingsService.isBackdropUI
+          ? const SwipeablePageTransitionsBuilder()
+          : const ZoomPageTransitionsBuilder(),
+      TargetPlatform.iOS: SettingsService.isBackdropUI
+          ? const SwipeablePageTransitionsBuilder()
+          : const CupertinoPageTransitionsBuilder(),
+      TargetPlatform.macOS: SettingsService.isBackdropUI
+          ? const SwipeablePageTransitionsBuilder()
+          : const CupertinoPageTransitionsBuilder(),
+    }),
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -124,6 +137,18 @@ abstract class AppTheme {
         selectedLabelStyle:
             const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
         unselectedLabelStyle: const TextStyle(fontSize: 14.0)),
+    indicatorColor: Colors.white,
+    pageTransitionsTheme: PageTransitionsTheme(builders: {
+      TargetPlatform.android: SettingsService.isBackdropUI
+          ? const SwipeablePageTransitionsBuilder()
+          : const ZoomPageTransitionsBuilder(),
+      TargetPlatform.iOS: SettingsService.isBackdropUI
+          ? const SwipeablePageTransitionsBuilder()
+          : const CupertinoPageTransitionsBuilder(),
+      TargetPlatform.macOS: SettingsService.isBackdropUI
+          ? const SwipeablePageTransitionsBuilder()
+          : const CupertinoPageTransitionsBuilder(),
+    }),
     textTheme: const TextTheme(
       //headlineLarge: TextStyle(),
       //labelMedium: TextStyle(),

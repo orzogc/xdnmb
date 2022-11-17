@@ -28,9 +28,11 @@ class SettingsService extends GetxService {
 
   static SettingsService get to => Get.find<SettingsService>();
 
-  static bool isFixMissingFont = false;
+  static late final bool isRestoreForumPage;
 
-  static bool isRestoreForumPage = false;
+  static late final bool isFixMissingFont;
+
+  static late final bool isBackdropUI;
 
   late final Box _settingsBox;
 
@@ -122,10 +124,8 @@ class SettingsService extends GetxService {
   bool get restoreForumPage =>
       _settingsBox.get(Settings.restoreForumPage, defaultValue: false);
 
-  set restoreForumPage(bool restoreForumPage) {
-    _settingsBox.put(Settings.restoreForumPage, restoreForumPage);
-    isRestoreForumPage = restoreForumPage;
-  }
+  set restoreForumPage(bool restoreForumPage) =>
+      _settingsBox.put(Settings.restoreForumPage, restoreForumPage);
 
   double get drawerEdgeDragWidthRatio =>
       (_settingsBox.get(Settings.drawerEdgeDragWidthRatio, defaultValue: 0.25)
@@ -158,6 +158,12 @@ class SettingsService extends GetxService {
 
   set fixMissingFont(bool fixMissingFont) =>
       _settingsBox.put(Settings.fixMissingFont, fixMissingFont);
+
+  bool get backdropUI =>
+      _settingsBox.get(Settings.backdropUI, defaultValue: GetPlatform.isIOS);
+
+  set backdropUI(bool backdropUi) =>
+      _settingsBox.put(Settings.backdropUI, backdropUi);
 
   double get drawerDragRatio => _drawerDragRatio.value;
 
@@ -193,13 +199,20 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> fixMissingFontListenable;
 
-  static Future<void> getData() async {
+  late final ValueListenable<Box> backdropUIListenable;
+
+  late final StreamSubscription<BoxEvent> _darkModeSubscription;
+
+  static Future<void> getSettings() async {
     final box = await Hive.openBox(HiveBoxName.settings);
+
     ImageService.savePath = box.get(Settings.saveImagePath, defaultValue: null);
     // 是否修复字体，结果保存在`fixMissingFont`
     isFixMissingFont = box.get(Settings.fixMissingFont, defaultValue: false);
     isRestoreForumPage =
         box.get(Settings.restoreForumPage, defaultValue: false);
+    isBackdropUI =
+        box.get(Settings.backdropUI, defaultValue: GetPlatform.isIOS);
   }
 
   void updateSaveImagePath() {
@@ -225,7 +238,8 @@ class SettingsService extends GetxService {
     _settingsBox = await Hive.openBox(HiveBoxName.settings);
 
     Get.changeThemeMode(isDarkMode ? ThemeMode.dark : ThemeMode.light);
-    _settingsBox.watch(key: Settings.isDarkMode).listen((event) async {
+    _darkModeSubscription =
+        _settingsBox.watch(key: Settings.isDarkMode).listen((event) async {
       Get.changeThemeMode(
           event.value as bool ? ThemeMode.dark : ThemeMode.light);
       await checkDarkMode();
@@ -267,10 +281,9 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.fixedImageDisposeRatio]);
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
+    backdropUIListenable = _settingsBox.listenable(keys: [Settings.backdropUI]);
 
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
-
-    updateSaveImagePath();
 
     isReady.value = true;
     await checkDarkMode();
@@ -280,6 +293,7 @@ class SettingsService extends GetxService {
 
   @override
   void onClose() async {
+    await _darkModeSubscription.cancel();
     await _settingsBox.close();
     isReady.value = false;
 

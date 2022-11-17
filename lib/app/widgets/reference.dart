@@ -20,6 +20,7 @@ class _Dialog extends StatelessWidget {
 
   final int? mainPostId;
 
+  // ignore: unused_element
   const _Dialog({super.key, required this.post, this.mainPostId});
 
   @override
@@ -72,102 +73,107 @@ class ReferenceCard extends StatelessWidget {
     final client = XdnmbClientService.to.client;
     Object? error;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Padding(
-        padding: const EdgeInsets.all(5.0),
-        child: TapToReload(
-          builder: (context, child) => FutureBuilder<HtmlReference>(
-            future: Future(() async {
-              debugPrint('获取串 ${postId.toPostNumber()} 的引用');
+    return LayoutBuilder(
+      builder: (context, constraints) => Card(
+        margin: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: TapToReload(
+            builder: (context, child) => FutureBuilder<HtmlReference>(
+              future: Future(() async {
+                debugPrint('获取串 ${postId.toPostNumber()} 的引用');
 
-              return client.getHtmlReference(postId);
-            }),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done &&
-                  snapshot.hasData) {
-                final post = snapshot.data!;
-                final mainPostId = post.mainPostId;
+                return client.getHtmlReference(postId);
+              }),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done &&
+                    snapshot.hasData) {
+                  final post = snapshot.data!;
+                  final mainPostId = post.mainPostId;
 
-                return NotifyBuilder(
-                  animation: BlacklistService.to.postAndUserBlacklistNotifier,
-                  builder: (context, child) {
-                    final isVisible = (!post.isBlocked()).obs;
+                  return NotifyBuilder(
+                    animation: BlacklistService.to.postAndUserBlacklistNotifier,
+                    builder: (context, child) {
+                      final isVisible = (!post.isBlocked()).obs;
 
-                    return Obx(
-                      () => isVisible.value
-                          ? Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                PostInkWell(
-                                  post: post,
-                                  showForumName: false,
-                                  showReplyCount: false,
-                                  poUserHash: poUserHash,
-                                  onTap: (post) {},
-                                  onLongPress: (post) => postListDialog(_Dialog(
-                                      post: post, mainPostId: mainPostId)),
-                                  onLinkTap: (context, link, text) => parseUrl(
-                                      url: link,
-                                      mainPostId: this.mainPostId,
-                                      poUserHash: poUserHash),
-                                  mouseCursor: SystemMouseCursors.basic,
-                                  hoverColor: Theme.of(context).cardColor,
-                                  canTapHiddenText: true,
-                                  isContentScrollable: true,
-                                ),
-                                if (mainPostId != null &&
-                                    mainPostId != this.mainPostId)
-                                  Padding(
-                                    padding: const EdgeInsets.all(10.0),
-                                    child: TextButton(
-                                      onPressed: () => AppRoutes.toThread(
-                                          mainPostId: mainPostId,
-                                          mainPost: post.id == mainPostId
-                                              ? post
-                                              : null),
-                                      child: const Text('跳转原串'),
-                                    ),
+                      return Obx(
+                        () => isVisible.value
+                            ? Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  PostInkWell(
+                                    post: post,
+                                    showForumName: false,
+                                    showReplyCount: false,
+                                    poUserHash: poUserHash,
+                                    onTap: (post) {},
+                                    onLongPress: (post) => postListDialog(
+                                        _Dialog(
+                                            post: post,
+                                            mainPostId: mainPostId)),
+                                    onLinkTap: (context, link, text) =>
+                                        parseUrl(
+                                            url: link,
+                                            mainPostId: this.mainPostId,
+                                            poUserHash: poUserHash),
+                                    mouseCursor: SystemMouseCursors.basic,
+                                    hoverColor: Theme.of(context).cardColor,
+                                    canTapHiddenText: true,
+                                    contentHeight: constraints.maxHeight * 0.5,
                                   ),
-                              ],
-                            )
-                          : GestureDetector(
-                              onTap: () => isVisible.value = true,
-                              child: const Text(
-                                '本串已被屏蔽，点击查看内容',
-                                style: AppTheme.boldRed,
+                                  if (mainPostId != null &&
+                                      mainPostId != this.mainPostId)
+                                    Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: TextButton(
+                                        onPressed: () => AppRoutes.toThread(
+                                            mainPostId: mainPostId,
+                                            mainPost: post.id == mainPostId
+                                                ? post
+                                                : null),
+                                        child: const Text('跳转原串'),
+                                      ),
+                                    ),
+                                ],
+                              )
+                            : GestureDetector(
+                                onTap: () => isVisible.value = true,
+                                child: const Text(
+                                  '本串已被屏蔽，点击查看内容',
+                                  style: AppTheme.boldRed,
+                                ),
                               ),
-                            ),
-                    );
-                  },
-                );
-              }
+                      );
+                    },
+                  );
+                }
 
-              if (snapshot.connectionState == ConnectionState.done &&
-                  snapshot.hasError) {
-                showToast(exceptionMessage(snapshot.error!));
-                error = snapshot.error!;
+                if (snapshot.connectionState == ConnectionState.done &&
+                    snapshot.hasError) {
+                  showToast(exceptionMessage(snapshot.error!));
+                  error = snapshot.error!;
 
-                return child!(context);
-              }
+                  return child!(context);
+                }
 
-              return const CircularProgressIndicator();
-            },
+                return const CircularProgressIndicator();
+              },
+            ),
+            tapped: (context) => error != null
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '错误：${exceptionMessage(error!)}',
+                        style: AppTheme.boldRed,
+                      ),
+                      _errorText,
+                    ],
+                  )
+                : _errorText,
           ),
-          tapped: (context) => error != null
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '错误：${exceptionMessage(error!)}',
-                      style: AppTheme.boldRed,
-                    ),
-                    _errorText,
-                  ],
-                )
-              : _errorText,
         ),
       ),
     );

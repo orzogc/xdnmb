@@ -18,6 +18,7 @@ class _AddForum extends StatelessWidget {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // ignore: unused_element
   _AddForum({super.key, required this.forumListKey});
 
   @override
@@ -246,17 +247,20 @@ class ReorderForumsView extends GetView<ReorderForumsController> {
   ReorderForumsView({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        resizeToAvoidBottomInset: true,
-        appBar: AppBar(
-          title: const Text('版块排序'),
-          actions: [
-            IconButton(
-                onPressed: () =>
-                    Get.dialog(_AddForum(forumListKey: _forumListKey)),
-                icon: const Icon(Icons.add)),
-          ],
+  Widget build(BuildContext context) => SafeArea(
+        top: false,
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          appBar: AppBar(
+            title: const Text('版块排序'),
+            actions: [
+              IconButton(
+                  onPressed: () =>
+                      Get.dialog(_AddForum(forumListKey: _forumListKey)),
+                  icon: const Icon(Icons.add)),
+            ],
+          ),
+          body: _Forums(key: _forumListKey),
         ),
-        body: _Forums(key: _forumListKey),
       );
 }

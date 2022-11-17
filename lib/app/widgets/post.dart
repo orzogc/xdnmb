@@ -22,6 +22,7 @@ class _PostUser extends StatelessWidget {
   final bool isAdmin;
 
   const _PostUser(
+      // ignore: unused_element
       {super.key,
       required this.userHash,
       this.poUserHash,
@@ -51,7 +52,10 @@ class _PostTime extends StatelessWidget {
   final bool showFullTime;
 
   const _PostTime(
-      {super.key, required this.postTime, this.showFullTime = true});
+      // ignore: unused_element
+      {super.key,
+      required this.postTime,
+      this.showFullTime = true});
 
   @override
   Widget build(BuildContext context) =>
@@ -65,6 +69,7 @@ class _PostId extends StatelessWidget {
 
   final OnPostIdCallback? onPostIdTap;
 
+  // ignore: unused_element
   const _PostId({super.key, required this.postId, this.onPostIdTap});
 
   @override
@@ -82,6 +87,7 @@ class _PostId extends StatelessWidget {
 class _PostReplyCount extends StatelessWidget {
   final int replyCount;
 
+  // ignore: unused_element
   const _PostReplyCount(this.replyCount, {super.key});
 
   @override
@@ -103,6 +109,7 @@ class _PostReplyCount extends StatelessWidget {
 class _PostTitle extends StatelessWidget {
   final String title;
 
+  // ignore: unused_element
   const _PostTitle(this.title, {super.key});
 
   @override
@@ -124,6 +131,7 @@ class _PostTitle extends StatelessWidget {
 class _PostName extends StatelessWidget {
   final String name;
 
+  // ignore: unused_element
   const _PostName(this.name, {super.key});
 
   @override
@@ -143,6 +151,7 @@ class _PostName extends StatelessWidget {
 }
 
 class _PostSage extends StatelessWidget {
+  // ignore: unused_element
   const _PostSage({super.key});
 
   @override
@@ -231,7 +240,7 @@ class PostContent extends StatelessWidget {
 
   final Color? hiddenTextColor;
 
-  final bool isContentScrollable;
+  final double? contentHeight;
 
   final OnPostIdCallback? onPostIdTap;
 
@@ -250,7 +259,7 @@ class PostContent extends StatelessWidget {
       this.canReturnImageData = false,
       this.canTapHiddenText = false,
       this.hiddenTextColor,
-      this.isContentScrollable = false,
+      this.contentHeight,
       this.onPostIdTap})
       : assert(onImagePainted == null || displayImage),
         assert(!canReturnImageData || (displayImage && onImagePainted != null));
@@ -314,14 +323,13 @@ class PostContent extends StatelessWidget {
             _PostTitle(post.title),
           if (post.name.isNotEmpty && post.name != '无名氏') _PostName(post.name),
           if (isSage != null && isSage) const _PostSage(),
-          isContentScrollable
-              ? ConstrainedBox(
-                  constraints: BoxConstraints(
-                      minWidth: double.infinity,
-                      maxHeight: MediaQuery.of(context).size.height / 2),
-                  child: SingleChildScrollViewWithScrollbar(child: content),
-                )
-              : content,
+          if (contentHeight != null)
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: contentHeight!),
+              child: SingleChildScrollViewWithScrollbar(child: content),
+            )
+          else
+            content,
         ].withSpaceBetween(height: 5.0),
       ),
     );
@@ -354,7 +362,7 @@ class PostInkWell extends StatelessWidget {
       bool canReturnImageData = false,
       bool canTapHiddenText = false,
       Color? hiddenTextColor,
-      bool isContentScrollable = false,
+      double? contentHeight,
       OnPostIdCallback? onPostIdTap,
       this.onTap,
       this.onLongPress,
@@ -374,7 +382,7 @@ class PostInkWell extends StatelessWidget {
             canReturnImageData: canReturnImageData,
             canTapHiddenText: canTapHiddenText,
             hiddenTextColor: hiddenTextColor,
-            isContentScrollable: isContentScrollable,
+            contentHeight: contentHeight,
             onPostIdTap: onPostIdTap);
 
   @override

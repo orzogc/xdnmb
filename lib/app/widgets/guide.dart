@@ -1,34 +1,82 @@
 import 'package:flutter/material.dart';
 import 'package:showcaseview/showcaseview.dart';
 
+import '../data/services/persistent.dart';
+
 abstract class Guide {
+  static ValueNotifier<bool> startGuide = ValueNotifier(false);
+
   static bool isShowForumGuides = false;
 
   static bool isShowDrawerGuides = false;
 
   static bool isShowEndDrawerGuides = false;
 
+  static bool isShowBackLayerTabListGuides = false;
+
+  static bool isShowBackLayerForumListGuides = false;
+
   static final List<GlobalKey> forumGuides = [
-    AppBarTitleGuide._key,
-    AppBarPageButtonGuide._key,
-    AppBarMenuGuide._key,
-    ThreadGuide._key,
-    FloatingButtonGuide._key,
+    if (AppBarMenuGuide._key.currentState?.mounted ?? false)
+      AppBarMenuGuide._key,
+    if (AppBarTitleGuide._key.currentState?.mounted ?? false)
+      AppBarTitleGuide._key,
+    if (AppBarPageButtonGuide._key.currentState?.mounted ?? false)
+      AppBarPageButtonGuide._key,
+    if (AppBarPopupMenuGuide._key.currentState?.mounted ?? false)
+      AppBarPopupMenuGuide._key,
+    if (ThreadGuide._key.currentState?.mounted ?? false) ThreadGuide._key,
+    if (FloatingButtonGuide._key.currentState?.mounted ?? false)
+      FloatingButtonGuide._key,
   ];
 
   static final List<GlobalKey> drawerGuides = [
-    TabListGuide._key,
-    DarkModeGuide._key,
-    SearchGuide._key,
-    SettingsGuide._key,
-    HistoryGuide._key,
-    FeedGuide._key,
+    if (TabListGuide._key.currentState?.mounted ?? false) TabListGuide._key,
+    if (DarkModeGuide._key.currentState?.mounted ?? false) DarkModeGuide._key,
+    if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
+    if (SettingsGuide._key.currentState?.mounted ?? false) SettingsGuide._key,
+    if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
+    if (FeedGuide._key.currentState?.mounted ?? false) FeedGuide._key,
   ];
 
   static final List<GlobalKey> endDrawerGuides = [
-    ForumListGuide._key,
-    ReorderForumsGuide._key,
+    if (ForumListGuide._key.currentState?.mounted ?? false) ForumListGuide._key,
+    if (ReorderForumsGuide._key.currentState?.mounted ?? false)
+      ReorderForumsGuide._key,
   ];
+
+  static final List<GlobalKey> backdropEndDrawerGuides = [
+    if (DarkModeGuide._key.currentState?.mounted ?? false) DarkModeGuide._key,
+    if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
+    if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
+    if (FeedGuide._key.currentState?.mounted ?? false) FeedGuide._key,
+    if (SettingsGuide._key.currentState?.mounted ?? false) SettingsGuide._key,
+  ];
+
+  static final List<GlobalKey> backLayerTabListGuides = [
+    if (TabListGuide._key.currentState?.mounted ?? false) TabListGuide._key,
+  ];
+
+  static final List<GlobalKey> backLayerForumListGuides = [
+    if (ForumListGuide._key.currentState?.mounted ?? false) ForumListGuide._key,
+  ];
+}
+
+class AppBarMenuGuide extends StatelessWidget {
+  static final GlobalKey _key = GlobalKey();
+
+  final Widget child;
+
+  const AppBarMenuGuide(this.child, {super.key});
+
+  @override
+  Widget build(BuildContext context) => Showcase(
+        key: _key,
+        title: PersistentDataService.to.showGuide ? '标签页菜单' : '标签页和版块列表菜单',
+        description:
+            PersistentDataService.to.showGuide ? '点击打开标签页' : '点击打开标签页和版块列表',
+        child: child,
+      );
 }
 
 class AppBarTitleGuide extends StatelessWidget {
@@ -42,7 +90,9 @@ class AppBarTitleGuide extends StatelessWidget {
   Widget build(BuildContext context) => Showcase(
         key: _key,
         title: '标题栏',
-        description: '点击刷新页面',
+        description: PersistentDataService.to.showGuide
+            ? '点击刷新页面'
+            : '点击刷新页面，双击或下拉显示标签页和版块列表',
         child: child,
       );
 }
@@ -63,12 +113,12 @@ class AppBarPageButtonGuide extends StatelessWidget {
       );
 }
 
-class AppBarMenuGuide extends StatelessWidget {
+class AppBarPopupMenuGuide extends StatelessWidget {
   static final GlobalKey _key = GlobalKey();
 
   final Widget child;
 
-  const AppBarMenuGuide(this.child, {super.key});
+  const AppBarPopupMenuGuide(this.child, {super.key});
 
   @override
   Widget build(BuildContext context) => Showcase(
@@ -81,6 +131,8 @@ class AppBarMenuGuide extends StatelessWidget {
 
 class ThreadGuide extends StatelessWidget {
   static final GlobalKey _key = GlobalKey();
+
+  static bool exist() => _key.currentState?.mounted ?? false;
 
   final Widget child;
 
@@ -122,7 +174,9 @@ class TabListGuide extends StatelessWidget {
   Widget build(BuildContext context) => Showcase(
         key: _key,
         title: '标签页列表',
-        description: '从左向右划可以打开标签页列表',
+        description: PersistentDataService.to.showGuide
+            ? '从左向右划可以打开标签页列表，点击切换标签页'
+            : '点击切换标签页',
         child: child,
       );
 }
@@ -218,7 +272,9 @@ class ForumListGuide extends StatelessWidget {
   Widget build(BuildContext context) => Showcase(
         key: _key,
         title: '版块列表',
-        description: '从右向左划可以打开版块列表，点击进入版块，长按打开功能菜单',
+        description: PersistentDataService.to.showGuide
+            ? '从右向左划可以打开版块列表，点击进入版块，长按打开功能菜单'
+            : '点击进入版块，长按打开功能菜单',
         child: child,
       );
 }

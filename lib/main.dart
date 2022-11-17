@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
+import 'app/data/services/persistent.dart';
 import 'app/data/services/services.dart';
 import 'app/data/services/settings.dart';
 import 'app/routes/pages.dart';
@@ -27,7 +28,8 @@ void main() async {
     debugPrint('初始化Hive失败：$e');
     return;
   }
-  await SettingsService.getData();
+  await SettingsService.getSettings();
+  await PersistentDataService.getData();
 
   runApp(const _XdnmbApp());
 
@@ -36,6 +38,7 @@ void main() async {
 
 /// xdnmb应用
 class _XdnmbApp extends StatelessWidget {
+  // ignore: unused_element
   const _XdnmbApp({super.key});
 
   @override

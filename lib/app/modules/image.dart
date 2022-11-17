@@ -32,37 +32,35 @@ class _TopOverlay extends StatelessWidget {
 
   final RxBool _isShowed = false.obs;
 
-  _TopOverlay({super.key, required this.post, this.poUserHash});
+  _TopOverlay(
+      // ignore: unused_element
+      {super.key,
+      required this.post,
+      this.poUserHash});
 
   void _toggle() => _isShowed.value = !_isShowed.value;
 
   @override
-  Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-
-    return ChildSizeNotifier(
-      builder: (context, size, child) => Obx(
-        () => AnimatedPositioned(
-          left: 0,
-          right: 0,
-          top: _isShowed.value
-              ? 0
-              : size.height == 0
-                  ? -10000
-                  : -size.height,
-          curve: Curves.easeOutQuart,
-          duration: _overlayDuration,
-          child: child!,
+  Widget build(BuildContext context) => ChildSizeNotifier(
+        builder: (context, size, child) => Obx(
+          () => AnimatedPositioned(
+            left: 0,
+            right: 0,
+            top: _isShowed.value
+                ? 0
+                : size.height == 0
+                    ? -10000
+                    : -size.height,
+            curve: Curves.easeOutQuart,
+            duration: _overlayDuration,
+            child: child!,
+          ),
         ),
-      ),
-      child: Container(
-        color: AppTheme.overlayBackgroundColor,
-        width: media.size.width,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (media.padding.top > 0) SizedBox(height: media.padding.top),
-            DefaultTextStyle.merge(
+        child: ColoredBox(
+          color: AppTheme.overlayBackgroundColor,
+          child: Padding(
+            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+            child: DefaultTextStyle.merge(
               style: TextStyle(color: AppTheme.colorDark),
               child: PostContent(
                 post: post,
@@ -74,11 +72,9 @@ class _TopOverlay extends StatelessWidget {
                 hiddenTextColor: AppTheme.colorDark,
               ),
             ),
-          ],
+          ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _BottomOverlay extends StatelessWidget {
@@ -96,9 +92,12 @@ class _BottomOverlay extends StatelessWidget {
 
   final VoidCallback saveImage;
 
+  final Size size;
+
   final RxBool _isShowed = false.obs;
 
   _BottomOverlay(
+      // ignore: unused_element
       {super.key,
       required this.imageKey,
       this.imageData,
@@ -106,98 +105,92 @@ class _BottomOverlay extends StatelessWidget {
       this.canReturnImageData = false,
       required this.hideOverlay,
       required this.paint,
-      required this.saveImage});
+      required this.saveImage,
+      required this.size});
 
   void _toggle() => _isShowed.value = !_isShowed.value;
 
   @override
-  Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final bodySize =
-        Size(media.size.width, media.size.height - media.padding.top);
-
-    return ChildSizeNotifier(
-      builder: (context, size, child) => Obx(
-        () => AnimatedPositioned(
-          left: 0,
-          right: 0,
-          bottom: _isShowed.value
-              ? 0
-              : size.height == 0
-                  ? -10000
-                  : -size.height,
-          curve: Curves.easeOutQuart,
-          duration: _overlayDuration,
-          child: child!,
+  Widget build(BuildContext context) => ChildSizeNotifier(
+        builder: (context, size, child) => Obx(
+          () => AnimatedPositioned(
+            left: 0,
+            right: 0,
+            bottom: _isShowed.value
+                ? 0
+                : size.height == 0
+                    ? -10000
+                    : -(size.height + MediaQuery.of(context).padding.bottom),
+            curve: Curves.easeOutQuart,
+            duration: _overlayDuration,
+            child: child!,
+          ),
         ),
-      ),
-      child: Container(
-        color: AppTheme.overlayBackgroundColor,
-        width: bodySize.width,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Flexible(
-              child: BackButton(
-                onPressed: () {
-                  hideOverlay();
-                  Get.maybePop();
-                },
-                color: AppTheme.colorDark,
+        child: ColoredBox(
+          color: AppTheme.overlayBackgroundColor,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Flexible(
+                child: BackButton(
+                  onPressed: () {
+                    hideOverlay();
+                    Get.maybePop();
+                  },
+                  color: AppTheme.colorDark,
+                ),
               ),
-            ),
-            Flexible(
-              child: IconButton(
-                onPressed: () {
-                  final size = bodySize * 0.5;
-                  imageKey.currentState
-                      ?._animateScaleUp(size.width, size.height);
-                },
-                icon: Icon(Icons.zoom_in, color: AppTheme.colorDark),
-              ),
-            ),
-            Flexible(
-              child: IconButton(
-                onPressed: () {
-                  final size = bodySize * 0.5;
-                  imageKey.currentState
-                      ?._animateScaleDown(size.width, size.height);
-                },
-                icon: Icon(Icons.zoom_out, color: AppTheme.colorDark),
-              ),
-            ),
-            Flexible(
-              child: IconButton(
-                onPressed: () => imageKey.currentState?._rotate(bodySize),
-                icon: Icon(Icons.rotate_right, color: AppTheme.colorDark),
-              ),
-            ),
-            Flexible(
-              child: IconButton(
-                onPressed: paint,
-                icon: Icon(Icons.brush, color: AppTheme.colorDark),
-              ),
-            ),
-            Flexible(
-              child: IconButton(
-                onPressed: saveImage,
-                icon: Icon(Icons.save_alt, color: AppTheme.colorDark),
-              ),
-            ),
-            if (isPainted && canReturnImageData && imageData != null)
               Flexible(
                 child: IconButton(
                   onPressed: () {
-                    Get.back<Uint8List>(result: imageData);
+                    final halfSize = size * 0.5;
+                    imageKey.currentState
+                        ?._animateScaleUp(halfSize.width, halfSize.height);
                   },
-                  icon: Icon(Icons.check, color: AppTheme.colorDark),
+                  icon: Icon(Icons.zoom_in, color: AppTheme.colorDark),
                 ),
               ),
-          ],
+              Flexible(
+                child: IconButton(
+                  onPressed: () {
+                    final halfSize = size * 0.5;
+                    imageKey.currentState
+                        ?._animateScaleDown(halfSize.width, halfSize.height);
+                  },
+                  icon: Icon(Icons.zoom_out, color: AppTheme.colorDark),
+                ),
+              ),
+              Flexible(
+                child: IconButton(
+                  onPressed: () => imageKey.currentState?._rotate(size),
+                  icon: Icon(Icons.rotate_right, color: AppTheme.colorDark),
+                ),
+              ),
+              Flexible(
+                child: IconButton(
+                  onPressed: paint,
+                  icon: Icon(Icons.brush, color: AppTheme.colorDark),
+                ),
+              ),
+              Flexible(
+                child: IconButton(
+                  onPressed: saveImage,
+                  icon: Icon(Icons.save_alt, color: AppTheme.colorDark),
+                ),
+              ),
+              if (isPainted && canReturnImageData && imageData != null)
+                Flexible(
+                  child: IconButton(
+                    onPressed: () {
+                      Get.back<Uint8List>(result: imageData);
+                    },
+                    icon: Icon(Icons.check, color: AppTheme.colorDark),
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _ImageDialog extends StatelessWidget {
@@ -216,6 +209,7 @@ class _ImageDialog extends StatelessWidget {
   final VoidCallback saveImage;
 
   const _ImageDialog(
+      // ignore: unused_element
       {super.key,
       required this.fixWidth,
       required this.fixHeight,
@@ -308,6 +302,8 @@ class _Image<T extends Object> extends StatefulWidget {
 
   final VoidCallback? saveImage;
 
+  final Size size;
+
   const _Image(
       {super.key,
       required this.tag,
@@ -316,7 +312,8 @@ class _Image<T extends Object> extends StatefulWidget {
       required this.hideOverlay,
       this.canShowDialog = false,
       this.paint,
-      this.saveImage})
+      this.saveImage,
+      required this.size})
       : assert(!canShowDialog || (paint != null && saveImage != null));
 
   @override
@@ -719,13 +716,9 @@ class _ImageState extends State<_Image>
         _width = image.image.width;
         _height = image.image.height;
 
-        final media = Get.mediaQuery;
-        final size =
-            Size(media.size.width, media.size.height - media.padding.top);
-
         // 过长的图片自动设置适应宽度
-        if (_height! > size.height &&
-            _height! / _width! > size.height / size.width * 1.5) {
+        if (_height! > widget.size.height &&
+            _height! / _width! > widget.size.height / widget.size.width * 1.5) {
           _fixWidth = true;
         }
       });
@@ -827,23 +820,20 @@ class _ImageState extends State<_Image>
   Widget build(BuildContext context) {
     assert(!(_fixWidth && _fixHeight));
 
-    final media = MediaQuery.of(context);
-    final bodySize =
-        Size(media.size.width, media.size.height - media.padding.top);
-
     // 适应宽度或高度情况下图片的大小，无适应情况下为`null`
     Size? imageSize;
     if (_width != null && _height != null) {
       if (_fixWidth) {
-        imageSize = Size(bodySize.width, _height! * (bodySize.width / _width!));
-        if (imageSize.height > bodySize.height) {
+        imageSize =
+            Size(widget.size.width, _height! * (widget.size.width / _width!));
+        if (imageSize.height > widget.size.height) {
           // 高度超出屏幕范围就取消限制
           _isConstrained = false;
         }
       } else if (_fixHeight) {
         imageSize =
-            Size(_width! * (bodySize.height / _height!), bodySize.height);
-        if (imageSize.width > bodySize.width) {
+            Size(_width! * (widget.size.height / _height!), widget.size.height);
+        if (imageSize.width > widget.size.width) {
           // 宽度超出屏幕范围就取消限制
           _isConstrained = false;
         }
@@ -857,7 +847,7 @@ class _ImageState extends State<_Image>
     return SizedBox.expand(
       child: GestureDetector(
         onDoubleTapDown: (details) =>
-            _onDoubleTapDown(details, media.padding.top),
+            _onDoubleTapDown(details, MediaQuery.of(context).padding.top),
         onDoubleTap: _onDoubleTap,
         onLongPress: widget.canShowDialog
             ? () {
@@ -884,9 +874,9 @@ class _ImageState extends State<_Image>
           minScale: 1.0,
           onInteractionStart: _onInteractionStart,
           onInteractionUpdate: (details) =>
-              _onInteractionUpdate(details, bodySize, imageSize),
+              _onInteractionUpdate(details, widget.size, imageSize),
           onInteractionEnd: (details) =>
-              _onInteractionEnd(details, bodySize, imageSize),
+              _onInteractionEnd(details, widget.size, imageSize),
           child: Hero(
             tag: widget.tag,
             child: Image(
@@ -1061,6 +1051,7 @@ class ImageView extends GetView<ImageController> {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
     final isLoaded = (controller.imageData.value != null).obs;
 
     return WillPopScope(
@@ -1092,134 +1083,144 @@ class ImageView extends GetView<ImageController> {
 
         return true;
       },
-      child: Obx(
-        () {
-          controller._isShowOverlay = false;
+      child: SafeArea(
+        top: false,
+        child: LayoutBuilder(builder: (context, constraints) {
+          final size = Size(
+              constraints.maxWidth, constraints.maxHeight - media.padding.top);
 
-          if (controller.post.value != null) {
-            controller._topOverlay = _TopOverlay(
-                post: controller.post.value!,
-                poUserHash: controller.poUserHash);
-          } else {
-            controller._topOverlay = null;
-          }
+          return Obx(() {
+            controller._isShowOverlay = false;
 
-          controller._bottomOverlay = _BottomOverlay(
-              imageKey: _imageKey,
-              imageData: controller.imageData.value,
-              isPainted: controller._isPainted,
-              canReturnImageData: controller.canReturnImageData,
-              hideOverlay: _hideOverlay,
-              paint: _paint,
-              saveImage: _saveImage);
+            if (controller.post.value != null) {
+              controller._topOverlay = _TopOverlay(
+                  post: controller.post.value!,
+                  poUserHash: controller.poUserHash);
+            } else {
+              controller._topOverlay = null;
+            }
 
-          final CachedNetworkImage? thumbImage = controller.post.value != null
-              ? CachedNetworkImage(
-                  imageUrl: controller.post.value!.thumbImageUrl()!,
-                  cacheManager: XdnmbImageCacheManager(),
-                  errorWidget: (context, url, error) =>
-                      loadingImageErrorBuilder(context, url, error,
-                          showError: false),
-                  imageBuilder: (context, imageProvider) =>
-                      _Image<CachedNetworkImageProvider>(
-                    tag: controller.tag,
-                    provider: imageProvider as CachedNetworkImageProvider,
-                    setOpacity: _setOpacity,
-                    hideOverlay: _hideOverlay,
-                  ),
-                )
-              : null;
+            controller._bottomOverlay = _BottomOverlay(
+                imageKey: _imageKey,
+                imageData: controller.imageData.value,
+                isPainted: controller._isPainted,
+                canReturnImageData: controller.canReturnImageData,
+                hideOverlay: _hideOverlay,
+                paint: _paint,
+                saveImage: _saveImage,
+                size: size);
 
-          return Scaffold(
-            backgroundColor: Colors.black.withOpacity(opacity.value),
-            body: Stack(
-              children: [
-                Padding(
-                  padding:
-                      EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: _toggleOverlay,
-                    onSecondaryTap: () {
-                      _hideOverlay();
-                      Get.maybePop();
-                    },
-                    child: (controller.post.value != null && thumbImage != null)
-                        ? CachedNetworkImage(
-                            imageUrl: controller.post.value!.imageUrl()!,
-                            cacheManager: XdnmbImageCacheManager(),
-                            progressIndicatorBuilder:
-                                (context, url, progress) => Stack(
-                              children: [
-                                Obx(
-                                  () => !isLoaded.value
-                                      ? thumbImage
-                                      : const SizedBox.shrink(),
-                                ),
-                                const Align(
-                                  alignment: Alignment.topCenter,
-                                  child: Quotation(),
-                                ),
-                                if (progress.progress != null)
-                                  Center(
-                                    child: CircularProgressIndicator(
-                                      value: progress.progress,
+            final CachedNetworkImage? thumbImage = controller.post.value != null
+                ? CachedNetworkImage(
+                    imageUrl: controller.post.value!.thumbImageUrl()!,
+                    cacheManager: XdnmbImageCacheManager(),
+                    errorWidget: (context, url, error) =>
+                        loadingImageErrorBuilder(context, url, error,
+                            showError: false),
+                    imageBuilder: (context, imageProvider) =>
+                        _Image<CachedNetworkImageProvider>(
+                      tag: controller.tag,
+                      provider: imageProvider as CachedNetworkImageProvider,
+                      setOpacity: _setOpacity,
+                      hideOverlay: _hideOverlay,
+                      size: size,
+                    ),
+                  )
+                : null;
+
+            return Scaffold(
+              backgroundColor: Colors.black.withOpacity(opacity.value),
+              body: Stack(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(top: media.padding.top),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: _toggleOverlay,
+                      onSecondaryTap: () {
+                        _hideOverlay();
+                        Get.maybePop();
+                      },
+                      child: (controller.post.value != null &&
+                              thumbImage != null)
+                          ? CachedNetworkImage(
+                              imageUrl: controller.post.value!.imageUrl()!,
+                              cacheManager: XdnmbImageCacheManager(),
+                              progressIndicatorBuilder:
+                                  (context, url, progress) => Stack(
+                                children: [
+                                  Obx(
+                                    () => !isLoaded.value
+                                        ? thumbImage
+                                        : const SizedBox.shrink(),
+                                  ),
+                                  const Align(
+                                    alignment: Alignment.topCenter,
+                                    child: Quotation(),
+                                  ),
+                                  if (progress.progress != null)
+                                    Center(
+                                      child: CircularProgressIndicator(
+                                        value: progress.progress,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              errorWidget: (context, url, error) => Stack(
+                                children: [
+                                  thumbImage,
+                                  Align(
+                                    alignment: Alignment.topCenter,
+                                    child: Text(
+                                      '图片加载失败: $error',
+                                      style: AppTheme.boldRed,
                                     ),
                                   ),
-                              ],
-                            ),
-                            errorWidget: (context, url, error) => Stack(
-                              children: [
-                                thumbImage,
-                                Align(
-                                  alignment: Alignment.topCenter,
-                                  child: Text(
-                                    '图片加载失败: $error',
-                                    style: AppTheme.boldRed,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            imageBuilder: (context, imageProvider) {
-                              isLoaded.value = true;
+                                ],
+                              ),
+                              imageBuilder: (context, imageProvider) {
+                                isLoaded.value = true;
 
-                              return _Image<CachedNetworkImageProvider>(
-                                key: _imageKey,
-                                tag: controller.tag,
-                                provider:
-                                    imageProvider as CachedNetworkImageProvider,
-                                setOpacity: _setOpacity,
-                                hideOverlay: _hideOverlay,
-                                canShowDialog: true,
-                                paint: _paint,
-                                saveImage: _saveImage,
-                              );
-                            },
-                          )
-                        : (controller.imageData.value != null
-                            ? _Image<MemoryImage>(
-                                key: _imageKey,
-                                tag: controller.tag,
-                                provider:
-                                    MemoryImage(controller.imageData.value!),
-                                setOpacity: _setOpacity,
-                                hideOverlay: _hideOverlay,
-                                canShowDialog: true,
-                                paint: _paint,
-                                saveImage: _saveImage,
-                              )
-                            : const SizedBox.shrink()),
+                                return _Image<CachedNetworkImageProvider>(
+                                  key: _imageKey,
+                                  tag: controller.tag,
+                                  provider: imageProvider
+                                      as CachedNetworkImageProvider,
+                                  setOpacity: _setOpacity,
+                                  hideOverlay: _hideOverlay,
+                                  canShowDialog: true,
+                                  paint: _paint,
+                                  saveImage: _saveImage,
+                                  size: size,
+                                );
+                              },
+                            )
+                          : (controller.imageData.value != null
+                              ? _Image<MemoryImage>(
+                                  key: _imageKey,
+                                  tag: controller.tag,
+                                  provider:
+                                      MemoryImage(controller.imageData.value!),
+                                  setOpacity: _setOpacity,
+                                  hideOverlay: _hideOverlay,
+                                  canShowDialog: true,
+                                  paint: _paint,
+                                  saveImage: _saveImage,
+                                  size: size,
+                                )
+                              : const SizedBox.shrink()),
+                    ),
                   ),
-                ),
-                if (controller.post.value != null &&
-                    controller._topOverlay != null)
-                  controller._topOverlay!,
-                if (controller._bottomOverlay != null)
-                  controller._bottomOverlay!,
-              ],
-            ),
-          );
-        },
+                  if (controller.post.value != null &&
+                      controller._topOverlay != null)
+                    controller._topOverlay!,
+                  if (controller._bottomOverlay != null)
+                    controller._bottomOverlay!,
+                ],
+              ),
+            );
+          });
+        }),
       ),
     );
   }

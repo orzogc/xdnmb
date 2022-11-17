@@ -227,7 +227,10 @@ class _ThreadDialog extends StatelessWidget {
   final PostBase post;
 
   const _ThreadDialog(
-      {super.key, required this.controller, required this.post});
+      // ignore: unused_element
+      {super.key,
+      required this.controller,
+      required this.post});
 
   @override
   Widget build(BuildContext context) => SimpleDialog(
@@ -309,8 +312,8 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
               (timeStamp) => AppRoutes.toEditPost(
                 postListType: PostListType.forum,
                 id: EditPost.dutyRoomId,
-                content: '${postId.toPostReference()}\n',
                 forumId: EditPost.dutyRoomId,
+                content: '${postId.toPostReference()}\n',
               ),
             ),
             child: const Text('举报'),

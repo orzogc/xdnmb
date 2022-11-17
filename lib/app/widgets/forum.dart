@@ -127,6 +127,7 @@ class ForumAppBarPopupMenuButton extends StatelessWidget {
 class _AddFeed extends StatelessWidget {
   final int postId;
 
+  // ignore: unused_element
   const _AddFeed(this.postId, {super.key});
 
   @override
@@ -151,7 +152,10 @@ class _BlockForum extends StatelessWidget {
   final int forumId;
 
   const _BlockForum(
-      {super.key, required this.controller, required this.forumId});
+      // ignore: unused_element
+      {super.key,
+      required this.controller,
+      required this.forumId});
 
   @override
   Widget build(BuildContext context) {
@@ -191,6 +195,7 @@ class _ForumDialog extends StatelessWidget {
 
   final PostBase post;
 
+  // ignore: unused_element
   const _ForumDialog({super.key, required this.controller, required this.post});
 
   @override
@@ -259,14 +264,8 @@ class _ForumBodyState extends State<ForumBody> {
         lastPage:
             controller.isTimeline ? forums.maxPage(id, isTimeline: true) : 100,
         fetch: (page) async {
-          ShowCaseWidgetState? showCase;
-          final shouldShowGuide = data.showGuide &&
-              controller.isTimeline == defaultForum.isTimeline &&
-              id == defaultForum.id &&
-              page == 1;
-          if (shouldShowGuide) {
-            showCase = ShowCaseWidget.of(context);
-          }
+          final ShowCaseWidgetState? showCase =
+              data.shouldShowGuide ? ShowCaseWidget.of(context) : null;
 
           final threads = controller.isTimeline
               ? (await client.getTimeline(id, page: page))
@@ -276,9 +275,12 @@ class _ForumBodyState extends State<ForumBody> {
                   .map((thread) => ThreadWithPage(thread, page))
                   .toList();
 
-          if (shouldShowGuide) {
-            Guide.isShowForumGuides = true;
-            showCase!.startShowCase(Guide.forumGuides);
+          if (data.shouldShowGuide && showCase != null) {
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+              Guide.startGuide.value = true;
+              Guide.isShowForumGuides = true;
+              showCase.startShowCase(Guide.forumGuides);
+            });
           }
 
           return threads;
@@ -319,11 +321,7 @@ class _ForumBodyState extends State<ForumBody> {
                 : const SizedBox.shrink(),
           );
 
-          return data.showGuide &&
-                  controller.isTimeline == defaultForum.isTimeline &&
-                  id == defaultForum.id &&
-                  thread.page == 1 &&
-                  index == 0
+          return (data.shouldShowGuide && index == 0 && !ThreadGuide.exist())
               ? ThreadGuide(item)
               : item;
         },

@@ -11,6 +11,7 @@ import '../widgets/dialog.dart';
 class _Feedback extends StatelessWidget {
   final VoidCallback closeDrawer;
 
+  // ignore: unused_element
   const _Feedback({super.key, required this.closeDrawer});
 
   @override
@@ -25,17 +26,19 @@ class _Feedback extends StatelessWidget {
 }
 
 class _AuthorSponsor extends StatelessWidget {
+  // ignore: unused_element
   const _AuthorSponsor({super.key});
 
   @override
   Widget build(BuildContext context) => ListTile(
-        title: const Text('赞助'),
+        title: const Text('赞助客户端作者'),
         subtitle: const Text(Urls.authorSponsor),
         onTap: () => launchURL(Urls.authorSponsor),
       );
 }
 
 class _AppSource extends StatelessWidget {
+  // ignore: unused_element
   const _AppSource({super.key});
 
   @override
@@ -47,6 +50,7 @@ class _AppSource extends StatelessWidget {
 }
 
 class _AppLicense extends StatelessWidget {
+  // ignore: unused_element
   const _AppLicense({super.key});
 
   @override
@@ -63,6 +67,7 @@ class _AppLicense extends StatelessWidget {
 }
 
 class _AppVersion extends StatelessWidget {
+  // ignore: unused_element
   const _AppVersion({super.key});
 
   @override
@@ -108,25 +113,28 @@ class SettingsView extends GetView<SettingsController> {
   const SettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('设置'),
-        ),
-        body: ListView(
-          children: [
-            const ListTile(title: Text('饼干'), onTap: AppRoutes.toUser),
-            const ListTile(title: Text('黑名单'), onTap: AppRoutes.toBlacklist),
-            const ListTile(
-                title: Text('基本设置'), onTap: AppRoutes.toBasicSettings),
-            const ListTile(
-                title: Text('高级设置'), onTap: AppRoutes.toAdvancedSettings),
-            _Feedback(closeDrawer: controller.closeDrawer),
-            const ListTile(title: Text('作者'), subtitle: Text('Orzogc')),
-            const _AuthorSponsor(),
-            const _AppSource(),
-            const _AppLicense(),
-            const _AppVersion(),
-          ],
+  Widget build(BuildContext context) => SafeArea(
+        top: false,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('设置'),
+          ),
+          body: ListView(
+            children: [
+              const ListTile(title: Text('饼干'), onTap: AppRoutes.toUser),
+              const ListTile(title: Text('黑名单'), onTap: AppRoutes.toBlacklist),
+              const ListTile(
+                  title: Text('基本设置'), onTap: AppRoutes.toBasicSettings),
+              const ListTile(
+                  title: Text('高级设置'), onTap: AppRoutes.toAdvancedSettings),
+              _Feedback(closeDrawer: controller.closeDrawer),
+              const ListTile(title: Text('客户端作者'), subtitle: Text('Orzogc')),
+              const _AuthorSponsor(),
+              const _AppSource(),
+              const _AppLicense(),
+              const _AppVersion(),
+            ],
+          ),
         ),
       );
 }

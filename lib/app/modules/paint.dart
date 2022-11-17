@@ -62,6 +62,7 @@ typedef _ExportImageCallback = Future<Uint8List?> Function();
 class _SaveImage extends StatelessWidget {
   final _ExportImageCallback exportImage;
 
+  // ignore: unused_element
   const _SaveImage({super.key, required this.exportImage});
 
   @override
@@ -81,6 +82,7 @@ class _SaveImage extends StatelessWidget {
 class _Confirm extends StatelessWidget {
   final _ExportImageCallback exportImage;
 
+  // ignore: unused_element
   const _Confirm({super.key, required this.exportImage});
 
   @override
@@ -184,30 +186,33 @@ class PaintView extends GetView<PaintController> {
 
           return true;
         },
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('涂鸦'),
-            actions: [
-              // TODO: 旋转
-              PickImage(onPickImage: (path) async {
-                try {
-                  controller.image.value = await File(path).readAsBytes();
-                } catch (e) {
-                  showToast('读取图片出错：$e');
-                }
-              }),
-              _SaveImage(exportImage: _exportImage),
-              _Confirm(exportImage: _exportImage),
-            ],
-          ),
-          body: Obx(
-            () {
-              controller._painterKey = GlobalKey<ImagePainterState>();
+        child: SafeArea(
+          top: false,
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('涂鸦'),
+              actions: [
+                // TODO: 旋转
+                PickImage(onPickImage: (path) async {
+                  try {
+                    controller.image.value = await File(path).readAsBytes();
+                  } catch (e) {
+                    showToast('读取图片出错：$e');
+                  }
+                }),
+                _SaveImage(exportImage: _exportImage),
+                _Confirm(exportImage: _exportImage),
+              ],
+            ),
+            body: Obx(
+              () {
+                controller._painterKey = GlobalKey<ImagePainterState>();
 
-              return controller.image.value != null
-                  ? _imagePainter()
-                  : _blankPainter();
-            },
+                return controller.image.value != null
+                    ? _imagePainter()
+                    : _blankPainter();
+              },
+            ),
           ),
         ),
       );

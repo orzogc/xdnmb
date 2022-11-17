@@ -149,7 +149,9 @@ class NoticeDialog extends StatelessWidget {
   final bool isAutoUpdate;
 
   const NoticeDialog(
-      {super.key, this.showCheckbox = false, this.isAutoUpdate = false});
+      {super.key, this.showCheckbox = false, this.isAutoUpdate = false})
+      : assert(
+            (showCheckbox && !isAutoUpdate) || (!showCheckbox && isAutoUpdate));
 
   @override
   Widget build(BuildContext context) {
@@ -436,10 +438,11 @@ class Report extends StatelessWidget {
         onPressed: () {
           postListBack();
           AppRoutes.toEditPost(
-              postListType: PostListType.forum,
-              id: EditPost.dutyRoomId,
-              content: '${postId.toPostReference()}\n',
-              forumId: EditPost.dutyRoomId);
+            postListType: PostListType.forum,
+            id: EditPost.dutyRoomId,
+            forumId: EditPost.dutyRoomId,
+            content: '${postId.toPostReference()}\n',
+          );
         },
         child: Text('举报', style: Theme.of(context).textTheme.subtitle1),
       );

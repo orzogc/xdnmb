@@ -76,6 +76,7 @@ class EditPostBinding implements Bindings {
   }
 }
 
+// TODO: 第一次唤出键盘时注意键盘高度
 class EditPostView extends GetView<EditPostController> {
   final GlobalKey<EditPostState> _editKey = GlobalKey();
 
@@ -89,11 +90,15 @@ class EditPostView extends GetView<EditPostController> {
 
           return false;
         },
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text(controller.postListType.isForumType ? '发表新串' : '回串'),
+        child: SafeArea(
+          top: false,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(controller.postListType.isForumType ? '发表新串' : '回串'),
+            ),
+            body:
+                EditPost.fromController(key: _editKey, controller: controller),
           ),
-          body: EditPost.fromController(key: _editKey, controller: controller),
         ),
       );
 }
