@@ -363,7 +363,9 @@ class BlacklistView extends GetView<BlacklistController> {
 
   @override
   Widget build(BuildContext context) => SafeArea(
+        left: false,
         top: false,
+        right: false,
         child: Obx(
           () => Scaffold(
             appBar: AppBar(

@@ -248,7 +248,9 @@ class ReorderForumsView extends GetView<ReorderForumsController> {
 
   @override
   Widget build(BuildContext context) => SafeArea(
+        left: false,
         top: false,
+        right: false,
         child: Scaffold(
           resizeToAvoidBottomInset: true,
           appBar: AppBar(

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:get/get.dart';
@@ -43,12 +42,14 @@ class PersistentDataService extends GetxService {
 
   set notice(String notice) => _dataBox.put(PersistentData.notice, notice);
 
-  double? get keyboardHeight => _dataBox.get(PersistentData.keyboardHeight);
+  double? get keyboardHeight =>
+      _dataBox.get(PersistentData.keyboardHeight, defaultValue: null);
 
   set keyboardHeight(double? height) =>
       _dataBox.put(PersistentData.keyboardHeight, height);
 
-  String? get pictureDirectory => _dataBox.get(PersistentData.pictureDirectory);
+  String? get pictureDirectory =>
+      _dataBox.get(PersistentData.pictureDirectory, defaultValue: null);
 
   set pictureDirectory(String? path) =>
       _dataBox.put(PersistentData.pictureDirectory, path);
@@ -89,8 +90,6 @@ class PersistentDataService extends GetxService {
 
   set controllerStackListIndex(int index) =>
       _dataBox.put(PersistentData.controllerStackListIndex, index);
-
-  late final ValueListenable<Box> showGuideListenable;
 
   StreamSubscription<bool>? _keyboardSubscription;
 
@@ -151,8 +150,6 @@ class PersistentDataService extends GetxService {
 
     _dataBox = await Hive.openBox(HiveBoxName.data);
     isShowGuide = shouldShowGuide;
-    showGuideListenable = _dataBox.listenable(
-        keys: [PersistentData.showGuide, PersistentData.showBackdropGuide]);
 
     if (GetPlatform.isMobile) {
       bottomHeight.value = _bottomHeight();

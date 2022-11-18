@@ -8,7 +8,6 @@ import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
-import '../utils/notify.dart';
 import 'buttons.dart';
 import 'forum_list.dart';
 import 'guide.dart';
@@ -50,17 +49,12 @@ class _DrawerHeader extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            NotifyBuilder(
-              animation: Listenable.merge(
-                  [data.showGuideListenable, Guide.startGuide]),
-              builder: (context, child) =>
-                  (data.showGuide && Guide.startGuide.value)
+            Obx(
+              () => client.isReady.value
+                  ? data.showGuide
                       ? ReorderForumsGuide(reorderForums)
-                      : Obx(
-                          () => client.isReady.value
-                              ? reorderForums
-                              : const SizedBox.shrink(),
-                        ),
+                      : reorderForums
+                  : const SizedBox.shrink(),
             ),
           ],
         ),

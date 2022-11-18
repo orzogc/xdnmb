@@ -187,7 +187,9 @@ class PaintView extends GetView<PaintController> {
           return true;
         },
         child: SafeArea(
+          left: false,
           top: false,
+          right: false,
           child: Scaffold(
             appBar: AppBar(
               title: const Text('涂鸦'),

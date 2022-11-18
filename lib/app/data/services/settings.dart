@@ -165,6 +165,12 @@ class SettingsService extends GetxService {
   set backdropUI(bool backdropUi) =>
       _settingsBox.put(Settings.backdropUI, backdropUi);
 
+  double get swipeablePageDragWidthRatio => _settingsBox
+      .get(Settings.swipeablePageDragWidthRatio, defaultValue: 0.25);
+
+  set swipeablePageDragWidthRatio(double ratio) =>
+      _settingsBox.put(Settings.swipeablePageDragWidthRatio, ratio);
+
   double get drawerDragRatio => _drawerDragRatio.value;
 
   late final ValueListenable<Box> isRestoreTabsListenable;
@@ -200,6 +206,8 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> fixMissingFontListenable;
 
   late final ValueListenable<Box> backdropUIListenable;
+
+  late final ValueListenable<Box> swipeablePageDragWidthRatioListenable;
 
   late final StreamSubscription<BoxEvent> _darkModeSubscription;
 
@@ -282,6 +290,8 @@ class SettingsService extends GetxService {
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
     backdropUIListenable = _settingsBox.listenable(keys: [Settings.backdropUI]);
+    swipeablePageDragWidthRatioListenable = _settingsBox.listenable(
+        keys: [Settings.backdropUI, Settings.swipeablePageDragWidthRatio]);
 
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
 

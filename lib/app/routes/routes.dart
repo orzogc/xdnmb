@@ -13,7 +13,6 @@ import '../modules/basic_settings.dart';
 import '../modules/blacklist.dart';
 import '../modules/cookie.dart';
 import '../modules/drafts.dart';
-import '../modules/edit_post.dart';
 import '../modules/image.dart';
 import '../modules/paint.dart';
 import '../modules/reorder_forums.dart';
@@ -75,9 +74,6 @@ abstract class AppRoutes {
   static const String postDrafts = '/${PathNames.postDrafts}';
 
   static const String paint = '/${PathNames.paint}';
-
-  // TODO: 404
-  static const String notFound = '/${PathNames.notFound}';
 
   static const int feedbackId = 52940632;
 
@@ -277,8 +273,6 @@ abstract class PathNames {
   static const String editPost = 'editPost';
 
   static const String postDrafts = 'postDrafts';
-
-  static const String notFound = 'notFound';
 
   static const String paint = 'paint';
 }

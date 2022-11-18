@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
 import '../data/services/settings.dart';
+import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 
@@ -110,35 +111,42 @@ class _RestoreForumPage extends StatelessWidget {
   }
 }
 
-class _DrawerDragRatioDialog extends StatelessWidget {
+class _RatioRangeDialog extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // ignore: unused_element
-  _DrawerDragRatioDialog({super.key});
+  final double initialValue;
+
+  final double min;
+
+  final double max;
+
+  _RatioRangeDialog(
+      // ignore: unused_element
+      {super.key,
+      required this.initialValue,
+      required this.min,
+      required this.max});
 
   @override
   Widget build(BuildContext context) {
-    final settings = SettingsService.to;
     String? ratio;
 
     return InputDialog(
       content: Form(
         key: _formKey,
         child: TextFormField(
-          decoration: const InputDecoration(labelText: '比例（0.1-0.5）'),
+          decoration: InputDecoration(labelText: '比例（$min-$max）'),
           autofocus: true,
-          initialValue: '${settings.drawerEdgeDragWidthRatio}',
+          initialValue: '$initialValue',
           onSaved: (newValue) => ratio = newValue,
           validator: (value) {
             if (value != null && value.isNotEmpty) {
               final ratio = double.tryParse(value);
               if (ratio != null) {
-                if (ratio >= SettingsService.minDrawerEdgeDragWidthRatio &&
-                    ratio <= SettingsService.maxDrawerEdgeDragWidthRatio) {
+                if (ratio >= min && ratio <= max) {
                   return null;
                 } else {
-                  return '比例必须在${SettingsService.minDrawerEdgeDragWidthRatio}'
-                      '与${SettingsService.maxDrawerEdgeDragWidthRatio}之间';
+                  return '比例必须在$min与$max之间';
                 }
               } else {
                 return '请输入比例数字';
@@ -155,9 +163,7 @@ class _DrawerDragRatioDialog extends StatelessWidget {
             if (_formKey.currentState!.validate()) {
               _formKey.currentState!.save();
 
-              settings.drawerEdgeDragWidthRatio = double.parse(ratio!);
-
-              Get.back();
+              Get.back<double>(result: double.parse(ratio!));
             }
           },
           child: const Text('确定'),
@@ -180,7 +186,16 @@ class _DrawerDragRatio extends StatelessWidget {
       builder: (context, value, child) => ListTile(
         title: const Text('划开侧边栏的范围占屏幕宽度的比例'),
         trailing: Text('${settings.drawerEdgeDragWidthRatio}'),
-        onTap: () => Get.dialog(_DrawerDragRatioDialog()),
+        onTap: () async {
+          final ratio = await Get.dialog<double>(_RatioRangeDialog(
+              initialValue: settings.drawerEdgeDragWidthRatio,
+              min: SettingsService.minDrawerEdgeDragWidthRatio,
+              max: SettingsService.maxDrawerEdgeDragWidthRatio));
+
+          if (ratio != null) {
+            settings.drawerEdgeDragWidthRatio = ratio;
+          }
+        },
       ),
     );
   }
@@ -260,61 +275,6 @@ class _ImageDisposeDistance extends StatelessWidget {
   }
 }
 
-class _FixedImageDisposeRatioDialog extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  // ignore: unused_element
-  _FixedImageDisposeRatioDialog({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-    String? ratio;
-
-    return InputDialog(
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          decoration: const InputDecoration(labelText: '比例（0.0-1.0）'),
-          autofocus: true,
-          initialValue: '${settings.fixedImageDisposeRatio}',
-          onSaved: (newValue) => ratio = newValue,
-          validator: (value) {
-            if (value != null && value.isNotEmpty) {
-              final ratio = double.tryParse(value);
-              if (ratio != null) {
-                if (ratio >= 0.0 && ratio <= 1.0) {
-                  return null;
-                } else {
-                  return '比例必须在0与1之间';
-                }
-              } else {
-                return '请输入比例数字';
-              }
-            } else {
-              return '请输入比例';
-            }
-          },
-        ),
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-
-              settings.fixedImageDisposeRatio = double.parse(ratio!);
-
-              Get.back();
-            }
-          },
-          child: const Text('确定'),
-        )
-      ],
-    );
-  }
-}
-
 class _FixedImageDisposeRatio extends StatelessWidget {
   // ignore: unused_element
   const _FixedImageDisposeRatio({super.key});
@@ -328,7 +288,16 @@ class _FixedImageDisposeRatio extends StatelessWidget {
       builder: (context, value, child) => ListTile(
         title: const Text('适应模式下移动未缩放的大图导致返回的最小距离占屏幕高度/宽度的比例'),
         trailing: Text('${settings.fixedImageDisposeRatio}'),
-        onTap: () => Get.dialog(_FixedImageDisposeRatioDialog()),
+        onTap: () async {
+          final ratio = await Get.dialog<double>(_RatioRangeDialog(
+              initialValue: settings.fixedImageDisposeRatio,
+              min: 0.0,
+              max: 1.0));
+
+          if (ratio != null) {
+            settings.fixedImageDisposeRatio = ratio;
+          }
+        },
       ),
     );
   }
@@ -378,6 +347,45 @@ class _BackdropUI extends StatelessWidget {
   }
 }
 
+class _PageDragWidthRatio extends StatelessWidget {
+  // ignore: unused_element
+  const _PageDragWidthRatio({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder(
+      valueListenable: settings.swipeablePageDragWidthRatioListenable,
+      builder: (context, value, child) {
+        final textStyle = TextStyle(
+            color: !settings.backdropUI
+                ? (Get.isDarkMode ? AppTheme.primaryColorDark : Colors.grey)
+                : null);
+
+        return ListTile(
+          title: Text('Backdrop UI中返回上一页的手势范围占屏幕宽度的比例', style: textStyle),
+          subtitle: Text('更改后需要重启应用', style: textStyle),
+          trailing:
+              Text('${settings.swipeablePageDragWidthRatio}', style: textStyle),
+          onTap: settings.backdropUI
+              ? () async {
+                  final ratio = await Get.dialog<double>(_RatioRangeDialog(
+                      initialValue: settings.swipeablePageDragWidthRatio,
+                      min: 0.0,
+                      max: 1.0));
+
+                  if (ratio != null) {
+                    settings.swipeablePageDragWidthRatio = ratio;
+                  }
+                }
+              : null,
+        );
+      },
+    );
+  }
+}
+
 class AdvancedSettingsController extends GetxController {}
 
 class AdvancedSettingsBinding implements Bindings {
@@ -392,7 +400,9 @@ class AdvancedSettingsView extends GetView<AdvancedSettingsController> {
 
   @override
   Widget build(BuildContext context) => SafeArea(
+        left: false,
         top: false,
+        right: false,
         child: Scaffold(
           appBar: AppBar(
             title: const Text('高级设置'),
@@ -407,6 +417,7 @@ class AdvancedSettingsView extends GetView<AdvancedSettingsController> {
               const _FixedImageDisposeRatio(),
               const _FixMissingFont(),
               if (!GetPlatform.isIOS) const _BackdropUI(),
+              const _PageDragWidthRatio(),
             ],
           ),
         ),

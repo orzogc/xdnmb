@@ -47,8 +47,6 @@ import 'size.dart';
 import 'thread.dart';
 import 'tooltip.dart';
 
-const double _defaultHeight = 200.0;
-
 class _ForumName extends StatelessWidget {
   final PostListType postListType;
 
@@ -1253,6 +1251,8 @@ class _Emoticon extends StatefulWidget {
 }
 
 class _EmoticonState extends State<_Emoticon> {
+  static const double _defaultHeight = 200.0;
+
   static final Iterable<EmoticonData> _emoticonList = xdnmb_api.Emoticon.list
       .getRange(0, xdnmb_api.Emoticon.list.length - 3)
       .map((emoticon) => EmoticonData(name: emoticon.name, text: emoticon.text))
@@ -1306,10 +1306,11 @@ class _EmoticonState extends State<_Emoticon> {
       valueListenable: data.bottomHeight,
       builder: (context, value, child) => Obx(
         () {
-          final height =
+          final height = max(
               (data.keyboardHeight != null && data.keyboardHeight! > 0)
                   ? data.keyboardHeight! - value
-                  : _defaultHeight;
+                  : _defaultHeight - value,
+              0.0);
 
           return !data.isKeyboardVisible.value
               ? SizedBox(
@@ -1822,8 +1823,7 @@ class EditPostState extends State<EditPost> {
             Obx(
               () {
                 final dynamicHeight = fullHeight - value;
-                final lessHeight =
-                    fullHeight - (data.keyboardHeight ?? _defaultHeight);
+                final lessHeight = fullHeight - (data.keyboardHeight ?? value);
 
                 return (data.isKeyboardVisible.value || _showEmoticon.value)
                     ? _inputArea(context, max(lessHeight, 0.0))

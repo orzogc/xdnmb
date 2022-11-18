@@ -153,7 +153,9 @@ class PostDraftsView extends GetView<PostDraftsController> {
 
   @override
   Widget build(BuildContext context) => SafeArea(
+        left: false,
         top: false,
+        right: false,
         child: Scaffold(
           appBar: AppBar(
             title: const Text('草稿'),

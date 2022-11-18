@@ -23,6 +23,8 @@ class _TabTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     late final Widget title;
     switch (controller.postListType) {
       case PostListType.thread:
@@ -32,10 +34,7 @@ class _TabTitle extends StatelessWidget {
           final forumId = (controller as ThreadTypeController).post?.forumId;
 
           return DefaultTextStyle.merge(
-            style: Theme.of(context)
-                .textTheme
-                .caption
-                ?.apply(color: AppTheme.headerColor),
+            style: theme.textTheme.caption?.apply(color: AppTheme.headerColor),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -60,7 +59,8 @@ class _TabTitle extends StatelessWidget {
             ? ForumName(
                 forumId: forumId,
                 isTimeline: controller.isTimeline,
-                maxLines: 1)
+                maxLines: 1,
+                textStyle: theme.textTheme.bodyText1)
             : const SizedBox.shrink());
 
         break;

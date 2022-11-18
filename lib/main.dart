@@ -10,8 +10,8 @@ import 'package:hive/hive.dart';
 import 'app/data/services/persistent.dart';
 import 'app/data/services/services.dart';
 import 'app/data/services/settings.dart';
+import 'app/modules/post_list.dart';
 import 'app/routes/pages.dart';
-import 'app/routes/routes.dart';
 import 'app/utils/directory.dart';
 import 'app/utils/hive.dart';
 import 'app/utils/theme.dart';
@@ -46,8 +46,7 @@ class _XdnmbApp extends StatelessWidget {
         title: '霞岛',
         initialBinding: servicesBindings(),
         getPages: getPages,
-        // 默认打开综合线
-        initialRoute: AppRoutes.timelineUrl(1),
+        home: const PostListView(),
         theme: AppTheme.theme,
         darkTheme: AppTheme.darkTheme,
         builder: EasyLoading.init(),

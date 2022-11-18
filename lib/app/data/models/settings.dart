@@ -36,4 +36,7 @@ abstract class Settings {
   static const String fixMissingFont = 'fixMissingFont';
 
   static const String backdropUI = 'backdropUI';
+
+  static const String swipeablePageDragWidthRatio =
+      'swipeablePageDragWidthRatio';
 }

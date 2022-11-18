@@ -44,9 +44,7 @@ class _InitialForum extends StatelessWidget {
           '应用启动后显示的版块',
           style: TextStyle(
             color: settings.isRestoreTabs
-                ? Get.isDarkMode
-                    ? AppTheme.primaryColorDark
-                    : Colors.grey
+                ? (Get.isDarkMode ? AppTheme.primaryColorDark : Colors.grey)
                 : null,
           ),
         ),
@@ -174,25 +172,24 @@ class _AutoJumpPosition extends StatelessWidget {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.isJumpToLastBrowsePositionListenable,
-      builder: (context, value, child) => ListTile(
-        title: Text(
-          '自动跳转位置',
-          style: TextStyle(
-            color: settings.isJumpToLastBrowsePage
-                ? null
-                : Get.isDarkMode
-                    ? AppTheme.primaryColorDark
-                    : Colors.grey,
-          ),
-        ),
-        subtitle: const Text('自动跳转页数时跳转到最近浏览的位置'),
-        trailing: Switch(
-          value: settings.isJumpToLastBrowsePosition,
-          onChanged: settings.isJumpToLastBrowsePage
-              ? (value) => settings.isJumpToLastBrowsePosition = value
+      builder: (context, value, child) {
+        final textStyle = TextStyle(
+          color: !settings.isJumpToLastBrowsePage
+              ? (Get.isDarkMode ? AppTheme.primaryColorDark : Colors.grey)
               : null,
-        ),
-      ),
+        );
+
+        return ListTile(
+          title: Text('自动跳转位置', style: textStyle),
+          subtitle: Text('自动跳转页数时跳转到最近浏览的位置', style: textStyle),
+          trailing: Switch(
+            value: settings.isJumpToLastBrowsePosition,
+            onChanged: settings.isJumpToLastBrowsePage
+                ? (value) => settings.isJumpToLastBrowsePosition = value
+                : null,
+          ),
+        );
+      },
     );
   }
 }
@@ -280,6 +277,7 @@ class _FeedId extends StatelessWidget {
         title: const Text('订阅ID'),
         subtitle: Text(settings.feedId),
         trailing: child,
+        onTap: () => Get.dialog(_EditFeedId()),
       ),
       child: TextButton(
         onPressed: () => Get.dialog(_EditFeedId()),
@@ -303,7 +301,9 @@ class BasicSettingsView extends GetView<BasicSettingsController> {
 
   @override
   Widget build(BuildContext context) => SafeArea(
+        left: false,
         top: false,
+        right: false,
         child: Scaffold(
           appBar: AppBar(
             title: const Text('基本设置'),

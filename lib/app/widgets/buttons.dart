@@ -154,16 +154,19 @@ class SettingsButton extends StatelessWidget {
 
   const SettingsButton({super.key, this.showLabel = false, this.iconColor});
 
-  void _onTap(BuildContext context) =>
-      AppRoutes.toSettings(SettingsController(closeDrawer: () {
-        final scaffold = Scaffold.of(context);
+  void _onTap(BuildContext context) {
+    Get.back();
 
-        if (SettingsService.isBackdropUI) {
-          scaffold.closeEndDrawer();
-        } else {
-          scaffold.closeDrawer();
-        }
-      }));
+    AppRoutes.toSettings(SettingsController(closeDrawer: () {
+      final scaffold = Scaffold.of(context);
+
+      if (SettingsService.isBackdropUI) {
+        scaffold.closeEndDrawer();
+      } else {
+        scaffold.closeDrawer();
+      }
+    }));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -249,7 +252,7 @@ class SponsorButton extends StatelessWidget {
     return showIcon
         ? _Button(
             icon: const Padding(
-              padding: EdgeInsets.only(left: 4.0),
+              padding: EdgeInsets.only(left: 3.0, top: 3.0),
               child: Icon(AppIcons.heart, size: 18.0),
             ),
             label: '赞助',

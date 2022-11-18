@@ -1084,7 +1084,9 @@ class ImageView extends GetView<ImageController> {
         return true;
       },
       child: SafeArea(
+        left: false,
         top: false,
+        right: false,
         child: LayoutBuilder(builder: (context, constraints) {
           final size = Size(
               constraints.maxWidth, constraints.maxHeight - media.padding.top);

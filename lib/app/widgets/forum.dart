@@ -277,7 +277,6 @@ class _ForumBodyState extends State<ForumBody> {
 
           if (data.shouldShowGuide && showCase != null) {
             WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-              Guide.startGuide.value = true;
               Guide.isShowForumGuides = true;
               showCase.startShowCase(Guide.forumGuides);
             });

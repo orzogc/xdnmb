@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
@@ -165,8 +164,9 @@ abstract class PostListController extends ChangeNotifier {
 class PostListBinding implements Bindings {
   @override
   void dependencies() {
-    late final PostListController controller;
     final uri = Uri.parse(Get.currentRoute);
+
+    late final PostListController controller;
     switch (uri.path) {
       case AppRoutes.thread:
         controller = threadController(Get.parameters, Get.arguments);
@@ -261,131 +261,139 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
 
         final dump = false.obs;
 
-        return GestureDetector(
-          onTap: controller.isThreadType
-              ? controller.refresh
-              : controller.refreshPage,
-          onDoubleTap: SettingsService.isBackdropUI
-              ? backdropController?.toggleFrontLayer
-              : null,
-          onVerticalDragUpdate: backdropController?.onVerticalDragUpdate,
-          onVerticalDragEnd: backdropController?.onVerticalDragEnd,
-          child: Obx(
-            () {
-              // 为了不让Obx因为没有Rx出错
-              dump.value;
+        return Obx(() {
+          // 为了不让Obx因为没有Rx出错
+          dump.value;
 
-              return AppBar(
-                primary: !(backdropController?.isShowBackLayer ?? false),
-                leading: !(backdropController?.isShowBackLayer ?? false)
-                    ? (stacks.controllersCount() > 1
-                        ? const BackButton(onPressed: postListPop)
-                        : (data.shouldShowGuide
-                            ? AppBarMenuGuide(button)
-                            : button))
-                    : IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: backdropController?.hideBackLayer),
-                title: data.shouldShowGuide ? AppBarTitleGuide(title) : title,
-                actions: !(backdropController?.isShowBackLayer ?? false)
-                    ? [
-                        if (controller.isXdnmbApi)
-                          data.shouldShowGuide
-                              ? AppBarPageButtonGuide(
-                                  PageButton(controller: controller))
-                              : PageButton(controller: controller),
-                        if (controller.isThreadType)
-                          NotifyBuilder(
-                              animation: controller,
-                              builder: (context, child) => data.shouldShowGuide
-                                  ? AppBarPopupMenuGuide(
-                                      ThreadAppBarPopupMenuButton(
-                                          controller as ThreadTypeController))
-                                  : ThreadAppBarPopupMenuButton(
-                                      controller as ThreadTypeController)),
-                        if (controller.isForumType)
-                          data.shouldShowGuide
-                              ? AppBarPopupMenuGuide(ForumAppBarPopupMenuButton(
-                                  controller as ForumTypeController))
-                              : ForumAppBarPopupMenuButton(
-                                  controller as ForumTypeController),
-                        if (controller.isHistory)
-                          HistoryDateRangePicker(
-                              controller as HistoryController),
-                        if (controller.isHistory)
-                          data.shouldShowGuide
-                              ? AppBarPopupMenuGuide(
-                                  HistoryAppBarPopupMenuButton(
-                                      controller as HistoryController))
-                              : HistoryAppBarPopupMenuButton(
-                                  controller as HistoryController),
-                      ]
-                    : const [SizedBox.shrink()],
-              );
-            },
-          ),
-        );
+          return GestureDetector(
+            onTap: !(SettingsService.isBackdropUI &&
+                    (backdropController?.isShowBackLayer ?? false))
+                ? (controller.isThreadType
+                    ? controller.refresh
+                    : controller.refreshPage)
+                : null,
+            onDoubleTap: SettingsService.isBackdropUI
+                ? backdropController?.toggleFrontLayer
+                : null,
+            onVerticalDragStart: backdropController?.onVerticalDragStart,
+            onVerticalDragUpdate: backdropController?.onVerticalDragUpdate,
+            onVerticalDragEnd: backdropController?.onVerticalDragEnd,
+            child: AppBar(
+              primary: !(backdropController?.isShowBackLayer ?? false),
+              leading: !(backdropController?.isShowBackLayer ?? false)
+                  ? (stacks.controllersCount() > 1
+                      ? const BackButton(onPressed: postListPop)
+                      : (data.shouldShowGuide
+                          ? AppBarMenuGuide(button)
+                          : button))
+                  : IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: backdropController?.hideBackLayer),
+              title: data.shouldShowGuide ? AppBarTitleGuide(title) : title,
+              actions: !(backdropController?.isShowBackLayer ?? false)
+                  ? [
+                      if (controller.isXdnmbApi)
+                        data.shouldShowGuide
+                            ? AppBarPageButtonGuide(
+                                PageButton(controller: controller))
+                            : PageButton(controller: controller),
+                      if (controller.isThreadType)
+                        NotifyBuilder(
+                            animation: controller,
+                            builder: (context, child) => data.shouldShowGuide
+                                ? AppBarPopupMenuGuide(
+                                    ThreadAppBarPopupMenuButton(
+                                        controller as ThreadTypeController))
+                                : ThreadAppBarPopupMenuButton(
+                                    controller as ThreadTypeController)),
+                      if (controller.isForumType)
+                        data.shouldShowGuide
+                            ? AppBarPopupMenuGuide(ForumAppBarPopupMenuButton(
+                                controller as ForumTypeController))
+                            : ForumAppBarPopupMenuButton(
+                                controller as ForumTypeController),
+                      if (controller.isHistory)
+                        HistoryDateRangePicker(controller as HistoryController),
+                      if (controller.isHistory)
+                        data.shouldShowGuide
+                            ? AppBarPopupMenuGuide(HistoryAppBarPopupMenuButton(
+                                controller as HistoryController))
+                            : HistoryAppBarPopupMenuButton(
+                                controller as HistoryController),
+                    ]
+                  : const [SizedBox.shrink()],
+            ),
+          );
+        });
       },
     );
   }
 }
 
 class _PostListGetPageRoute<T> extends GetPageRoute<T> {
-  bool _maintainState;
+  bool _maintainState = false;
 
   @override
   bool get maintainState => _maintainState;
 
-  _PostListGetPageRoute(
-      {super.settings, super.transition, bool maintainState = true, super.page})
-      : _maintainState = maintainState;
-
   @override
-  void changedInternalState() {
-    if (settings is _PostListPage<T>) {
-      setState(() {
-        _maintainState = (settings as _PostListPage<T>).maintainState;
-      });
-    }
+  GetPageBuilder? get page => super.page != null
+      ? () {
+          _active();
 
-    super.changedInternalState();
+          return super.page!();
+        }
+      : null;
+
+  _PostListGetPageRoute({super.settings, super.transition, super.page});
+
+  void _active() {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (isActive) {
+        _maintainState = true;
+        changedInternalState();
+      }
+    });
   }
 }
 
 class _PostListSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
-  bool _maintainState;
+  bool _maintainState = false;
 
   @override
   bool get maintainState => _maintainState;
 
+  @override
+  WidgetBuilder get builder => (context) {
+        _active();
+
+        return super.builder(context);
+      };
+
   _PostListSwipeablePageRoute(
       {super.settings,
-      bool maintainState = true,
       super.canOnlySwipeFromEdge,
       super.backGestureDetectionWidth,
       super.backGestureDetectionStartOffset,
-      required super.builder})
-      : _maintainState = maintainState;
+      required super.builder});
 
-  @override
-  void changedInternalState() {
-    if (settings is _PostListPage<T>) {
-      setState(() {
-        _maintainState = (settings as _PostListPage<T>).maintainState;
-      });
-    }
-
-    super.changedInternalState();
+  void _active() {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (isActive) {
+        _maintainState = true;
+        changedInternalState();
+      }
+    });
   }
 }
 
 class _PostListPage<T> extends Page<T> {
   final PostListController controller;
 
-  final bool maintainState;
+  final double? backGestureDetectionWidth;
 
   const _PostListPage(
-      {super.key, required this.controller, this.maintainState = true});
+      {super.key, required this.controller, this.backGestureDetectionWidth});
 
   Widget _buildWidget() {
     final hasBeenDarkMode = SettingsService.to.hasBeenDarkMode;
@@ -425,18 +433,19 @@ class _PostListPage<T> extends Page<T> {
     );
   }
 
-  Route<T> _buildRoute() => SettingsService.isBackdropUI
-      ? _PostListSwipeablePageRoute(
-          settings: this,
-          maintainState: maintainState,
-          builder: (context) => _buildWidget(),
-        )
-      : _PostListGetPageRoute(
-          settings: this,
-          transition: Transition.rightToLeft,
-          maintainState: maintainState,
-          page: _buildWidget,
-        );
+  Route<T> _buildRoute() =>
+      (SettingsService.isBackdropUI && backGestureDetectionWidth != null)
+          ? _PostListSwipeablePageRoute(
+              settings: this,
+              canOnlySwipeFromEdge: true,
+              backGestureDetectionWidth: backGestureDetectionWidth!,
+              builder: (context) => _buildWidget(),
+            )
+          : _PostListGetPageRoute(
+              settings: this,
+              transition: Transition.rightToLeft,
+              page: _buildWidget,
+            );
 
   @override
   Route<T> createRoute(BuildContext context) => _buildRoute();
@@ -447,10 +456,10 @@ class _PostListPage<T> extends Page<T> {
       (other is _PostListPage<T> &&
           key == other.key &&
           controller == other.controller &&
-          maintainState == other.maintainState);
+          backGestureDetectionWidth == other.backGestureDetectionWidth);
 
   @override
-  int get hashCode => Object.hash(key, controller, maintainState);
+  int get hashCode => Object.hash(key, controller, backGestureDetectionWidth);
 }
 
 class PostListPage extends StatefulWidget {
@@ -465,8 +474,6 @@ class PostListPage extends StatefulWidget {
 
 class PostListPageState extends State<PostListPage> {
   late final PageController _pageController;
-
-  final HashMap<int, bool> _maintainStateMap = HashMap();
 
   void _openDrawer() => Scaffold.of(context).openDrawer();
 
@@ -495,40 +502,35 @@ class PostListPageState extends State<PostListPage> {
 
   void jumpToLast() => jumpToPage(ControllerStacksService.to.length - 1);
 
-  Widget _buildNavigator(int index) {
-    final stacks = ControllerStacksService.to;
-
+  Widget _buildNavigator(BuildContext context, int index) {
     debugPrint('build navigator: $index');
+
+    final settings = SettingsService.to;
+    final stacks = ControllerStacksService.to;
+    final media = MediaQuery.of(context);
+
+    final double? backGestureDetectionWidth = SettingsService.isBackdropUI
+        ? media.size.width * settings.swipeablePageDragWidthRatio
+        : null;
 
     return NotifyBuilder(
       animation: stacks.getStackNotifier(index),
-      builder: (context, child) {
-        final controllers = stacks.getControllers(index);
-        if (controllers.isNotEmpty) {
-          final key = controllers.last.key;
-          final maintainState = _maintainStateMap[key];
-          if (maintainState != null && !maintainState) {
-            _maintainStateMap[key] = true;
-          }
-        }
+      builder: (context, child) => Navigator(
+        key: Get.nestedKey(stacks.getKeyId(index)),
+        pages: [
+          for (final controller in stacks.getControllers(index))
+            _PostListPage(
+              key: ValueKey(controller.key),
+              controller: controller.controller,
+              backGestureDetectionWidth: backGestureDetectionWidth,
+            ),
+        ],
+        onPopPage: (route, result) {
+          stacks.popController(index);
 
-        return Navigator(
-          key: Get.nestedKey(stacks.getKeyId(index)),
-          pages: [
-            for (final controller in controllers)
-              _PostListPage(
-                key: ValueKey(controller.key),
-                controller: controller.controller,
-                maintainState: _maintainStateMap[controller.key] ?? true,
-              ),
-          ],
-          onPopPage: (route, result) {
-            stacks.popController(index);
-
-            return route.didPop(result);
-          },
-        );
-      },
+          return route.didPop(result);
+        },
+      ),
     );
   }
 
@@ -536,11 +538,8 @@ class PostListPageState extends State<PostListPage> {
   void initState() {
     super.initState();
 
-    final stacks = ControllerStacksService.to;
-    _pageController = PageController(initialPage: stacks.index);
-    for (final key in stacks.getControllerKeys()) {
-      _maintainStateMap[key] = false;
-    }
+    _pageController =
+        PageController(initialPage: ControllerStacksService.to.index);
   }
 
   @override
@@ -552,6 +551,7 @@ class PostListPageState extends State<PostListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final stacks = ControllerStacksService.to;
     final scaffold = Scaffold.of(context);
 
     debugPrint('build page');
@@ -560,8 +560,8 @@ class PostListPageState extends State<PostListPage> {
       () => PageView.builder(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: ControllerStacksService.to.length,
-        itemBuilder: (context, index) => _buildNavigator(index),
+        itemCount: stacks.length,
+        itemBuilder: (context, index) => _buildNavigator(context, index),
       ),
     );
 
@@ -872,7 +872,9 @@ class _PostListBackdropState extends State<_PostListBackdrop>
 
   @override
   Widget build(BuildContext context) => SafeArea(
+        left: false,
         top: false,
+        right: false,
         child: Padding(
           padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
           child: Material(
@@ -953,33 +955,30 @@ class _PostListViewState extends State<PostListView>
   void _showCase() {
     final data = PersistentDataService.to;
 
-    if (Guide.startGuide.value) {
-      if (Guide.isShowForumGuides) {
-        Guide.isShowForumGuides = false;
-        Guide.isShowDrawerGuides = true;
-        PostListPage.pageKey.currentState!._openDrawer();
-        PostListPage.pageKey.currentState!._startDrawerGuide();
-      } else if (Guide.isShowDrawerGuides) {
-        Guide.isShowDrawerGuides = false;
-        PostListPage.pageKey.currentState!._closeDrawer();
-        Guide.isShowEndDrawerGuides = true;
-        PostListPage.pageKey.currentState!._openEndDrawer();
-        PostListPage.pageKey.currentState!._startEndDrawerGuide();
-      } else if (Guide.isShowEndDrawerGuides) {
-        Guide.isShowEndDrawerGuides = false;
-        PostListPage.pageKey.currentState!._closeEndDrawer();
-        data.showGuide = false;
-        Guide.startGuide.value = false;
-        CheckAppVersionService.to.checkAppVersion();
-        data.showNotice();
-      }
+    if (Guide.isShowForumGuides) {
+      Guide.isShowForumGuides = false;
+      Guide.isShowDrawerGuides = true;
+      PostListPage.pageKey.currentState!._openDrawer();
+      PostListPage.pageKey.currentState!._startDrawerGuide();
+    } else if (Guide.isShowDrawerGuides) {
+      Guide.isShowDrawerGuides = false;
+      PostListPage.pageKey.currentState!._closeDrawer();
+      Guide.isShowEndDrawerGuides = true;
+      PostListPage.pageKey.currentState!._openEndDrawer();
+      PostListPage.pageKey.currentState!._startEndDrawerGuide();
+    } else if (Guide.isShowEndDrawerGuides) {
+      Guide.isShowEndDrawerGuides = false;
+      PostListPage.pageKey.currentState!._closeEndDrawer();
+      data.showGuide = false;
+      CheckAppVersionService.to.checkAppVersion();
+      data.showNotice();
     }
   }
 
   void _backdropShowCase() {
     final data = PersistentDataService.to;
 
-    if (_backdropController != null && Guide.startGuide.value) {
+    if (_backdropController != null) {
       if (Guide.isShowForumGuides) {
         Guide.isShowForumGuides = false;
         Guide.isShowEndDrawerGuides = true;
@@ -999,7 +998,6 @@ class _PostListViewState extends State<PostListView>
         Guide.isShowBackLayerForumListGuides = false;
         _backdropController!.hideBackLayer();
         data.showBackdropGuide = false;
-        Guide.startGuide.value = false;
         CheckAppVersionService.to.checkAppVersion();
         data.showNotice();
       }
@@ -1039,7 +1037,9 @@ class _PostListViewState extends State<PostListView>
     return WillPopScope(
       onWillPop: () => _onWillPop(context),
       child: SafeArea(
+        left: false,
         top: false,
+        right: false,
         child: LayoutBuilder(builder: (context, constraints) {
           final width = constraints.maxWidth;
           final height = constraints.maxHeight;

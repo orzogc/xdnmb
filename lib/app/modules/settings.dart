@@ -114,7 +114,9 @@ class SettingsView extends GetView<SettingsController> {
 
   @override
   Widget build(BuildContext context) => SafeArea(
+        left: false,
         top: false,
+        right: false,
         child: Scaffold(
           appBar: AppBar(
             title: const Text('设置'),

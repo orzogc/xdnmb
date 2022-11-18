@@ -12,6 +12,8 @@ class BackdropController {
 
   GestureDragEndCallback? _onVerticalDragEnd;
 
+  GestureDragStartCallback? _onVerticalDragStart;
+
   void toggleFrontLayer() {
     if (_toggleFrontLayer != null) {
       _toggleFrontLayer!();
@@ -27,6 +29,12 @@ class BackdropController {
   void hideBackLayer() {
     if (_toggleFrontLayer != null && _isShowBackLayer.value) {
       _toggleFrontLayer!();
+    }
+  }
+
+  void onVerticalDragStart(DragStartDetails details) {
+    if (_onVerticalDragStart != null) {
+      _onVerticalDragStart!(details);
     }
   }
 
@@ -104,6 +112,13 @@ class _BackdropState extends State<Backdrop>
               0.0, (widget.height - widget.appBarHeight) / widget.height))
       .animate(_animationController);
 
+  void _onVerticalDragStart(DragStartDetails details) {
+    if (!_isShowBackLayer) {
+      _animationController.value =
+          MediaQuery.of(context).padding.top / widget.height;
+    }
+  }
+
   void _onVerticalDragUpdate(DragUpdateDetails details) {
     final delta = details.primaryDelta;
     if (delta != null) {
@@ -136,6 +151,7 @@ class _BackdropState extends State<Backdrop>
 
     _updateController();
     widget.controller._toggleFrontLayer = _toggleFrontLayer;
+    widget.controller._onVerticalDragStart = _onVerticalDragStart;
     widget.controller._onVerticalDragUpdate = _onVerticalDragUpdate;
     widget.controller._onVerticalDragEnd = _onVerticalDragEnd;
 

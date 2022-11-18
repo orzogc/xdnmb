@@ -134,78 +134,64 @@ class ForumList extends StatelessWidget {
     final theme = Theme.of(context);
 
     return NotifyBuilder(
-      animation: Listenable.merge([data.showGuideListenable, Guide.startGuide]),
-      builder: (context, child) => (data.shouldShowGuide &&
-              Guide.startGuide.value)
-          ? ListView(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              children: [
-                ForumListGuide(
-                  ListTile(
-                    tileColor: theme.focusColor,
-                    title: Text(defaultForum.forumDisplayName),
-                  ),
-                ),
-              ],
-            )
-          : NotifyBuilder(
-              animation: ControllerStacksService.to.notifier,
-              builder: (context, child) {
-                final controller = PostListController.get();
-                final forumId = controller.forumOrTimelineId;
-                final isTimeline = controller.isTimeline;
+      animation: ControllerStacksService.to.notifier,
+      builder: (context, child) {
+        final controller = PostListController.get();
+        final forumId = controller.forumOrTimelineId;
+        final isTimeline = controller.isTimeline;
 
-                return ValueListenableBuilder<HashMap<int, int>>(
-                  valueListenable: forums.displayedForumIndexNotifier,
-                  builder: (context, box, child) => ListView.builder(
-                    key: const PageStorageKey<String>('forumList'),
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    itemCount: forums.displayedForumsCount,
-                    itemBuilder: (context, index) {
-                      final forum = forums.displayedForum(index);
+        return ValueListenableBuilder<HashMap<int, int>>(
+          valueListenable: forums.displayedForumIndexNotifier,
+          builder: (context, box, child) => ListView.builder(
+            key: const PageStorageKey<String>('forumList'),
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemCount: forums.displayedForumsCount,
+            itemBuilder: (context, index) {
+              final forum = forums.displayedForum(index);
 
-                      return forum != null
-                          ? ListTile(
-                              key: ValueKey<PostList>(
-                                  PostList.fromForumData(forum)),
-                              onTap: () {
-                                if (!controller.isForumType ||
-                                    forumId != forum.id) {
-                                  if (forum.isTimeline) {
-                                    AppRoutes.toTimeline(timelineId: forum.id);
-                                  } else {
-                                    AppRoutes.toForum(forumId: forum.id);
-                                  }
-                                }
-                                _back();
-                              },
-                              onLongPress: () async {
-                                if (await Get.dialog<bool>(
-                                        _Dialog(forum: forum)) ??
-                                    false) {
-                                  _back();
-                                }
-                              },
-                              tileColor: (forumId == forum.id &&
-                                      isTimeline == forum.isTimeline)
-                                  ? theme.focusColor
-                                  : null,
-                              title: ForumName(
-                                forumId: forum.id,
-                                isTimeline: forum.isTimeline,
-                                isDeprecated: forum.isDeprecated,
-                                textStyle: theme.textTheme.bodyText1,
-                                maxLines: 1,
-                              ),
-                            )
-                          : const SizedBox.shrink();
-                    },
+              if (forum != null) {
+                final Widget forumWidget = ListTile(
+                  key: ValueKey<PostList>(PostList.fromForumData(forum)),
+                  onTap: () {
+                    if (!controller.isForumType || forumId != forum.id) {
+                      if (forum.isTimeline) {
+                        AppRoutes.toTimeline(timelineId: forum.id);
+                      } else {
+                        AppRoutes.toForum(forumId: forum.id);
+                      }
+                    }
+                    _back();
+                  },
+                  onLongPress: () async {
+                    if (await Get.dialog<bool>(_Dialog(forum: forum)) ??
+                        false) {
+                      _back();
+                    }
+                  },
+                  tileColor:
+                      (forumId == forum.id && isTimeline == forum.isTimeline)
+                          ? theme.focusColor
+                          : null,
+                  title: ForumName(
+                    forumId: forum.id,
+                    isTimeline: forum.isTimeline,
+                    isDeprecated: forum.isDeprecated,
+                    textStyle: theme.textTheme.bodyText1,
+                    maxLines: 1,
                   ),
                 );
-              },
-            ),
+
+                return (index == 0 && data.shouldShowGuide)
+                    ? ForumListGuide(forumWidget)
+                    : forumWidget;
+              } else {
+                return const SizedBox.shrink();
+              }
+            },
+          ),
+        );
+      },
     );
   }
 }

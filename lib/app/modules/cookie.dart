@@ -488,7 +488,9 @@ class CookieView extends GetView<CookieController> {
     final user = UserService.to;
 
     return SafeArea(
+      left: false,
       top: false,
+      right: false,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('饼干'),

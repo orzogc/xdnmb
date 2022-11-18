@@ -4,8 +4,6 @@ import 'package:showcaseview/showcaseview.dart';
 import '../data/services/persistent.dart';
 
 abstract class Guide {
-  static ValueNotifier<bool> startGuide = ValueNotifier(false);
-
   static bool isShowForumGuides = false;
 
   static bool isShowDrawerGuides = false;
