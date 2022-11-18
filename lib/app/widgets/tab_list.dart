@@ -35,17 +35,12 @@ class _TabTitle extends StatelessWidget {
 
           return DefaultTextStyle.merge(
             style: theme.textTheme.caption?.apply(color: AppTheme.headerColor),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: OverflowBar(
+              spacing: 5.0,
+              alignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (forumId != null)
-                  Flexible(
-                    child: ForumName(
-                      forumId: forumId,
-                      maxLines: 1,
-                    ),
-                  ),
-                Flexible(child: Text(postId.toPostNumber())),
+                if (forumId != null) ForumName(forumId: forumId, maxLines: 1),
+                Text(postId.toPostNumber()),
               ],
             ),
           );

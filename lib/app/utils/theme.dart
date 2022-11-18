@@ -176,6 +176,9 @@ abstract class AppTheme {
 
   static Color get highlightColor =>
       Get.isDarkMode ? Colors.white : AppTheme.primaryColorLight;
+
+  static Color get inactiveSettingColor =>
+      Get.isDarkMode ? AppTheme.primaryColorDark : Colors.grey;
 }
 
 class _TextButtonDefaultOverlay extends MaterialStateProperty<Color?> {

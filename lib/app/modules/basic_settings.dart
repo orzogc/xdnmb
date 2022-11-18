@@ -43,9 +43,8 @@ class _InitialForum extends StatelessWidget {
         title: Text(
           '应用启动后显示的版块',
           style: TextStyle(
-            color: settings.isRestoreTabs
-                ? (Get.isDarkMode ? AppTheme.primaryColorDark : Colors.grey)
-                : null,
+            color:
+                settings.isRestoreTabs ? AppTheme.inactiveSettingColor : null,
           ),
         ),
         trailing: TextButton(
@@ -175,7 +174,7 @@ class _AutoJumpPosition extends StatelessWidget {
       builder: (context, value, child) {
         final textStyle = TextStyle(
           color: !settings.isJumpToLastBrowsePage
-              ? (Get.isDarkMode ? AppTheme.primaryColorDark : Colors.grey)
+              ? AppTheme.inactiveSettingColor
               : null,
         );
 

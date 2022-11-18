@@ -171,6 +171,18 @@ class SettingsService extends GetxService {
   set swipeablePageDragWidthRatio(double ratio) =>
       _settingsBox.put(Settings.swipeablePageDragWidthRatio, ratio);
 
+  double get frontLayerDragHeightRatio =>
+      _settingsBox.get(Settings.frontLayerDragHeightRatio, defaultValue: 0.25);
+
+  set frontLayerDragHeightRatio(double ratio) =>
+      _settingsBox.put(Settings.frontLayerDragHeightRatio, ratio);
+
+  double get backLayerDragHeightRatio =>
+      _settingsBox.get(Settings.backLayerDragHeightRatio, defaultValue: 0.10);
+
+  set backLayerDragHeightRatio(double ratio) =>
+      _settingsBox.put(Settings.backLayerDragHeightRatio, ratio);
+
   double get drawerDragRatio => _drawerDragRatio.value;
 
   late final ValueListenable<Box> isRestoreTabsListenable;
@@ -208,6 +220,10 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> backdropUIListenable;
 
   late final ValueListenable<Box> swipeablePageDragWidthRatioListenable;
+
+  late final ValueListenable<Box> frontLayerDragHeightRatioListenable;
+
+  late final ValueListenable<Box> backLayerDragHeightRatioListenable;
 
   late final StreamSubscription<BoxEvent> _darkModeSubscription;
 
@@ -292,6 +308,10 @@ class SettingsService extends GetxService {
     backdropUIListenable = _settingsBox.listenable(keys: [Settings.backdropUI]);
     swipeablePageDragWidthRatioListenable = _settingsBox.listenable(
         keys: [Settings.backdropUI, Settings.swipeablePageDragWidthRatio]);
+    frontLayerDragHeightRatioListenable = _settingsBox.listenable(
+        keys: [Settings.backdropUI, Settings.frontLayerDragHeightRatio]);
+    backLayerDragHeightRatioListenable = _settingsBox.listenable(
+        keys: [Settings.backdropUI, Settings.backLayerDragHeightRatio]);
 
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
 

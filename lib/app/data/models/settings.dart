@@ -39,4 +39,8 @@ abstract class Settings {
 
   static const String swipeablePageDragWidthRatio =
       'swipeablePageDragWidthRatio';
+
+  static const String frontLayerDragHeightRatio = 'frontLayerDragHeightRatio';
+
+  static const String backLayerDragHeightRatio = 'backLayerDragHeightRatio';
 }

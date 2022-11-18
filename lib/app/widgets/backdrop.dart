@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../data/services/settings.dart';
+
 class BackdropController {
   final RxBool _isShowBackLayer = false.obs;
 
   bool get isShowBackLayer => _isShowBackLayer.value;
 
   VoidCallback? _toggleFrontLayer;
-
-  GestureDragUpdateCallback? _onVerticalDragUpdate;
-
-  GestureDragEndCallback? _onVerticalDragEnd;
-
-  GestureDragStartCallback? _onVerticalDragStart;
 
   void toggleFrontLayer() {
     if (_toggleFrontLayer != null) {
@@ -29,24 +25,6 @@ class BackdropController {
   void hideBackLayer() {
     if (_toggleFrontLayer != null && _isShowBackLayer.value) {
       _toggleFrontLayer!();
-    }
-  }
-
-  void onVerticalDragStart(DragStartDetails details) {
-    if (_onVerticalDragStart != null) {
-      _onVerticalDragStart!(details);
-    }
-  }
-
-  void onVerticalDragUpdate(DragUpdateDetails details) {
-    if (_onVerticalDragUpdate != null) {
-      _onVerticalDragUpdate!(details);
-    }
-  }
-
-  void onVerticalDragEnd(DragEndDetails details) {
-    if (_onVerticalDragEnd != null) {
-      _onVerticalDragEnd!(details);
     }
   }
 }
@@ -151,9 +129,6 @@ class _BackdropState extends State<Backdrop>
 
     _updateController();
     widget.controller._toggleFrontLayer = _toggleFrontLayer;
-    widget.controller._onVerticalDragStart = _onVerticalDragStart;
-    widget.controller._onVerticalDragUpdate = _onVerticalDragUpdate;
-    widget.controller._onVerticalDragEnd = _onVerticalDragEnd;
 
     _animationController.addStatusListener(_updateController);
     _animationController.addListener(_truncate);
@@ -172,20 +147,61 @@ class _BackdropState extends State<Backdrop>
   }
 
   @override
-  Widget build(BuildContext context) => Stack(
-        children: [
-          Container(
-            color: Theme.of(context).primaryColor,
-            height: widget.height - widget.appBarHeight,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: widget.backLayer,
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    final paddingTop = MediaQuery.of(context).padding.top;
+
+    return Stack(
+      children: [
+        Container(
+          color: Theme.of(context).primaryColor,
+          height: widget.height - widget.appBarHeight,
+          child: Padding(
+            padding: EdgeInsets.only(top: paddingTop),
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: widget.backLayer,
+                ),
+                GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onVerticalDragStart: _onVerticalDragStart,
+                  onVerticalDragUpdate: _onVerticalDragUpdate,
+                  onVerticalDragEnd: _onVerticalDragEnd,
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: (widget.height - widget.appBarHeight) *
+                        settings.backLayerDragHeightRatio,
+                  ),
+                ),
+              ],
             ),
           ),
-          SlideTransition(
-            position: _animationOffSet(),
-            child: widget.frontLayer,
+        ),
+        SlideTransition(
+          position: _animationOffSet(),
+          child: Stack(
+            children: [
+              widget.frontLayer,
+              GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onVerticalDragStart: _onVerticalDragStart,
+                onVerticalDragUpdate: _onVerticalDragUpdate,
+                onVerticalDragEnd: _onVerticalDragEnd,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: paddingTop +
+                      widget.appBarHeight +
+                      (widget.height - paddingTop - widget.appBarHeight) *
+                          settings.frontLayerDragHeightRatio,
+                ),
+              ),
+            ],
           ),
-        ],
-      );
+        ),
+      ],
+    );
+  }
 }

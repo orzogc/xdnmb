@@ -266,18 +266,15 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
           dump.value;
 
           return GestureDetector(
-            onTap: !(SettingsService.isBackdropUI &&
+            onTap: (SettingsService.isBackdropUI &&
                     (backdropController?.isShowBackLayer ?? false))
-                ? (controller.isThreadType
+                ? backdropController?.toggleFrontLayer
+                : (controller.isThreadType
                     ? controller.refresh
-                    : controller.refreshPage)
-                : null,
+                    : controller.refreshPage),
             onDoubleTap: SettingsService.isBackdropUI
                 ? backdropController?.toggleFrontLayer
                 : null,
-            onVerticalDragStart: backdropController?.onVerticalDragStart,
-            onVerticalDragUpdate: backdropController?.onVerticalDragUpdate,
-            onVerticalDragEnd: backdropController?.onVerticalDragEnd,
             child: AppBar(
               primary: !(backdropController?.isShowBackLayer ?? false),
               leading: !(backdropController?.isShowBackLayer ?? false)
@@ -871,34 +868,26 @@ class _PostListBackdropState extends State<_PostListBackdrop>
   }
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-        left: false,
-        top: false,
-        right: false,
-        child: Padding(
-          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-          child: Material(
-            child: Column(
-              children: [
-                ColoredBox(
-                  color: Theme.of(context).primaryColor,
-                  child: TabBar(
-                    controller: _controller,
-                    tabs: const [Tab(text: '标签'), Tab(text: '版块')],
-                  ),
-                ),
-                Expanded(
-                  child: TabBarView(
-                    controller: _controller,
-                    children: [
-                      TabList(backdropController: widget.backdropController),
-                      ForumList(backdropController: widget.backdropController),
-                    ],
-                  ),
-                ),
-              ],
+  Widget build(BuildContext context) => Material(
+        child: Column(
+          children: [
+            ColoredBox(
+              color: Theme.of(context).primaryColor,
+              child: TabBar(
+                controller: _controller,
+                tabs: const [Tab(text: '标签'), Tab(text: '版块')],
+              ),
             ),
-          ),
+            Expanded(
+              child: TabBarView(
+                controller: _controller,
+                children: [
+                  TabList(backdropController: widget.backdropController),
+                  ForumList(backdropController: widget.backdropController),
+                ],
+              ),
+            ),
+          ],
         ),
       );
 }

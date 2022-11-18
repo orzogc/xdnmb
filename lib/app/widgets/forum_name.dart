@@ -112,7 +112,7 @@ class ForumName extends StatelessWidget {
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  nameWidget,
+                  Flexible(child: nameWidget),
                   Text('隐藏', style: textStyle?.merge(AppTheme.boldRed)),
                 ],
               )
