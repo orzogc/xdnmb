@@ -771,6 +771,16 @@ class _ThreadBodyState extends State<ThreadBody> {
   }
 
   @override
+  void didUpdateWidget(covariant ThreadBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller.removeListener(_addRefresh);
+      widget.controller.addListener(_addRefresh);
+    }
+  }
+
+  @override
   void dispose() {
     _isToJump.value = false;
     _anchorController.dispose();

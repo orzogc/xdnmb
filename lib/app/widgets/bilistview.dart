@@ -115,7 +115,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
   int _itemListLength = 0;
 
-  late final ScrollController _scrollController;
+  late ScrollController _scrollController;
 
   final RxBool _isOutOfBoundary = true.obs;
 
@@ -384,6 +384,21 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
     if (widget.getLoadMore != null) {
       widget.getLoadMore!(_loadMore);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant BiListView<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.controller != oldWidget.controller) {
+      final oldController = _scrollController;
+      oldController.removeListener(_checkBoundary);
+      if (oldWidget.controller == null) {
+        oldController.dispose();
+      }
+      _scrollController = widget.controller ?? ScrollController();
+      _scrollController.addListener(_checkBoundary);
     }
   }
 

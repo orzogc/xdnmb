@@ -124,6 +124,8 @@ class XdnmbClientService extends GetxService {
 
       debugPrint('更新X岛版块列表成功');
     } catch (e) {
+      // 失败的话确保下次启动会更新版块列表
+      data.updateForumListTime == null;
       showToast('更新X岛版块列表失败：${exceptionMessage(e)}');
     }
 

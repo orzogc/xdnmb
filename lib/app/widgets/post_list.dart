@@ -33,6 +33,16 @@ class _PostListRefresherState extends State<PostListRefresher> {
   }
 
   @override
+  void didUpdateWidget(covariant PostListRefresher oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller.removeListener(_addRefresh);
+      widget.controller.addListener(_addRefresh);
+    }
+  }
+
+  @override
   void dispose() {
     widget.controller.removeListener(_addRefresh);
 
@@ -78,6 +88,16 @@ class _PostListAnchorRefresherState extends State<PostListAnchorRefresher> {
     );
 
     widget.controller.addListener(_addRefresh);
+  }
+
+  @override
+  void didUpdateWidget(covariant PostListAnchorRefresher oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller.removeListener(_addRefresh);
+      widget.controller.addListener(_addRefresh);
+    }
   }
 
   @override

@@ -37,6 +37,8 @@ abstract class Settings {
 
   static const String backdropUI = 'backdropUI';
 
+  static const String showTabAndForumListInRow = 'showTabAndForumListInRow';
+
   static const String swipeablePageDragWidthRatio =
       'swipeablePageDragWidthRatio';
 

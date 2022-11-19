@@ -23,6 +23,7 @@ import '../utils/time.dart';
 import '../utils/toast.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
+import 'page_view.dart';
 import 'post.dart';
 import 'post_list.dart';
 
@@ -802,6 +803,16 @@ class _HistoryBodyState extends State<HistoryBody> {
   }
 
   @override
+  void didUpdateWidget(covariant HistoryBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller._controller.removeListener(_updateIndex);
+      widget.controller._controller.addListener(_updateIndex);
+    }
+  }
+
+  @override
   void dispose() {
     _bottomBarIndexSubscription.cancel();
     _dateRangeSubscription.cancel();
@@ -811,7 +822,7 @@ class _HistoryBodyState extends State<HistoryBody> {
   }
 
   @override
-  Widget build(BuildContext context) => PageView.builder(
+  Widget build(BuildContext context) => SwipeablePageView(
         controller: widget.controller._controller,
         itemCount: 3,
         itemBuilder: (context, index) {

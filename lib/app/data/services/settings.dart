@@ -165,6 +165,12 @@ class SettingsService extends GetxService {
   set backdropUI(bool backdropUi) =>
       _settingsBox.put(Settings.backdropUI, backdropUi);
 
+  bool get showTabAndForumListInRow =>
+      _settingsBox.get(Settings.showTabAndForumListInRow, defaultValue: true);
+
+  set showTabAndForumListInRow(bool showTabAndForumListInRow) => _settingsBox
+      .put(Settings.showTabAndForumListInRow, showTabAndForumListInRow);
+
   double get swipeablePageDragWidthRatio => _settingsBox
       .get(Settings.swipeablePageDragWidthRatio, defaultValue: 0.25);
 
@@ -172,7 +178,7 @@ class SettingsService extends GetxService {
       _settingsBox.put(Settings.swipeablePageDragWidthRatio, ratio);
 
   double get frontLayerDragHeightRatio =>
-      _settingsBox.get(Settings.frontLayerDragHeightRatio, defaultValue: 0.25);
+      _settingsBox.get(Settings.frontLayerDragHeightRatio, defaultValue: 0.20);
 
   set frontLayerDragHeightRatio(double ratio) =>
       _settingsBox.put(Settings.frontLayerDragHeightRatio, ratio);
@@ -218,6 +224,8 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> fixMissingFontListenable;
 
   late final ValueListenable<Box> backdropUIListenable;
+
+  late final ValueListenable<Box> showTabAndForumListInRowListenable;
 
   late final ValueListenable<Box> swipeablePageDragWidthRatioListenable;
 
@@ -306,12 +314,14 @@ class SettingsService extends GetxService {
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
     backdropUIListenable = _settingsBox.listenable(keys: [Settings.backdropUI]);
+    showTabAndForumListInRowListenable =
+        _settingsBox.listenable(keys: [Settings.showTabAndForumListInRow]);
     swipeablePageDragWidthRatioListenable = _settingsBox.listenable(
         keys: [Settings.backdropUI, Settings.swipeablePageDragWidthRatio]);
-    frontLayerDragHeightRatioListenable = _settingsBox.listenable(
-        keys: [Settings.backdropUI, Settings.frontLayerDragHeightRatio]);
-    backLayerDragHeightRatioListenable = _settingsBox.listenable(
-        keys: [Settings.backdropUI, Settings.backLayerDragHeightRatio]);
+    frontLayerDragHeightRatioListenable =
+        _settingsBox.listenable(keys: [Settings.frontLayerDragHeightRatio]);
+    backLayerDragHeightRatioListenable =
+        _settingsBox.listenable(keys: [Settings.backLayerDragHeightRatio]);
 
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
 

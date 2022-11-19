@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
-import '../modules/settings.dart';
 import '../routes/routes.dart';
 import '../utils/icons.dart';
 import '../utils/regex.dart';
@@ -156,16 +155,7 @@ class SettingsButton extends StatelessWidget {
 
   void _onTap(BuildContext context) {
     Get.back();
-
-    AppRoutes.toSettings(SettingsController(closeDrawer: () {
-      final scaffold = Scaffold.of(context);
-
-      if (SettingsService.isBackdropUI) {
-        scaffold.closeEndDrawer();
-      } else {
-        scaffold.closeDrawer();
-      }
-    }));
+    AppRoutes.toSettings();
   }
 
   @override

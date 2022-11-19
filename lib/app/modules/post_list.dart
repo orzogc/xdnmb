@@ -197,6 +197,7 @@ class PostListBinding implements Bindings {
   }
 }
 
+// TODO: AppBar动画
 class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
   static const double _height = kToolbarHeight;
 
@@ -832,6 +833,8 @@ class _PostListBackdrop extends StatefulWidget {
 
 class _PostListBackdropState extends State<_PostListBackdrop>
     with SingleTickerProviderStateMixin<_PostListBackdrop> {
+  static const double _tabBarHeight = 48.0;
+
   late final TabController _controller;
 
   void _startTabListGuide() =>

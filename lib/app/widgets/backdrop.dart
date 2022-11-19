@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
 
 import '../data/services/settings.dart';
 
@@ -170,10 +171,14 @@ class _BackdropState extends State<Backdrop>
                   onVerticalDragStart: _onVerticalDragStart,
                   onVerticalDragUpdate: _onVerticalDragUpdate,
                   onVerticalDragEnd: _onVerticalDragEnd,
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: (widget.height - widget.appBarHeight) *
-                        settings.backLayerDragHeightRatio,
+                  child: ValueListenableBuilder<Box>(
+                    valueListenable:
+                        settings.backLayerDragHeightRatioListenable,
+                    builder: (context, value, child) => SizedBox(
+                      width: double.infinity,
+                      height: (widget.height - widget.appBarHeight) *
+                          settings.backLayerDragHeightRatio,
+                    ),
                   ),
                 ),
               ],
@@ -190,12 +195,15 @@ class _BackdropState extends State<Backdrop>
                 onVerticalDragStart: _onVerticalDragStart,
                 onVerticalDragUpdate: _onVerticalDragUpdate,
                 onVerticalDragEnd: _onVerticalDragEnd,
-                child: SizedBox(
-                  width: double.infinity,
-                  height: paddingTop +
-                      widget.appBarHeight +
-                      (widget.height - paddingTop - widget.appBarHeight) *
-                          settings.frontLayerDragHeightRatio,
+                child: ValueListenableBuilder<Box>(
+                  valueListenable: settings.frontLayerDragHeightRatioListenable,
+                  builder: (context, value, child) => SizedBox(
+                    width: double.infinity,
+                    height: paddingTop +
+                        widget.appBarHeight +
+                        (widget.height - paddingTop - widget.appBarHeight) *
+                            settings.frontLayerDragHeightRatio,
+                  ),
                 ),
               ),
             ],

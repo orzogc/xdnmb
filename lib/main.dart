@@ -6,12 +6,14 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 import 'app/data/services/persistent.dart';
 import 'app/data/services/services.dart';
 import 'app/data/services/settings.dart';
 import 'app/modules/post_list.dart';
 import 'app/routes/pages.dart';
+import 'app/routes/routes.dart';
 import 'app/utils/directory.dart';
 import 'app/utils/hive.dart';
 import 'app/utils/theme.dart';
@@ -45,12 +47,18 @@ class _XdnmbApp extends StatelessWidget {
   Widget build(BuildContext context) => GetMaterialApp(
         title: '霞岛',
         initialBinding: servicesBindings(),
-        getPages: getPages,
-        home: const PostListView(),
+        getPages: !SettingsService.isBackdropUI ? getPages : null,
+        initialRoute: AppRoutes.home,
+        onGenerateInitialRoutes: SettingsService.isBackdropUI
+            ? (initialRoute) =>
+                [SwipeablePageRoute(builder: (context) => const PostListView())]
+            : null,
+        onGenerateRoute:
+            SettingsService.isBackdropUI ? backdropOnGenerateRoute : null,
         theme: AppTheme.theme,
         darkTheme: AppTheme.darkTheme,
         builder: EasyLoading.init(),
-        // flutter官方的翻译
+        // Flutter官方的翻译
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
 import '../data/services/settings.dart';
+import '../utils/notify.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
@@ -283,7 +284,7 @@ class _FixedImageDisposeRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder(
+    return ValueListenableBuilder<Box>(
       valueListenable: settings.fixedImageDisposeRatioListenable,
       builder: (context, value, child) => ListTile(
         title: const Text('适应模式下移动未缩放的大图导致返回的最小距离占屏幕高度/宽度的比例'),
@@ -333,7 +334,7 @@ class _BackdropUI extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder(
+    return ValueListenableBuilder<Box>(
       valueListenable: settings.backdropUIListenable,
       builder: (context, value, child) => ListTile(
         title: const Text('启用Backdrop UI'),
@@ -355,7 +356,7 @@ class _PageDragWidthRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder(
+    return ValueListenableBuilder<Box>(
       valueListenable: settings.swipeablePageDragWidthRatioListenable,
       builder: (context, value, child) {
         final textStyle = TextStyle(
@@ -392,9 +393,12 @@ class _FrontLayerDragHeightRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder(
-      valueListenable: settings.frontLayerDragHeightRatioListenable,
-      builder: (context, value, child) {
+    return NotifyBuilder(
+      animation: Listenable.merge([
+        settings.backdropUIListenable,
+        settings.frontLayerDragHeightRatioListenable
+      ]),
+      builder: (context, child) {
         final textStyle = TextStyle(
             color: !settings.backdropUI ? AppTheme.inactiveSettingColor : null);
 
@@ -428,9 +432,12 @@ class _BackLayerDragHeightRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder(
-      valueListenable: settings.backLayerDragHeightRatioListenable,
-      builder: (context, value, child) {
+    return NotifyBuilder(
+      animation: Listenable.merge([
+        settings.backdropUIListenable,
+        settings.backLayerDragHeightRatioListenable
+      ]),
+      builder: (context, child) {
         final textStyle = TextStyle(
             color: !settings.backdropUI ? AppTheme.inactiveSettingColor : null);
 
@@ -461,7 +468,7 @@ class AdvancedSettingsController extends GetxController {}
 class AdvancedSettingsBinding implements Bindings {
   @override
   void dependencies() {
-    Get.put(AdvancedSettingsBinding());
+    Get.put(AdvancedSettingsController());
   }
 }
 

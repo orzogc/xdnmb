@@ -11,6 +11,7 @@ import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
+import '../widgets/page_view.dart';
 
 class _AppBarTitle extends StatelessWidget {
   final int index;
@@ -375,7 +376,7 @@ class BlacklistView extends GetView<BlacklistController> {
                     index: controller._index.value, refresh: _refresh),
               ],
             ),
-            body: PageView.builder(
+            body: SwipeablePageView(
               controller: controller._controller,
               itemCount: 3,
               itemBuilder: (context, index) =>
