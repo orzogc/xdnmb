@@ -214,6 +214,27 @@ class _AfterPostRefresh extends StatelessWidget {
   }
 }
 
+class _DismissibleTab extends StatelessWidget {
+  // ignore: unused_element
+  const _DismissibleTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.dismissibleTabListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('在标签页列表中滑动标签可以关闭标签页'),
+        trailing: Switch(
+          value: settings.dismissibleTab,
+          onChanged: ((value) => settings.dismissibleTab = value),
+        ),
+      ),
+    );
+  }
+}
+
 class _EditFeedId extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -304,9 +325,7 @@ class BasicSettingsView extends GetView<BasicSettingsController> {
         top: false,
         right: false,
         child: Scaffold(
-          appBar: AppBar(
-            title: const Text('基本设置'),
-          ),
+          appBar: AppBar(title: const Text('基本设置')),
           body: ListView(
             children: const [
               _RestoreTabs(),
@@ -317,6 +336,7 @@ class BasicSettingsView extends GetView<BasicSettingsController> {
               _AutoJumpPage(),
               _AutoJumpPosition(),
               _AfterPostRefresh(),
+              _DismissibleTab(),
               _FeedId(),
             ],
           ),

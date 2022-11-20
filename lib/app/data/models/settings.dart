@@ -19,6 +19,8 @@ abstract class Settings {
 
   static const String isAfterPostRefresh = 'isAfterPostRefresh';
 
+  static const String dismissibleTab = 'dismissibleTab';
+
   static const String feedId = 'feedId';
 
   static const String saveImagePath = 'saveImagePath';

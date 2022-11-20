@@ -75,6 +75,13 @@ class TabList extends StatelessWidget {
 
   const TabList({super.key, this.backdropController});
 
+  void _closeTab(int index) {
+    final stacks = ControllerStacksService.to;
+
+    stacks.removeStackAt(index);
+    PostListPage.pageKey.currentState!.jumpToPage(stacks.index);
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
@@ -91,12 +98,15 @@ class TabList extends StatelessWidget {
           padding: EdgeInsets.zero,
           itemCount: stacks.length,
           itemBuilder: (context, index) => NotifyBuilder(
-            animation: stacks.notifier,
+            animation: Listenable.merge(
+                [stacks.notifier, settings.dismissibleTabListenable]),
             builder: (context, child) {
               final controller = PostListController.get(index);
 
-              final tab = ListTile(
-                key: ValueKey<int>(stacks.getKeyId(index)),
+              Widget tab = ListTile(
+                key: !(settings.dismissibleTab && stacks.length > 1)
+                    ? ValueKey<int>(stacks.getKeyId(index))
+                    : null,
                 onTap: () {
                   PostListPage.pageKey.currentState!.jumpToPage(index);
 
@@ -124,16 +134,21 @@ class TabList extends StatelessWidget {
                             : const SizedBox.shrink();
                       })
                     : null,
-                trailing: stacks.length > 1
+                trailing: (!settings.dismissibleTab && stacks.length > 1)
                     ? IconButton(
-                        onPressed: () {
-                          stacks.removeStackAt(index);
-                          PostListPage.pageKey.currentState!
-                              .jumpToPage(stacks.index);
-                        },
+                        onPressed: () => _closeTab(index),
                         icon: const Icon(Icons.close))
                     : null,
               );
+
+              if (settings.dismissibleTab && stacks.length > 1) {
+                tab = Dismissible(
+                  key: ValueKey<int>(stacks.getKeyId(index)),
+                  background: ColoredBox(color: theme.primaryColor),
+                  onDismissed: (direction) => _closeTab(index),
+                  child: tab,
+                );
+              }
 
               return (settings.shouldShowGuide && index == 0)
                   ? TabListGuide(tab)

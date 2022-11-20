@@ -105,6 +105,12 @@ class SettingsService extends GetxService {
   set isAfterPostRefresh(bool isAfterPostRefresh) =>
       _settingsBox.put(Settings.isAfterPostRefresh, isAfterPostRefresh);
 
+  bool get dismissibleTab =>
+      _settingsBox.get(Settings.dismissibleTab, defaultValue: false);
+
+  set dismissibleTab(bool dismissibleTab) =>
+      _settingsBox.put(Settings.dismissibleTab, dismissibleTab);
+
   String get feedId => _settingsBox.get(Settings.feedId);
 
   set feedId(String feedId) => _settingsBox.put(Settings.feedId, feedId);
@@ -225,6 +231,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> isAfterPostRefreshListenable;
 
+  late final ValueListenable<Box> dismissibleTabListenable;
+
   late final ValueListenable<Box> feedIdListenable;
 
   late final ValueListenable<Box> saveImagePathListenable;
@@ -319,6 +327,8 @@ class SettingsService extends GetxService {
     ]);
     isAfterPostRefreshListenable =
         _settingsBox.listenable(keys: [Settings.isAfterPostRefresh]);
+    dismissibleTabListenable =
+        _settingsBox.listenable(keys: [Settings.dismissibleTab]);
     feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
     saveImagePathListenable =
         _settingsBox.listenable(keys: [Settings.saveImagePath]);

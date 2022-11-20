@@ -337,7 +337,7 @@ class _ShowGuide extends StatelessWidget {
     return ValueListenableBuilder<Box>(
       valueListenable: settings.showGuideListenable,
       builder: (context, value, child) => ListTile(
-        title: const Text('显示用户指导'),
+        title: const Text('下一次启动应用时显示用户指导'),
         subtitle: const Text('更改后需要重启应用'),
         trailing: Switch(
           value: settings.backdropUI
