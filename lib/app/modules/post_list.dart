@@ -212,7 +212,7 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final stacks = ControllerStacksService.to;
-    final data = PersistentDataService.to;
+    final settings = SettingsService.to;
 
     return NotifyBuilder(
       animation: stacks.notifier,
@@ -281,31 +281,32 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
               leading: !(backdropController?.isShowBackLayer ?? false)
                   ? (stacks.controllersCount() > 1
                       ? const BackButton(onPressed: postListPop)
-                      : (data.shouldShowGuide
+                      : (settings.shouldShowGuide
                           ? AppBarMenuGuide(button)
                           : button))
                   : IconButton(
                       icon: const Icon(Icons.close),
                       onPressed: backdropController?.hideBackLayer),
-              title: data.shouldShowGuide ? AppBarTitleGuide(title) : title,
+              title: settings.shouldShowGuide ? AppBarTitleGuide(title) : title,
               actions: !(backdropController?.isShowBackLayer ?? false)
                   ? [
                       if (controller.isXdnmbApi)
-                        data.shouldShowGuide
+                        settings.shouldShowGuide
                             ? AppBarPageButtonGuide(
                                 PageButton(controller: controller))
                             : PageButton(controller: controller),
                       if (controller.isThreadType)
                         NotifyBuilder(
                             animation: controller,
-                            builder: (context, child) => data.shouldShowGuide
-                                ? AppBarPopupMenuGuide(
-                                    ThreadAppBarPopupMenuButton(
-                                        controller as ThreadTypeController))
-                                : ThreadAppBarPopupMenuButton(
-                                    controller as ThreadTypeController)),
+                            builder: (context, child) =>
+                                settings.shouldShowGuide
+                                    ? AppBarPopupMenuGuide(
+                                        ThreadAppBarPopupMenuButton(
+                                            controller as ThreadTypeController))
+                                    : ThreadAppBarPopupMenuButton(
+                                        controller as ThreadTypeController)),
                       if (controller.isForumType)
-                        data.shouldShowGuide
+                        settings.shouldShowGuide
                             ? AppBarPopupMenuGuide(ForumAppBarPopupMenuButton(
                                 controller as ForumTypeController))
                             : ForumAppBarPopupMenuButton(
@@ -313,7 +314,7 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                       if (controller.isHistory)
                         HistoryDateRangePicker(controller as HistoryController),
                       if (controller.isHistory)
-                        data.shouldShowGuide
+                        settings.shouldShowGuide
                             ? AppBarPopupMenuGuide(HistoryAppBarPopupMenuButton(
                                 controller as HistoryController))
                             : HistoryAppBarPopupMenuButton(
@@ -480,18 +481,6 @@ class PostListPageState extends State<PostListPage> {
   void _openEndDrawer() => Scaffold.of(context).openEndDrawer();
 
   void _closeEndDrawer() => Scaffold.of(context).closeEndDrawer();
-
-  void _startDrawerGuide() => WidgetsBinding.instance.addPostFrameCallback(
-      (timeStamp) => Future.delayed(const Duration(milliseconds: 300),
-          () => ShowCaseWidget.of(context).startShowCase(Guide.drawerGuides)));
-
-  void _startEndDrawerGuide() => WidgetsBinding.instance.addPostFrameCallback(
-      (timeStamp) => Future.delayed(
-          const Duration(milliseconds: 300),
-          () => ShowCaseWidget.of(context).startShowCase(
-              PersistentDataService.to.showGuide
-                  ? Guide.endDrawerGuides
-                  : Guide.backdropEndDrawerGuides)));
 
   void jumpToPage(int page) {
     _pageController.jumpToPage(page);
@@ -792,7 +781,7 @@ class FloatingButtonState extends State<FloatingButton> {
                   PostListController.get().canPost)
               ? Padding(
                   padding: EdgeInsets.only(bottom: hasBottomSheet ? 56.0 : 0.0),
-                  child: PersistentDataService.isShowGuide
+                  child: SettingsService.isShowGuide
                       ? FloatingButtonGuide(floatingButton)
                       : floatingButton,
                 )
@@ -820,9 +809,64 @@ class _BottomBar extends StatelessWidget {
       );
 }
 
-class _PostListBackdrop extends StatefulWidget {
-  static final GlobalKey<_PostListBackdropState> _backdropKey = GlobalKey();
+class _PostListCompactBackdropTabBar extends StatelessWidget {
+  // ignore: unused_element
+  const _PostListCompactBackdropTabBar({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      height: _PostListAppBar._height,
+      color: theme.primaryColor,
+      child: DefaultTextStyle.merge(
+        style: theme.textTheme.headline6
+            ?.apply(color: theme.colorScheme.onPrimary),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: const [
+            Text('标签'),
+            SizedBox.shrink(),
+            Text('版块'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PostListCompactBackdrop extends StatelessWidget {
+  final BackdropController backdropController;
+
+  // ignore: unused_element
+  const _PostListCompactBackdrop({super.key, required this.backdropController});
+
+  @override
+  Widget build(BuildContext context) => Material(
+        child: Column(
+          children: [
+            const _PostListCompactBackdropTabBar(),
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                      child: TabList(backdropController: backdropController)),
+                  const VerticalDivider(width: 1.0, thickness: 1.0),
+                  Flexible(
+                    child: ForumList(backdropController: backdropController),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _PostListBackdrop extends StatefulWidget {
   final BackdropController backdropController;
 
   const _PostListBackdrop({super.key, required this.backdropController});
@@ -833,28 +877,11 @@ class _PostListBackdrop extends StatefulWidget {
 
 class _PostListBackdropState extends State<_PostListBackdrop>
     with SingleTickerProviderStateMixin<_PostListBackdrop> {
-  static const double _tabBarHeight = 48.0;
-
   late final TabController _controller;
 
-  void _startTabListGuide() =>
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-        final showCase = ShowCaseWidget.of(context);
-        await Future.delayed(const Duration(milliseconds: 300));
-        if (_controller.index != 0) {
-          _controller.animateTo(0);
-          await Future.delayed(const Duration(milliseconds: 300));
-        }
-        showCase.startShowCase(Guide.backLayerTabListGuides);
-      });
+  int get _index => _controller.index;
 
-  void _startForumListGuide() =>
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-        final showCase = ShowCaseWidget.of(context);
-        _controller.animateTo(1);
-        await Future.delayed(const Duration(milliseconds: 300));
-        showCase.startShowCase(Guide.backLayerForumListGuides);
-      });
+  void _animateTo(int index) => _controller.animateTo(index);
 
   @override
   void initState() {
@@ -874,10 +901,12 @@ class _PostListBackdropState extends State<_PostListBackdrop>
   Widget build(BuildContext context) => Material(
         child: Column(
           children: [
-            ColoredBox(
+            Container(
+              height: _PostListAppBar._height,
               color: Theme.of(context).primaryColor,
               child: TabBar(
                 controller: _controller,
+                labelStyle: Theme.of(context).textTheme.headline6,
                 tabs: const [Tab(text: '标签'), Tab(text: '版块')],
               ),
             ),
@@ -910,8 +939,12 @@ class _PostListViewState extends State<PostListView>
 
   final Rxn<PersistentBottomSheetController> _bottomSheetController = Rxn(null);
 
+  GlobalKey<_PostListBackdropState>? _backdropKey;
+
   final BackdropController? _backdropController =
       SettingsService.isBackdropUI ? BackdropController() : null;
+
+  ShowCaseWidgetState? showCase;
 
   Future<bool> _onWillPop(BuildContext context) async {
     if (_backdropController?.isShowBackLayer ?? false) {
@@ -944,54 +977,89 @@ class _PostListViewState extends State<PostListView>
     return true;
   }
 
-  void _showCase() {
-    final data = PersistentDataService.to;
+  void _startDrawerGuide() => WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) => Future.delayed(const Duration(milliseconds: 300),
+          () => showCase?.startShowCase(Guide.drawerGuides)));
 
+  void _startEndDrawerGuide() => WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) => Future.delayed(
+          const Duration(milliseconds: 300),
+          () => showCase?.startShowCase(SettingsService.to.showGuide
+              ? Guide.endDrawerGuides
+              : Guide.backdropEndDrawerGuides)));
+
+  void _showCase() {
     if (Guide.isShowForumGuides) {
       Guide.isShowForumGuides = false;
       Guide.isShowDrawerGuides = true;
       PostListPage.pageKey.currentState!._openDrawer();
-      PostListPage.pageKey.currentState!._startDrawerGuide();
+      _startDrawerGuide();
     } else if (Guide.isShowDrawerGuides) {
       Guide.isShowDrawerGuides = false;
       PostListPage.pageKey.currentState!._closeDrawer();
       Guide.isShowEndDrawerGuides = true;
       PostListPage.pageKey.currentState!._openEndDrawer();
-      PostListPage.pageKey.currentState!._startEndDrawerGuide();
+      _startEndDrawerGuide();
     } else if (Guide.isShowEndDrawerGuides) {
       Guide.isShowEndDrawerGuides = false;
       PostListPage.pageKey.currentState!._closeEndDrawer();
-      data.showGuide = false;
+      SettingsService.to.showGuide = false;
       CheckAppVersionService.to.checkAppVersion();
-      data.showNotice();
+      PersistentDataService.to.showNotice();
     }
   }
 
-  void _backdropShowCase() {
-    final data = PersistentDataService.to;
+  void _startBackdropTabListGuide() =>
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+        await Future.delayed(const Duration(milliseconds: 300));
 
+        if (!SettingsService.to.compactBackdrop && _backdropKey != null) {
+          final state = _backdropKey!.currentState;
+          if (state != null && state._index != 0) {
+            state._animateTo(0);
+            await Future.delayed(const Duration(milliseconds: 300));
+          }
+        }
+
+        showCase?.startShowCase(Guide.backLayerTabListGuides);
+      });
+
+  void _startBackdropForumListGuide() =>
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+        if (!SettingsService.to.compactBackdrop && _backdropKey != null) {
+          final state = _backdropKey!.currentState;
+          if (state != null && state._index != 1) {
+            state._animateTo(1);
+            await Future.delayed(const Duration(milliseconds: 300));
+          }
+        }
+
+        showCase?.startShowCase(Guide.backLayerForumListGuides);
+      });
+
+  void _backdropShowCase() {
     if (_backdropController != null) {
       if (Guide.isShowForumGuides) {
         Guide.isShowForumGuides = false;
         Guide.isShowEndDrawerGuides = true;
         PostListPage.pageKey.currentState!._openEndDrawer();
-        PostListPage.pageKey.currentState!._startEndDrawerGuide();
+        _startEndDrawerGuide();
       } else if (Guide.isShowEndDrawerGuides) {
         Guide.isShowEndDrawerGuides = false;
         PostListPage.pageKey.currentState!._closeEndDrawer();
         Guide.isShowBackLayerTabListGuides = true;
         _backdropController!.showBackLayer();
-        _PostListBackdrop._backdropKey.currentState!._startTabListGuide();
+        _startBackdropTabListGuide();
       } else if (Guide.isShowBackLayerTabListGuides) {
         Guide.isShowBackLayerTabListGuides = false;
         Guide.isShowBackLayerForumListGuides = true;
-        _PostListBackdrop._backdropKey.currentState!._startForumListGuide();
+        _startBackdropForumListGuide();
       } else if (Guide.isShowBackLayerForumListGuides) {
         Guide.isShowBackLayerForumListGuides = false;
         _backdropController!.hideBackLayer();
-        data.showBackdropGuide = false;
+        SettingsService.to.showBackdropGuide = false;
         CheckAppVersionService.to.checkAppVersion();
-        data.showNotice();
+        PersistentDataService.to.showNotice();
       }
     }
   }
@@ -1050,13 +1118,13 @@ class _PostListViewState extends State<PostListView>
                 (!PersistentDataService.isFirstLaunched ||
                     client.isReady.value)) {
               if (_isInitial) {
-                // TODO: 增加开关指南的设置
-                //data.showGuide = true;
-                //data.showBackdropGuide = true;
-                //PersistentDataService.isShowGuide = true;
+                if (SettingsService.isBackdropUI &&
+                    !SettingsService.to.compactBackdrop) {
+                  _backdropKey = GlobalKey<_PostListBackdropState>();
+                }
 
                 // 出现用户指导时更新和公告延后显示
-                if (!data.shouldShowGuide) {
+                if (!settings.shouldShowGuide) {
                   WidgetsBinding.instance.addPostFrameCallback((timeStamp) =>
                       CheckAppVersionService.to.checkAppVersion());
 
@@ -1105,21 +1173,35 @@ class _PostListViewState extends State<PostListView>
                   height: height,
                   appBarHeight: _PostListAppBar._height,
                   frontLayer: scaffold,
-                  backLayer: _PostListBackdrop(
-                    key: _PostListBackdrop._backdropKey,
-                    backdropController: _backdropController!,
+                  backLayer: ValueListenableBuilder(
+                    valueListenable: settings.compactBackdropListenable,
+                    builder: (context, value, child) => settings.compactBackdrop
+                        ? _PostListCompactBackdrop(
+                            backdropController: _backdropController!)
+                        : _PostListBackdrop(
+                            key: _backdropKey,
+                            backdropController: _backdropController!,
+                          ),
                   ),
                 );
               }
 
-              return PersistentDataService.isShowGuide
-                  ? (data.showGuide
+              return SettingsService.isShowGuide
+                  ? (settings.showGuide
                       ? ShowCaseWidget(
                           onFinish: _showCase,
-                          builder: Builder(builder: (context) => scaffold))
+                          builder: Builder(builder: (context) {
+                            showCase = ShowCaseWidget.of(context);
+
+                            return scaffold;
+                          }))
                       : ShowCaseWidget(
                           onFinish: _backdropShowCase,
-                          builder: Builder(builder: (context) => scaffold)))
+                          builder: Builder(builder: (context) {
+                            showCase = ShowCaseWidget.of(context);
+
+                            return scaffold;
+                          })))
                   : scaffold;
             } else {
               return Center(

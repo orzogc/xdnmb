@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../data/services/persistent.dart';
+import '../data/services/settings.dart';
 import 'buttons.dart';
 import 'guide.dart';
 import 'tab_list.dart';
@@ -13,7 +13,7 @@ class _DrawerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = PersistentDataService.to;
+    final settings = SettingsService.to;
     final theme = Theme.of(context);
     final color = theme.colorScheme.onPrimary;
 
@@ -36,13 +36,13 @@ class _DrawerHeader extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            data.shouldShowGuide
+            settings.shouldShowGuide
                 ? const DarkModeGuide(DarkModeButton())
                 : const DarkModeButton(),
-            data.shouldShowGuide
+            settings.shouldShowGuide
                 ? SearchGuide(SearchButton(iconColor: color))
                 : SearchButton(iconColor: color),
-            data.shouldShowGuide
+            settings.shouldShowGuide
                 ? SettingsGuide(SettingsButton(iconColor: color))
                 : SettingsButton(iconColor: color),
           ],
@@ -58,7 +58,7 @@ class _DrawerBottom extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = PersistentDataService.to;
+    final settings = SettingsService.to;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0),
@@ -66,10 +66,10 @@ class _DrawerBottom extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           const SponsorButton(),
-          data.shouldShowGuide
+          settings.shouldShowGuide
               ? const HistoryGuide(HistoryButton())
               : const HistoryButton(),
-          data.shouldShowGuide
+          settings.shouldShowGuide
               ? const FeedGuide(FeedButton())
               : const FeedButton(),
         ],

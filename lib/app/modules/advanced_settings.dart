@@ -326,6 +326,36 @@ class _FixMissingFont extends StatelessWidget {
   }
 }
 
+class _ShowGuide extends StatelessWidget {
+  // ignore: unused_element
+  const _ShowGuide({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.showGuideListenable,
+      builder: (context, value, child) => ListTile(
+        title: const Text('显示用户指导'),
+        subtitle: const Text('更改后需要重启应用'),
+        trailing: Switch(
+          value: settings.backdropUI
+              ? settings.showBackdropGuide
+              : settings.showGuide,
+          onChanged: (value) {
+            if (settings.backdropUI) {
+              settings.showBackdropGuide = value;
+            } else {
+              settings.showGuide = value;
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+
 class _BackdropUI extends StatelessWidget {
   // ignore: unused_element
   const _BackdropUI({super.key});
@@ -342,6 +372,35 @@ class _BackdropUI extends StatelessWidget {
         trailing: Switch(
           value: settings.backdropUI,
           onChanged: (value) => settings.backdropUI = value,
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactBackdrop extends StatelessWidget {
+  // ignore: unused_element
+  const _CompactBackdrop({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return NotifyBuilder(
+      animation: Listenable.merge(
+          [settings.backdropUIListenable, settings.compactBackdropListenable]),
+      builder: (context, child) => ListTile(
+        title: Text(
+          '同时显示标签页列表和版块列表',
+          style: TextStyle(
+            color: !settings.backdropUI ? AppTheme.inactiveSettingColor : null,
+          ),
+        ),
+        trailing: Switch(
+          value: settings.compactBackdrop,
+          onChanged: settings.backdropUI
+              ? (value) => settings.compactBackdrop = value
+              : null,
         ),
       ),
     );
@@ -493,6 +552,7 @@ class AdvancedSettingsView extends GetView<AdvancedSettingsController> {
               const _ImageDisposeDistance(),
               const _FixedImageDisposeRatio(),
               const _FixMissingFont(),
+              const _ShowGuide(),
               const Divider(height: 10.0, thickness: 1.0),
               ListTile(
                 title: Text(
@@ -501,6 +561,7 @@ class AdvancedSettingsView extends GetView<AdvancedSettingsController> {
                 ),
               ),
               if (!GetPlatform.isIOS) const _BackdropUI(),
+              const _CompactBackdrop(),
               const _PageDragWidthRatio(),
               const _FrontLayerDragHeightRatio(),
               const _BackLayerDragHeightRatio(),

@@ -20,8 +20,6 @@ class PersistentDataService extends GetxService {
 
   static late final bool isFirstLaunched;
 
-  static late final bool isShowGuide;
-
   late final Box _dataBox;
 
   final RxBool isKeyboardVisible = false.obs;
@@ -62,22 +60,6 @@ class PersistentDataService extends GetxService {
       _dataBox.get(PersistentData.diceUpper, defaultValue: 100);
 
   set diceUpper(int upper) => _dataBox.put(PersistentData.diceUpper, upper);
-
-  bool get showGuide =>
-      !SettingsService.isBackdropUI &&
-      _dataBox.get(PersistentData.showGuide, defaultValue: true);
-
-  set showGuide(bool showGuide) =>
-      _dataBox.put(PersistentData.showGuide, showGuide);
-
-  bool get showBackdropGuide =>
-      SettingsService.isBackdropUI &&
-      _dataBox.get(PersistentData.showBackdropGuide, defaultValue: true);
-
-  set showBackdropGuide(bool showBackdropGuide) =>
-      _dataBox.put(PersistentData.showBackdropGuide, showBackdropGuide);
-
-  bool get shouldShowGuide => showBackdropGuide || showGuide;
 
   DateTime? get updateForumListTime =>
       _dataBox.get(PersistentData.updateForumListTime, defaultValue: null);
@@ -149,7 +131,6 @@ class PersistentDataService extends GetxService {
     super.onInit();
 
     _dataBox = await Hive.openBox(HiveBoxName.data);
-    isShowGuide = shouldShowGuide;
 
     if (GetPlatform.isMobile) {
       bottomHeight.value = _bottomHeight();

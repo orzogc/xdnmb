@@ -35,9 +35,13 @@ abstract class Settings {
 
   static const String fixMissingFont = 'fixMissingFont';
 
+  static const String showGuide = 'showGuide';
+
+  static const String showBackdropGuide = 'showBackdropGuide';
+
   static const String backdropUI = 'backdropUI';
 
-  static const String showTabAndForumListInRow = 'showTabAndForumListInRow';
+  static const String compactBackdrop = 'compactBackdrop';
 
   static const String swipeablePageDragWidthRatio =
       'swipeablePageDragWidthRatio';

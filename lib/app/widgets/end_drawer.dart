@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../routes/routes.dart';
@@ -21,7 +20,7 @@ class _DrawerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final data = PersistentDataService.to;
+    final settings = SettingsService.to;
     final client = XdnmbClientService.to;
 
     final reorderForums = IconButton(
@@ -51,7 +50,7 @@ class _DrawerHeader extends StatelessWidget {
             const Spacer(),
             Obx(
               () => client.isReady.value
-                  ? data.showGuide
+                  ? settings.showGuide
                       ? ReorderForumsGuide(reorderForums)
                       : reorderForums
                   : const SizedBox.shrink(),
@@ -110,7 +109,7 @@ class AppEndDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = PersistentDataService.to;
+    final settings = SettingsService.to;
 
     return SettingsService.isBackdropUI
         ? Drawer(
@@ -122,19 +121,19 @@ class AppEndDrawer extends StatelessWidget {
                   shrinkWrap: true,
                   padding: EdgeInsets.zero,
                   children: [
-                    data.shouldShowGuide
+                    settings.shouldShowGuide
                         ? const DarkModeGuide(DarkModeButton(showLabel: true))
                         : const DarkModeButton(showLabel: true),
-                    data.shouldShowGuide
+                    settings.shouldShowGuide
                         ? const SearchGuide(SearchButton(showLabel: true))
                         : const SearchButton(showLabel: true),
-                    data.shouldShowGuide
+                    settings.shouldShowGuide
                         ? const HistoryGuide(HistoryButton(showLabel: true))
                         : const HistoryButton(showLabel: true),
-                    data.shouldShowGuide
+                    settings.shouldShowGuide
                         ? const FeedGuide(FeedButton(showLabel: true))
                         : const FeedButton(showLabel: true),
-                    data.shouldShowGuide
+                    settings.shouldShowGuide
                         ? const SettingsGuide(SettingsButton(showLabel: true))
                         : const SettingsButton(showLabel: true),
                     const SponsorButton(showIcon: true),

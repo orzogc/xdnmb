@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../data/models/controller.dart';
-import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../data/services/stack.dart';
 import '../modules/post_list.dart';
@@ -78,7 +77,7 @@ class TabList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = PersistentDataService.to;
+    final settings = SettingsService.to;
     final stacks = ControllerStacksService.to;
     final theme = Theme.of(context);
     final textStyle =
@@ -136,7 +135,7 @@ class TabList extends StatelessWidget {
                     : null,
               );
 
-              return (data.shouldShowGuide && index == 0)
+              return (settings.shouldShowGuide && index == 0)
                   ? TabListGuide(tab)
                   : tab;
             },

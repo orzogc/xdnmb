@@ -32,6 +32,8 @@ class SettingsService extends GetxService {
 
   static late final bool isFixMissingFont;
 
+  static late final bool isShowGuide;
+
   static late final bool isBackdropUI;
 
   late final Box _settingsBox;
@@ -159,17 +161,33 @@ class SettingsService extends GetxService {
   set fixMissingFont(bool fixMissingFont) =>
       _settingsBox.put(Settings.fixMissingFont, fixMissingFont);
 
+  bool get showGuide =>
+      !SettingsService.isBackdropUI &&
+      _settingsBox.get(Settings.showGuide, defaultValue: true);
+
+  set showGuide(bool showGuide) =>
+      _settingsBox.put(Settings.showGuide, showGuide);
+
+  bool get showBackdropGuide =>
+      SettingsService.isBackdropUI &&
+      _settingsBox.get(Settings.showBackdropGuide, defaultValue: true);
+
+  set showBackdropGuide(bool showBackdropGuide) =>
+      _settingsBox.put(Settings.showBackdropGuide, showBackdropGuide);
+
+  bool get shouldShowGuide => showBackdropGuide || showGuide;
+
   bool get backdropUI =>
       _settingsBox.get(Settings.backdropUI, defaultValue: GetPlatform.isIOS);
 
   set backdropUI(bool backdropUi) =>
       _settingsBox.put(Settings.backdropUI, backdropUi);
 
-  bool get showTabAndForumListInRow =>
-      _settingsBox.get(Settings.showTabAndForumListInRow, defaultValue: true);
+  bool get compactBackdrop =>
+      _settingsBox.get(Settings.compactBackdrop, defaultValue: false);
 
-  set showTabAndForumListInRow(bool showTabAndForumListInRow) => _settingsBox
-      .put(Settings.showTabAndForumListInRow, showTabAndForumListInRow);
+  set compactBackdrop(bool compactBackdrop) =>
+      _settingsBox.put(Settings.compactBackdrop, compactBackdrop);
 
   double get swipeablePageDragWidthRatio => _settingsBox
       .get(Settings.swipeablePageDragWidthRatio, defaultValue: 0.25);
@@ -223,9 +241,11 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> fixMissingFontListenable;
 
+  late final ValueListenable<Box> showGuideListenable;
+
   late final ValueListenable<Box> backdropUIListenable;
 
-  late final ValueListenable<Box> showTabAndForumListInRowListenable;
+  late final ValueListenable<Box> compactBackdropListenable;
 
   late final ValueListenable<Box> swipeablePageDragWidthRatioListenable;
 
@@ -268,6 +288,7 @@ class SettingsService extends GetxService {
     super.onInit();
 
     _settingsBox = await Hive.openBox(HiveBoxName.settings);
+    isShowGuide = shouldShowGuide;
 
     Get.changeThemeMode(isDarkMode ? ThemeMode.dark : ThemeMode.light);
     _darkModeSubscription =
@@ -313,9 +334,14 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.fixedImageDisposeRatio]);
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
+    showGuideListenable = _settingsBox.listenable(keys: [
+      Settings.backdropUI,
+      Settings.showGuide,
+      Settings.showBackdropGuide,
+    ]);
     backdropUIListenable = _settingsBox.listenable(keys: [Settings.backdropUI]);
-    showTabAndForumListInRowListenable =
-        _settingsBox.listenable(keys: [Settings.showTabAndForumListInRow]);
+    compactBackdropListenable =
+        _settingsBox.listenable(keys: [Settings.compactBackdrop]);
     swipeablePageDragWidthRatioListenable = _settingsBox.listenable(
         keys: [Settings.backdropUI, Settings.swipeablePageDragWidthRatio]);
     frontLayerDragHeightRatioListenable =

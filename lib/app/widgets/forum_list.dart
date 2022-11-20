@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 
 import '../data/models/forum.dart';
 import '../data/services/forum.dart';
-import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../data/services/stack.dart';
 import '../data/services/xdnmb_client.dart';
@@ -129,7 +128,7 @@ class ForumList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = PersistentDataService.to;
+    final settings = SettingsService.to;
     final forums = ForumListService.to;
     final theme = Theme.of(context);
 
@@ -182,7 +181,7 @@ class ForumList extends StatelessWidget {
                   ),
                 );
 
-                return (index == 0 && data.shouldShowGuide)
+                return (index == 0 && settings.shouldShowGuide)
                     ? ForumListGuide(forumWidget)
                     : forumWidget;
               } else {

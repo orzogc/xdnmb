@@ -10,7 +10,6 @@ import '../data/models/controller.dart';
 import '../data/models/forum.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/forum.dart';
-import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
@@ -249,7 +248,7 @@ class _ForumBodyState extends State<ForumBody> {
     final client = XdnmbClientService.to.client;
     final forums = ForumListService.to;
     final blacklist = BlacklistService.to;
-    final data = PersistentDataService.to;
+    final settings = SettingsService.to;
     final controller = widget.controller;
     final id = controller.id;
 
@@ -265,7 +264,7 @@ class _ForumBodyState extends State<ForumBody> {
             controller.isTimeline ? forums.maxPage(id, isTimeline: true) : 100,
         fetch: (page) async {
           final ShowCaseWidgetState? showCase =
-              data.shouldShowGuide ? ShowCaseWidget.of(context) : null;
+              settings.shouldShowGuide ? ShowCaseWidget.of(context) : null;
 
           final threads = controller.isTimeline
               ? (await client.getTimeline(id, page: page))
@@ -275,7 +274,7 @@ class _ForumBodyState extends State<ForumBody> {
                   .map((thread) => ThreadWithPage(thread, page))
                   .toList();
 
-          if (data.shouldShowGuide && showCase != null) {
+          if (settings.shouldShowGuide && showCase != null) {
             WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
               Guide.isShowForumGuides = true;
               showCase.startShowCase(Guide.forumGuides);
@@ -320,7 +319,9 @@ class _ForumBodyState extends State<ForumBody> {
                 : const SizedBox.shrink(),
           );
 
-          return (data.shouldShowGuide && index == 0 && !ThreadGuide.exist())
+          return (settings.shouldShowGuide &&
+                  index == 0 &&
+                  !ThreadGuide.exist())
               ? ThreadGuide(item)
               : item;
         },
