@@ -171,11 +171,17 @@ class SettingsService extends GetxService {
       !SettingsService.isBackdropUI &&
       _settingsBox.get(Settings.showGuide, defaultValue: true);
 
+  bool get rawShowGuide =>
+      _settingsBox.get(Settings.showGuide, defaultValue: true);
+
   set showGuide(bool showGuide) =>
       _settingsBox.put(Settings.showGuide, showGuide);
 
   bool get showBackdropGuide =>
       SettingsService.isBackdropUI &&
+      _settingsBox.get(Settings.showBackdropGuide, defaultValue: true);
+
+  bool get rawShowBackdropGuide =>
       _settingsBox.get(Settings.showBackdropGuide, defaultValue: true);
 
   set showBackdropGuide(bool showBackdropGuide) =>

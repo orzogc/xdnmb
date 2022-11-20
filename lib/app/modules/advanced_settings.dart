@@ -341,8 +341,8 @@ class _ShowGuide extends StatelessWidget {
         subtitle: const Text('更改后需要重启应用'),
         trailing: Switch(
           value: settings.backdropUI
-              ? settings.showBackdropGuide
-              : settings.showGuide,
+              ? settings.rawShowBackdropGuide
+              : settings.rawShowGuide,
           onChanged: (value) {
             if (settings.backdropUI) {
               settings.showBackdropGuide = value;

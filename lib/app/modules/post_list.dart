@@ -1123,6 +1123,10 @@ class _PostListViewState extends State<PostListView>
                   _backdropKey = GlobalKey<_PostListBackdropState>();
                 }
 
+                if (settings.showBackdropGuide && _backdropController != null) {
+                  Get.put<BackdropController>(_backdropController!);
+                }
+
                 // 出现用户指导时更新和公告延后显示
                 if (!settings.shouldShowGuide) {
                   WidgetsBinding.instance.addPostFrameCallback((timeStamp) =>

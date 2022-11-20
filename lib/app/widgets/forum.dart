@@ -22,6 +22,7 @@ import '../utils/notify.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
+import 'backdrop.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
@@ -228,6 +229,34 @@ class ForumBody extends StatefulWidget {
 class _ForumBodyState extends State<ForumBody> {
   late final StreamSubscription<int> _pageSubscription;
 
+  void _showGuide() {
+    final settings = SettingsService.to;
+    if (mounted && settings.shouldShowGuide) {
+      final scaffold = Scaffold.of(context);
+      final showCase = ShowCaseWidget.of(context);
+
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+        if (mounted) {
+          if (settings.showBackdropGuide &&
+              Get.isRegistered<BackdropController>()) {
+            final BackdropController backdropController =
+                Get.find<BackdropController>();
+            backdropController.hideBackLayer();
+          }
+
+          if (settings.showGuide) {
+            scaffold.closeDrawer();
+          }
+          scaffold.closeEndDrawer();
+          await Future.delayed(const Duration(milliseconds: 300));
+
+          Guide.isShowForumGuides = true;
+          showCase.startShowCase(Guide.forumGuides);
+        }
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -263,9 +292,6 @@ class _ForumBodyState extends State<ForumBody> {
         lastPage:
             controller.isTimeline ? forums.maxPage(id, isTimeline: true) : 100,
         fetch: (page) async {
-          final ShowCaseWidgetState? showCase =
-              settings.shouldShowGuide ? ShowCaseWidget.of(context) : null;
-
           final threads = controller.isTimeline
               ? (await client.getTimeline(id, page: page))
                   .map((thread) => ThreadWithPage(thread, page))
@@ -274,12 +300,7 @@ class _ForumBodyState extends State<ForumBody> {
                   .map((thread) => ThreadWithPage(thread, page))
                   .toList();
 
-          if (settings.shouldShowGuide && showCase != null) {
-            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-              Guide.isShowForumGuides = true;
-              showCase.startShowCase(Guide.forumGuides);
-            });
-          }
+          _showGuide();
 
           return threads;
         },
