@@ -307,16 +307,7 @@ class _FeedId extends StatelessWidget {
   }
 }
 
-class BasicSettingsController extends GetxController {}
-
-class BasicSettingsBinding implements Bindings {
-  @override
-  void dependencies() {
-    Get.put(BasicSettingsController());
-  }
-}
-
-class BasicSettingsView extends GetView<BasicSettingsController> {
+class BasicSettingsView extends StatelessWidget {
   const BasicSettingsView({super.key});
 
   @override

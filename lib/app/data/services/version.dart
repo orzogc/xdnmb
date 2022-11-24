@@ -45,7 +45,7 @@ class CheckAppVersionService extends GetxService {
         title: '发现新版本 $_latestVersion',
         contentWidget: htmlToRichText(
             Get.context!, _updateMessage ?? '新版本 $_latestVersion',
-            textStyle: Get.textTheme.subtitle1),
+            textStyle: Get.textTheme.titleMedium),
         onConfirm: () {
           showToast('正在打开下载链接');
           launchURL(url);

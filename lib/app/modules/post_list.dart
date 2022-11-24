@@ -822,7 +822,7 @@ class _PostListCompactBackdropTabBar extends StatelessWidget {
       height: _PostListAppBar._height,
       color: theme.primaryColor,
       child: DefaultTextStyle.merge(
-        style: theme.textTheme.headline6
+        style: theme.textTheme.titleLarge
             ?.apply(color: theme.colorScheme.onPrimary),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -906,7 +906,7 @@ class _PostListBackdropState extends State<_PostListBackdrop>
               color: Theme.of(context).primaryColor,
               child: TabBar(
                 controller: _controller,
-                labelStyle: Theme.of(context).textTheme.headline6,
+                labelStyle: Theme.of(context).textTheme.titleLarge,
                 tabs: const [Tab(text: '标签'), Tab(text: '版块')],
               ),
             ),

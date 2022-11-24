@@ -7,7 +7,9 @@ import '../utils/theme.dart';
 class QuestionTooltip extends StatelessWidget {
   final String message;
 
-  const QuestionTooltip(this.message, {super.key});
+  final double? size;
+
+  const QuestionTooltip({super.key, required this.message, this.size = 12});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +33,7 @@ class QuestionTooltip extends StatelessWidget {
               padding: const EdgeInsets.all(2.0),
               child: Icon(
                 Icons.question_mark,
-                size: 12,
+                size: size,
                 color: AppTheme.highlightColor,
               ),
             ),

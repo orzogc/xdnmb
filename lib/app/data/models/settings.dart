@@ -51,4 +51,20 @@ abstract class Settings {
   static const String frontLayerDragHeightRatio = 'frontLayerDragHeightRatio';
 
   static const String backLayerDragHeightRatio = 'backLayerDragHeightRatio';
+
+  static const String postHeaderFontSize = 'postHeaderFontSize';
+
+  static const String postHeaderFontWeight = 'postHeaderFontWeight';
+
+  static const String postHeaderLineHeight = 'postHeaderLineHeight';
+
+  static const String postHeaderLetterSpacing = 'postHeaderLetterSpacing';
+
+  static const String postContentFontSize = 'postContentFontSize';
+
+  static const String postContentFontWeight = 'postContentFontWeight';
+
+  static const String postContentLineHeight = 'postContentLineHeight';
+
+  static const String postContentLetterSpacing = 'postContentLetterSpacing';
 }

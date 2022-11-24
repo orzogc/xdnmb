@@ -113,7 +113,7 @@ class ConfirmCancelDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fontSize = Theme.of(context).textTheme.subtitle1?.fontSize;
+    final fontSize = Theme.of(context).textTheme.titleMedium?.fontSize;
 
     return AlertDialog(
       actionsPadding:
@@ -157,7 +157,7 @@ class NoticeDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = PersistentDataService.to;
     final settings = SettingsService.to;
-    final textStyle = Theme.of(context).textTheme.subtitle1;
+    final textStyle = Theme.of(context).textTheme.titleMedium;
     final isCheck = false.obs;
 
     return AlertDialog(
@@ -282,7 +282,7 @@ class ForumRuleDialog extends StatelessWidget {
               ? ForumName(
                   forumId: forum.id,
                   trailing: ' 版规',
-                  textStyle: Theme.of(context).textTheme.headline6,
+                  textStyle: Theme.of(context).textTheme.titleLarge,
                   maxLines: 1)
               : const Text('版规'),
           content: SingleChildScrollViewWithScrollbar(
@@ -315,7 +315,7 @@ class ForumRuleDialog extends StatelessWidget {
               child: Text(
                 '确定',
                 style: TextStyle(
-                  fontSize: Theme.of(context).textTheme.subtitle1?.fontSize,
+                  fontSize: Theme.of(context).textTheme.titleMedium?.fontSize,
                 ),
               ),
             ),
@@ -343,7 +343,7 @@ class NewTab extends StatelessWidget {
         },
         child: Text(
           text ?? '在新标签页打开',
-          style: Theme.of(context).textTheme.subtitle1,
+          style: Theme.of(context).textTheme.titleMedium,
         ),
       );
 }
@@ -365,7 +365,7 @@ class NewTabBackground extends StatelessWidget {
         },
         child: Text(
           text ?? '在新标签页后台打开',
-          style: Theme.of(context).textTheme.subtitle1,
+          style: Theme.of(context).textTheme.titleMedium,
         ),
       );
 }
@@ -384,8 +384,8 @@ class CopyPostId extends StatelessWidget {
           showToast('已复制 $postId');
           postListBack();
         },
-        child:
-            Text(text ?? '复制串号', style: Theme.of(context).textTheme.subtitle1),
+        child: Text(text ?? '复制串号',
+            style: Theme.of(context).textTheme.titleMedium),
       );
 }
 
@@ -406,7 +406,7 @@ class CopyPostReference extends StatelessWidget {
         },
         child: Text(
           text ?? '复制串号引用',
-          style: Theme.of(context).textTheme.subtitle1,
+          style: Theme.of(context).textTheme.titleMedium,
         ),
       );
 }
@@ -424,7 +424,7 @@ class CopyPostContent extends StatelessWidget {
           showToast('已复制串 ${post.toPostNumber()} 的内容');
           postListBack();
         },
-        child: Text('复制串的内容', style: Theme.of(context).textTheme.subtitle1),
+        child: Text('复制串的内容', style: Theme.of(context).textTheme.titleMedium),
       );
 }
 
@@ -444,7 +444,7 @@ class Report extends StatelessWidget {
             content: '${postId.toPostReference()}\n',
           );
         },
-        child: Text('举报', style: Theme.of(context).textTheme.subtitle1),
+        child: Text('举报', style: Theme.of(context).textTheme.titleMedium),
       );
 }
 
@@ -474,7 +474,7 @@ class BlockPost extends StatelessWidget {
             postListBack();
           }
         },
-        child: Text('屏蔽串号', style: Theme.of(context).textTheme.subtitle1),
+        child: Text('屏蔽串号', style: Theme.of(context).textTheme.titleMedium),
       );
 }
 
@@ -505,7 +505,7 @@ class BlockUser extends StatelessWidget {
           postListBack();
         }
       },
-      child: Text('屏蔽饼干', style: Theme.of(context).textTheme.subtitle1),
+      child: Text('屏蔽饼干', style: Theme.of(context).textTheme.titleMedium),
     );
   }
 }
@@ -551,4 +551,68 @@ class ApplyImageDialog extends StatelessWidget {
           ),
         ],
       );
+}
+
+class DoubleRangeDialog extends StatelessWidget {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  final String text;
+
+  final double initialValue;
+
+  final double min;
+
+  final double max;
+
+  DoubleRangeDialog(
+      {super.key,
+      required this.text,
+      required this.initialValue,
+      required this.min,
+      required this.max});
+
+  @override
+  Widget build(BuildContext context) {
+    String? ratio;
+
+    return InputDialog(
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          decoration: InputDecoration(labelText: '$text（$min - $max）'),
+          autofocus: true,
+          initialValue: '$initialValue',
+          onSaved: (newValue) => ratio = newValue,
+          validator: (value) {
+            if (value != null && value.isNotEmpty) {
+              final ratio = double.tryParse(value);
+              if (ratio != null) {
+                if (ratio >= min && ratio <= max) {
+                  return null;
+                } else {
+                  return '$text必须在$min与$max之间';
+                }
+              } else {
+                return '请输入$text数字';
+              }
+            } else {
+              return '请输入$text';
+            }
+          },
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              Get.back<double>(result: double.parse(ratio!));
+            }
+          },
+          child: const Text('确定'),
+        )
+      ],
+    );
+  }
 }

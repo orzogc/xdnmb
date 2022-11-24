@@ -208,6 +208,7 @@ class PaintView extends GetView<PaintController> {
             ),
             body: Obx(
               () {
+                // 为了可以读取图片
                 controller._painterKey = GlobalKey<ImagePainterState>();
 
                 return controller.image.value != null

@@ -85,7 +85,7 @@ class _FeedDialog extends StatelessWidget {
                     '取消订阅 ${post.id.toPostNumber()} 失败：${exceptionMessage(e)}');
               }
             },
-            child: Text('取消订阅', style: Theme.of(context).textTheme.subtitle1),
+            child: Text('取消订阅', style: Theme.of(context).textTheme.titleMedium),
           ),
           CopyPostId(post.id),
           CopyPostReference(post.id),
@@ -151,10 +151,10 @@ class _FeedBodyState extends State<FeedBody> {
                     child: PostCard(
                       child: PostInkWell(
                         post: feed.item.post,
+                        poUserHash: feed.item.post.userHash,
+                        contentMaxLines: 8,
                         showFullTime: false,
                         showPostId: false,
-                        contentMaxLines: 8,
-                        poUserHash: feed.item.post.userHash,
                         onTap: (post) => AppRoutes.toThread(
                             mainPostId: feed.item.post.id,
                             mainPost: feed.item.post),

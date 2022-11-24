@@ -33,7 +33,8 @@ class _TabTitle extends StatelessWidget {
           final forumId = (controller as ThreadTypeController).post?.forumId;
 
           return DefaultTextStyle.merge(
-            style: theme.textTheme.caption?.apply(color: AppTheme.headerColor),
+            style:
+                theme.textTheme.bodySmall?.apply(color: AppTheme.headerColor),
             child: OverflowBar(
               spacing: 5.0,
               alignment: MainAxisAlignment.spaceBetween,
@@ -54,7 +55,7 @@ class _TabTitle extends StatelessWidget {
                 forumId: forumId,
                 isTimeline: controller.isTimeline,
                 maxLines: 1,
-                textStyle: theme.textTheme.bodyText1)
+                textStyle: theme.textTheme.bodyLarge)
             : const SizedBox.shrink());
 
         break;
@@ -88,7 +89,7 @@ class TabList extends StatelessWidget {
     final stacks = ControllerStacksService.to;
     final theme = Theme.of(context);
     final textStyle =
-        theme.textTheme.bodyText2?.apply(color: AppTheme.textColor);
+        theme.textTheme.bodyMedium?.apply(color: AppTheme.textColor);
 
     return Center(
       child: Obx(
@@ -142,9 +143,42 @@ class TabList extends StatelessWidget {
               );
 
               if (settings.dismissibleTab && stacks.length > 1) {
+                final isIconOnLeft = true.obs;
+
                 tab = Dismissible(
                   key: ValueKey<int>(stacks.getKeyId(index)),
-                  background: ColoredBox(color: theme.primaryColor),
+                  background: ColoredBox(
+                    color: theme.primaryColor,
+                    child: Obx(() => isIconOnLeft.value
+                        ? Padding(
+                            padding: const EdgeInsets.only(left: 20.0),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Icon(
+                                Icons.delete_outline,
+                                color: theme.colorScheme.onPrimary,
+                              ),
+                            ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.only(right: 20.0),
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Icon(
+                                Icons.delete_outline,
+                                color: theme.colorScheme.onPrimary,
+                              ),
+                            ),
+                          )),
+                  ),
+                  onUpdate: (details) {
+                    if (details.direction == DismissDirection.startToEnd) {
+                      isIconOnLeft.value = true;
+                    } else if (details.direction ==
+                        DismissDirection.endToStart) {
+                      isIconOnLeft.value = false;
+                    }
+                  },
                   onDismissed: (direction) => _closeTab(index),
                   child: tab,
                 );

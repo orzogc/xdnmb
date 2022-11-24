@@ -64,12 +64,12 @@ class _TopOverlay extends StatelessWidget {
               style: TextStyle(color: AppTheme.colorDark),
               child: PostContent(
                 post: post,
-                showForumName: false,
-                showReplyCount: false,
-                contentMaxLines: 5,
                 poUserHash: poUserHash,
+                contentMaxLines: 5,
                 displayImage: false,
                 hiddenTextColor: AppTheme.colorDark,
+                showForumName: false,
+                showReplyCount: false,
               ),
             ),
           ),
@@ -222,7 +222,7 @@ class _ImageDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.subtitle1;
+    final textStyle = Theme.of(context).textTheme.titleMedium;
 
     return SimpleDialog(
       children: [

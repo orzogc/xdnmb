@@ -93,16 +93,7 @@ class _AppVersion extends StatelessWidget {
       );
 }
 
-class SettingsController extends GetxController {}
-
-class SettingsBinding implements Bindings {
-  @override
-  void dependencies() {
-    Get.put(SettingsController());
-  }
-}
-
-class SettingsView extends GetView<SettingsController> {
+class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
 
   @override
@@ -111,9 +102,7 @@ class SettingsView extends GetView<SettingsController> {
         top: false,
         right: false,
         child: Scaffold(
-          appBar: AppBar(
-            title: const Text('设置'),
-          ),
+          appBar: AppBar(title: const Text('设置')),
           body: ListView(
             children: const [
               ListTile(title: Text('饼干'), onTap: AppRoutes.toUser),
@@ -121,6 +110,7 @@ class SettingsView extends GetView<SettingsController> {
               ListTile(title: Text('基本设置'), onTap: AppRoutes.toBasicSettings),
               ListTile(
                   title: Text('高级设置'), onTap: AppRoutes.toAdvancedSettings),
+              ListTile(title: Text('界面设置'), onTap: AppRoutes.toUISettings),
               _Feedback(),
               ListTile(title: Text('客户端作者'), subtitle: Text('Orzogc')),
               _AuthorSponsor(),

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/blacklist.dart';
+import '../data/services/settings.dart';
 
 const int _int32Max = 4294967295;
 
@@ -124,4 +125,17 @@ extension GetExtension on GetInterface {
 
 extension DateTimeExtension on DateTime {
   DateTime addOneDay() => add(const Duration(days: 1));
+}
+
+extension FontWeightExtension on FontWeight {
+  int toInt() => index + 1;
+
+  static FontWeight fromInt(int n) {
+    if (n < SettingsService.minFontWeight ||
+        n > SettingsService.maxFontWeight) {
+      return FontWeight.normal;
+    }
+
+    return FontWeight.values[n - 1];
+  }
 }

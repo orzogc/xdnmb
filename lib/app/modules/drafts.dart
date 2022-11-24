@@ -139,16 +139,7 @@ class _DraftList extends StatelessWidget {
   }
 }
 
-class PostDraftsController extends GetxController {}
-
-class PostDraftsBinding implements Bindings {
-  @override
-  void dependencies() {
-    Get.put(PostDraftsController());
-  }
-}
-
-class PostDraftsView extends GetView<PostDraftsController> {
+class PostDraftsView extends StatelessWidget {
   const PostDraftsView({super.key});
 
   @override

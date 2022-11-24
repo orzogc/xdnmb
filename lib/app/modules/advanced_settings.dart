@@ -5,8 +5,6 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
 import '../data/services/settings.dart';
-import '../utils/notify.dart';
-import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 
@@ -112,68 +110,6 @@ class _RestoreForumPage extends StatelessWidget {
   }
 }
 
-class _RatioRangeDialog extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  final double initialValue;
-
-  final double min;
-
-  final double max;
-
-  _RatioRangeDialog(
-      // ignore: unused_element
-      {super.key,
-      required this.initialValue,
-      required this.min,
-      required this.max});
-
-  @override
-  Widget build(BuildContext context) {
-    String? ratio;
-
-    return InputDialog(
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          decoration: InputDecoration(labelText: '比例（$min-$max）'),
-          autofocus: true,
-          initialValue: '$initialValue',
-          onSaved: (newValue) => ratio = newValue,
-          validator: (value) {
-            if (value != null && value.isNotEmpty) {
-              final ratio = double.tryParse(value);
-              if (ratio != null) {
-                if (ratio >= min && ratio <= max) {
-                  return null;
-                } else {
-                  return '比例必须在$min与$max之间';
-                }
-              } else {
-                return '请输入比例数字';
-              }
-            } else {
-              return '请输入比例';
-            }
-          },
-        ),
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-
-              Get.back<double>(result: double.parse(ratio!));
-            }
-          },
-          child: const Text('确定'),
-        )
-      ],
-    );
-  }
-}
-
 class _DrawerDragRatio extends StatelessWidget {
   // ignore: unused_element
   const _DrawerDragRatio({super.key});
@@ -188,7 +124,8 @@ class _DrawerDragRatio extends StatelessWidget {
         title: const Text('划开侧边栏的范围占屏幕宽度的比例'),
         trailing: Text('${settings.drawerEdgeDragWidthRatio}'),
         onTap: () async {
-          final ratio = await Get.dialog<double>(_RatioRangeDialog(
+          final ratio = await Get.dialog<double>(DoubleRangeDialog(
+              text: '比例',
               initialValue: settings.drawerEdgeDragWidthRatio,
               min: SettingsService.minDrawerEdgeDragWidthRatio,
               max: SettingsService.maxDrawerEdgeDragWidthRatio));
@@ -290,7 +227,8 @@ class _FixedImageDisposeRatio extends StatelessWidget {
         title: const Text('适应模式下移动未缩放的大图导致返回的最小距离占屏幕高度/宽度的比例'),
         trailing: Text('${settings.fixedImageDisposeRatio}'),
         onTap: () async {
-          final ratio = await Get.dialog<double>(_RatioRangeDialog(
+          final ratio = await Get.dialog<double>(DoubleRangeDialog(
+              text: '比例',
               initialValue: settings.fixedImageDisposeRatio,
               min: 0.0,
               max: 1.0));
@@ -356,182 +294,7 @@ class _ShowGuide extends StatelessWidget {
   }
 }
 
-class _BackdropUI extends StatelessWidget {
-  // ignore: unused_element
-  const _BackdropUI({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.backdropUIListenable,
-      builder: (context, value, child) => ListTile(
-        title: const Text('启用Backdrop UI'),
-        subtitle: const Text('更改后需要重启应用'),
-        trailing: Switch(
-          value: settings.backdropUI,
-          onChanged: (value) => settings.backdropUI = value,
-        ),
-      ),
-    );
-  }
-}
-
-class _CompactBackdrop extends StatelessWidget {
-  // ignore: unused_element
-  const _CompactBackdrop({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return NotifyBuilder(
-      animation: Listenable.merge(
-          [settings.backdropUIListenable, settings.compactBackdropListenable]),
-      builder: (context, child) => ListTile(
-        title: Text(
-          '同时显示标签页列表和版块列表',
-          style: TextStyle(
-            color: !settings.backdropUI ? AppTheme.inactiveSettingColor : null,
-          ),
-        ),
-        trailing: Switch(
-          value: settings.compactBackdrop,
-          onChanged: settings.backdropUI
-              ? (value) => settings.compactBackdrop = value
-              : null,
-        ),
-      ),
-    );
-  }
-}
-
-class _PageDragWidthRatio extends StatelessWidget {
-  // ignore: unused_element
-  const _PageDragWidthRatio({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.swipeablePageDragWidthRatioListenable,
-      builder: (context, value, child) {
-        final textStyle = TextStyle(
-            color: !settings.backdropUI ? AppTheme.inactiveSettingColor : null);
-
-        return ListTile(
-          title: Text('返回上一页的手势范围占屏幕宽度的比例', style: textStyle),
-          subtitle: Text('更改后需要重启应用', style: textStyle),
-          trailing:
-              Text('${settings.swipeablePageDragWidthRatio}', style: textStyle),
-          onTap: settings.backdropUI
-              ? () async {
-                  final ratio = await Get.dialog<double>(_RatioRangeDialog(
-                      initialValue: settings.swipeablePageDragWidthRatio,
-                      min: 0.0,
-                      max: 1.0));
-
-                  if (ratio != null) {
-                    settings.swipeablePageDragWidthRatio = ratio;
-                  }
-                }
-              : null,
-        );
-      },
-    );
-  }
-}
-
-class _FrontLayerDragHeightRatio extends StatelessWidget {
-  // ignore: unused_element
-  const _FrontLayerDragHeightRatio({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return NotifyBuilder(
-      animation: Listenable.merge([
-        settings.backdropUIListenable,
-        settings.frontLayerDragHeightRatioListenable
-      ]),
-      builder: (context, child) {
-        final textStyle = TextStyle(
-            color: !settings.backdropUI ? AppTheme.inactiveSettingColor : null);
-
-        return ListTile(
-          title: Text('下拉手势范围占屏幕高度的比例', style: textStyle),
-          trailing:
-              Text('${settings.frontLayerDragHeightRatio}', style: textStyle),
-          onTap: settings.backdropUI
-              ? () async {
-                  final ratio = await Get.dialog<double>(_RatioRangeDialog(
-                      initialValue: settings.frontLayerDragHeightRatio,
-                      min: 0.0,
-                      max: 1.0));
-
-                  if (ratio != null) {
-                    settings.frontLayerDragHeightRatio = ratio;
-                  }
-                }
-              : null,
-        );
-      },
-    );
-  }
-}
-
-class _BackLayerDragHeightRatio extends StatelessWidget {
-  // ignore: unused_element
-  const _BackLayerDragHeightRatio({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return NotifyBuilder(
-      animation: Listenable.merge([
-        settings.backdropUIListenable,
-        settings.backLayerDragHeightRatioListenable
-      ]),
-      builder: (context, child) {
-        final textStyle = TextStyle(
-            color: !settings.backdropUI ? AppTheme.inactiveSettingColor : null);
-
-        return ListTile(
-          title: Text('上拉手势范围占屏幕高度的比例', style: textStyle),
-          trailing:
-              Text('${settings.backLayerDragHeightRatio}', style: textStyle),
-          onTap: settings.backdropUI
-              ? () async {
-                  final ratio = await Get.dialog<double>(_RatioRangeDialog(
-                      initialValue: settings.backLayerDragHeightRatio,
-                      min: 0.0,
-                      max: 1.0));
-
-                  if (ratio != null) {
-                    settings.backLayerDragHeightRatio = ratio;
-                  }
-                }
-              : null,
-        );
-      },
-    );
-  }
-}
-
-class AdvancedSettingsController extends GetxController {}
-
-class AdvancedSettingsBinding implements Bindings {
-  @override
-  void dependencies() {
-    Get.put(AdvancedSettingsController());
-  }
-}
-
-class AdvancedSettingsView extends GetView<AdvancedSettingsController> {
+class AdvancedSettingsView extends StatelessWidget {
   const AdvancedSettingsView({super.key});
 
   @override
@@ -554,17 +317,6 @@ class AdvancedSettingsView extends GetView<AdvancedSettingsController> {
               const _FixMissingFont(),
               const _ShowGuide(),
               const Divider(height: 10.0, thickness: 1.0),
-              ListTile(
-                title: Text(
-                  'Backdrop UI',
-                  style: Theme.of(context).textTheme.headline6,
-                ),
-              ),
-              if (!GetPlatform.isIOS) const _BackdropUI(),
-              const _CompactBackdrop(),
-              const _PageDragWidthRatio(),
-              const _FrontLayerDragHeightRatio(),
-              const _BackLayerDragHeightRatio(),
             ],
           ),
         ),

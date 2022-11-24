@@ -90,7 +90,7 @@ class ForumAppBarTitle extends StatelessWidget {
             maxLines: 1),
         Text(
           'X岛 nmbxd.com',
-          style: theme.textTheme.bodyText2
+          style: theme.textTheme.bodyMedium
               ?.apply(color: theme.colorScheme.onPrimary),
         )
       ],
@@ -142,7 +142,7 @@ class _AddFeed extends StatelessWidget {
             showToast('订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');
           }
         },
-        child: Text('订阅', style: Theme.of(context).textTheme.subtitle1),
+        child: Text('订阅', style: Theme.of(context).textTheme.titleMedium),
       );
 }
 
@@ -159,7 +159,7 @@ class _BlockForum extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.subtitle1;
+    final textStyle = Theme.of(context).textTheme.titleMedium;
 
     return SimpleDialogOption(
       onPressed: () async {
@@ -324,11 +324,11 @@ class _ForumBodyState extends State<ForumBody> {
                     child: PostCard(
                       child: PostInkWell(
                         post: mainPost,
+                        poUserHash: mainPost.userHash,
+                        contentMaxLines: 8,
                         showFullTime: false,
                         showPostId: false,
                         showForumName: controller.isTimeline,
-                        contentMaxLines: 8,
-                        poUserHash: mainPost.userHash,
                         onTap: (post) => AppRoutes.toThread(
                             mainPostId: mainPost.id, mainPost: mainPost),
                         onLongPress: (post) => postListDialog(

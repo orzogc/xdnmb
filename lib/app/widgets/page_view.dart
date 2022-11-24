@@ -20,7 +20,7 @@ class SwipeablePageView extends StatelessWidget {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
 
-    return SettingsService.isBackdropUI
+    return (SettingsService.isBackdropUI && GetPlatform.isMobile)
         ? Listener(
             onPointerDown: (event) {
               final route = ModalRoute.of(context);

@@ -196,7 +196,7 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     final blacklist = BlacklistService.to;
     final forums = ForumListService.to;
-    final textStyle = Theme.of(context).textTheme.subtitle1;
+    final textStyle = Theme.of(context).textTheme.titleMedium;
 
     switch (index) {
       case BlacklistView._forumIndex:

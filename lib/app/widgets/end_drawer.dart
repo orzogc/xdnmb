@@ -41,7 +41,7 @@ class _DrawerHeader extends StatelessWidget {
             Text(
               '版块',
               style: (theme.appBarTheme.titleTextStyle ??
-                      theme.textTheme.headline6)
+                      theme.textTheme.titleLarge)
                   ?.apply(
                 color: theme.appBarTheme.foregroundColor ??
                     theme.colorScheme.onPrimary,
@@ -86,7 +86,7 @@ class _BackdropDrawerHeader extends StatelessWidget {
             child: Text(
               '霞岛',
               style: (theme.appBarTheme.titleTextStyle ??
-                      theme.textTheme.headline6)
+                      theme.textTheme.titleLarge)
                   ?.apply(
                 color: theme.appBarTheme.foregroundColor ??
                     theme.colorScheme.onPrimary,

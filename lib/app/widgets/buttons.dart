@@ -211,7 +211,7 @@ class _SponsorDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.subtitle1;
+    final textStyle = Theme.of(context).textTheme.titleMedium;
 
     return SimpleDialog(
       children: [
@@ -253,7 +253,7 @@ class SponsorButton extends StatelessWidget {
             child: Text(
               '赞助',
               style: (theme.appBarTheme.titleTextStyle ??
-                      theme.textTheme.headline6)
+                      theme.textTheme.titleLarge)
                   ?.merge(
                 TextStyle(
                   color: AppTheme.highlightColor,

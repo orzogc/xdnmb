@@ -108,7 +108,7 @@ const ReplyDataSchema = CollectionSchema(
   getId: _replyDataGetId,
   getLinks: _replyDataGetLinks,
   attach: _replyDataAttach,
-  version: '3.0.4',
+  version: '3.0.5',
 );
 
 int _replyDataEstimateSize(

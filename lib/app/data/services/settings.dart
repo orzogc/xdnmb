@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
 import '../models/settings.dart';
+import '../../utils/extensions.dart';
 import 'image.dart';
 
 final ForumData defaultForum = ForumData(
@@ -25,6 +26,32 @@ class SettingsService extends GetxService {
   static const double minDrawerEdgeDragWidthRatio = 0.1;
 
   static const double maxDrawerEdgeDragWidthRatio = 0.5;
+
+  static const double minPostFontSize = 10.0;
+
+  static const double maxPostFontSize = 30.0;
+
+  static const double defaultPostHeaderFontSize = 12.0;
+
+  static const double defaultPostContentFontSize = 14.0;
+
+  static final int minFontWeight = FontWeight.values.first.toInt();
+
+  static final int maxFontWeight = FontWeight.values.last.toInt();
+
+  static final int defaultFontWeight = FontWeight.normal.toInt();
+
+  static const double minLineHeight = 1.0;
+
+  static const double maxLineHeight = 3.0;
+
+  static const double defaultLineHeight = 1.2;
+
+  static const double minLetterSpacing = -3.0;
+
+  static const double maxLetterSpacing = 30.0;
+
+  static const double defaultLetterSpacing = 0.25;
 
   static SettingsService get to => Get.find<SettingsService>();
 
@@ -147,6 +174,8 @@ class SettingsService extends GetxService {
     _drawerDragRatio.value = ratio;
   }
 
+  double get drawerDragRatio => _drawerDragRatio.value;
+
   int get imageDisposeDistance => max(
       _settingsBox.get(Settings.imageDisposeDistance, defaultValue: 120), 0);
 
@@ -201,25 +230,108 @@ class SettingsService extends GetxService {
   set compactBackdrop(bool compactBackdrop) =>
       _settingsBox.put(Settings.compactBackdrop, compactBackdrop);
 
-  double get swipeablePageDragWidthRatio => _settingsBox
-      .get(Settings.swipeablePageDragWidthRatio, defaultValue: 0.25);
+  double get swipeablePageDragWidthRatio =>
+      (_settingsBox.get(Settings.swipeablePageDragWidthRatio,
+              defaultValue: 0.25) as double)
+          .clamp(0.0, 1.0);
 
-  set swipeablePageDragWidthRatio(double ratio) =>
-      _settingsBox.put(Settings.swipeablePageDragWidthRatio, ratio);
+  set swipeablePageDragWidthRatio(double ratio) => _settingsBox.put(
+      Settings.swipeablePageDragWidthRatio, ratio.clamp(0.0, 1.0));
 
   double get frontLayerDragHeightRatio =>
-      _settingsBox.get(Settings.frontLayerDragHeightRatio, defaultValue: 0.20);
+      (_settingsBox.get(Settings.frontLayerDragHeightRatio, defaultValue: 0.20)
+              as double)
+          .clamp(0.0, 1.0);
 
-  set frontLayerDragHeightRatio(double ratio) =>
-      _settingsBox.put(Settings.frontLayerDragHeightRatio, ratio);
+  set frontLayerDragHeightRatio(double ratio) => _settingsBox.put(
+      Settings.frontLayerDragHeightRatio, ratio.clamp(0.0, 1.0));
 
   double get backLayerDragHeightRatio =>
-      _settingsBox.get(Settings.backLayerDragHeightRatio, defaultValue: 0.10);
+      (_settingsBox.get(Settings.backLayerDragHeightRatio, defaultValue: 0.10)
+              as double)
+          .clamp(0.0, 1.0);
 
-  set backLayerDragHeightRatio(double ratio) =>
-      _settingsBox.put(Settings.backLayerDragHeightRatio, ratio);
+  set backLayerDragHeightRatio(double ratio) => _settingsBox.put(
+      Settings.backLayerDragHeightRatio, ratio.clamp(0.0, 1.0));
 
-  double get drawerDragRatio => _drawerDragRatio.value;
+  double get postHeaderFontSize =>
+      (_settingsBox.get(Settings.postHeaderFontSize,
+              defaultValue: defaultPostHeaderFontSize) as double)
+          .roundToDouble()
+          .clamp(minPostFontSize, maxPostFontSize);
+
+  set postHeaderFontSize(double fontSize) => _settingsBox.put(
+      Settings.postHeaderFontSize,
+      fontSize.roundToDouble().clamp(minPostFontSize, maxPostFontSize));
+
+  int get postHeaderFontWeight =>
+      (_settingsBox.get(Settings.postHeaderFontWeight,
+              defaultValue: defaultFontWeight) as int)
+          .clamp(minFontWeight, maxFontWeight);
+
+  set postHeaderFontWeight(int fontWeight) => _settingsBox.put(
+      Settings.postHeaderFontWeight,
+      fontWeight.clamp(minFontWeight, maxFontWeight));
+
+  double get postHeaderLineHeight =>
+      (_settingsBox.get(Settings.postHeaderLineHeight,
+              defaultValue: defaultLineHeight) as double)
+          .clamp(minLineHeight, maxLineHeight);
+
+  set postHeaderLineHeight(double height) => _settingsBox.put(
+      Settings.postHeaderLineHeight,
+      height.clamp(minLineHeight, maxLineHeight));
+
+  double get postHeaderDefaultLineHeight =>
+      postHeaderLineHeight < defaultLineHeight
+          ? postHeaderLineHeight
+          : defaultLineHeight;
+
+  double get postHeaderLetterSpacing =>
+      (_settingsBox.get(Settings.postHeaderLetterSpacing,
+              defaultValue: defaultLetterSpacing) as double)
+          .clamp(minLetterSpacing, maxLetterSpacing);
+
+  set postHeaderLetterSpacing(double letterSpacing) => _settingsBox.put(
+      Settings.postHeaderLetterSpacing,
+      letterSpacing.clamp(minLetterSpacing, maxLetterSpacing));
+
+  double get postContentFontSize =>
+      (_settingsBox.get(Settings.postContentFontSize,
+              defaultValue: defaultPostContentFontSize) as double)
+          .roundToDouble()
+          .clamp(minPostFontSize, maxPostFontSize);
+
+  set postContentFontSize(double fontSize) => _settingsBox.put(
+      Settings.postContentFontSize,
+      fontSize.roundToDouble().clamp(minPostFontSize, maxPostFontSize));
+
+  int get postContentFontWeight =>
+      (_settingsBox.get(Settings.postContentFontWeight,
+              defaultValue: defaultFontWeight) as int)
+          .clamp(minFontWeight, maxFontWeight);
+
+  set postContentFontWeight(int fontWeight) => _settingsBox.put(
+      Settings.postContentFontWeight,
+      fontWeight.clamp(minFontWeight, maxFontWeight));
+
+  double get postContentLineHeight =>
+      (_settingsBox.get(Settings.postContentLineHeight,
+              defaultValue: defaultLineHeight) as double)
+          .clamp(minLineHeight, maxLineHeight);
+
+  set postContentLineHeight(double height) => _settingsBox.put(
+      Settings.postContentLineHeight,
+      height.clamp(minLineHeight, maxLineHeight));
+
+  double get postContentLetterSpacing =>
+      (_settingsBox.get(Settings.postContentLetterSpacing,
+              defaultValue: defaultLetterSpacing) as double)
+          .clamp(minLetterSpacing, maxLetterSpacing);
+
+  set postContentLetterSpacing(double letterSpacing) => _settingsBox.put(
+      Settings.postContentLetterSpacing,
+      letterSpacing.clamp(minLetterSpacing, maxLetterSpacing));
 
   late final ValueListenable<Box> isRestoreTabsListenable;
 
@@ -296,6 +408,20 @@ class SettingsService extends GetxService {
 
     hasBeenDarkMode.value = Get.isDarkMode;
   }
+
+  TextStyle postHeaderTextStyle([TextStyle? textStyle]) => TextStyle(
+        fontSize: postHeaderFontSize,
+        fontWeight: FontWeightExtension.fromInt(postHeaderFontWeight),
+        height: postHeaderDefaultLineHeight,
+        letterSpacing: postHeaderLetterSpacing,
+      ).merge(textStyle);
+
+  TextStyle postContentTextStyle([TextStyle? textStyle]) => TextStyle(
+        fontSize: postContentFontSize,
+        fontWeight: FontWeightExtension.fromInt(postContentFontWeight),
+        height: postContentLineHeight,
+        letterSpacing: postContentLetterSpacing,
+      ).merge(textStyle);
 
   @override
   void onInit() async {

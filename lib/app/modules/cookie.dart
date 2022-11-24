@@ -383,7 +383,7 @@ class _Cookie extends StatelessWidget {
 
     return ListTile(
       onLongPress: () {
-        final textStyle = theme.textTheme.subtitle1;
+        final textStyle = theme.textTheme.titleMedium;
         Get.dialog(
           SimpleDialog(
             children: [
@@ -419,7 +419,7 @@ class _Cookie extends StatelessWidget {
         cookie.name,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: theme.textTheme.bodyText2?.fontSize),
+        style: TextStyle(fontSize: theme.textTheme.bodyMedium?.fontSize),
       ),
       subtitle: (cookie.note?.isNotEmpty ?? false)
           ? Text(cookie.note!, maxLines: 1, overflow: TextOverflow.ellipsis)
@@ -450,7 +450,7 @@ class _Cookie extends StatelessWidget {
                   '浏览',
                   style: TextStyle(
                     color: theme.colorScheme.onPrimary,
-                    fontSize: theme.textTheme.bodyText2?.fontSize,
+                    fontSize: theme.textTheme.bodyMedium?.fontSize,
                   ),
                 ),
               ),
@@ -471,16 +471,7 @@ class _Cookie extends StatelessWidget {
   }
 }
 
-class CookieController extends GetxController {}
-
-class CookieBinding implements Bindings {
-  @override
-  void dependencies() {
-    Get.put(CookieController());
-  }
-}
-
-class CookieView extends GetView<CookieController> {
+class CookieView extends StatelessWidget {
   const CookieView({super.key});
 
   @override

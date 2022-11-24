@@ -140,7 +140,7 @@ class _PageButtonState extends State<PageButton> {
       child: Obx(
         () => Text(
           '${widget.controller.page}',
-          style: theme.textTheme.headline6?.apply(
+          style: theme.textTheme.titleLarge?.apply(
             color: theme.colorScheme.onPrimary,
           ),
         ),

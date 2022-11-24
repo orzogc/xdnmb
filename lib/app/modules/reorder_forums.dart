@@ -127,13 +127,13 @@ class _ForumsState extends State<_Forums> {
     return ReorderableListView.builder(
       buildDefaultDragHandles: false,
       header: ListTile(
-        title: Text('显示版块', style: theme.textTheme.headline6),
+        title: Text('显示版块', style: theme.textTheme.titleLarge),
       ),
       footer: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            title: Text('隐藏版块', style: theme.textTheme.headline6),
+            title: Text('隐藏版块', style: theme.textTheme.titleLarge),
           ),
           ...List.generate(
             _hiddenForums.length,
@@ -160,7 +160,7 @@ class _ForumsState extends State<_Forums> {
                   forumId: forum.id,
                   isTimeline: forum.isTimeline,
                   isDeprecated: forum.isDeprecated,
-                  textStyle: theme.textTheme.subtitle1,
+                  textStyle: theme.textTheme.titleMedium,
                   maxLines: 1,
                 ),
                 trailing: IconButton(
@@ -196,7 +196,7 @@ class _ForumsState extends State<_Forums> {
             forumId: forum.id,
             isTimeline: forum.isTimeline,
             isDeprecated: forum.isDeprecated,
-            textStyle: theme.textTheme.subtitle1,
+            textStyle: theme.textTheme.titleMedium,
             maxLines: 1,
           ),
           trailing: Row(
@@ -232,19 +232,11 @@ class _ForumsState extends State<_Forums> {
   }
 }
 
-class ReorderForumsController extends GetxController {}
+class ReorderForumsView extends StatelessWidget {
+  static final GlobalKey<_ForumsState> _forumListKey =
+      GlobalKey<_ForumsState>();
 
-class ReorderForumsBinding implements Bindings {
-  @override
-  void dependencies() {
-    Get.put(ReorderForumsController());
-  }
-}
-
-class ReorderForumsView extends GetView<ReorderForumsController> {
-  final GlobalKey<_ForumsState> _forumListKey = GlobalKey<_ForumsState>();
-
-  ReorderForumsView({super.key});
+  const ReorderForumsView({super.key});
 
   @override
   Widget build(BuildContext context) => SafeArea(
@@ -252,7 +244,6 @@ class ReorderForumsView extends GetView<ReorderForumsController> {
         top: false,
         right: false,
         child: Scaffold(
-          resizeToAvoidBottomInset: true,
           appBar: AppBar(
             title: const Text('版块排序'),
             actions: [

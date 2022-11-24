@@ -27,7 +27,7 @@ class _Dialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.subtitle1;
+    final textStyle = Theme.of(context).textTheme.titleMedium;
     final client = XdnmbClientService.to;
     final forumName = htmlToPlainText(context, forum.forumDisplayName);
 
@@ -176,7 +176,7 @@ class ForumList extends StatelessWidget {
                     forumId: forum.id,
                     isTimeline: forum.isTimeline,
                     isDeprecated: forum.isDeprecated,
-                    textStyle: theme.textTheme.bodyText1,
+                    textStyle: theme.textTheme.bodyLarge,
                     maxLines: 1,
                   ),
                 );

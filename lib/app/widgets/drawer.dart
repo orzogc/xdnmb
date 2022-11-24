@@ -30,7 +30,7 @@ class _DrawerHeader extends StatelessWidget {
             Text(
               '霞岛',
               style: (theme.appBarTheme.titleTextStyle ??
-                      theme.textTheme.headline6)
+                      theme.textTheme.titleLarge)
                   ?.apply(
                 color: theme.appBarTheme.foregroundColor ?? color,
               ),

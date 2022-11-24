@@ -181,7 +181,7 @@ class _ReportReason extends StatelessWidget {
           Obx(
             () => DropdownButton<String>(
               value: _value.value,
-              style: Theme.of(context).textTheme.bodyText2,
+              style: Theme.of(context).textTheme.bodyMedium,
               onChanged: (value) {
                 if (value != null && value.isNotEmpty) {
                   _value.value = value;
@@ -296,7 +296,7 @@ class _WatermarkDialog extends StatelessWidget {
           child: Text(
             '确定',
             style: TextStyle(
-                fontSize: Theme.of(context).textTheme.subtitle1?.fontSize),
+                fontSize: Theme.of(context).textTheme.titleMedium?.fontSize),
           ),
         ),
       ],
@@ -436,7 +436,7 @@ class _AttachDeviceInfo extends StatelessWidget {
           ),
           const Flexible(child: Text('附加应用和设备信息')),
           const SizedBox(width: 5),
-          const QuestionTooltip('提供这些信息以便开发者更好地解决问题'),
+          const QuestionTooltip(message: '提供这些信息以便开发者更好地解决问题'),
         ],
       );
 }
@@ -693,7 +693,7 @@ class _Cookie extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = UserService.to;
     final size =
-        getTextSize(context, '啊啊啊啊啊啊啊', Theme.of(context).textTheme.bodyText2);
+        getTextSize(context, '啊啊啊啊啊啊啊', Theme.of(context).textTheme.bodyMedium);
 
     return user.hasPostCookie
         ? ValueListenableBuilder<Box>(
@@ -1209,7 +1209,7 @@ class _EmoticonDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.subtitle1;
+    final textStyle = Theme.of(context).textTheme.titleMedium;
 
     return SimpleDialog(
       children: [
@@ -1296,7 +1296,7 @@ class _EmoticonState extends State<_Emoticon> {
   Widget build(BuildContext context) {
     final data = PersistentDataService.to;
     final emoticons = EmoticonListService.to;
-    final textStyle = Theme.of(context).textTheme.bodyText2;
+    final textStyle = Theme.of(context).textTheme.bodyMedium;
     final buttonStyle = TextButton.styleFrom(
       padding: EdgeInsets.zero,
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1501,7 +1501,7 @@ class EditPostState extends State<EditPost> {
   Widget _inputArea(BuildContext context, double height) {
     assert(height > 0.0);
 
-    final textStyle = Theme.of(context).textTheme.bodyText2;
+    final textStyle = Theme.of(context).textTheme.bodyMedium;
 
     final color = Get.isDarkMode
         ? AppTheme.editPostFilledColorDark

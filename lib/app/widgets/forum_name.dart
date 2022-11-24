@@ -42,12 +42,16 @@ class ForumNameText extends StatelessWidget {
           maxLines: maxLines,
           overflow:
               maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip,
+          strutStyle:
+              textStyle != null ? StrutStyle.fromTextStyle(textStyle!) : null,
         )
       : RichText(
           text: htmlToTextSpan(context, forumName, textStyle: textStyle),
           maxLines: maxLines,
           overflow:
               maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip,
+          strutStyle:
+              textStyle != null ? StrutStyle.fromTextStyle(textStyle!) : null,
         );
 }
 
@@ -102,21 +106,33 @@ class ForumName extends StatelessWidget {
             : (fallbackText != null
                 ? Text(fallbackText!,
                     style: textStyle,
+                    strutStyle: textStyle != null
+                        ? StrutStyle.fromTextStyle(textStyle!)
+                        : null,
                     maxLines: maxLines,
                     overflow: maxLines != null
                         ? TextOverflow.ellipsis
                         : TextOverflow.clip)
                 : const SizedBox.shrink());
 
-        return (isDeprecated != null && isDeprecated!)
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(child: nameWidget),
-                  Text('隐藏', style: textStyle?.merge(AppTheme.boldRed)),
-                ],
-              )
-            : nameWidget;
+        if (isDeprecated != null && isDeprecated!) {
+          final style = textStyle?.merge(AppTheme.boldRed);
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: nameWidget),
+              Text(
+                '隐藏',
+                style: style,
+                strutStyle:
+                    style != null ? StrutStyle.fromTextStyle(style) : null,
+              ),
+            ],
+          );
+        } else {
+          return nameWidget;
+        }
       },
     );
   }
@@ -214,7 +230,7 @@ class SelectForum extends StatelessWidget {
               forumId: forum.id,
               isTimeline: forum.isTimeline,
               isDeprecated: forum.isDeprecated,
-              textStyle: Theme.of(context).textTheme.bodyText1,
+              textStyle: Theme.of(context).textTheme.bodyLarge,
               maxLines: 1,
             ),
           ),

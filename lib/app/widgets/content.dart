@@ -123,6 +123,19 @@ class _ContentState extends State<Content> {
     }
   }
 
+  void _setHtmlText() {
+    if (!_hasHiddenText) {
+      _htmlText = HtmlText(
+        context,
+        widget.post.content,
+        onLinkTap: widget.onLinkTap,
+        onText: (context, text) => Regex.onText(text),
+        onTextRecursiveParse: true,
+        textStyle: widget.textStyle,
+      );
+    }
+  }
+
   void _setHiddenText() {
     if (_hasHiddenText) {
       int index = 0;
@@ -179,15 +192,18 @@ class _ContentState extends State<Content> {
 
     _text = Regex.replaceHiddenTag(widget.post.content);
 
-    if (!_hasHiddenText) {
-      _htmlText = HtmlText(
-        context,
-        widget.post.content,
-        onLinkTap: widget.onLinkTap,
-        onText: (context, text) => Regex.onText(text),
-        onTextRecursiveParse: true,
-        textStyle: widget.textStyle,
-      );
+    _setHtmlText();
+  }
+
+  @override
+  void didUpdateWidget(covariant Content oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (!_hasHiddenText && widget.textStyle != oldWidget.textStyle) {
+      assert(_hiddenTextList.isEmpty);
+
+      _htmlText?.dispose();
+      _setHtmlText();
     }
   }
 
@@ -212,6 +228,9 @@ class _ContentState extends State<Content> {
       maxLines: widget.maxLines,
       overflow:
           widget.maxLines == null ? TextOverflow.clip : TextOverflow.ellipsis,
+      strutStyle: widget.textStyle != null
+          ? StrutStyle.fromTextStyle(widget.textStyle!)
+          : null,
     );
 
     return ValueListenableBuilder<Box>(

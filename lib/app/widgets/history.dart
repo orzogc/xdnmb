@@ -10,6 +10,7 @@ import '../data/models/history.dart';
 import '../data/models/post.dart';
 import '../data/models/reply.dart';
 import '../data/services/history.dart';
+import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
@@ -365,7 +366,7 @@ class _HistoryDialog extends StatelessWidget {
               postListBack();
             }
           },
-          child: Text('删除', style: Theme.of(context).textTheme.subtitle1),
+          child: Text('删除', style: Theme.of(context).textTheme.titleMedium),
         ),
         if (hasPostId) CopyPostId(postHistory.id),
         if (hasPostId) CopyPostReference(postHistory.id),
@@ -397,8 +398,9 @@ class _BrowseHistoryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
-    final textStyle =
-        Theme.of(context).textTheme.caption?.apply(color: AppTheme.headerColor);
+    final textStyle = SettingsService.to
+        .postHeaderTextStyle()
+        .apply(color: AppTheme.headerColor);
 
     return PostListRefresher(
       controller: controller,
@@ -471,19 +473,25 @@ class _BrowseHistoryBody extends StatelessWidget {
                               Padding(
                                 padding: const EdgeInsets.only(
                                     left: 10.0, top: 5.0, right: 10.0),
-                                child: DefaultTextStyle.merge(
-                                  style: textStyle,
+                                child: PostHeader(
+                                  fontSize: textStyle.fontSize,
                                   child: OverflowBar(
                                     spacing: 5.0,
                                     alignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         '最后浏览时间：${fullFormatTime(browse.item.browseTime)}',
+                                        style: textStyle,
+                                        strutStyle:
+                                            StrutStyle.fromTextStyle(textStyle),
                                       ),
                                       if (browsePage != null &&
                                           browsePostId != null)
                                         Text(
                                           '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
+                                          style: textStyle,
+                                          strutStyle: StrutStyle.fromTextStyle(
+                                              textStyle),
                                         ),
                                     ],
                                   ),
@@ -491,10 +499,10 @@ class _BrowseHistoryBody extends StatelessWidget {
                               ),
                               PostContent(
                                 post: browse.item,
+                                poUserHash: browse.item.userHash,
+                                contentMaxLines: 8,
                                 showFullTime: false,
                                 showReplyCount: false,
-                                contentMaxLines: 8,
-                                poUserHash: browse.item.userHash,
                               ),
                             ],
                           ),
@@ -570,11 +578,11 @@ class _PostHistoryBody extends StatelessWidget {
                         key: ValueKey<int>(mainPost.item.id),
                         child: PostInkWell(
                           post: mainPost.item.toPost(),
+                          poUserHash: mainPost.item.userHash,
+                          contentMaxLines: 8,
                           showPostId:
                               mainPost.item.postId != null ? true : false,
                           showReplyCount: false,
-                          contentMaxLines: 8,
-                          poUserHash: mainPost.item.userHash,
                           onTap: (post) {
                             if (post.id > 0) {
                               AppRoutes.toThread(
@@ -625,8 +633,9 @@ class _ReplyHistoryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
-    final textStyle =
-        Theme.of(context).textTheme.caption?.apply(color: AppTheme.headerColor);
+    final textStyle = SettingsService.to
+        .postHeaderTextStyle()
+        .apply(color: AppTheme.headerColor);
 
     return PostListRefresher(
       controller: controller,
@@ -700,18 +709,25 @@ class _ReplyHistoryBody extends StatelessWidget {
                                     top: 5.0,
                                     right: 10.0,
                                   ),
-                                  child: DefaultTextStyle.merge(
-                                    style: textStyle,
+                                  child: PostHeader(
+                                    fontSize: textStyle.fontSize,
                                     child: OverflowBar(
                                       spacing: 5.0,
                                       alignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           '主串：${reply.item.mainPostId.toPostNumber()}',
+                                          style: textStyle,
+                                          strutStyle: StrutStyle.fromTextStyle(
+                                              textStyle),
                                         ),
                                         if (reply.item.page != null)
                                           Text(
                                             '第 ${reply.item.page} 页',
+                                            style: textStyle,
+                                            strutStyle:
+                                                StrutStyle.fromTextStyle(
+                                                    textStyle),
                                           ),
                                       ],
                                     ),
@@ -719,10 +735,10 @@ class _ReplyHistoryBody extends StatelessWidget {
                                 ),
                                 PostContent(
                                   post: post,
+                                  contentMaxLines: 8,
                                   showPostId:
                                       reply.item.postId != null ? true : false,
                                   showReplyCount: false,
-                                  contentMaxLines: 8,
                                 ),
                               ],
                             ),

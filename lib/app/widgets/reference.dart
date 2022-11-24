@@ -104,23 +104,24 @@ class ReferenceCard extends StatelessWidget {
                                 children: [
                                   PostInkWell(
                                     post: post,
-                                    showForumName: false,
-                                    showReplyCount: false,
                                     poUserHash: poUserHash,
-                                    onTap: (post) {},
-                                    onLongPress: (post) => postListDialog(
-                                        _Dialog(
-                                            post: post,
-                                            mainPostId: mainPostId)),
                                     onLinkTap: (context, link, text) =>
                                         parseUrl(
                                             url: link,
                                             mainPostId: this.mainPostId,
                                             poUserHash: poUserHash),
+                                    canTapHiddenText: true,
+                                    showForumName: false,
+                                    showReplyCount: false,
+                                    contentMaxHeight:
+                                        constraints.maxHeight * 0.5,
+                                    onTap: (post) {},
+                                    onLongPress: (post) => postListDialog(
+                                        _Dialog(
+                                            post: post,
+                                            mainPostId: mainPostId)),
                                     mouseCursor: SystemMouseCursors.basic,
                                     hoverColor: Theme.of(context).cardColor,
-                                    canTapHiddenText: true,
-                                    contentHeight: constraints.maxHeight * 0.5,
                                   ),
                                   if (mainPostId != null &&
                                       mainPostId != this.mainPostId)

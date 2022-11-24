@@ -194,7 +194,7 @@ class ThreadAppBarTitle extends StatelessWidget {
           ),
         ),
         DefaultTextStyle.merge(
-          style: theme.textTheme.bodyText2!
+          style: theme.textTheme.bodyMedium!
               .apply(color: theme.colorScheme.onPrimary),
           child: Obx(
             () {
@@ -242,7 +242,7 @@ class _ThreadDialog extends StatelessWidget {
                 _replyPost(controller, post.id);
                 postListBack();
               },
-              child: Text('回复', style: Theme.of(context).textTheme.subtitle1),
+              child: Text('回复', style: Theme.of(context).textTheme.titleMedium),
             ),
           if (post is! Tip) Report(post.id),
           if (post is! Tip && !post.isAdmin)
@@ -619,22 +619,22 @@ class _ThreadBodyState extends State<ThreadBody> {
     final Widget item = PostInkWell(
       key: post is Tip ? UniqueKey() : null,
       post: post,
-      showForumName: false,
-      showReplyCount: false,
       poUserHash: mainPost?.userHash,
-      onTap: (post) {},
-      onLongPress: (post) =>
-          postListDialog(_ThreadDialog(controller: controller, post: post)),
       onLinkTap: (context, link, text) => parseUrl(
           url: link, mainPostId: mainPost?.id, poUserHash: mainPost?.userHash),
       onImagePainted: (imageData) => _replyWithImage(controller, imageData),
+      canReturnImageData: true,
+      canTapHiddenText: true,
+      showForumName: false,
+      showReplyCount: false,
+      onPostIdTap:
+          post is! Tip ? (postId) => _replyPost(controller, postId) : null,
+      onTap: (post) {},
+      onLongPress: (post) =>
+          postListDialog(_ThreadDialog(controller: controller, post: post)),
       mouseCursor: SystemMouseCursors.basic,
       hoverColor:
           Get.isDarkMode ? theme.cardColor : theme.scaffoldBackgroundColor,
-      canReturnImageData: true,
-      canTapHiddenText: true,
-      onPostIdTap:
-          post is! Tip ? (postId) => _replyPost(controller, postId) : null,
     );
 
     return post is! Tip

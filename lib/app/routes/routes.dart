@@ -2,12 +2,25 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:swipeable_page_route/swipeable_page_route.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/controller.dart';
+import '../data/services/settings.dart';
 import '../data/services/stack.dart';
+import '../modules/advanced_settings.dart';
+import '../modules/backdrop_settings.dart';
+import '../modules/basic_settings.dart';
+import '../modules/blacklist.dart';
+import '../modules/cookie.dart';
+import '../modules/drafts.dart';
+import '../modules/edit_post.dart';
 import '../modules/image.dart';
 import '../modules/paint.dart';
+import '../modules/post_settings.dart';
+import '../modules/reorder_forums.dart';
+import '../modules/settings.dart';
+import '../modules/ui_settings.dart';
 import '../widgets/feed.dart';
 import '../widgets/forum.dart';
 import '../widgets/history.dart';
@@ -56,6 +69,19 @@ abstract class AppRoutes {
   static const String advancedSettings = '/${PathNames.advancedSettings}';
 
   static const String advancedSettingsPath = '$settings$advancedSettings';
+
+  static const String uiSettings = '/${PathNames.uiSettings}';
+
+  static const String uiSettingsPath = '$settings$uiSettings';
+
+  static const String backdropUISettings = '/${PathNames.backdropUISettings}';
+
+  static const String backdropUISettingsPath =
+      '$uiSettingsPath$backdropUISettings';
+
+  static const String postUISettings = '/${PathNames.postUISettings}';
+
+  static const String postUISettingsPath = '$uiSettingsPath$postUISettings';
 
   static const String reorderForums = '/${PathNames.reorderForums}';
 
@@ -150,6 +176,14 @@ abstract class AppRoutes {
   static Future<T?>? toAdvancedSettings<T>() =>
       Get.toNamed<T>(advancedSettingsPath);
 
+  static Future<T?>? toUISettings<T>() => Get.toNamed<T>(uiSettingsPath);
+
+  static Future<T?>? toBackdropUISettings<T>() =>
+      Get.toNamed<T>(backdropUISettingsPath);
+
+  static Future<T?>? toPostUISettings<T>() =>
+      Get.toNamed<T>(postUISettingsPath);
+
   static Future<T?>? toReorderForums<T>() => Get.toNamed<T>(reorderForums);
 
   static Future<T?>? toEditPost<T>(
@@ -218,6 +252,12 @@ abstract class PathNames {
 
   static const String advancedSettings = 'advancedSettings';
 
+  static const String uiSettings = 'uiSettings';
+
+  static const String backdropUISettings = 'backdropUISettings';
+
+  static const String postUISettings = 'postUISettings';
+
   static const String reorderForums = 'reorderForums';
 
   static const String editPost = 'editPost';
@@ -225,4 +265,103 @@ abstract class PathNames {
   static const String postDrafts = 'postDrafts';
 
   static const String paint = 'paint';
+}
+
+class _SwipeablePageRoute extends SwipeablePageRoute {
+  final Bindings? binding;
+
+  @override
+  WidgetBuilder get builder => (context) {
+        if (binding != null) {
+          binding!.dependencies();
+        }
+
+        return super.builder(context);
+      };
+
+  _SwipeablePageRoute(
+      {RouteSettings? settings, this.binding, required WidgetBuilder builder})
+      : super(
+            settings: settings,
+            canOnlySwipeFromEdge: true,
+            backGestureDetectionWidth: Get.mediaQuery.size.width *
+                SettingsService.to.swipeablePageDragWidthRatio,
+            builder: builder);
+}
+
+/// Backdrop UI下生成[Route]
+Route? backdropOnGenerateRoute(RouteSettings settings) {
+  if (settings.name != null) {
+    final uri = Uri.parse(settings.name!);
+    Get.parameters = uri.queryParameters;
+
+    switch (uri.path) {
+      case AppRoutes.image:
+        return GetPageRoute(
+            settings: settings,
+            routeName: AppRoutes.image,
+            binding: ImageBinding(),
+            page: () => ImageView(),
+            transition: Transition.fadeIn,
+            opaque: false);
+      case AppRoutes.settings:
+        return _SwipeablePageRoute(
+            settings: settings, builder: (context) => const SettingsView());
+      case AppRoutes.userPath:
+        return _SwipeablePageRoute(
+            settings: settings, builder: (context) => const CookieView());
+      case AppRoutes.blacklistPath:
+        return _SwipeablePageRoute(
+            settings: settings,
+            binding: BlacklistBinding(),
+            builder: (context) => const BlacklistView());
+      case AppRoutes.basicSettingsPath:
+        return _SwipeablePageRoute(
+            settings: settings,
+            builder: (context) => const BasicSettingsView());
+      case AppRoutes.advancedSettingsPath:
+        return _SwipeablePageRoute(
+            settings: settings,
+            builder: (context) => const AdvancedSettingsView());
+      case AppRoutes.uiSettingsPath:
+        return _SwipeablePageRoute(
+            settings: settings, builder: (context) => const UISettingsView());
+      case AppRoutes.backdropUISettingsPath:
+        return _SwipeablePageRoute(
+            settings: settings,
+            builder: (context) => const BackdropUISettingsView());
+      case AppRoutes.postUISettingsPath:
+        return GetPageRoute(
+            settings: settings,
+            routeName: AppRoutes.postUISettingsPath,
+            binding: PostUISettingsBinding(),
+            page: () => const PostUISettingsView(),
+            transition: Transition.rightToLeft);
+      case AppRoutes.reorderForums:
+        return _SwipeablePageRoute(
+            settings: settings,
+            builder: (context) => const ReorderForumsView());
+      case AppRoutes.editPost:
+        return GetPageRoute(
+            settings: settings,
+            routeName: AppRoutes.editPost,
+            binding: EditPostBinding(),
+            page: () => EditPostView(),
+            transition: Transition.rightToLeft);
+      case AppRoutes.postDrafts:
+        return _SwipeablePageRoute(
+            settings: settings, builder: (context) => const PostDraftsView());
+      case AppRoutes.paint:
+        return GetPageRoute(
+            settings: settings,
+            routeName: AppRoutes.paint,
+            binding: PaintBinding(),
+            page: () => const PaintView(),
+            transition: Transition.rightToLeft);
+      default:
+        throw '未知URI: $uri';
+    }
+  } else {
+    throw '未知RouteSettings: $RouteSettings';
+  }
 }
