@@ -45,34 +45,33 @@ class _Screenshot extends StatelessWidget {
   const _Screenshot(this.draft, {super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: () async {
-        final overlay = context.loaderOverlay;
-        try {
-          overlay.show();
-          final data = await ScreenshotController().captureFromWidget(
-              Container(
+  Widget build(BuildContext context) => IconButton(
+        onPressed: () async {
+          final overlay = context.loaderOverlay;
+          try {
+            overlay.show();
+            final data = await ScreenshotController().captureFromWidget(
+                Container(
                   width: 300.0,
                   color: Colors.white,
                   child: PostDraft(
-                      title: draft.title,
-                      name: draft.name,
-                      content: draft.content,
-                      textStyle: const TextStyle(color: Colors.black))),
-              context: context);
+                    title: draft.title,
+                    name: draft.name,
+                    content: draft.content,
+                  ),
+                ),
+                context: context);
 
-          showToast('草稿生成图片成功');
-          Get.back<Uint8List>(result: data);
-        } finally {
-          if (overlay.visible) {
-            overlay.hide();
+            showToast('草稿生成图片成功');
+            Get.back<Uint8List>(result: data);
+          } finally {
+            if (overlay.visible) {
+              overlay.hide();
+            }
           }
-        }
-      },
-      icon: const Icon(Icons.screenshot),
-    );
-  }
+        },
+        icon: const Icon(Icons.screenshot),
+      );
 }
 
 class _DraftList extends StatelessWidget {

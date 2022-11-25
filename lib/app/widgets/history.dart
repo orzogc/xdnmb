@@ -331,22 +331,26 @@ class _HistoryDialog extends StatelessWidget {
 
   final VoidCallback onDelete;
 
+  final int? page;
+
   const _HistoryDialog(
       // ignore: unused_element
       {super.key,
       required this.mainPost,
       this.post,
       this.confirmDelete = true,
-      required this.onDelete});
+      required this.onDelete,
+      this.page});
 
   @override
   Widget build(BuildContext context) {
-    final hasPostId =
-        (post != null && post!.id > 0) || (post == null && mainPost.id > 0);
+    final hasMainPostId = mainPost.id > 0;
+    final hasPostId = post != null && post!.id > 0;
+    final hasPostIdOrMainPostId = hasPostId || (post == null && hasMainPostId);
     final postHistory = post != null ? post! : mainPost;
 
     return SimpleDialog(
-      title: hasPostId ? Text(postHistory.toPostNumber()) : null,
+      title: hasPostIdOrMainPostId ? Text(postHistory.toPostNumber()) : null,
       children: [
         SimpleDialogOption(
           onPressed: () async {
@@ -368,14 +372,20 @@ class _HistoryDialog extends StatelessWidget {
           },
           child: Text('删除', style: Theme.of(context).textTheme.titleMedium),
         ),
-        if (hasPostId) CopyPostId(postHistory.id),
-        if (hasPostId) CopyPostReference(postHistory.id),
+        if (hasMainPostId)
+          SharePost(
+            mainPostId: mainPost.id,
+            page: page,
+            postId: hasPostId ? post!.id : null,
+          ),
+        if (hasPostIdOrMainPostId) CopyPostId(postHistory.id),
+        if (hasPostIdOrMainPostId) CopyPostReference(postHistory.id),
         CopyPostContent(postHistory),
         if (post != null) CopyPostId(mainPost.id, text: '复制主串串号'),
         if (post != null) CopyPostReference(mainPost.id, text: '复制主串串号引用'),
-        if (mainPost.id > 0)
+        if (hasMainPostId)
           NewTab(mainPost, text: post != null ? '在新标签页打开主串' : null),
-        if (mainPost.id > 0)
+        if (hasMainPostId)
           NewTabBackground(mainPost, text: post != null ? '在新标签页后台打开主串' : null),
       ],
     );
@@ -698,6 +708,7 @@ class _ReplyHistoryBody extends StatelessWidget {
                                       : showToast('删除回复记录');
                                   reply.isVisible.value = false;
                                 },
+                                page: reply.item.page,
                               ),
                             ),
                             child: Column(

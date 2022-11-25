@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
@@ -226,11 +226,14 @@ class _ThreadDialog extends StatelessWidget {
 
   final PostBase post;
 
+  final int page;
+
   const _ThreadDialog(
       // ignore: unused_element
       {super.key,
       required this.controller,
-      required this.post});
+      required this.post,
+      required this.page});
 
   @override
   Widget build(BuildContext context) => SimpleDialog(
@@ -245,6 +248,12 @@ class _ThreadDialog extends StatelessWidget {
               child: Text('回复', style: Theme.of(context).textTheme.titleMedium),
             ),
           if (post is! Tip) Report(post.id),
+          if (post is! Tip && controller.post != null)
+            SharePost(
+              mainPostId: controller.post!.id,
+              page: page,
+              postId: post.id,
+            ),
           if (post is! Tip && !post.isAdmin)
             BlockPost(
               postId: post.id,
@@ -317,6 +326,14 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
               ),
             ),
             child: const Text('举报'),
+          ),
+          PopupMenuItem(
+            onTap: () async {
+              await Clipboard.setData(
+                  ClipboardData(text: Urls.threadUrl(mainPostId: postId)));
+              showToast('已复制串 ${postId.toPostNumber()} 链接');
+            },
+            child: const Text('分享'),
           ),
           if (controller.isThread && !isBlockedPost && !isBlockedUser)
             PopupMenuItem(
@@ -630,8 +647,11 @@ class _ThreadBodyState extends State<ThreadBody> {
       onPostIdTap:
           post is! Tip ? (postId) => _replyPost(controller, postId) : null,
       onTap: (post) {},
-      onLongPress: (post) =>
-          postListDialog(_ThreadDialog(controller: controller, post: post)),
+      onLongPress: (post) => postListDialog(_ThreadDialog(
+        controller: controller,
+        post: post,
+        page: postWithPage.page,
+      )),
       mouseCursor: SystemMouseCursors.basic,
       hoverColor:
           Get.isDarkMode ? theme.cardColor : theme.scaffoldBackgroundColor,

@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/forum.dart';
 import '../routes/routes.dart';
@@ -36,6 +37,39 @@ abstract class Urls {
 
   static const String appX64Apk =
       'https://nmb.ovear.info/orzogc/xdnmb-latest-x86_64.apk';
+
+  static String? forumUrl(
+      {required int forumId, bool isTimeline = false, int? page}) {
+    if (isTimeline) {
+      return Uri.https(
+              XdnmbUrls.xdnmbHost,
+              page != null
+                  ? '/Forum/timeline/id/$forumId/page/$page.html'
+                  : '/Forum/timeline/id/$forumId')
+          .toString();
+    }
+
+    final forumName = ForumListService.to.forum(forumId)?.name;
+    if (forumName == null) {
+      return null;
+    }
+
+    return Uri.https(XdnmbUrls.xdnmbHost, '/f/$forumName',
+            page != null ? {'page': '$page'} : null)
+        .toString();
+  }
+
+  static String threadUrl({required int mainPostId, int? page, int? postId}) =>
+      Uri.https(
+              XdnmbUrls.xdnmbHost,
+              '/t/$mainPostId',
+              (page != null || postId != null)
+                  ? {
+                      if (page != null) 'page': '$page',
+                      if (postId != null) 'r': '$postId',
+                    }
+                  : null)
+          .toString();
 }
 
 Future<void> launchURL(String url) async {

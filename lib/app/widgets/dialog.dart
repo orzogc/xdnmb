@@ -486,28 +486,50 @@ class BlockUser extends StatelessWidget {
   const BlockUser({super.key, required this.userHash, this.onBlock});
 
   @override
-  Widget build(BuildContext context) {
-    return SimpleDialogOption(
-      onPressed: () async {
-        final result = await postListDialog<bool>(ConfirmCancelDialog(
-          content: '确定屏蔽饼干 $userHash ？',
-          onConfirm: () => postListBack<bool>(result: true),
-          onCancel: () => postListBack<bool>(result: false),
-        ));
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          final result = await postListDialog<bool>(ConfirmCancelDialog(
+            content: '确定屏蔽饼干 $userHash ？',
+            onConfirm: () => postListBack<bool>(result: true),
+            onCancel: () => postListBack<bool>(result: false),
+          ));
 
-        if (result ?? false) {
-          await BlacklistService.to.blockUser(userHash);
-          if (onBlock != null) {
-            onBlock!();
+          if (result ?? false) {
+            await BlacklistService.to.blockUser(userHash);
+            if (onBlock != null) {
+              onBlock!();
+            }
+
+            showToast('屏蔽饼干 $userHash');
+            postListBack();
           }
+        },
+        child: Text('屏蔽饼干', style: Theme.of(context).textTheme.titleMedium),
+      );
+}
 
-          showToast('屏蔽饼干 $userHash');
+class SharePost extends StatelessWidget {
+  final int mainPostId;
+
+  final int? page;
+
+  final int? postId;
+
+  const SharePost(
+      {super.key, required this.mainPostId, this.page, this.postId});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          await Clipboard.setData(ClipboardData(
+              text: Urls.threadUrl(
+                  mainPostId: mainPostId, page: page, postId: postId)));
+
+          showToast('已复制串 ${mainPostId.toPostNumber()} 链接');
           postListBack();
-        }
-      },
-      child: Text('屏蔽饼干', style: Theme.of(context).textTheme.titleMedium),
-    );
-  }
+        },
+        child: Text('分享', style: Theme.of(context).textTheme.titleMedium),
+      );
 }
 
 class ApplyImageDialog extends StatelessWidget {

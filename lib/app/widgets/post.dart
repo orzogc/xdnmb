@@ -123,7 +123,7 @@ class _PostReplyCount extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-              padding: const EdgeInsets.only(top: 3.0, right: 2.0),
+              padding: const EdgeInsets.only(top: 2.0, right: 2.0),
               child: Icon(
                 Icons.mode_comment_outlined,
                 size: textStyle.fontSize != null

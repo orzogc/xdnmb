@@ -11,7 +11,7 @@ abstract class Regex {
   static const String _postReference3 = r'([0-9]{8,})';
 
   static const String _link =
-      r'(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|www\.[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*)';
+      r'((?:https?:\/\/)*(?:www\.){0,1}nmbxd[0-9]*\.com\/f\/[^ ]{1,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|www\.[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*)';
 
   static const String _postId = r'(^[0-9]+$)';
 

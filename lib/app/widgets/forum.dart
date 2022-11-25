@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
@@ -22,6 +23,7 @@ import '../utils/notify.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
+import '../utils/url.dart';
 import 'backdrop.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
@@ -104,24 +106,48 @@ class ForumAppBarPopupMenuButton extends StatelessWidget {
   const ForumAppBarPopupMenuButton(this.controller, {super.key});
 
   @override
-  Widget build(BuildContext context) => PopupMenuButton(
-        itemBuilder: (context) => [
+  Widget build(BuildContext context) {
+    final forumId = controller.id;
+
+    return PopupMenuButton(
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          onTap: () => showNoticeDialog(isAutoUpdate: true),
+          child: const Text('公告'),
+        ),
+        PopupMenuItem(
+            onTap: () => postListDialog(const Center(
+                child: ReferenceCard(postId: 50000001, poUserHash: 'Admin'))),
+            child: const Text('岛规')),
+        if (controller.isForum)
           PopupMenuItem(
-            onTap: () => showNoticeDialog(isAutoUpdate: true),
-            child: const Text('公告'),
+            onTap: () => showForumRuleDialog(forumId),
+            child: const Text('版规'),
           ),
-          PopupMenuItem(
-              onTap: () => postListDialog(const Center(
-                  child: ReferenceCard(postId: 50000001, poUserHash: 'Admin'))),
-              child: const Text('岛规')),
-          if (controller.isForum)
-            PopupMenuItem(
-              onTap: () => showForumRuleDialog(controller.id),
-              child: const Text('版规'),
-            ),
-          const PopupMenuItem(onTap: bottomSheet, child: Text('发串')),
-        ],
-      );
+        const PopupMenuItem(onTap: bottomSheet, child: Text('发串')),
+        PopupMenuItem(
+          onTap: () async {
+            final url = Urls.forumUrl(
+                forumId: forumId, isTimeline: controller.isTimeline);
+            if (url != null) {
+              final forumName = ForumListService.to
+                  .forumName(forumId, isTimeline: controller.isTimeline);
+              if (forumName != null) {
+                final name = htmlToPlainText(context, forumName);
+                await Clipboard.setData(ClipboardData(text: url));
+                showToast('已复制版块 $name 链接');
+              } else {
+                showToast('未知版块：$forumId');
+              }
+            } else {
+              showToast('未知版块：$forumId');
+            }
+          },
+          child: const Text('分享'),
+        ),
+      ],
+    );
+  }
 }
 
 class _AddFeed extends StatelessWidget {
@@ -204,6 +230,7 @@ class _ForumDialog extends StatelessWidget {
         children: [
           _AddFeed(post.id),
           Report(post.id),
+          SharePost(mainPostId: post.id),
           if (controller.isTimeline && post.forumId != null)
             _BlockForum(controller: controller, forumId: post.forumId!),
           if (!post.isAdmin) BlockPost(postId: post.id),

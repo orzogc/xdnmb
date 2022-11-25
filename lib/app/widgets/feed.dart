@@ -72,6 +72,8 @@ class _FeedDialog extends StatelessWidget {
   Widget build(BuildContext context) => SimpleDialog(
         title: Text(post.toPostNumber()),
         children: [
+          Report(post.id),
+          SharePost(mainPostId: post.id),
           SimpleDialogOption(
             onPressed: () async {
               postListBack();

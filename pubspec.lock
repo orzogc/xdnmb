@@ -491,7 +491,7 @@ packages:
       name: frontend_server_client
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.1.0"
+    version: "3.2.0"
   get:
     dependency: "direct main"
     description:
@@ -1213,7 +1213,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "9d896028ff30adb3f22d91550e20d4a1da8e34d8"
+      resolved-ref: b15ca957a21afc722f3b7bb72f83f440112025c7
       url: "https://github.com/orzogc/xdnmb_api.git"
     source: git
     version: "0.1.0"
