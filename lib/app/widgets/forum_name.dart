@@ -6,6 +6,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 import '../data/models/forum.dart';
 import '../data/services/forum.dart';
 import '../utils/notify.dart';
+import '../utils/text.dart';
 import '../utils/theme.dart';
 import 'dialog.dart';
 
@@ -42,16 +43,14 @@ class ForumNameText extends StatelessWidget {
           maxLines: maxLines,
           overflow:
               maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip,
-          strutStyle:
-              textStyle != null ? StrutStyle.fromTextStyle(textStyle!) : null,
+          strutStyle: strutStyleFromHeight(textStyle),
         )
       : RichText(
           text: htmlToTextSpan(context, forumName, textStyle: textStyle),
           maxLines: maxLines,
           overflow:
               maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip,
-          strutStyle:
-              textStyle != null ? StrutStyle.fromTextStyle(textStyle!) : null,
+          strutStyle: strutStyleFromHeight(textStyle),
         );
 }
 

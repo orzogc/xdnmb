@@ -19,7 +19,7 @@ class UISettingsView extends StatelessWidget {
                 onTap: AppRoutes.toBackdropUISettings,
               ),
               ListTile(
-                title: Text('串界面设置'),
+                title: Text('串字体设置'),
                 onTap: AppRoutes.toPostUISettings,
               ),
             ],

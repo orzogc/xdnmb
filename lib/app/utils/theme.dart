@@ -39,7 +39,7 @@ abstract class AppTheme {
         onPrimary: Colors.white,
         onSurface: Colors.black,
         onSecondary: Colors.white),
-    fontFamily: SettingsService.isFixMissingFont ? 'Noto Sans' : null,
+    fontFamily: SettingsService.isFixMissingFont ? 'Go Noto CJKCore' : null,
     appBarTheme: AppBarTheme(backgroundColor: primaryColorLight),
     progressIndicatorTheme:
         ProgressIndicatorThemeData(color: primaryColorLight),
@@ -100,7 +100,7 @@ abstract class AppTheme {
         onPrimary: colorDark,
         onSurface: colorDark,
         onSecondary: colorDark),
-    fontFamily: SettingsService.isFixMissingFont ? 'Noto Sans' : null,
+    fontFamily: SettingsService.isFixMissingFont ? 'Go Noto CJKCore' : null,
     appBarTheme: AppBarTheme(backgroundColor: primaryColorDark),
     progressIndicatorTheme: ProgressIndicatorThemeData(color: primaryColorDark),
     textButtonTheme: TextButtonThemeData(

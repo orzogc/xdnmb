@@ -228,9 +228,7 @@ class _ContentState extends State<Content> {
       maxLines: widget.maxLines,
       overflow:
           widget.maxLines == null ? TextOverflow.clip : TextOverflow.ellipsis,
-      strutStyle: widget.textStyle != null
-          ? StrutStyle.fromTextStyle(widget.textStyle!)
-          : null,
+      strutStyle: strutStyleFromHeight(widget.textStyle),
     );
 
     return ValueListenableBuilder<Box>(

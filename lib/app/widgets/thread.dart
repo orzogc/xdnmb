@@ -251,6 +251,7 @@ class _ThreadDialog extends StatelessWidget {
           if (post is! Tip && controller.post != null)
             SharePost(
               mainPostId: controller.post!.id,
+              isOnlyPo: controller.isOnlyPoThread,
               page: page,
               postId: post.id,
             ),
@@ -329,8 +330,10 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
           ),
           PopupMenuItem(
             onTap: () async {
-              await Clipboard.setData(
-                  ClipboardData(text: Urls.threadUrl(mainPostId: postId)));
+              await Clipboard.setData(ClipboardData(
+                  text: Urls.threadUrl(
+                      mainPostId: postId,
+                      isOnlyPo: controller.isOnlyPoThread)));
               showToast('已复制串 ${postId.toPostNumber()} 链接');
             },
             child: const Text('分享'),
@@ -473,15 +476,26 @@ class _ThreadBodyState extends State<ThreadBody> {
   }
 
   void _saveHistoryAndJumpToIndex(Thread thread, int firstPage, int page) {
-    final history = PostHistoryService.to;
-    final controller = widget.controller;
-    final jumpToId = controller.jumpToId;
-    final isOnlyPoThread = controller.isOnlyPoThread;
-
     if (page == firstPage) {
+      final history = PostHistoryService.to;
+      final controller = widget.controller;
+      final jumpToId = controller.jumpToId;
+      final isOnlyPoThread = controller.isOnlyPoThread;
+
       if (page == 1 || thread.replies.isNotEmpty) {
         final Post firstPost =
             page == 1 ? thread.mainPost : thread.replies.first;
+
+        void updateHistory() {
+          if (_history != null) {
+            _history!.update(
+                mainPost: thread.mainPost,
+                browsePage: page,
+                browsePostId: firstPost.id,
+                isOnlyPo: isOnlyPoThread);
+            history.saveBrowseHistory(_history!);
+          }
+        }
 
         if (_history == null) {
           _history = BrowseHistory.fromPost(
@@ -500,6 +514,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                 .map((post) => post.id);
             final id = index.getPostIdFromPostIndex();
             if (postIds.contains(id)) {
+              // 存在目标ID时
               WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                 Future.delayed(const Duration(milliseconds: 50), () async {
                   try {
@@ -520,12 +535,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                           });
                         }
                       } else {
-                        _history!.update(
-                            mainPost: thread.mainPost,
-                            browsePage: page,
-                            browsePostId: firstPost.id,
-                            isOnlyPo: isOnlyPoThread);
-                        history.saveBrowseHistory(_history!);
+                        updateHistory();
                       }
                     }
                   } catch (e) {
@@ -541,31 +551,16 @@ class _ThreadBodyState extends State<ThreadBody> {
                   },
                 );
               });
-            } else if (page == 1 && thread.mainPost.id == id) {
-              _history!.update(
-                  mainPost: thread.mainPost,
-                  browsePage: page,
-                  browsePostId: thread.mainPost.id,
-                  isOnlyPo: isOnlyPoThread);
-              history.saveBrowseHistory(_history!);
-              _isToJump.value = false;
             } else {
+              updateHistory();
               _isToJump.value = false;
             }
           } else {
+            updateHistory();
             _isToJump.value = false;
           }
         } else {
-          if (!_isNoMoreItems) {
-            _history!.update(
-                mainPost: thread.mainPost,
-                browsePage: page,
-                browsePostId: firstPost.id,
-                isOnlyPo: isOnlyPoThread);
-            history.saveBrowseHistory(_history!);
-          }
-
-          _isToJump.value = false;
+          updateHistory();
         }
       } else {
         _isToJump.value = false;

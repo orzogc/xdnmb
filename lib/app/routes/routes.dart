@@ -300,7 +300,6 @@ Route? backdropOnGenerateRoute(RouteSettings settings) {
         return GetPageRoute(
             settings: settings,
             routeName: AppRoutes.image,
-            binding: ImageBinding(),
             page: () => ImageView(),
             transition: Transition.fadeIn,
             opaque: false);
@@ -334,8 +333,8 @@ Route? backdropOnGenerateRoute(RouteSettings settings) {
         return GetPageRoute(
             settings: settings,
             routeName: AppRoutes.postUISettingsPath,
-            binding: PostUISettingsBinding(),
-            page: () => const PostUISettingsView(),
+            binding: PostFontSettingsBinding(),
+            page: () => const PostFontSettingsView(),
             transition: Transition.rightToLeft);
       case AppRoutes.reorderForums:
         return _SwipeablePageRoute(

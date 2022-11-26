@@ -83,7 +83,6 @@ abstract class AppPages {
   /// 图片浏览页面
   static final GetPage _image = GetPage(
       name: AppRoutes.image,
-      binding: ImageBinding(),
       page: () => ImageView(),
       transition: Transition.fadeIn,
       opaque: false);
@@ -139,8 +138,8 @@ abstract class AppPages {
 
   static final GetPage _postUISettings = GetPage(
       name: AppRoutes.postUISettings,
-      binding: PostUISettingsBinding(),
-      page: () => const PostUISettingsView(),
+      binding: PostFontSettingsBinding(),
+      page: () => const PostFontSettingsView(),
       transition: Transition.rightToLeft);
 
   /// 版块排序页面

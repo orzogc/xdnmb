@@ -104,3 +104,6 @@ double getLineHeight(BuildContext context, String text, TextStyle? style) {
 
   return textPainter.preferredLineHeight;
 }
+
+StrutStyle? strutStyleFromHeight(TextStyle? textStyle) =>
+    textStyle?.height != null ? StrutStyle(height: textStyle!.height) : null;

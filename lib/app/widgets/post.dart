@@ -7,6 +7,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/settings.dart';
 import '../utils/extensions.dart';
+import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/time.dart';
 import 'content.dart';
@@ -47,7 +48,7 @@ class _PostUser extends StatelessWidget {
       context,
       userHash,
       textStyle: style,
-      strutStyle: StrutStyle.fromTextStyle(style),
+      strutStyle: strutStyleFromHeight(style),
     );
   }
 }
@@ -170,7 +171,7 @@ class _PostTitle extends StatelessWidget {
           ),
         ),
       ),
-      strutStyle: StrutStyle.fromTextStyle(spanTextStyle),
+      strutStyle: strutStyleFromHeight(spanTextStyle),
     );
   }
 }
@@ -205,7 +206,7 @@ class _PostName extends StatelessWidget {
           ),
         ),
       ),
-      strutStyle: StrutStyle.fromTextStyle(spanTextStyle),
+      strutStyle: strutStyleFromHeight(spanTextStyle),
     );
   }
 }
@@ -221,6 +222,8 @@ class _PostSage extends StatelessWidget {
     final fontSize = textStyle.fontSize;
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.ideographic,
       children: [
         Flexible(
             child: Text('本串已经被SAGE', style: textStyle.merge(AppTheme.boldRed))),

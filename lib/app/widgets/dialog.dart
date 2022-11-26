@@ -511,19 +511,28 @@ class BlockUser extends StatelessWidget {
 class SharePost extends StatelessWidget {
   final int mainPostId;
 
+  final bool isOnlyPo;
+
   final int? page;
 
   final int? postId;
 
   const SharePost(
-      {super.key, required this.mainPostId, this.page, this.postId});
+      {super.key,
+      required this.mainPostId,
+      this.isOnlyPo = false,
+      this.page,
+      this.postId});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () async {
           await Clipboard.setData(ClipboardData(
               text: Urls.threadUrl(
-                  mainPostId: mainPostId, page: page, postId: postId)));
+                  mainPostId: mainPostId,
+                  isOnlyPo: isOnlyPo,
+                  page: page,
+                  postId: postId)));
 
           showToast('已复制串 ${mainPostId.toPostNumber()} 链接');
           postListBack();

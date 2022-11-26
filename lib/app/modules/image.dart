@@ -892,7 +892,7 @@ class _ImageState extends State<_Image>
   }
 }
 
-class ImageController extends GetxController {
+class ImageController {
   final UniqueKey tag;
 
   final Rxn<PostBase> post;
@@ -924,21 +924,18 @@ class ImageController extends GetxController {
         imageData = Rxn(imageData);
 }
 
-class ImageBinding implements Bindings {
-  @override
-  void dependencies() {
-    Get.put(Get.arguments as ImageController);
-  }
-}
+class ImageView extends StatelessWidget {
+  final ImageController _controller = Get.arguments;
 
-class ImageView extends GetView<ImageController> {
   final GlobalKey<_ImageState> _imageKey = GlobalKey();
 
-  final RxDouble opacity = 1.0.obs;
+  final RxDouble _opacity = 1.0.obs;
+
+  ImageView({super.key});
 
   Future<Uint8List?> _loadImage() async {
     if (_imageKey.currentState != null) {
-      final post = controller.post.value;
+      final post = _controller.post.value;
 
       if (post != null) {
         final manager = XdnmbImageCacheManager();
@@ -954,7 +951,7 @@ class ImageView extends GetView<ImageController> {
           showToast('读取缓存图片数据失败：$e');
         }
       } else {
-        return controller.imageData.value!;
+        return _controller.imageData.value!;
       }
     }
 
@@ -966,9 +963,9 @@ class ImageView extends GetView<ImageController> {
     if (data != null) {
       final result = await AppRoutes.toPaint(PaintController(data));
       if (result is Uint8List) {
-        controller.post.value = null;
-        controller.imageData.value = result;
-        controller._isPainted = true;
+        _controller.post.value = null;
+        _controller.imageData.value = result;
+        _controller._isPainted = true;
       }
     }
   }
@@ -976,7 +973,7 @@ class ImageView extends GetView<ImageController> {
   Future<void> _saveImage() async {
     if (_imageKey.currentState != null) {
       final savePath = ImageService.savePath;
-      final post = controller.post.value;
+      final post = _controller.post.value;
 
       try {
         if (post != null) {
@@ -1021,7 +1018,7 @@ class ImageView extends GetView<ImageController> {
             showToast('读取缓存图片数据失败');
           }
         } else {
-          saveImageData(controller.imageData.value!);
+          saveImageData(_controller.imageData.value!);
         }
       } catch (e) {
         showToast('保存图片失败：$e');
@@ -1032,38 +1029,36 @@ class ImageView extends GetView<ImageController> {
   }
 
   void _toggleOverlay() {
-    controller._topOverlay?._toggle();
-    controller._bottomOverlay?._toggle();
-    controller._isShowOverlay = !controller._isShowOverlay;
+    _controller._topOverlay?._toggle();
+    _controller._bottomOverlay?._toggle();
+    _controller._isShowOverlay = !_controller._isShowOverlay;
   }
 
   void _hideOverlay() {
-    if (controller._isShowOverlay) {
-      controller._topOverlay?._toggle();
-      controller._bottomOverlay?._toggle();
-      controller._isShowOverlay = false;
+    if (_controller._isShowOverlay) {
+      _controller._topOverlay?._toggle();
+      _controller._bottomOverlay?._toggle();
+      _controller._isShowOverlay = false;
     }
   }
 
-  void _setOpacity(double value) => opacity.value = value.clamp(0.0, 1.0);
-
-  ImageView({super.key});
+  void _setOpacity(double value) => _opacity.value = value.clamp(0.0, 1.0);
 
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    final isLoaded = (controller.imageData.value != null).obs;
+    final isLoaded = (_controller.imageData.value != null).obs;
 
     return WillPopScope(
       onWillPop: () async {
-        if (controller._isPainted && controller.imageData.value != null) {
+        if (_controller._isPainted && _controller.imageData.value != null) {
           final result = await Get.dialog(ApplyImageDialog(
-            onApply: controller.canReturnImageData
-                ? () => Get.back(result: controller.imageData.value)
+            onApply: _controller.canReturnImageData
+                ? () => Get.back(result: _controller.imageData.value)
                 : null,
-            onSave: !controller.canReturnImageData
+            onSave: !_controller.canReturnImageData
                 ? () async {
-                    await saveImageData(controller.imageData.value!);
+                    await saveImageData(_controller.imageData.value!);
                     Get.back(result: true);
                   }
                 : null,
@@ -1092,46 +1087,47 @@ class ImageView extends GetView<ImageController> {
               constraints.maxWidth, constraints.maxHeight - media.padding.top);
 
           return Obx(() {
-            controller._isShowOverlay = false;
+            _controller._isShowOverlay = false;
 
-            if (controller.post.value != null) {
-              controller._topOverlay = _TopOverlay(
-                  post: controller.post.value!,
-                  poUserHash: controller.poUserHash);
+            if (_controller.post.value != null) {
+              _controller._topOverlay = _TopOverlay(
+                  post: _controller.post.value!,
+                  poUserHash: _controller.poUserHash);
             } else {
-              controller._topOverlay = null;
+              _controller._topOverlay = null;
             }
 
-            controller._bottomOverlay = _BottomOverlay(
+            _controller._bottomOverlay = _BottomOverlay(
                 imageKey: _imageKey,
-                imageData: controller.imageData.value,
-                isPainted: controller._isPainted,
-                canReturnImageData: controller.canReturnImageData,
+                imageData: _controller.imageData.value,
+                isPainted: _controller._isPainted,
+                canReturnImageData: _controller.canReturnImageData,
                 hideOverlay: _hideOverlay,
                 paint: _paint,
                 saveImage: _saveImage,
                 size: size);
 
-            final CachedNetworkImage? thumbImage = controller.post.value != null
-                ? CachedNetworkImage(
-                    imageUrl: controller.post.value!.thumbImageUrl()!,
-                    cacheManager: XdnmbImageCacheManager(),
-                    errorWidget: (context, url, error) =>
-                        loadingImageErrorBuilder(context, url, error,
-                            showError: false),
-                    imageBuilder: (context, imageProvider) =>
-                        _Image<CachedNetworkImageProvider>(
-                      tag: controller.tag,
-                      provider: imageProvider as CachedNetworkImageProvider,
-                      setOpacity: _setOpacity,
-                      hideOverlay: _hideOverlay,
-                      size: size,
-                    ),
-                  )
-                : null;
+            final CachedNetworkImage? thumbImage =
+                _controller.post.value != null
+                    ? CachedNetworkImage(
+                        imageUrl: _controller.post.value!.thumbImageUrl()!,
+                        cacheManager: XdnmbImageCacheManager(),
+                        errorWidget: (context, url, error) =>
+                            loadingImageErrorBuilder(context, url, error,
+                                showError: false),
+                        imageBuilder: (context, imageProvider) =>
+                            _Image<CachedNetworkImageProvider>(
+                          tag: _controller.tag,
+                          provider: imageProvider as CachedNetworkImageProvider,
+                          setOpacity: _setOpacity,
+                          hideOverlay: _hideOverlay,
+                          size: size,
+                        ),
+                      )
+                    : null;
 
             return Scaffold(
-              backgroundColor: Colors.black.withOpacity(opacity.value),
+              backgroundColor: Colors.black.withOpacity(_opacity.value),
               body: Stack(
                 children: [
                   Padding(
@@ -1143,10 +1139,10 @@ class ImageView extends GetView<ImageController> {
                         _hideOverlay();
                         Get.maybePop();
                       },
-                      child: (controller.post.value != null &&
+                      child: (_controller.post.value != null &&
                               thumbImage != null)
                           ? CachedNetworkImage(
-                              imageUrl: controller.post.value!.imageUrl()!,
+                              imageUrl: _controller.post.value!.imageUrl()!,
                               cacheManager: XdnmbImageCacheManager(),
                               progressIndicatorBuilder:
                                   (context, url, progress) => Stack(
@@ -1185,7 +1181,7 @@ class ImageView extends GetView<ImageController> {
 
                                 return _Image<CachedNetworkImageProvider>(
                                   key: _imageKey,
-                                  tag: controller.tag,
+                                  tag: _controller.tag,
                                   provider: imageProvider
                                       as CachedNetworkImageProvider,
                                   setOpacity: _setOpacity,
@@ -1197,12 +1193,12 @@ class ImageView extends GetView<ImageController> {
                                 );
                               },
                             )
-                          : (controller.imageData.value != null
+                          : (_controller.imageData.value != null
                               ? _Image<MemoryImage>(
                                   key: _imageKey,
-                                  tag: controller.tag,
+                                  tag: _controller.tag,
                                   provider:
-                                      MemoryImage(controller.imageData.value!),
+                                      MemoryImage(_controller.imageData.value!),
                                   setOpacity: _setOpacity,
                                   hideOverlay: _hideOverlay,
                                   canShowDialog: true,
@@ -1213,11 +1209,11 @@ class ImageView extends GetView<ImageController> {
                               : const SizedBox.shrink()),
                     ),
                   ),
-                  if (controller.post.value != null &&
-                      controller._topOverlay != null)
-                    controller._topOverlay!,
-                  if (controller._bottomOverlay != null)
-                    controller._bottomOverlay!,
+                  if (_controller.post.value != null &&
+                      _controller._topOverlay != null)
+                    _controller._topOverlay!,
+                  if (_controller._bottomOverlay != null)
+                    _controller._bottomOverlay!,
                 ],
               ),
             );

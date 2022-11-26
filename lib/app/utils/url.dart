@@ -59,17 +59,29 @@ abstract class Urls {
         .toString();
   }
 
-  static String threadUrl({required int mainPostId, int? page, int? postId}) =>
-      Uri.https(
-              XdnmbUrls.xdnmbHost,
-              '/t/$mainPostId',
-              (page != null || postId != null)
-                  ? {
-                      if (page != null) 'page': '$page',
-                      if (postId != null) 'r': '$postId',
-                    }
-                  : null)
-          .toString();
+  static String threadUrl(
+          {required int mainPostId,
+          bool isOnlyPo = false,
+          int? page,
+          int? postId}) =>
+      isOnlyPo
+          ? Uri.https(
+                  XdnmbUrls.xdnmbHost,
+                  page != null
+                      ? '/Forum/po/id/$mainPostId/page/$page.html'
+                      : '/Forum/po/id/$mainPostId.html',
+                  postId != null ? {'r': '$postId'} : null)
+              .toString()
+          : Uri.https(
+                  XdnmbUrls.xdnmbHost,
+                  '/t/$mainPostId',
+                  (page != null || postId != null)
+                      ? {
+                          if (page != null) 'page': '$page',
+                          if (postId != null) 'r': '$postId',
+                        }
+                      : null)
+              .toString();
 }
 
 Future<void> launchURL(String url) async {
@@ -187,6 +199,12 @@ int? _getPage(Map<String, String> parameters) {
   return page != null ? max(page, 1) : null;
 }
 
+int? _getPostId(Map<String, String> parameters) {
+  final postId = parameters['r'].tryParseInt();
+
+  return postId != null ? max(postId, 1) : null;
+}
+
 void _parseXdnmbWeb(
     String url, List<String> paths, Map<String, String> queries) {
   if (paths.length >= 2) {
@@ -212,13 +230,15 @@ void _parseXdnmbWeb(
         break;
       case 't':
       case 'T':
-        final postId = Regex.getXdnmbParameter(paths[1]).tryParseInt();
-        if (postId != null) {
+        final mainPostId = Regex.getXdnmbParameter(paths[1]).tryParseInt();
+        if (mainPostId != null) {
           final page = _getPage(parameters);
+          final postId = _getPostId(parameters);
           AppRoutes.toThread(
-              mainPostId: postId,
+              mainPostId: mainPostId,
               page: page ?? 1,
-              cancelAutoJump: page != null);
+              cancelAutoJump: page != null && postId == null,
+              jumpToId: postId);
         } else {
           debugPrint('未知的链接：$url');
         }
@@ -259,11 +279,15 @@ void _parseXdnmbForum(
         break;
       case 'thread':
       case 'thread.html':
-        final id = _getId(parameters);
-        if (id != null && id > 0) {
+        final mainPostId = _getId(parameters);
+        if (mainPostId != null && mainPostId > 0) {
           final page = _getPage(parameters);
+          final postId = _getPostId(parameters);
           AppRoutes.toThread(
-              mainPostId: id, page: page ?? 1, cancelAutoJump: page != null);
+              mainPostId: mainPostId,
+              page: page ?? 1,
+              cancelAutoJump: page != null && postId == null,
+              jumpToId: postId);
         } else {
           debugPrint('未知的链接：$url');
         }
@@ -271,11 +295,15 @@ void _parseXdnmbForum(
         break;
       case 'po':
       case 'po.html':
-        final id = _getId(parameters);
-        if (id != null && id > 0) {
+        final mainPostId = _getId(parameters);
+        if (mainPostId != null && mainPostId > 0) {
           final page = _getPage(parameters);
+          final postId = _getPostId(parameters);
           AppRoutes.toOnlyPoThread(
-              mainPostId: id, page: page ?? 1, cancelAutoJump: page != null);
+              mainPostId: mainPostId,
+              page: page ?? 1,
+              cancelAutoJump: page != null && postId == null,
+              jumpToId: postId);
         } else {
           debugPrint('未知的链接：$url');
         }
