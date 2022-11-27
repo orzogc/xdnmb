@@ -218,7 +218,7 @@ class PostListControllerData extends HiveObject {
   final PostBaseData? post;
 
   @HiveField(4)
-  final int? bottomBarIndex;
+  final int? pageIndex;
 
   @HiveField(5)
   final List<DateTimeRange?>? dateRange;
@@ -228,7 +228,7 @@ class PostListControllerData extends HiveObject {
       this.id,
       this.page = 1,
       this.post,
-      this.bottomBarIndex,
+      this.pageIndex,
       this.dateRange});
 
   factory PostListControllerData.fromController(PostListController controller) {
@@ -255,7 +255,7 @@ class PostListControllerData extends HiveObject {
         return PostListControllerData(
             postListType: (controller as HistoryController).postListType,
             page: controller.page,
-            bottomBarIndex: controller.bottomBarIndex,
+            pageIndex: controller.pageIndex,
             dateRange: controller.dateRange);
     }
   }
@@ -274,7 +274,7 @@ class PostListControllerData extends HiveObject {
         return FeedController(page);
       case PostListType.history:
         return HistoryController(
-            page: page, bottomBarIndex: bottomBarIndex!, dateRange: dateRange!);
+            page: page, pageIndex: pageIndex!, dateRange: dateRange!);
     }
   }
 }

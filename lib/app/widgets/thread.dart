@@ -450,7 +450,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   int _maxPage = 1;
 
-  late final StreamSubscription<int> _pageSubscription;
+  late StreamSubscription<int> _pageSubscription;
 
   Future<void> _saveBrowseHistory() async {
     if (!_isSavingBrowseHistory) {
@@ -613,6 +613,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     return posts;
   }
 
+  // TODO: 修正字体大小
   Widget _itemBuilder(BuildContext context, PostWithPage postWithPage) {
     final post = postWithPage.post;
 
@@ -762,6 +763,8 @@ class _ThreadBodyState extends State<ThreadBody> {
     _isNoMoreItems = false;
   }
 
+  void _trySave(int page) => widget.controller.trySave();
+
   @override
   void initState() {
     super.initState();
@@ -776,8 +779,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     );
 
     widget.controller.addListener(_addRefresh);
-    _pageSubscription =
-        widget.controller.listenPage((page) => widget.controller.trySave());
+    _pageSubscription = widget.controller.listenPage(_trySave);
 
     final replyCount = widget.controller.post?.replyCount;
     if (replyCount != null) {
@@ -790,8 +792,11 @@ class _ThreadBodyState extends State<ThreadBody> {
     super.didUpdateWidget(oldWidget);
 
     if (widget.controller != oldWidget.controller) {
+      oldWidget.controller.removeListener(_cancelJump);
       oldWidget.controller.removeListener(_addRefresh);
       widget.controller.addListener(_addRefresh);
+      _pageSubscription.cancel();
+      _pageSubscription = widget.controller.listenPage(_trySave);
     }
   }
 

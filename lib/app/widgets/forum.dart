@@ -254,7 +254,7 @@ class ForumBody extends StatefulWidget {
 }
 
 class _ForumBodyState extends State<ForumBody> {
-  late final StreamSubscription<int> _pageSubscription;
+  late StreamSubscription<int> _pageSubscription;
 
   void _showGuide() {
     final settings = SettingsService.to;
@@ -284,12 +284,23 @@ class _ForumBodyState extends State<ForumBody> {
     }
   }
 
+  void _trySave(int page) => widget.controller.trySave();
+
   @override
   void initState() {
     super.initState();
 
-    _pageSubscription =
-        widget.controller.listenPage((page) => widget.controller.trySave());
+    _pageSubscription = widget.controller.listenPage(_trySave);
+  }
+
+  @override
+  void didUpdateWidget(covariant ForumBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.controller != oldWidget.controller) {
+      _pageSubscription.cancel();
+      _pageSubscription = widget.controller.listenPage(_trySave);
+    }
   }
 
   @override

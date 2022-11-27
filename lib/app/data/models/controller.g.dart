@@ -86,7 +86,7 @@ class PostListControllerDataAdapter
       id: fields[1] as int?,
       page: fields[2] as int,
       post: fields[3] as PostBaseData?,
-      bottomBarIndex: fields[4] as int?,
+      pageIndex: fields[4] as int?,
       dateRange: (fields[5] as List?)?.cast<DateTimeRange?>(),
     );
   }
@@ -104,7 +104,7 @@ class PostListControllerDataAdapter
       ..writeByte(3)
       ..write(obj.post)
       ..writeByte(4)
-      ..write(obj.bottomBarIndex)
+      ..write(obj.pageIndex)
       ..writeByte(5)
       ..write(obj.dateRange);
   }

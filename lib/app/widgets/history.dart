@@ -69,8 +69,8 @@ class HistoryBottomBarKey {
   const HistoryBottomBarKey(this.index, this.range);
 
   HistoryBottomBarKey.fromController(HistoryController controller)
-      : assert(controller.bottomBarIndex < 3),
-        index = controller.bottomBarIndex,
+      : assert(controller.pageIndex < 3),
+        index = controller.pageIndex,
         range = controller._getDateRange();
 
   @override
@@ -85,7 +85,7 @@ class HistoryBottomBarKey {
 }
 
 class HistoryController extends PostListController {
-  final RxInt _bottomBarIndex;
+  final RxInt _pageIndex;
 
   final Rx<List<DateTimeRange?>> _dateRange;
 
@@ -95,7 +95,7 @@ class HistoryController extends PostListController {
     ListenableNotifier(),
   ];
 
-  final PageController _controller;
+  final PageController _pageController;
 
   @override
   PostListType get postListType => PostListType.history;
@@ -103,50 +103,48 @@ class HistoryController extends PostListController {
   @override
   int? get id => null;
 
-  int get bottomBarIndex => _bottomBarIndex.value;
+  int get pageIndex => _pageIndex.value;
 
-  set bottomBarIndex(int index) => _bottomBarIndex.value = index;
+  set pageIndex(int index) => _pageIndex.value = index;
 
   List<DateTimeRange?> get dateRange => _dateRange.value;
 
   set dateRange(List<DateTimeRange?> range) => _dateRange.value = range;
 
   HistoryController(
-      {required int page,
-      int bottomBarIndex = 0,
-      List<DateTimeRange?>? dateRange})
-      : assert(bottomBarIndex >= 0 && bottomBarIndex <= 2),
-        _bottomBarIndex = bottomBarIndex.obs,
+      {required int page, int pageIndex = 0, List<DateTimeRange?>? dateRange})
+      : assert(pageIndex >= 0 && pageIndex <= 2),
+        _pageIndex = pageIndex.obs,
         _dateRange = Rx(dateRange ?? List.filled(3, null)),
-        _controller = PageController(initialPage: bottomBarIndex),
+        _pageController = PageController(initialPage: pageIndex),
         super(page);
 
   ListenableNotifier _getNotifier([int? index]) {
     assert(index == null || index < 3);
 
-    return _notifiers[index ?? bottomBarIndex];
+    return _notifiers[index ?? pageIndex];
   }
 
   void _notify([int? index]) {
     _getNotifier(index).notify();
-    _bottomBarIndex.refresh();
+    _pageIndex.refresh();
   }
 
   void _trigger([int? index]) {
     _getNotifier(index).trigger();
-    _bottomBarIndex.refresh();
+    _pageIndex.refresh();
   }
 
   DateTimeRange? _getDateRange([int? index]) {
     assert(index == null || index < 3);
 
-    return dateRange[index ?? bottomBarIndex];
+    return dateRange[index ?? pageIndex];
   }
 
   void _setDateRange(DateTimeRange? range, [int? index]) {
     assert(index == null || index < 3);
 
-    dateRange[index ?? bottomBarIndex] = range;
+    dateRange[index ?? pageIndex] = range;
     _notify(index);
   }
 
@@ -155,7 +153,7 @@ class HistoryController extends PostListController {
     for (final notifier in _notifiers) {
       notifier.dispose();
     }
-    _controller.dispose();
+    _pageController.dispose();
 
     super.dispose();
   }
@@ -164,7 +162,7 @@ class HistoryController extends PostListController {
 HistoryController historyController(Map<String, String?> parameters) =>
     HistoryController(
         page: parameters['page'].tryParseInt() ?? 1,
-        bottomBarIndex: parameters['index'].tryParseInt() ?? 0);
+        pageIndex: parameters['index'].tryParseInt() ?? 0);
 
 class HistoryAppBarTitle extends StatelessWidget {
   final HistoryController controller;
@@ -178,7 +176,7 @@ class HistoryAppBarTitle extends StatelessWidget {
     return FutureBuilder<int?>(
       future: Future(
         () {
-          switch (controller.bottomBarIndex) {
+          switch (controller.pageIndex) {
             case _BrowseHistoryBody._index:
               return history.browseHistoryCount(controller._getDateRange());
             case _PostHistoryBody._index:
@@ -186,14 +184,14 @@ class HistoryAppBarTitle extends StatelessWidget {
             case _ReplyHistoryBody._index:
               return history.replyDataCount(controller._getDateRange());
             default:
-              debugPrint('未知bottomBarIndex：${controller.bottomBarIndex}');
+              debugPrint('未知pageIndex：${controller.pageIndex}');
               return null;
           }
         },
       ),
       builder: (context, snapshot) {
         late final String text;
-        switch (controller.bottomBarIndex) {
+        switch (controller.pageIndex) {
           case _BrowseHistoryBody._index:
             text = '浏览';
             break;
@@ -265,7 +263,7 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
           onTap: () async {
             final range = controller._getDateRange();
 
-            switch (controller.bottomBarIndex) {
+            switch (controller.pageIndex) {
               case _BrowseHistoryBody._index:
                 if (await history.browseHistoryCount(range) > 0) {
                   postListDialog(ConfirmCancelDialog(
@@ -312,7 +310,7 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
 
                 break;
               default:
-                debugPrint('未知bottomBarIndex：${controller.bottomBarIndex}');
+                debugPrint('未知pageIndex：${controller.pageIndex}');
             }
           },
           child: const Text('清空'),
@@ -779,9 +777,9 @@ class HistoryBody extends StatefulWidget {
 }
 
 class _HistoryBodyState extends State<HistoryBody> {
-  late final StreamSubscription<int> _bottomBarIndexSubscription;
+  late StreamSubscription<int> _pageIndexSubscription;
 
-  late final StreamSubscription<List<DateTimeRange?>> _dateRangeSubscription;
+  late StreamSubscription<List<DateTimeRange?>> _dateRangeSubscription;
 
   final HashMap<int, _Image?> _images = HashMap();
 
@@ -811,22 +809,22 @@ class _HistoryBodyState extends State<HistoryBody> {
   }
 
   void _updateIndex() {
-    final page = widget.controller._controller.page;
+    final page = widget.controller._pageController.page;
     if (page != null) {
-      widget.controller.bottomBarIndex = page.round();
+      widget.controller.pageIndex = page.round();
     }
   }
+
+  void _trySave(Object object) => widget.controller.trySave();
 
   @override
   void initState() {
     super.initState();
 
-    _bottomBarIndexSubscription = widget.controller._bottomBarIndex
-        .listen((index) => widget.controller.trySave());
-    _dateRangeSubscription = widget.controller._dateRange
-        .listen((list) => widget.controller.trySave());
+    _pageIndexSubscription = widget.controller._pageIndex.listen(_trySave);
+    _dateRangeSubscription = widget.controller._dateRange.listen(_trySave);
 
-    widget.controller._controller.addListener(_updateIndex);
+    widget.controller._pageController.addListener(_updateIndex);
   }
 
   @override
@@ -834,100 +832,102 @@ class _HistoryBodyState extends State<HistoryBody> {
     super.didUpdateWidget(oldWidget);
 
     if (widget.controller != oldWidget.controller) {
-      oldWidget.controller._controller.removeListener(_updateIndex);
-      widget.controller._controller.addListener(_updateIndex);
+      _pageIndexSubscription.cancel();
+      _pageIndexSubscription = widget.controller._pageIndex.listen(_trySave);
+      _dateRangeSubscription.cancel();
+      _dateRangeSubscription = widget.controller._dateRange.listen(_trySave);
+
+      oldWidget.controller._pageController.removeListener(_updateIndex);
+      widget.controller._pageController.addListener(_updateIndex);
     }
   }
 
   @override
   void dispose() {
-    _bottomBarIndexSubscription.cancel();
+    _pageIndexSubscription.cancel();
     _dateRangeSubscription.cancel();
-    widget.controller._controller.removeListener(_updateIndex);
+    widget.controller._pageController.removeListener(_updateIndex);
 
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => SwipeablePageView(
-        controller: widget.controller._controller,
-        itemCount: 3,
-        itemBuilder: (context, index) {
-          late final Widget body;
-          switch (index) {
-            case _BrowseHistoryBody._index:
-              body = _BrowseHistoryBody(
-                  controller: widget.controller, getImage: _getImage);
-              break;
-            case _PostHistoryBody._index:
-              body = _PostHistoryBody(
-                  controller: widget.controller, getImage: _getImage);
-              break;
-            case _ReplyHistoryBody._index:
-              body = _ReplyHistoryBody(
-                  controller: widget.controller, getImage: _getImage);
-              break;
-            default:
-              body = const Center(
-                child: Text('未知记录', style: AppTheme.boldRed),
-              );
-          }
+  Widget build(BuildContext context) => Column(
+        children: [
+          Material(
+            elevation: 4,
+            color: Theme.of(context).primaryColor,
+            child: PageViewTabBar(
+              pageController: widget.controller._pageController,
+              initialIndex: widget.controller.pageIndex,
+              onIndex: (index) {
+                if (widget.controller.pageIndex != index) {
+                  popAllPopup();
+                  widget.controller._pageController.animateToPage(index,
+                      duration: PageViewTabBar.animationDuration,
+                      curve: Curves.easeIn);
+                }
+              },
+              tabs: const [Tab(text: '浏览'), Tab(text: '主题'), Tab(text: '回复')],
+            ),
+          ),
+          Expanded(
+            child: SwipeablePageView(
+              controller: widget.controller._pageController,
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                late final Widget body;
+                switch (index) {
+                  case _BrowseHistoryBody._index:
+                    body = _BrowseHistoryBody(
+                        controller: widget.controller, getImage: _getImage);
+                    break;
+                  case _PostHistoryBody._index:
+                    body = _PostHistoryBody(
+                        controller: widget.controller, getImage: _getImage);
+                    break;
+                  case _ReplyHistoryBody._index:
+                    body = _ReplyHistoryBody(
+                        controller: widget.controller, getImage: _getImage);
+                    break;
+                  default:
+                    body = const Center(
+                      child: Text('未知记录', style: AppTheme.boldRed),
+                    );
+                }
 
-          return Column(
-            children: [
-              Obx(
-                () {
-                  final range = widget.controller._getDateRange();
+                return Column(
+                  children: [
+                    Obx(
+                      () {
+                        final range = widget.controller._getDateRange();
 
-                  return range != null
-                      ? ListTile(
-                          title: Center(
-                            child: range.start != range.end
-                                ? Text(
-                                    '${formatDay(range.start)} - ${formatDay(range.end)}',
-                                  )
-                                : Text(formatDay(range.start)),
-                          ),
-                          trailing: IconButton(
-                            onPressed: () {
-                              widget.controller._setDateRange(null);
-                              //widget.controller.refreshPage();
-                            },
-                            icon: const Icon(Icons.close),
-                          ),
-                        )
-                      : const SizedBox.shrink();
-                },
-              ),
-              Expanded(child: body),
-            ],
-          );
-        },
-      );
-}
-
-class HistoryBottomBar extends StatelessWidget {
-  final HistoryController controller;
-
-  const HistoryBottomBar(this.controller, {super.key});
-
-  @override
-  Widget build(BuildContext context) => Obx(
-        () => BottomNavigationBar(
-          currentIndex: controller.bottomBarIndex,
-          onTap: (value) {
-            if (controller.bottomBarIndex != value) {
-              popAllPopup();
-              controller._controller.animateToPage(value,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeIn);
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(icon: SizedBox.shrink(), label: '浏览'),
-            BottomNavigationBarItem(icon: SizedBox.shrink(), label: '主题'),
-            BottomNavigationBarItem(icon: SizedBox.shrink(), label: '回复'),
-          ],
-        ),
+                        return range != null
+                            ? ListTile(
+                                title: Center(
+                                  child: range.start != range.end
+                                      ? Text(
+                                          '${formatDay(range.start)} - ${formatDay(range.end)}',
+                                        )
+                                      : Text(formatDay(range.start)),
+                                ),
+                                trailing: IconButton(
+                                  onPressed: () {
+                                    widget.controller._setDateRange(null);
+                                    //widget.controller.refreshPage();
+                                  },
+                                  icon: const Icon(Icons.close),
+                                ),
+                              )
+                            : const SizedBox.shrink();
+                      },
+                    ),
+                    Expanded(child: body),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       );
 }

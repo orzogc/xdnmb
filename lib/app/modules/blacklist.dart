@@ -68,6 +68,7 @@ class _AppBarPopupMenuButton extends StatelessWidget {
                       onConfirm: () async {
                         await blacklist.clearForumBlacklist();
                         refresh();
+                        showToast('清空版块黑名单');
                         Get.back();
                       },
                       onCancel: () => Get.back(),
@@ -82,6 +83,7 @@ class _AppBarPopupMenuButton extends StatelessWidget {
                       onConfirm: () async {
                         await blacklist.clearPostBlacklist();
                         refresh();
+                        showToast('清空串号黑名单');
                         Get.back();
                       },
                       onCancel: () => Get.back(),
@@ -96,6 +98,7 @@ class _AppBarPopupMenuButton extends StatelessWidget {
                       onConfirm: () async {
                         await blacklist.clearUserBlacklist();
                         refresh();
+                        showToast('清空饼干黑名单');
                         Get.back();
                       },
                       onCancel: () => Get.back(),
@@ -292,37 +295,13 @@ class _Body extends StatelessWidget {
   }
 }
 
-class _BottomBar extends StatelessWidget {
-  final int index;
-
-  final _IndexCallback<void> onIndex;
-
-  // ignore: unused_element
-  const _BottomBar({super.key, required this.index, required this.onIndex});
-
-  @override
-  Widget build(BuildContext context) => BottomNavigationBar(
-        currentIndex: index,
-        onTap: (value) {
-          if (index != value) {
-            onIndex(value);
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '版块'),
-          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '串号'),
-          BottomNavigationBarItem(icon: SizedBox.shrink(), label: '饼干'),
-        ],
-      );
-}
-
 class BlacklistController extends GetxController {
-  final PageController _controller = PageController();
+  final PageController _pageController = PageController();
 
   final RxInt _index = 0.obs;
 
   void _updateIndex() {
-    final page = _controller.page;
+    final page = _pageController.page;
     if (page != null) {
       _index.value = page.round();
     }
@@ -332,13 +311,13 @@ class BlacklistController extends GetxController {
   void onInit() {
     super.onInit();
 
-    _controller.addListener(_updateIndex);
+    _pageController.addListener(_updateIndex);
   }
 
   @override
   void onClose() {
-    _controller.removeListener(_updateIndex);
-    _controller.dispose();
+    _pageController.removeListener(_updateIndex);
+    _pageController.dispose();
 
     super.onClose();
   }
@@ -364,33 +343,38 @@ class BlacklistView extends GetView<BlacklistController> {
 
   @override
   Widget build(BuildContext context) => SafeArea(
-        left: false,
-        top: false,
-        right: false,
-        child: Obx(
-          () => Scaffold(
-            appBar: AppBar(
-              title: _AppBarTitle(index: controller._index.value),
-              actions: [
-                _AppBarPopupMenuButton(
-                    index: controller._index.value, refresh: _refresh),
-              ],
-            ),
-            body: SwipeablePageView(
-              controller: controller._controller,
-              itemCount: 3,
-              itemBuilder: (context, index) =>
-                  _Body(index: index, refresh: _refresh),
-            ),
-            bottomNavigationBar: _BottomBar(
-              index: controller._index.value,
-              onIndex: (index) => controller._controller.animateToPage(
-                index,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeIn,
-              ),
+      left: false,
+      top: false,
+      right: false,
+      child: Obx(
+        () => Scaffold(
+          appBar: AppBar(
+            title: _AppBarTitle(index: controller._index.value),
+            actions: [
+              _AppBarPopupMenuButton(
+                  index: controller._index.value, refresh: _refresh),
+            ],
+            bottom: PageViewTabBar(
+              pageController: controller._pageController,
+              initialIndex: 0,
+              onIndex: (index) {
+                if (controller._index.value != index) {
+                  controller._pageController.animateToPage(
+                    index,
+                    duration: PageViewTabBar.animationDuration,
+                    curve: Curves.easeIn,
+                  );
+                }
+              },
+              tabs: const [Tab(text: '版块'), Tab(text: '串号'), Tab(text: '饼干')],
             ),
           ),
+          body: SwipeablePageView(
+            controller: controller._pageController,
+            itemCount: 3,
+            itemBuilder: (context, index) =>
+                _Body(index: index, refresh: _refresh),
+          ),
         ),
-      );
+      ));
 }

@@ -47,7 +47,7 @@ abstract class AppTheme {
         style: ButtonStyle(
             foregroundColor:
                 MaterialStateColor.resolveWith((states) => primaryColorLight),
-            overlayColor: _TextButtonDefaultOverlay(buttonOverlayColorLight))),
+            overlayColor: _ButtonDefaultOverlay(buttonOverlayColorLight))),
     elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
             backgroundColor: ButtonStyleButton.allOrNull(primaryColorLight))),
@@ -55,7 +55,7 @@ abstract class AppTheme {
         style: ButtonStyle(
             foregroundColor:
                 MaterialStateColor.resolveWith((states) => primaryColorLight),
-            overlayColor: _TextButtonDefaultOverlay(buttonOverlayColorLight))),
+            overlayColor: _ButtonDefaultOverlay(buttonOverlayColorLight))),
     inputDecorationTheme: InputDecorationTheme(
       focusedBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: AppTheme.primaryColorLight)),
@@ -107,7 +107,7 @@ abstract class AppTheme {
         style: ButtonStyle(
             foregroundColor:
                 MaterialStateColor.resolveWith((states) => Colors.white),
-            overlayColor: _TextButtonDefaultOverlay(buttonOverlayColorDark))),
+            overlayColor: _ButtonDefaultOverlay(buttonOverlayColorDark))),
     elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
             backgroundColor: ButtonStyleButton.allOrNull(primaryColorDark),
@@ -116,7 +116,7 @@ abstract class AppTheme {
         style: ButtonStyle(
             foregroundColor:
                 MaterialStateColor.resolveWith((states) => colorDark),
-            overlayColor: _TextButtonDefaultOverlay(buttonOverlayColorDark))),
+            overlayColor: _ButtonDefaultOverlay(buttonOverlayColorDark))),
     inputDecorationTheme: InputDecorationTheme(
       focusedBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: AppTheme.colorDark)),
@@ -181,10 +181,10 @@ abstract class AppTheme {
       Get.isDarkMode ? AppTheme.primaryColorDark : Colors.grey;
 }
 
-class _TextButtonDefaultOverlay extends MaterialStateProperty<Color?> {
+class _ButtonDefaultOverlay extends MaterialStateProperty<Color?> {
   final Color primary;
 
-  _TextButtonDefaultOverlay(this.primary);
+  _ButtonDefaultOverlay(this.primary);
 
   @override
   Color? resolve(Set<MaterialState> states) {
@@ -205,10 +205,6 @@ class _CheckboxFillColor extends MaterialStateProperty<Color?> {
   _CheckboxFillColor(this.primary);
 
   @override
-  Color? resolve(Set<MaterialState> states) {
-    if (states.contains(MaterialState.disabled)) {
-      return Colors.grey.shade400;
-    }
-    return primary;
-  }
+  Color? resolve(Set<MaterialState> states) =>
+      states.contains(MaterialState.disabled) ? Colors.grey.shade400 : primary;
 }

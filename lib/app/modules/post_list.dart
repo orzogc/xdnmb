@@ -278,6 +278,7 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                 : null,
             child: AppBar(
               primary: !(backdropController?.isShowBackLayer ?? false),
+              elevation: controller.isHistory ? 0 : null,
               leading: !(backdropController?.isShowBackLayer ?? false)
                   ? (stacks.controllersCount() > 1
                       ? const BackButton(onPressed: postListPop)
@@ -797,7 +798,8 @@ class _BottomBar extends StatelessWidget {
   const _BottomBar({super.key});
 
   @override
-  Widget build(BuildContext context) => NotifyBuilder(
+  Widget build(BuildContext context) => const SizedBox.shrink();
+  /* NotifyBuilder(
         animation: ControllerStacksService.to.notifier,
         builder: (context, child) {
           final controller = PostListController.get();
@@ -806,7 +808,7 @@ class _BottomBar extends StatelessWidget {
               ? HistoryBottomBar(controller as HistoryController)
               : const SizedBox.shrink();
         },
-      );
+      ); */
 }
 
 class _PostListCompactBackdropTabBar extends StatelessWidget {
@@ -901,13 +903,16 @@ class _PostListBackdropState extends State<_PostListBackdrop>
   Widget build(BuildContext context) => Material(
         child: Column(
           children: [
-            Container(
-              height: _PostListAppBar._height,
+            Material(
+              elevation: 4,
               color: Theme.of(context).primaryColor,
               child: TabBar(
                 controller: _controller,
                 labelStyle: Theme.of(context).textTheme.titleLarge,
-                tabs: const [Tab(text: '标签'), Tab(text: '版块')],
+                tabs: const [
+                  Tab(text: '标签', height: _PostListAppBar._height),
+                  Tab(text: '版块', height: _PostListAppBar._height),
+                ],
               ),
             ),
             Expanded(

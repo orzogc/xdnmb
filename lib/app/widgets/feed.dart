@@ -108,14 +108,25 @@ class FeedBody extends StatefulWidget {
 }
 
 class _FeedBodyState extends State<FeedBody> {
-  late final StreamSubscription<int> _pageSubscription;
+  late StreamSubscription<int> _pageSubscription;
+
+  void _trySave(int page) => widget.controller.trySave();
 
   @override
   void initState() {
     super.initState();
 
-    _pageSubscription =
-        widget.controller.listenPage((page) => widget.controller.trySave());
+    _pageSubscription = widget.controller.listenPage(_trySave);
+  }
+
+  @override
+  void didUpdateWidget(covariant FeedBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.controller != oldWidget.controller) {
+      _pageSubscription.cancel();
+      _pageSubscription = widget.controller.listenPage(_trySave);
+    }
   }
 
   @override
