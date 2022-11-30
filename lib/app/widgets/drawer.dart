@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
 import 'buttons.dart';
@@ -16,6 +17,11 @@ class _DrawerHeader extends StatelessWidget {
     final settings = SettingsService.to;
     final theme = Theme.of(context);
     final color = theme.colorScheme.onPrimary;
+
+    final Widget searchButton =
+        SearchButton(iconColor: color, afterSearch: Get.back);
+    final Widget settingsButton =
+        SettingsButton(iconColor: color, beforeOpenSettings: Get.back);
 
     return SizedBox(
       height: appBarHeight + MediaQuery.of(context).padding.top,
@@ -39,12 +45,10 @@ class _DrawerHeader extends StatelessWidget {
             settings.shouldShowGuide
                 ? const DarkModeGuide(DarkModeButton())
                 : const DarkModeButton(),
+            settings.shouldShowGuide ? SearchGuide(searchButton) : searchButton,
             settings.shouldShowGuide
-                ? SearchGuide(SearchButton(iconColor: color))
-                : SearchButton(iconColor: color),
-            settings.shouldShowGuide
-                ? SettingsGuide(SettingsButton(iconColor: color))
-                : SettingsButton(iconColor: color),
+                ? SettingsGuide(settingsButton)
+                : settingsButton,
           ],
         ),
       ),
@@ -60,6 +64,9 @@ class _DrawerBottom extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
+    final Widget historyButton = HistoryButton(onTapEnd: Get.back);
+    final Widget feedButton = FeedButton(onTapEnd: Get.back);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0),
       child: Row(
@@ -67,11 +74,9 @@ class _DrawerBottom extends StatelessWidget {
         children: [
           const SponsorButton(),
           settings.shouldShowGuide
-              ? const HistoryGuide(HistoryButton())
-              : const HistoryButton(),
-          settings.shouldShowGuide
-              ? const FeedGuide(FeedButton())
-              : const FeedButton(),
+              ? HistoryGuide(historyButton)
+              : historyButton,
+          settings.shouldShowGuide ? FeedGuide(feedButton) : feedButton,
         ],
       ),
     );
@@ -88,7 +93,7 @@ class AppDrawer extends StatelessWidget {
         child: Column(
           children: [
             _DrawerHeader(appBarHeight: appBarHeight),
-            const Expanded(child: TabList()),
+            Expanded(child: TabList(onTapEnd: Get.back)),
             const Divider(height: 10.0, thickness: 1.0),
             const _DrawerBottom(),
           ],

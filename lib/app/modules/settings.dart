@@ -1,12 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../data/services/settings.dart';
 import '../data/services/version.dart';
 import '../routes/routes.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import '../widgets/dialog.dart';
+
+class _DarkMode extends StatelessWidget {
+  // ignore: unused_element
+  const _DarkMode({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder<Box>(
+      valueListenable: settings.isDarkModeListenable,
+      builder: (context, value, child) => SwitchListTile(
+        title: const Text('黑夜模式'),
+        subtitle: settings.isDarkMode ? const Text('光来！') : const Text('暗来！'),
+        value: settings.isDarkMode,
+        onChanged: (value) => settings.isDarkMode = value,
+      ),
+    );
+  }
+}
 
 class _Feedback extends StatelessWidget {
   // ignore: unused_element
@@ -111,6 +133,7 @@ class SettingsView extends StatelessWidget {
               ListTile(
                   title: Text('高级设置'), onTap: AppRoutes.toAdvancedSettings),
               ListTile(title: Text('界面设置'), onTap: AppRoutes.toUISettings),
+              _DarkMode(),
               _Feedback(),
               ListTile(title: Text('客户端作者'), subtitle: Text('Orzogc')),
               _AuthorSponsor(),

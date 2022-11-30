@@ -124,7 +124,7 @@ class ForumAppBarPopupMenuButton extends StatelessWidget {
             onTap: () => showForumRuleDialog(forumId),
             child: const Text('版规'),
           ),
-        const PopupMenuItem(onTap: bottomSheet, child: Text('发串')),
+        const PopupMenuItem(onTap: openEditPostBottomSheet, child: Text('发串')),
         PopupMenuItem(
           onTap: () async {
             final url = Urls.forumUrl(
@@ -216,6 +216,7 @@ class _BlockForum extends StatelessWidget {
   }
 }
 
+// TODO: 自动显示scrollbar
 class _ForumDialog extends StatelessWidget {
   final ForumTypeController controller;
 
@@ -319,12 +320,13 @@ class _ForumBodyState extends State<ForumBody> {
     final controller = widget.controller;
     final id = controller.id;
 
-    return PostListAnchorRefresher(
+    return PostListRefresher(
       controller: controller,
-      builder: (context, anchorController, refresh) =>
+      useAnchorScrollController: true,
+      builder: (context, scrollController, refresh) =>
           BiListView<ThreadWithPage>(
         key: ValueKey<int>(refresh),
-        controller: anchorController,
+        controller: scrollController,
         initialPage: controller.page,
         // 版块的最大页固定为100
         lastPage:
@@ -357,7 +359,7 @@ class _ForumBodyState extends State<ForumBody> {
                     mainPost.isBlocked())
                 ? AnchorItemWrapper(
                     key: thread.toValueKey(),
-                    controller: anchorController,
+                    controller: scrollController as AnchorScrollController,
                     index: thread.toIndex(),
                     child: PostCard(
                       child: PostInkWell(

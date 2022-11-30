@@ -8,7 +8,6 @@ import '../modules/post_list.dart';
 import '../utils/extensions.dart';
 import '../utils/notify.dart';
 import '../utils/theme.dart';
-import 'backdrop.dart';
 import 'content.dart';
 import 'forum_name.dart';
 import 'guide.dart';
@@ -72,9 +71,9 @@ class _TabTitle extends StatelessWidget {
 }
 
 class TabList extends StatelessWidget {
-  final BackdropController? backdropController;
+  final VoidCallback onTapEnd;
 
-  const TabList({super.key, this.backdropController});
+  const TabList({super.key, required this.onTapEnd});
 
   void _closeTab(int index) {
     final stacks = ControllerStacksService.to;
@@ -111,12 +110,7 @@ class TabList extends StatelessWidget {
                 onTap: () {
                   PostListPage.pageKey.currentState!.jumpToPage(index);
 
-                  if (SettingsService.isBackdropUI &&
-                      backdropController != null) {
-                    backdropController!.hideBackLayer();
-                  } else {
-                    Get.back();
-                  }
+                  onTapEnd();
                 },
                 tileColor: index == stacks.index ? theme.focusColor : null,
                 title: _TabTitle(controller),

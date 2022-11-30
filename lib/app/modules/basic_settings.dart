@@ -18,12 +18,10 @@ class _RestoreTabs extends StatelessWidget {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.isRestoreTabsListenable,
-      builder: (context, value, child) => ListTile(
+      builder: (context, value, child) => SwitchListTile(
         title: const Text('应用启动后恢复标签页'),
-        trailing: Switch(
-          value: settings.isRestoreTabs,
-          onChanged: (value) => settings.isRestoreTabs = value,
-        ),
+        value: settings.isRestoreTabs,
+        onChanged: (value) => settings.isRestoreTabs = value,
       ),
     );
   }
@@ -86,12 +84,10 @@ class _ShowImage extends StatelessWidget {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.showImageListenable,
-      builder: (context, value, child) => ListTile(
+      builder: (context, value, child) => SwitchListTile(
         title: const Text('显示图片'),
-        trailing: Switch(
-          value: settings.showImage,
-          onChanged: (value) => settings.showImage = value,
-        ),
+        value: settings.showImage,
+        onChanged: (value) => settings.showImage = value,
       ),
     );
   }
@@ -107,33 +103,10 @@ class _Watermark extends StatelessWidget {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.isWatermarkListenable,
-      builder: (context, value, child) => ListTile(
+      builder: (context, value, child) => SwitchListTile(
         title: const Text('发送图片默认附带水印'),
-        trailing: Switch(
-          value: settings.isWatermark,
-          onChanged: (value) => settings.isWatermark = value,
-        ),
-      ),
-    );
-  }
-}
-
-class _HideFloatingButton extends StatelessWidget {
-  // ignore: unused_element
-  const _HideFloatingButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.hideFloatingButtonListenable,
-      builder: (context, value, child) => ListTile(
-        title: const Text('隐藏右下角的悬浮球'),
-        trailing: Switch(
-          value: settings.hideFloatingButton,
-          onChanged: (value) => settings.hideFloatingButton = value,
-        ),
+        value: settings.isWatermark,
+        onChanged: (value) => settings.isWatermark = value,
       ),
     );
   }
@@ -149,13 +122,11 @@ class _AutoJumpPage extends StatelessWidget {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.isJumpToLastBrowsePageListenable,
-      builder: (context, value, child) => ListTile(
+      builder: (context, value, child) => SwitchListTile(
         title: const Text('自动跳转页数'),
         subtitle: const Text('打开串时自动跳转到最近浏览的页数'),
-        trailing: Switch(
-          value: settings.isJumpToLastBrowsePage,
-          onChanged: (value) => settings.isJumpToLastBrowsePage = value,
-        ),
+        value: settings.isJumpToLastBrowsePage,
+        onChanged: (value) => settings.isJumpToLastBrowsePage = value,
       ),
     );
   }
@@ -178,15 +149,13 @@ class _AutoJumpPosition extends StatelessWidget {
               : null,
         );
 
-        return ListTile(
+        return SwitchListTile(
           title: Text('自动跳转位置', style: textStyle),
           subtitle: Text('自动跳转页数时跳转到最近浏览的位置', style: textStyle),
-          trailing: Switch(
-            value: settings.isJumpToLastBrowsePosition,
-            onChanged: settings.isJumpToLastBrowsePage
-                ? (value) => settings.isJumpToLastBrowsePosition = value
-                : null,
-          ),
+          value: settings.isJumpToLastBrowsePosition,
+          onChanged: settings.isJumpToLastBrowsePage
+              ? (value) => settings.isJumpToLastBrowsePosition = value
+              : null,
         );
       },
     );
@@ -203,12 +172,10 @@ class _AfterPostRefresh extends StatelessWidget {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.isAfterPostRefreshListenable,
-      builder: (context, value, child) => ListTile(
+      builder: (context, value, child) => SwitchListTile(
         title: const Text('发表新串后自动刷新页面'),
-        trailing: Switch(
-          value: settings.isAfterPostRefresh,
-          onChanged: (value) => settings.isAfterPostRefresh = value,
-        ),
+        value: settings.isAfterPostRefresh,
+        onChanged: (value) => settings.isAfterPostRefresh = value,
       ),
     );
   }
@@ -224,12 +191,10 @@ class _DismissibleTab extends StatelessWidget {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.dismissibleTabListenable,
-      builder: (context, value, child) => ListTile(
+      builder: (context, value, child) => SwitchListTile(
         title: const Text('在标签页列表中滑动标签可以关闭标签页'),
-        trailing: Switch(
-          value: settings.dismissibleTab,
-          onChanged: ((value) => settings.dismissibleTab = value),
-        ),
+        value: settings.dismissibleTab,
+        onChanged: ((value) => settings.dismissibleTab = value),
       ),
     );
   }
@@ -323,7 +288,6 @@ class BasicSettingsView extends StatelessWidget {
               _InitialForum(),
               _ShowImage(),
               _Watermark(),
-              _HideFloatingButton(),
               _AutoJumpPage(),
               _AutoJumpPosition(),
               _AfterPostRefresh(),

@@ -52,6 +52,7 @@ class _Restore extends StatelessWidget {
         title: OverflowBar(
           spacing: 5.0,
           alignment: MainAxisAlignment.spaceBetween,
+          overflowSpacing: 5.0,
           children: [
             ElevatedButton(
               onPressed: () {

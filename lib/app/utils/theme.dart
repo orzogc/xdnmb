@@ -79,13 +79,13 @@ abstract class AppTheme {
         unselectedLabelStyle: const TextStyle(fontSize: 14.0)),
     indicatorColor: Colors.blue,
     pageTransitionsTheme: PageTransitionsTheme(builders: {
-      TargetPlatform.android: SettingsService.isBackdropUI
+      TargetPlatform.android: SettingsService.isSwipeablePage
           ? const SwipeablePageTransitionsBuilder()
           : const ZoomPageTransitionsBuilder(),
-      TargetPlatform.iOS: SettingsService.isBackdropUI
+      TargetPlatform.iOS: SettingsService.isSwipeablePage
           ? const SwipeablePageTransitionsBuilder()
           : const CupertinoPageTransitionsBuilder(),
-      TargetPlatform.macOS: SettingsService.isBackdropUI
+      TargetPlatform.macOS: SettingsService.isSwipeablePage
           ? const SwipeablePageTransitionsBuilder()
           : const CupertinoPageTransitionsBuilder(),
     }),
@@ -139,13 +139,13 @@ abstract class AppTheme {
         unselectedLabelStyle: const TextStyle(fontSize: 14.0)),
     indicatorColor: Colors.white,
     pageTransitionsTheme: PageTransitionsTheme(builders: {
-      TargetPlatform.android: SettingsService.isBackdropUI
+      TargetPlatform.android: SettingsService.isSwipeablePage
           ? const SwipeablePageTransitionsBuilder()
           : const ZoomPageTransitionsBuilder(),
-      TargetPlatform.iOS: SettingsService.isBackdropUI
+      TargetPlatform.iOS: SettingsService.isSwipeablePage
           ? const SwipeablePageTransitionsBuilder()
           : const CupertinoPageTransitionsBuilder(),
-      TargetPlatform.macOS: SettingsService.isBackdropUI
+      TargetPlatform.macOS: SettingsService.isSwipeablePage
           ? const SwipeablePageTransitionsBuilder()
           : const CupertinoPageTransitionsBuilder(),
     }),

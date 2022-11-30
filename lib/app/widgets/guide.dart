@@ -10,6 +10,8 @@ abstract class Guide {
 
   static bool isShowEndDrawerGuides = false;
 
+  static bool isShowBottomBarGuides = false;
+
   static bool isShowBackLayerTabListGuides = false;
 
   static bool isShowBackLayerForumListGuides = false;
@@ -24,8 +26,10 @@ abstract class Guide {
     if (AppBarPopupMenuGuide._key.currentState?.mounted ?? false)
       AppBarPopupMenuGuide._key,
     if (ThreadGuide._key.currentState?.mounted ?? false) ThreadGuide._key,
-    if (FloatingButtonGuide._key.currentState?.mounted ?? false)
-      FloatingButtonGuide._key,
+    if (!SettingsService.isShowBottomBar &&
+        !SettingsService.to.hideFloatingButton &&
+        (EditPostGuide._key.currentState?.mounted ?? false))
+      EditPostGuide._key,
   ];
 
   static final List<GlobalKey> drawerGuides = [
@@ -41,6 +45,26 @@ abstract class Guide {
     if (ForumListGuide._key.currentState?.mounted ?? false) ForumListGuide._key,
     if (ReorderForumsGuide._key.currentState?.mounted ?? false)
       ReorderForumsGuide._key,
+  ];
+
+  static final List<GlobalKey> bottomBarGuides = [
+    if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
+    if (SettingsGuide._key.currentState?.mounted ?? false) SettingsGuide._key,
+    if (!SettingsService.isBackdropUI &&
+        SettingsService.to.compactTabAndForumList &&
+        (CompactListButtonGuide._key.currentState?.mounted ?? false))
+      CompactListButtonGuide._key,
+    if (!SettingsService.isBackdropUI &&
+        !SettingsService.to.compactTabAndForumList &&
+        (TabListButtonGuide._key.currentState?.mounted ?? false))
+      TabListButtonGuide._key,
+    if (!SettingsService.isBackdropUI &&
+        !SettingsService.to.compactTabAndForumList &&
+        (ForumListButtonGuide._key.currentState?.mounted ?? false))
+      ForumListButtonGuide._key,
+    if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
+    if (FeedGuide._key.currentState?.mounted ?? false) FeedGuide._key,
+    if (EditPostGuide._key.currentState?.mounted ?? false) EditPostGuide._key,
   ];
 
   static final List<GlobalKey> backdropEndDrawerGuides = [
@@ -143,12 +167,12 @@ class ThreadGuide extends StatelessWidget {
       );
 }
 
-class FloatingButtonGuide extends StatelessWidget {
+class EditPostGuide extends StatelessWidget {
   static final GlobalKey _key = GlobalKey();
 
   final Widget child;
 
-  const FloatingButtonGuide(this.child, {super.key});
+  const EditPostGuide(this.child, {super.key});
 
   @override
   Widget build(BuildContext context) => Showcase(
@@ -252,6 +276,54 @@ class FeedGuide extends StatelessWidget {
         key: _key,
         title: '订阅',
         description: '点击查看订阅',
+        child: child,
+      );
+}
+
+class CompactListButtonGuide extends StatelessWidget {
+  static final GlobalKey _key = GlobalKey();
+
+  final Widget child;
+
+  const CompactListButtonGuide(this.child, {super.key});
+
+  @override
+  Widget build(BuildContext context) => Showcase(
+        key: _key,
+        title: '标签页和版块列表',
+        description: '点击打开标签页和版块列表',
+        child: child,
+      );
+}
+
+class TabListButtonGuide extends StatelessWidget {
+  static final GlobalKey _key = GlobalKey();
+
+  final Widget child;
+
+  const TabListButtonGuide(this.child, {super.key});
+
+  @override
+  Widget build(BuildContext context) => Showcase(
+        key: _key,
+        title: '标签页列表',
+        description: '点击打开标签页列表',
+        child: child,
+      );
+}
+
+class ForumListButtonGuide extends StatelessWidget {
+  static final GlobalKey _key = GlobalKey();
+
+  final Widget child;
+
+  const ForumListButtonGuide(this.child, {super.key});
+
+  @override
+  Widget build(BuildContext context) => Showcase(
+        key: _key,
+        title: '版块列表',
+        description: '点击打开版块列表',
         child: child,
       );
 }

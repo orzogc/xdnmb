@@ -14,7 +14,6 @@ import '../utils/navigation.dart';
 import '../utils/notify.dart';
 import '../utils/text.dart';
 import '../utils/toast.dart';
-import 'backdrop.dart';
 import 'forum.dart';
 import 'forum_name.dart';
 import 'guide.dart';
@@ -114,17 +113,9 @@ class _Dialog extends StatelessWidget {
 }
 
 class ForumList extends StatelessWidget {
-  final BackdropController? backdropController;
+  final VoidCallback onTapEnd;
 
-  const ForumList({super.key, this.backdropController});
-
-  void _back() {
-    if (SettingsService.isBackdropUI && backdropController != null) {
-      backdropController!.hideBackLayer();
-    } else {
-      Get.back();
-    }
-  }
+  const ForumList({super.key, required this.onTapEnd});
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +135,6 @@ class ForumList extends StatelessWidget {
           builder: (context, box, child) => ListView.builder(
             key: const PageStorageKey<String>('forumList'),
             padding: EdgeInsets.zero,
-            shrinkWrap: true,
             itemCount: forums.displayedForumsCount,
             itemBuilder: (context, index) {
               final forum = forums.displayedForum(index);
@@ -160,12 +150,13 @@ class ForumList extends StatelessWidget {
                         AppRoutes.toForum(forumId: forum.id);
                       }
                     }
-                    _back();
+
+                    onTapEnd();
                   },
                   onLongPress: () async {
                     if (await Get.dialog<bool>(_Dialog(forum: forum)) ??
                         false) {
-                      _back();
+                      onTapEnd();
                     }
                   },
                   tileColor:

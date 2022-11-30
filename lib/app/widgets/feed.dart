@@ -143,12 +143,13 @@ class _FeedBodyState extends State<FeedBody> {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.feedIdListenable,
-      builder: (context, value, child) => PostListAnchorRefresher(
+      builder: (context, value, child) => PostListRefresher(
         controller: widget.controller,
-        builder: (context, anchorController, refresh) =>
+        useAnchorScrollController: true,
+        builder: (context, scrollController, refresh) =>
             BiListView<Visible<PostWithPage>>(
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
-          controller: anchorController,
+          controller: scrollController,
           initialPage: widget.controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async =>
@@ -159,7 +160,7 @@ class _FeedBodyState extends State<FeedBody> {
             () => feed.isVisible.value
                 ? AnchorItemWrapper(
                     key: feed.item.toValueKey(),
-                    controller: anchorController,
+                    controller: scrollController as AnchorScrollController,
                     index: feed.item.toIndex(),
                     child: PostCard(
                       child: PostInkWell(

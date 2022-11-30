@@ -303,7 +303,8 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
               onTap: () => showForumRuleDialog(mainPost.forumId!),
               child: const Text('版规'),
             ),
-          const PopupMenuItem(onTap: bottomSheet, child: Text('回复')),
+          const PopupMenuItem(
+              onTap: openEditPostBottomSheet, child: Text('回复')),
           PopupMenuItem(
             onTap: () async {
               try {
@@ -763,6 +764,9 @@ class _ThreadBodyState extends State<ThreadBody> {
     _isNoMoreItems = false;
   }
 
+  void _setScrollDirection() => widget.controller
+      .setScrollPosition(_anchorController.position.userScrollDirection);
+
   void _trySave(int page) => widget.controller.trySave();
 
   @override
@@ -777,6 +781,7 @@ class _ThreadBodyState extends State<ThreadBody> {
         _saveBrowseHistory();
       },
     );
+    _anchorController.addListener(_setScrollDirection);
 
     widget.controller.addListener(_addRefresh);
     _pageSubscription = widget.controller.listenPage(_trySave);
@@ -803,6 +808,7 @@ class _ThreadBodyState extends State<ThreadBody> {
   @override
   void dispose() {
     _isToJump.value = false;
+    _anchorController.removeListener(_setScrollDirection);
     _anchorController.dispose();
     widget.controller.removeListener(_cancelJump);
     widget.controller.removeListener(_addRefresh);

@@ -21,7 +21,7 @@ class ImageService extends GetxService {
   void onReady() async {
     super.onReady();
 
-    if (GetPlatform.isAndroid || GetPlatform.isIOS) {
+    if (GetPlatform.isMobile) {
       PermissionStatus status = await Permission.storage.status;
       if (status.isDenied) {
         status = await Permission.storage.request();

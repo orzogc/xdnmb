@@ -6,28 +6,46 @@ import '../utils/extensions.dart';
 import '../utils/notify.dart';
 
 typedef PostListRefresherBuilder = Widget Function(
-    BuildContext context, int refresh);
+    BuildContext context, ScrollController scrollController, int refresh);
 
 class PostListRefresher extends StatefulWidget {
   final PostListController controller;
 
+  final bool useAnchorScrollController;
+
   final PostListRefresherBuilder builder;
 
   const PostListRefresher(
-      {super.key, required this.controller, required this.builder});
+      {super.key,
+      required this.controller,
+      this.useAnchorScrollController = false,
+      required this.builder});
 
   @override
   State<PostListRefresher> createState() => _PostListRefresherState();
 }
 
 class _PostListRefresherState extends State<PostListRefresher> {
+  late final ScrollController _controller;
+
   int _refresh = 0;
 
   void _addRefresh() => _refresh++;
 
+  void _setScrollDirection() => widget.controller
+      .setScrollPosition(_controller.position.userScrollDirection);
+
   @override
   void initState() {
     super.initState();
+
+    _controller = widget.useAnchorScrollController
+        ? AnchorScrollController(
+            onIndexChanged: (index, userScroll) =>
+                widget.controller.page = index.getPageFromPostIndex(),
+          )
+        : ScrollController();
+    _controller.addListener(_setScrollDirection);
 
     widget.controller.addListener(_addRefresh);
   }
@@ -44,65 +62,8 @@ class _PostListRefresherState extends State<PostListRefresher> {
 
   @override
   void dispose() {
-    widget.controller.removeListener(_addRefresh);
-
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => NotifyBuilder(
-      animation: widget.controller,
-      builder: (context, child) => widget.builder(context, _refresh));
-}
-
-typedef PostListAnchorRefresherBuilder = Widget Function(
-    BuildContext context, AnchorScrollController anchorController, int refresh);
-
-class PostListAnchorRefresher extends StatefulWidget {
-  final PostListController controller;
-
-  final PostListAnchorRefresherBuilder builder;
-
-  const PostListAnchorRefresher(
-      {super.key, required this.controller, required this.builder});
-
-  @override
-  State<PostListAnchorRefresher> createState() =>
-      _PostListAnchorRefresherState();
-}
-
-class _PostListAnchorRefresherState extends State<PostListAnchorRefresher> {
-  late final AnchorScrollController _anchorController;
-
-  int _refresh = 0;
-
-  void _addRefresh() => _refresh++;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _anchorController = AnchorScrollController(
-      onIndexChanged: (index, userScroll) =>
-          widget.controller.page = index.getPageFromPostIndex(),
-    );
-
-    widget.controller.addListener(_addRefresh);
-  }
-
-  @override
-  void didUpdateWidget(covariant PostListAnchorRefresher oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (widget.controller != oldWidget.controller) {
-      oldWidget.controller.removeListener(_addRefresh);
-      widget.controller.addListener(_addRefresh);
-    }
-  }
-
-  @override
-  void dispose() {
-    _anchorController.dispose();
+    _controller.removeListener(_setScrollDirection);
+    _controller.dispose();
     widget.controller.removeListener(_addRefresh);
 
     super.dispose();
@@ -112,5 +73,5 @@ class _PostListAnchorRefresherState extends State<PostListAnchorRefresher> {
   Widget build(BuildContext context) => NotifyBuilder(
       animation: widget.controller,
       builder: (context, child) =>
-          widget.builder(context, _anchorController, _refresh));
+          widget.builder(context, _controller, _refresh));
 }

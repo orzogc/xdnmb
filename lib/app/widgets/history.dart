@@ -412,13 +412,15 @@ class _BrowseHistoryBody extends StatelessWidget {
 
     return PostListRefresher(
       controller: controller,
-      builder: (context, refresh) => ValueListenableBuilder<bool>(
+      builder: (context, scrollController, refresh) =>
+          ValueListenableBuilder<bool>(
         valueListenable: controller._getNotifier(_BrowseHistoryBody._index),
         builder: (context, value, child) => BiListView<Visible<BrowseHistory>>(
           key: ValueKey<_HistoryKey>(_HistoryKey(
               controller._getDateRange(_BrowseHistoryBody._index),
               refresh,
               value)),
+          controller: scrollController,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.browseHistoryList(
@@ -486,6 +488,7 @@ class _BrowseHistoryBody extends StatelessWidget {
                                   child: OverflowBar(
                                     spacing: 5.0,
                                     alignment: MainAxisAlignment.spaceBetween,
+                                    overflowSpacing: 5.0,
                                     children: [
                                       Text(
                                         '最后浏览时间：${fullFormatTime(browse.item.browseTime)}',
@@ -548,13 +551,15 @@ class _PostHistoryBody extends StatelessWidget {
 
     return PostListRefresher(
       controller: controller,
-      builder: (context, refresh) => ValueListenableBuilder<bool>(
+      builder: (context, scrollController, refresh) =>
+          ValueListenableBuilder<bool>(
         valueListenable: controller._getNotifier(_PostHistoryBody._index),
         builder: (context, value, child) => BiListView<Visible<PostData>>(
           key: ValueKey<_HistoryKey>(_HistoryKey(
               controller._getDateRange(_PostHistoryBody._index),
               refresh,
               value)),
+          controller: scrollController,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.postDataList(
@@ -647,13 +652,15 @@ class _ReplyHistoryBody extends StatelessWidget {
 
     return PostListRefresher(
       controller: controller,
-      builder: (context, refresh) => ValueListenableBuilder<bool>(
+      builder: (context, scrollController, refresh) =>
+          ValueListenableBuilder<bool>(
         valueListenable: controller._getNotifier(_ReplyHistoryBody._index),
         builder: (context, value, child) => BiListView<Visible<ReplyData>>(
           key: ValueKey<_HistoryKey>(_HistoryKey(
               controller._getDateRange(_ReplyHistoryBody._index),
               refresh,
               value)),
+          controller: scrollController,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.replyDataList(

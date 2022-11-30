@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
 
 import '../modules/advanced_settings.dart';
-import '../modules/backdrop_settings.dart';
 import '../modules/basic_settings.dart';
+import '../modules/basic_ui_settings.dart';
 import '../modules/blacklist.dart';
 import '../modules/cookie.dart';
 import '../modules/drafts.dart';
@@ -129,11 +129,11 @@ abstract class AppPages {
       name: AppRoutes.uiSettings,
       page: () => const UISettingsView(),
       transition: Transition.rightToLeft,
-      children: [_backdropUISettings, _postUISettings]);
+      children: [_basicUISettings, _postUISettings]);
 
-  static final GetPage _backdropUISettings = GetPage(
-      name: AppRoutes.backdropUISettings,
-      page: () => const BackdropUISettingsView(),
+  static final GetPage _basicUISettings = GetPage(
+      name: AppRoutes.basicUISettings,
+      page: () => const BasicUISettingsView(),
       transition: Transition.rightToLeft);
 
   static final GetPage _postUISettings = GetPage(

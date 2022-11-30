@@ -47,14 +47,14 @@ class _XdnmbApp extends StatelessWidget {
   Widget build(BuildContext context) => GetMaterialApp(
         title: '霞岛',
         initialBinding: servicesBindings(),
-        getPages: !SettingsService.isBackdropUI ? getPages : null,
+        getPages: !SettingsService.isSwipeablePage ? getPages : null,
         initialRoute: AppRoutes.home,
-        onGenerateInitialRoutes: SettingsService.isBackdropUI
+        onGenerateInitialRoutes: SettingsService.isSwipeablePage
             ? (initialRoute) =>
                 [SwipeablePageRoute(builder: (context) => const PostListView())]
             : null,
         onGenerateRoute:
-            SettingsService.isBackdropUI ? backdropOnGenerateRoute : null,
+            SettingsService.isSwipeablePage ? backdropOnGenerateRoute : null,
         theme: AppTheme.theme,
         darkTheme: AppTheme.darkTheme,
         builder: EasyLoading.init(),

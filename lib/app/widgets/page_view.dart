@@ -26,7 +26,7 @@ class PageViewTabBar extends StatefulWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize {
     double maxHeight = _height;
-    for (final Widget item in tabs) {
+    for (final item in tabs) {
       if (item is PreferredSizeWidget) {
         maxHeight = max(item.preferredSize.height, maxHeight);
       }
@@ -128,7 +128,7 @@ class SwipeablePageView extends StatelessWidget {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
 
-    return (SettingsService.isBackdropUI && GetPlatform.isMobile)
+    return (SettingsService.isSwipeablePage && GetPlatform.isMobile)
         ? Listener(
             onPointerDown: (event) {
               final route = ModalRoute.of(context);

@@ -9,8 +9,8 @@ import '../data/models/controller.dart';
 import '../data/services/settings.dart';
 import '../data/services/stack.dart';
 import '../modules/advanced_settings.dart';
-import '../modules/backdrop_settings.dart';
 import '../modules/basic_settings.dart';
+import '../modules/basic_ui_settings.dart';
 import '../modules/blacklist.dart';
 import '../modules/cookie.dart';
 import '../modules/drafts.dart';
@@ -74,10 +74,9 @@ abstract class AppRoutes {
 
   static const String uiSettingsPath = '$settings$uiSettings';
 
-  static const String backdropUISettings = '/${PathNames.backdropUISettings}';
+  static const String basicUISettings = '/${PathNames.basicUISettings}';
 
-  static const String backdropUISettingsPath =
-      '$uiSettingsPath$backdropUISettings';
+  static const String basicUISettingsPath = '$uiSettingsPath$basicUISettings';
 
   static const String postUISettings = '/${PathNames.postUISettings}';
 
@@ -178,8 +177,8 @@ abstract class AppRoutes {
 
   static Future<T?>? toUISettings<T>() => Get.toNamed<T>(uiSettingsPath);
 
-  static Future<T?>? toBackdropUISettings<T>() =>
-      Get.toNamed<T>(backdropUISettingsPath);
+  static Future<T?>? toBasicUISettings<T>() =>
+      Get.toNamed<T>(basicUISettingsPath);
 
   static Future<T?>? toPostUISettings<T>() =>
       Get.toNamed<T>(postUISettingsPath);
@@ -254,7 +253,7 @@ abstract class PathNames {
 
   static const String uiSettings = 'uiSettings';
 
-  static const String backdropUISettings = 'backdropUISettings';
+  static const String basicUISettings = 'basicUISettings';
 
   static const String postUISettings = 'postUISettings';
 
@@ -325,10 +324,10 @@ Route? backdropOnGenerateRoute(RouteSettings settings) {
       case AppRoutes.uiSettingsPath:
         return _SwipeablePageRoute(
             settings: settings, builder: (context) => const UISettingsView());
-      case AppRoutes.backdropUISettingsPath:
+      case AppRoutes.basicUISettingsPath:
         return _SwipeablePageRoute(
             settings: settings,
-            builder: (context) => const BackdropUISettingsView());
+            builder: (context) => const BasicUISettingsView());
       case AppRoutes.postUISettingsPath:
         return GetPageRoute(
             settings: settings,

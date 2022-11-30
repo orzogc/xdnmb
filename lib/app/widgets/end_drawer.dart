@@ -111,6 +111,14 @@ class AppEndDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
+    final Widget searchButton =
+        SearchButton(showLabel: true, afterSearch: Get.back);
+    final Widget historyButton =
+        HistoryButton(showLabel: true, onTapEnd: Get.back);
+    final Widget feedButton = FeedButton(showLabel: true, onTapEnd: Get.back);
+    final Widget settingsButton =
+        SettingsButton(showLabel: true, beforeOpenSettings: Get.back);
+
     return SettingsService.isBackdropUI
         ? Drawer(
             width: 150.0,
@@ -125,18 +133,18 @@ class AppEndDrawer extends StatelessWidget {
                         ? const DarkModeGuide(DarkModeButton(showLabel: true))
                         : const DarkModeButton(showLabel: true),
                     settings.shouldShowGuide
-                        ? const SearchGuide(SearchButton(showLabel: true))
-                        : const SearchButton(showLabel: true),
+                        ? SearchGuide(searchButton)
+                        : searchButton,
                     settings.shouldShowGuide
-                        ? const HistoryGuide(HistoryButton(showLabel: true))
-                        : const HistoryButton(showLabel: true),
+                        ? HistoryGuide(historyButton)
+                        : historyButton,
                     settings.shouldShowGuide
-                        ? const FeedGuide(FeedButton(showLabel: true))
-                        : const FeedButton(showLabel: true),
+                        ? FeedGuide(feedButton)
+                        : feedButton,
                     settings.shouldShowGuide
-                        ? const SettingsGuide(SettingsButton(showLabel: true))
-                        : const SettingsButton(showLabel: true),
-                    const SponsorButton(showIcon: true),
+                        ? SettingsGuide(settingsButton)
+                        : settingsButton,
+                    const SponsorButton(onlyText: false, showLabel: true),
                   ].withSpaceBetween(height: 10.0),
                 ),
               ].withSpaceBetween(height: 10.0),
@@ -147,7 +155,7 @@ class AppEndDrawer extends StatelessWidget {
             child: Column(
               children: [
                 _DrawerHeader(appBarHeight: appBarHeight),
-                const Expanded(child: ForumList()),
+                Expanded(child: ForumList(onTapEnd: Get.back)),
               ],
             ),
           );

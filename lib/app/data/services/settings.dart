@@ -61,7 +61,11 @@ class SettingsService extends GetxService {
 
   static late final bool isShowGuide;
 
+  static late final bool isShowBottomBar;
+
   static late final bool isBackdropUI;
+
+  static bool get isSwipeablePage => isShowBottomBar || isBackdropUI;
 
   late final Box _settingsBox;
 
@@ -106,12 +110,6 @@ class SettingsService extends GetxService {
 
   set isWatermark(bool isWatermark) =>
       _settingsBox.put(Settings.isWatermark, isWatermark);
-
-  bool get hideFloatingButton =>
-      _settingsBox.get(Settings.hideFloatingButton, defaultValue: false);
-
-  set hideFloatingButton(bool hideFloatingButton) =>
-      _settingsBox.put(Settings.hideFloatingButton, hideFloatingButton);
 
   bool get isJumpToLastBrowsePage =>
       _settingsBox.get(Settings.isJumpToLastBrowsePage, defaultValue: true);
@@ -162,20 +160,6 @@ class SettingsService extends GetxService {
   set restoreForumPage(bool restoreForumPage) =>
       _settingsBox.put(Settings.restoreForumPage, restoreForumPage);
 
-  double get drawerEdgeDragWidthRatio =>
-      (_settingsBox.get(Settings.drawerEdgeDragWidthRatio, defaultValue: 0.25)
-              as double)
-          .clamp(minDrawerEdgeDragWidthRatio, maxDrawerEdgeDragWidthRatio);
-
-  set drawerEdgeDragWidthRatio(double ratio) {
-    ratio =
-        ratio.clamp(minDrawerEdgeDragWidthRatio, maxDrawerEdgeDragWidthRatio);
-    _settingsBox.put(Settings.drawerEdgeDragWidthRatio, ratio);
-    _drawerDragRatio.value = ratio;
-  }
-
-  double get drawerDragRatio => _drawerDragRatio.value;
-
   int get imageDisposeDistance => max(
       _settingsBox.get(Settings.imageDisposeDistance, defaultValue: 120), 0);
 
@@ -218,25 +202,23 @@ class SettingsService extends GetxService {
 
   bool get shouldShowGuide => showBackdropGuide || showGuide;
 
+  bool get showBottomBar =>
+      _settingsBox.get(Settings.showBottomBar, defaultValue: GetPlatform.isIOS);
+
+  set showBottomBar(bool showBottomBar) =>
+      _settingsBox.put(Settings.showBottomBar, showBottomBar);
+
+  bool get autoHideBottomBar =>
+      _settingsBox.get(Settings.autoHideBottomBar, defaultValue: true);
+
+  set autoHideBottomBar(bool autoHideBottomBar) =>
+      _settingsBox.put(Settings.autoHideBottomBar, autoHideBottomBar);
+
   bool get backdropUI =>
-      _settingsBox.get(Settings.backdropUI, defaultValue: GetPlatform.isIOS);
+      _settingsBox.get(Settings.backdropUI, defaultValue: false);
 
   set backdropUI(bool backdropUi) =>
       _settingsBox.put(Settings.backdropUI, backdropUi);
-
-  bool get compactBackdrop =>
-      _settingsBox.get(Settings.compactBackdrop, defaultValue: false);
-
-  set compactBackdrop(bool compactBackdrop) =>
-      _settingsBox.put(Settings.compactBackdrop, compactBackdrop);
-
-  double get swipeablePageDragWidthRatio =>
-      (_settingsBox.get(Settings.swipeablePageDragWidthRatio,
-              defaultValue: 0.25) as double)
-          .clamp(0.0, 1.0);
-
-  set swipeablePageDragWidthRatio(double ratio) => _settingsBox.put(
-      Settings.swipeablePageDragWidthRatio, ratio.clamp(0.0, 1.0));
 
   double get frontLayerDragHeightRatio =>
       (_settingsBox.get(Settings.frontLayerDragHeightRatio, defaultValue: 0.20)
@@ -253,6 +235,40 @@ class SettingsService extends GetxService {
 
   set backLayerDragHeightRatio(double ratio) => _settingsBox.put(
       Settings.backLayerDragHeightRatio, ratio.clamp(0.0, 1.0));
+
+  bool get hideFloatingButton =>
+      _settingsBox.get(Settings.hideFloatingButton, defaultValue: false);
+
+  set hideFloatingButton(bool hideFloatingButton) =>
+      _settingsBox.put(Settings.hideFloatingButton, hideFloatingButton);
+
+  double get drawerEdgeDragWidthRatio =>
+      (_settingsBox.get(Settings.drawerEdgeDragWidthRatio, defaultValue: 0.25)
+              as double)
+          .clamp(minDrawerEdgeDragWidthRatio, maxDrawerEdgeDragWidthRatio);
+
+  set drawerEdgeDragWidthRatio(double ratio) {
+    ratio =
+        ratio.clamp(minDrawerEdgeDragWidthRatio, maxDrawerEdgeDragWidthRatio);
+    _settingsBox.put(Settings.drawerEdgeDragWidthRatio, ratio);
+    _drawerDragRatio.value = ratio;
+  }
+
+  double get drawerDragRatio => _drawerDragRatio.value;
+
+  double get swipeablePageDragWidthRatio =>
+      (_settingsBox.get(Settings.swipeablePageDragWidthRatio,
+              defaultValue: 0.25) as double)
+          .clamp(0.0, 1.0);
+
+  set swipeablePageDragWidthRatio(double ratio) => _settingsBox.put(
+      Settings.swipeablePageDragWidthRatio, ratio.clamp(0.0, 1.0));
+
+  bool get compactTabAndForumList =>
+      _settingsBox.get(Settings.compactTabAndForumList, defaultValue: false);
+
+  set compactTabAndForumList(bool isCompact) =>
+      _settingsBox.put(Settings.compactTabAndForumList, isCompact);
 
   double get postHeaderFontSize =>
       (_settingsBox.get(Settings.postHeaderFontSize,
@@ -333,6 +349,8 @@ class SettingsService extends GetxService {
       Settings.postContentLetterSpacing,
       letterSpacing.clamp(minLetterSpacing, maxLetterSpacing));
 
+  late final ValueListenable<Box> isDarkModeListenable;
+
   late final ValueListenable<Box> isRestoreTabsListenable;
 
   late final ValueListenable<Box> initialForumListenable;
@@ -340,8 +358,6 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> showImageListenable;
 
   late final ValueListenable<Box> isWatermarkListenable;
-
-  late final ValueListenable<Box> hideFloatingButtonListenable;
 
   late final ValueListenable<Box> isJumpToLastBrowsePageListenable;
 
@@ -359,8 +375,6 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> restoreForumPageListenable;
 
-  late final ValueListenable<Box> drawerEdgeDragWidthRatioListenable;
-
   late final ValueListenable<Box> imageDisposeDistanceListenable;
 
   late final ValueListenable<Box> fixedImageDisposeRatioListenable;
@@ -369,15 +383,23 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> showGuideListenable;
 
+  late final ValueListenable<Box> showBottomBarListenable;
+
+  late final ValueListenable<Box> autoHideBottomBarListenable;
+
   late final ValueListenable<Box> backdropUIListenable;
-
-  late final ValueListenable<Box> compactBackdropListenable;
-
-  late final ValueListenable<Box> swipeablePageDragWidthRatioListenable;
 
   late final ValueListenable<Box> frontLayerDragHeightRatioListenable;
 
   late final ValueListenable<Box> backLayerDragHeightRatioListenable;
+
+  late final ValueListenable<Box> hideFloatingButtonListenable;
+
+  late final ValueListenable<Box> drawerEdgeDragWidthRatioListenable;
+
+  late final ValueListenable<Box> swipeablePageDragWidthRatioListenable;
+
+  late final ValueListenable<Box> compactTabAndForumListListenable;
 
   late final StreamSubscription<BoxEvent> _darkModeSubscription;
 
@@ -389,8 +411,9 @@ class SettingsService extends GetxService {
     isFixMissingFont = box.get(Settings.fixMissingFont, defaultValue: false);
     isRestoreForumPage =
         box.get(Settings.restoreForumPage, defaultValue: false);
-    isBackdropUI =
-        box.get(Settings.backdropUI, defaultValue: GetPlatform.isIOS);
+    isShowBottomBar =
+        box.get(Settings.showBottomBar, defaultValue: GetPlatform.isIOS);
+    isBackdropUI = box.get(Settings.backdropUI, defaultValue: false);
   }
 
   void updateSaveImagePath() {
@@ -442,6 +465,7 @@ class SettingsService extends GetxService {
       feedId = const Uuid().v4();
     }
 
+    isDarkModeListenable = _settingsBox.listenable(keys: [Settings.isDarkMode]);
     isRestoreTabsListenable =
         _settingsBox.listenable(keys: [Settings.isRestoreTabs]);
     initialForumListenable = _settingsBox
@@ -449,8 +473,6 @@ class SettingsService extends GetxService {
     showImageListenable = _settingsBox.listenable(keys: [Settings.showImage]);
     isWatermarkListenable =
         _settingsBox.listenable(keys: [Settings.isWatermark]);
-    hideFloatingButtonListenable =
-        _settingsBox.listenable(keys: [Settings.hideFloatingButton]);
     isJumpToLastBrowsePageListenable =
         _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePage]);
     isJumpToLastBrowsePositionListenable = _settingsBox.listenable(keys: [
@@ -468,8 +490,6 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.addBlueIslandEmoticons]);
     restoreForumPageListenable =
         _settingsBox.listenable(keys: [Settings.restoreForumPage]);
-    drawerEdgeDragWidthRatioListenable =
-        _settingsBox.listenable(keys: [Settings.drawerEdgeDragWidthRatio]);
     imageDisposeDistanceListenable =
         _settingsBox.listenable(keys: [Settings.imageDisposeDistance]);
     fixedImageDisposeRatioListenable =
@@ -481,15 +501,26 @@ class SettingsService extends GetxService {
       Settings.showGuide,
       Settings.showBackdropGuide,
     ]);
+    showBottomBarListenable =
+        _settingsBox.listenable(keys: [Settings.showBottomBar]);
+    autoHideBottomBarListenable =
+        _settingsBox.listenable(keys: [Settings.autoHideBottomBar]);
     backdropUIListenable = _settingsBox.listenable(keys: [Settings.backdropUI]);
-    compactBackdropListenable =
-        _settingsBox.listenable(keys: [Settings.compactBackdrop]);
-    swipeablePageDragWidthRatioListenable = _settingsBox.listenable(
-        keys: [Settings.backdropUI, Settings.swipeablePageDragWidthRatio]);
     frontLayerDragHeightRatioListenable =
         _settingsBox.listenable(keys: [Settings.frontLayerDragHeightRatio]);
     backLayerDragHeightRatioListenable =
         _settingsBox.listenable(keys: [Settings.backLayerDragHeightRatio]);
+    hideFloatingButtonListenable =
+        _settingsBox.listenable(keys: [Settings.hideFloatingButton]);
+    drawerEdgeDragWidthRatioListenable = _settingsBox.listenable(
+        keys: [Settings.showBottomBar, Settings.drawerEdgeDragWidthRatio]);
+    swipeablePageDragWidthRatioListenable = _settingsBox.listenable(keys: [
+      Settings.showBottomBar,
+      Settings.backdropUI,
+      Settings.swipeablePageDragWidthRatio,
+    ]);
+    compactTabAndForumListListenable =
+        _settingsBox.listenable(keys: [Settings.compactTabAndForumList]);
 
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
 

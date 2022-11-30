@@ -15,8 +15,8 @@ class UISettingsView extends StatelessWidget {
           body: ListView(
             children: const [
               ListTile(
-                title: Text('Backdrop设置'),
-                onTap: AppRoutes.toBackdropUISettings,
+                title: Text('界面基本设置'),
+                onTap: AppRoutes.toBasicUISettings,
               ),
               ListTile(
                 title: Text('串字体设置'),

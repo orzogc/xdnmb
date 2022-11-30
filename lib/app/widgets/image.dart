@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -64,7 +63,8 @@ class ThumbImage extends StatelessWidget {
             builder: (context, constraints) => ConstrainedBox(
               constraints: BoxConstraints(
                 minWidth: _minWidth,
-                maxWidth: min(constraints.maxWidth / 3.0, _maxWidth),
+                maxWidth:
+                    (constraints.maxWidth / 3.0).clamp(_minWidth, _maxWidth),
                 minHeight: _minHeight,
                 maxHeight: _maxHeight,
               ),

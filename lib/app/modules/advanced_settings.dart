@@ -78,12 +78,10 @@ class _AddBlueIslandEmoticons extends StatelessWidget {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.addBlueIslandEmoticonsListenable,
-      builder: (context, value, child) => ListTile(
+      builder: (context, value, child) => SwitchListTile(
         title: const Text('添加蓝岛颜文字'),
-        trailing: Switch(
-          value: settings.addBlueIslandEmoticons,
-          onChanged: (value) => settings.addBlueIslandEmoticons = value,
-        ),
+        value: settings.addBlueIslandEmoticons,
+        onChanged: (value) => settings.addBlueIslandEmoticons = value,
       ),
     );
   }
@@ -99,41 +97,10 @@ class _RestoreForumPage extends StatelessWidget {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.restoreForumPageListenable,
-      builder: (context, value, child) => ListTile(
+      builder: (context, value, child) => SwitchListTile(
         title: const Text('恢复标签页时恢复时间线/版块的页数'),
-        trailing: Switch(
-          value: settings.restoreForumPage,
-          onChanged: (value) => settings.restoreForumPage = value,
-        ),
-      ),
-    );
-  }
-}
-
-class _DrawerDragRatio extends StatelessWidget {
-  // ignore: unused_element
-  const _DrawerDragRatio({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.drawerEdgeDragWidthRatioListenable,
-      builder: (context, value, child) => ListTile(
-        title: const Text('划开侧边栏的范围占屏幕宽度的比例'),
-        trailing: Text('${settings.drawerEdgeDragWidthRatio}'),
-        onTap: () async {
-          final ratio = await Get.dialog<double>(DoubleRangeDialog(
-              text: '比例',
-              initialValue: settings.drawerEdgeDragWidthRatio,
-              min: SettingsService.minDrawerEdgeDragWidthRatio,
-              max: SettingsService.maxDrawerEdgeDragWidthRatio));
-
-          if (ratio != null) {
-            settings.drawerEdgeDragWidthRatio = ratio;
-          }
-        },
+        value: settings.restoreForumPage,
+        onChanged: (value) => settings.restoreForumPage = value,
       ),
     );
   }
@@ -252,13 +219,11 @@ class _FixMissingFont extends StatelessWidget {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.fixMissingFontListenable,
-      builder: (context, value, child) => ListTile(
+      builder: (context, value, child) => SwitchListTile(
         title: const Text('修复字体显示'),
         subtitle: const Text('字体显示不正常可以尝试开启此项，更改后需要重启应用'),
-        trailing: Switch(
-          value: settings.fixMissingFont,
-          onChanged: (value) => settings.fixMissingFont = value,
-        ),
+        value: settings.fixMissingFont,
+        onChanged: (value) => settings.fixMissingFont = value,
       ),
     );
   }
@@ -274,21 +239,19 @@ class _ShowGuide extends StatelessWidget {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.showGuideListenable,
-      builder: (context, value, child) => ListTile(
+      builder: (context, value, child) => SwitchListTile(
         title: const Text('下一次启动应用时显示用户指导'),
         subtitle: const Text('更改后需要重启应用'),
-        trailing: Switch(
-          value: settings.backdropUI
-              ? settings.rawShowBackdropGuide
-              : settings.rawShowGuide,
-          onChanged: (value) {
-            if (settings.backdropUI) {
-              settings.showBackdropGuide = value;
-            } else {
-              settings.showGuide = value;
-            }
-          },
-        ),
+        value: settings.backdropUI
+            ? settings.rawShowBackdropGuide
+            : settings.rawShowGuide,
+        onChanged: (value) {
+          if (settings.backdropUI) {
+            settings.showBackdropGuide = value;
+          } else {
+            settings.showGuide = value;
+          }
+        },
       ),
     );
   }
@@ -311,7 +274,6 @@ class AdvancedSettingsView extends StatelessWidget {
               if (!GetPlatform.isIOS) const _SaveImagePath(),
               const _AddBlueIslandEmoticons(),
               const _RestoreForumPage(),
-              if (GetPlatform.isMobile) const _DrawerDragRatio(),
               const _ImageDisposeDistance(),
               const _FixedImageDisposeRatio(),
               const _FixMissingFont(),

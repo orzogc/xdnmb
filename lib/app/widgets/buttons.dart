@@ -26,13 +26,8 @@ class _Button extends StatelessWidget {
       required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: icon,
-      title: Text(label),
-      onTap: onTap,
-    );
-  }
+  Widget build(BuildContext context) =>
+      ListTile(leading: icon, title: Text(label), onTap: onTap);
 }
 
 class DarkModeButton extends StatelessWidget {
@@ -44,6 +39,12 @@ class DarkModeButton extends StatelessWidget {
   final bool showLabel;
 
   const DarkModeButton({super.key, this.showLabel = false});
+
+  void _onTap() {
+    final settings = SettingsService.to;
+
+    settings.isDarkMode = !settings.isDarkMode;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,19 +58,13 @@ class DarkModeButton extends StatelessWidget {
           ? _Button(
               icon: Get.isDarkMode ? _whiteIcon : _blackIcon,
               label: Get.isDarkMode ? '光来' : '暗来',
-              onTap: () => settings.isDarkMode = !settings.isDarkMode,
+              onTap: _onTap,
             )
-          : Get.isDarkMode
-              ? IconButton(
-                  onPressed: () => settings.isDarkMode = false,
-                  tooltip: '光来！',
-                  icon: _whiteIcon,
-                )
-              : IconButton(
-                  onPressed: () => settings.isDarkMode = true,
-                  tooltip: '暗来！',
-                  icon: _blackIcon,
-                );
+          : IconButton(
+              onPressed: _onTap,
+              tooltip: Get.isDarkMode ? '光来！' : '暗来！',
+              icon: Get.isDarkMode ? _whiteIcon : _blackIcon,
+            );
     });
   }
 }
@@ -127,12 +122,25 @@ class SearchButton extends StatelessWidget {
 
   final Color? iconColor;
 
-  const SearchButton({super.key, this.showLabel = false, this.iconColor});
+  final VoidCallback? onTapPrelude;
+
+  final VoidCallback? afterSearch;
+
+  const SearchButton(
+      {super.key,
+      this.showLabel = false,
+      this.iconColor,
+      this.onTapPrelude,
+      this.afterSearch});
 
   Future<void> _onTap() async {
+    if (onTapPrelude != null) {
+      onTapPrelude!();
+    }
+
     final result = await Get.dialog<bool>(_SearchDialog());
-    if (result ?? false) {
-      Get.back();
+    if ((result ?? false) && afterSearch != null) {
+      afterSearch!();
     }
   }
 
@@ -151,58 +159,112 @@ class SettingsButton extends StatelessWidget {
 
   final Color? iconColor;
 
-  const SettingsButton({super.key, this.showLabel = false, this.iconColor});
+  final VoidCallback? onTapPrelude;
 
-  void _onTap(BuildContext context) {
-    Get.back();
+  final VoidCallback? beforeOpenSettings;
+
+  const SettingsButton(
+      {super.key,
+      this.showLabel = false,
+      this.iconColor,
+      this.onTapPrelude,
+      this.beforeOpenSettings});
+
+  void _onTap() {
+    if (onTapPrelude != null) {
+      onTapPrelude!();
+    }
+
+    if (beforeOpenSettings != null) {
+      beforeOpenSettings!();
+    }
     AppRoutes.toSettings();
   }
 
   @override
   Widget build(BuildContext context) {
-    final icon = Icon(Icons.settings, color: iconColor);
+    final Widget icon = Icon(Icons.settings, color: iconColor);
 
     return showLabel
-        ? _Button(icon: icon, label: '设置', onTap: () => _onTap(context))
-        : IconButton(
-            onPressed: () => _onTap(context), tooltip: '设置', icon: icon);
+        ? _Button(icon: icon, label: '设置', onTap: _onTap)
+        : IconButton(onPressed: _onTap, tooltip: '设置', icon: icon);
   }
 }
 
 class HistoryButton extends StatelessWidget {
-  static const Widget _icon = Icon(Icons.history);
-
   final bool showLabel;
 
-  const HistoryButton({super.key, this.showLabel = false});
+  final Color? iconColor;
+
+  final VoidCallback? onTapPrelude;
+
+  final VoidCallback? onTapEnd;
+
+  const HistoryButton(
+      {super.key,
+      this.showLabel = false,
+      this.iconColor,
+      this.onTapPrelude,
+      this.onTapEnd});
 
   void _onTap() {
+    if (onTapPrelude != null) {
+      onTapPrelude!();
+    }
+
     AppRoutes.toHistory();
-    Get.back();
+
+    if (onTapEnd != null) {
+      onTapEnd!();
+    }
   }
 
   @override
-  Widget build(BuildContext context) => showLabel
-      ? _Button(icon: _icon, label: '历史', onTap: _onTap)
-      : IconButton(onPressed: _onTap, tooltip: '历史', icon: _icon);
+  Widget build(BuildContext context) {
+    final Widget icon = Icon(Icons.history, color: iconColor);
+
+    return showLabel
+        ? _Button(icon: icon, label: '历史', onTap: _onTap)
+        : IconButton(onPressed: _onTap, tooltip: '历史', icon: icon);
+  }
 }
 
 class FeedButton extends StatelessWidget {
-  static const Widget _icon = Icon(Icons.rss_feed);
-
   final bool showLabel;
 
-  const FeedButton({super.key, this.showLabel = false});
+  final Color? iconColor;
+
+  final VoidCallback? onTapPrelude;
+
+  final VoidCallback? onTapEnd;
+
+  const FeedButton(
+      {super.key,
+      this.showLabel = false,
+      this.iconColor,
+      this.onTapPrelude,
+      this.onTapEnd});
 
   void _onTap() {
+    if (onTapPrelude != null) {
+      onTapPrelude!();
+    }
+
     AppRoutes.toFeed();
-    Get.back();
+
+    if (onTapEnd != null) {
+      onTapEnd!();
+    }
   }
 
   @override
-  Widget build(BuildContext context) => showLabel
-      ? _Button(icon: _icon, label: '订阅', onTap: _onTap)
-      : IconButton(onPressed: _onTap, tooltip: '订阅', icon: _icon);
+  Widget build(BuildContext context) {
+    final Widget icon = Icon(Icons.rss_feed, color: iconColor);
+
+    return showLabel
+        ? _Button(icon: icon, label: '订阅', onTap: _onTap)
+        : IconButton(onPressed: _onTap, tooltip: '订阅', icon: icon);
+  }
 }
 
 class _SponsorDialog extends StatelessWidget {
@@ -229,26 +291,36 @@ class _SponsorDialog extends StatelessWidget {
 }
 
 class SponsorButton extends StatelessWidget {
-  final bool showIcon;
+  final bool onlyText;
 
-  const SponsorButton({super.key, this.showIcon = false});
+  final bool showLabel;
 
-  void _onTap() => Get.dialog(const _SponsorDialog());
+  final Color? iconColor;
+
+  final VoidCallback? onTapPrelude;
+
+  const SponsorButton(
+      {super.key,
+      this.onlyText = true,
+      this.showLabel = false,
+      this.iconColor,
+      this.onTapPrelude});
+
+  void _onTap() {
+    if (onTapPrelude != null) {
+      onTapPrelude!();
+    }
+
+    Get.dialog(const _SponsorDialog());
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final Widget icon = Icon(AppIcons.heart, color: iconColor, size: 18.0);
 
-    return showIcon
-        ? _Button(
-            icon: const Padding(
-              padding: EdgeInsets.only(left: 3.0, top: 3.0),
-              child: Icon(AppIcons.heart, size: 18.0),
-            ),
-            label: '赞助',
-            onTap: _onTap,
-          )
-        : TextButton(
+    return onlyText
+        ? TextButton(
             onPressed: _onTap,
             child: Text(
               '赞助',
@@ -261,6 +333,16 @@ class SponsorButton extends StatelessWidget {
                 ),
               ),
             ),
-          );
+          )
+        : (showLabel
+            ? _Button(
+                icon: Padding(
+                  padding: const EdgeInsets.only(left: 3.0, top: 3.0),
+                  child: icon,
+                ),
+                label: '赞助',
+                onTap: _onTap,
+              )
+            : IconButton(onPressed: _onTap, tooltip: '赞助', icon: icon));
   }
 }
