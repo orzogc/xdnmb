@@ -71,7 +71,11 @@ class SettingsService extends GetxService {
 
   final RxBool hasBeenDarkMode = false.obs;
 
+  late final RxBool _isAutoHideBottomBar;
+
   late final RxDouble _drawerDragRatio;
+
+  late final RxBool _isCompactTabAndForumList;
 
   final RxBool isReady = false.obs;
 
@@ -211,8 +215,12 @@ class SettingsService extends GetxService {
   bool get autoHideBottomBar =>
       _settingsBox.get(Settings.autoHideBottomBar, defaultValue: true);
 
-  set autoHideBottomBar(bool autoHideBottomBar) =>
-      _settingsBox.put(Settings.autoHideBottomBar, autoHideBottomBar);
+  set autoHideBottomBar(bool autoHideBottomBar) {
+    _settingsBox.put(Settings.autoHideBottomBar, autoHideBottomBar);
+    _isAutoHideBottomBar.value = autoHideBottomBar;
+  }
+
+  bool get isAutoHideBottomBar => _isAutoHideBottomBar.value;
 
   bool get backdropUI =>
       _settingsBox.get(Settings.backdropUI, defaultValue: false);
@@ -267,8 +275,12 @@ class SettingsService extends GetxService {
   bool get compactTabAndForumList =>
       _settingsBox.get(Settings.compactTabAndForumList, defaultValue: false);
 
-  set compactTabAndForumList(bool isCompact) =>
-      _settingsBox.put(Settings.compactTabAndForumList, isCompact);
+  set compactTabAndForumList(bool isCompact) {
+    _settingsBox.put(Settings.compactTabAndForumList, isCompact);
+    _isCompactTabAndForumList.value = isCompact;
+  }
+
+  bool get isCompactTabAndForumList => _isCompactTabAndForumList.value;
 
   double get postHeaderFontSize =>
       (_settingsBox.get(Settings.postHeaderFontSize,
@@ -522,7 +534,9 @@ class SettingsService extends GetxService {
     compactTabAndForumListListenable =
         _settingsBox.listenable(keys: [Settings.compactTabAndForumList]);
 
+    _isAutoHideBottomBar = autoHideBottomBar.obs;
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
+    _isCompactTabAndForumList = compactTabAndForumList.obs;
 
     isReady.value = true;
     await checkDarkMode();

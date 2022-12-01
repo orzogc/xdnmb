@@ -303,8 +303,9 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
               onTap: () => showForumRuleDialog(mainPost.forumId!),
               child: const Text('版规'),
             ),
-          const PopupMenuItem(
-              onTap: openEditPostBottomSheet, child: Text('回复')),
+          PopupMenuItem(
+              onTap: BottomSheetController.editPostController.showEditPost,
+              child: const Text('回复')),
           PopupMenuItem(
             onTap: () async {
               try {
@@ -764,8 +765,8 @@ class _ThreadBodyState extends State<ThreadBody> {
     _isNoMoreItems = false;
   }
 
-  void _setScrollDirection() => widget.controller
-      .setScrollPosition(_anchorController.position.userScrollDirection);
+  void _setScrollDirection() => PostListController.setScrollPosition(
+      _anchorController.position.userScrollDirection);
 
   void _trySave(int page) => widget.controller.trySave();
 
@@ -873,39 +874,35 @@ Widget _itemWithDivider(Widget widget) => Column(
     );
 
 void _replyPost(ThreadTypeController controller, int postId) {
-  final button = FloatingButton.buttonKey.currentState;
-  if (button != null && button.mounted) {
-    final text = '${postId.toPostReference()}\n';
+  final text = '${postId.toPostReference()}\n';
 
-    if (button.hasBottomSheet) {
-      final bottomSheet = EditPost.bottomSheetkey.currentState;
-      if (bottomSheet != null && bottomSheet.mounted) {
-        bottomSheet.insertText(text);
-      }
-    } else {
-      button.bottomSheet(EditPostController(
-          postListType: controller.postListType,
-          id: controller.id,
-          forumId: controller.forumId,
-          content: text));
+  final editPostController = BottomSheetController.editPostController;
+  if (editPostController.isShowed) {
+    final editPost = EditPostCallback.bottomSheet;
+    if (editPost != null) {
+      editPost.insertText(text);
     }
+  } else {
+    editPostController.showEditPost(EditPostController(
+        postListType: controller.postListType,
+        id: controller.id,
+        forumId: controller.forumId,
+        content: text));
   }
 }
 
 void _replyWithImage(ThreadTypeController controller, Uint8List imageData) {
-  final button = FloatingButton.buttonKey.currentState;
-  if (button != null && button.mounted) {
-    if (button.hasBottomSheet) {
-      final bottomSheet = EditPost.bottomSheetkey.currentState;
-      if (bottomSheet != null && bottomSheet.mounted) {
-        bottomSheet.insertImage(imageData);
-      }
-    } else {
-      button.bottomSheet(EditPostController(
-          postListType: controller.postListType,
-          id: controller.id,
-          forumId: controller.forumId,
-          imageData: imageData));
+  final editPostController = BottomSheetController.editPostController;
+  if (editPostController.isShowed) {
+    final editPost = EditPostCallback.bottomSheet;
+    if (editPost != null) {
+      editPost.insertImage(imageData);
     }
+  } else {
+    editPostController.showEditPost(EditPostController(
+        postListType: controller.postListType,
+        id: controller.id,
+        forumId: controller.forumId,
+        imageData: imageData));
   }
 }

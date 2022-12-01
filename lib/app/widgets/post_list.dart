@@ -32,8 +32,8 @@ class _PostListRefresherState extends State<PostListRefresher> {
 
   void _addRefresh() => _refresh++;
 
-  void _setScrollDirection() => widget.controller
-      .setScrollPosition(_controller.position.userScrollDirection);
+  void _setScrollDirection() => PostListController.setScrollPosition(
+      _controller.position.userScrollDirection);
 
   @override
   void initState() {

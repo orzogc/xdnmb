@@ -803,8 +803,7 @@ class _Post extends StatelessWidget {
       final lastPost = await _getLastPost(cookie);
       if (lastPost != null &&
           lastPost.mainPostId == null &&
-          lastPost.userHash == post.userHash &&
-          lastPost.postTime.difference(post.postTime).abs() < _difference) {
+          lastPost.userHash == post.userHash) {
         await history.updatePostData(id, lastPost);
       } else {
         final forum = await XdnmbClientService.to.client
@@ -875,8 +874,7 @@ class _Post extends StatelessWidget {
       final lastPost = await _getLastPost(cookie);
       if (lastPost != null &&
           lastPost.mainPostId == reply.mainPostId &&
-          lastPost.userHash == reply.userHash &&
-          lastPost.postTime.difference(reply.postTime).abs() < _difference) {
+          lastPost.userHash == reply.userHash) {
         await history.updateReplyData(id: id, post: lastPost);
         final thread = await client.getThread(reply.mainPostId, cookie: cookie);
         final maxPage = thread.maxPage;
@@ -1372,11 +1370,57 @@ class _EmoticonState extends State<_Emoticon> {
   }
 }
 
+typedef IsPostedCallback = bool Function();
+
+typedef ToContorllerCallback = EditPostController Function();
+
+typedef InsertTextCallback = void Function(String text, [int? offset]);
+
+typedef InsertImageCallback = void Function(Uint8List imageData);
+
+typedef SetPostListCallback = void Function(PostList postList, int? forumId);
+
+class EditPostCallback {
+  static EditPostCallback? bottomSheet;
+
+  static EditPostCallback? page;
+
+  final IsPostedCallback _isPosted;
+
+  final ToContorllerCallback _toController;
+
+  final InsertTextCallback _insertText;
+
+  final InsertImageCallback _insertImage;
+
+  final SetPostListCallback _setPostList;
+
+  EditPostCallback._internal(
+      {required IsPostedCallback isPosted,
+      required ToContorllerCallback toController,
+      required InsertTextCallback insertText,
+      required InsertImageCallback insertImage,
+      required SetPostListCallback setPostList})
+      : _isPosted = isPosted,
+        _toController = toController,
+        _insertText = insertText,
+        _insertImage = insertImage,
+        _setPostList = setPostList;
+
+  bool isPosted() => _isPosted();
+
+  EditPostController toController() => _toController();
+
+  void insertText(String text, [int? offset]) => _insertText(text, offset);
+
+  void insertImage(Uint8List imageData) => _insertImage(imageData);
+
+  void setPostList(PostList postList, int? forumId) =>
+      _setPostList(postList, forumId);
+}
+
 class EditPost extends StatefulWidget {
   static const int dutyRoomId = 18;
-
-  static final GlobalKey<EditPostState> bottomSheetkey =
-      GlobalKey<EditPostState>();
 
   final PostList postList;
 
@@ -1432,10 +1476,10 @@ class EditPost extends StatefulWidget {
             isAttachDeviceInfo: controller.isAttachDeviceInfo);
 
   @override
-  State<EditPost> createState() => EditPostState();
+  State<EditPost> createState() => _EditPostState();
 }
 
-class EditPostState extends State<EditPost> {
+class _EditPostState extends State<EditPost> {
   late final Rx<PostList> _postList;
 
   late final RxnInt _forumId;
@@ -1460,7 +1504,7 @@ class EditPostState extends State<EditPost> {
 
   final RxBool _showEmoticon = false.obs;
 
-  bool isPosted = false;
+  bool _isPosted = false;
 
   bool get _isAtBottom => widget.height != null;
 
@@ -1471,7 +1515,7 @@ class EditPostState extends State<EditPost> {
         postList.id == AppRoutes.feedbackId;
   }
 
-  EditPostController toController() => EditPostController(
+  EditPostController _toController() => EditPostController(
       postListType: _postList.value.postListType,
       id: _postList.value.id!,
       forumId: _forumId.value,
@@ -1484,15 +1528,15 @@ class EditPostState extends State<EditPost> {
       reportReason: _reportReason.value,
       isAttachDeviceInfo: _isAttachDeviceInfo.value);
 
-  void insertText(String text, [int? offset]) =>
+  void _insertText(String text, [int? offset]) =>
       _contentController.insertText(text, offset);
 
-  void insertImage(Uint8List imageData) {
+  void _insertImage(Uint8List imageData) {
     _imagePath.value = null;
     _imageData.value = imageData;
   }
 
-  void setPostList(PostList postList, int? forumId) {
+  void _setPostList(PostList postList, int? forumId) {
     _postList.value = postList;
     _forumId.value =
         forumId ?? (postList.postListType.isForum ? postList.id : null);
@@ -1590,7 +1634,7 @@ class EditPostState extends State<EditPost> {
                                 _titleController.text.isNotEmpty ||
                                     _nameController.text.isNotEmpty;
                           } else if (result is bool && result) {
-                            isPosted = true;
+                            _isPosted = true;
                             Get.back();
                           }
                         },
@@ -1715,7 +1759,7 @@ class EditPostState extends State<EditPost> {
                   _imagePath.value = path;
                   _imageData.value = null;
                 })),
-                Flexible(child: _Dice(onDice: insertText)),
+                Flexible(child: _Dice(onDice: _insertText)),
                 Flexible(
                   child: Obx(
                     () => _Paint(
@@ -1754,7 +1798,7 @@ class EditPostState extends State<EditPost> {
                       getTitle: () => _titleController.text,
                       getName: () => _nameController.text,
                       getContent: () => _contentController.text,
-                      onPost: () => isPosted = true,
+                      onPost: () => _isPosted = true,
                     ),
                   ),
                 ),
@@ -1790,10 +1834,32 @@ class EditPostState extends State<EditPost> {
     _isWatermark = (widget.isWatermark ?? SettingsService.to.isWatermark).obs;
     _reportReason = RxnString(widget.reportReason);
     _isAttachDeviceInfo = (widget.isAttachDeviceInfo ?? true).obs;
+
+    if (widget.height != null) {
+      EditPostCallback.bottomSheet = EditPostCallback._internal(
+          isPosted: () => _isPosted,
+          toController: _toController,
+          insertText: _insertText,
+          insertImage: _insertImage,
+          setPostList: _setPostList);
+    } else {
+      EditPostCallback.page = EditPostCallback._internal(
+          isPosted: () => _isPosted,
+          toController: _toController,
+          insertText: _insertText,
+          insertImage: _insertImage,
+          setPostList: _setPostList);
+    }
   }
 
   @override
   void dispose() {
+    if (widget.height != null) {
+      EditPostCallback.bottomSheet = null;
+    } else {
+      EditPostCallback.page = null;
+    }
+
     _titleController.dispose();
     _nameController.dispose();
     _contentController.dispose();
@@ -1832,7 +1898,7 @@ class EditPostState extends State<EditPost> {
             ),
           Obx(
             () => _showEmoticon.value
-                ? _Emoticon(onTap: insertText)
+                ? _Emoticon(onTap: _insertText)
                 : const SizedBox.shrink(),
           ),
         ],

@@ -77,14 +77,14 @@ class EditPostBinding implements Bindings {
 }
 
 class EditPostView extends GetView<EditPostController> {
-  final GlobalKey<EditPostState> _editKey = GlobalKey();
+  static EditPostCallback? get _editPost => EditPostCallback.page;
 
-  EditPostView({super.key});
+  const EditPostView({super.key});
 
   @override
   Widget build(BuildContext context) => WillPopScope(
         onWillPop: () async {
-          final controller = _editKey.currentState?.toController();
+          final controller = _editPost?.toController();
           Get.back(result: controller);
 
           return false;
@@ -97,8 +97,7 @@ class EditPostView extends GetView<EditPostController> {
             appBar: AppBar(
               title: Text(controller.postListType.isForumType ? '发表新串' : '回串'),
             ),
-            body:
-                EditPost.fromController(key: _editKey, controller: controller),
+            body: EditPost.fromController(controller: controller),
           ),
         ),
       );

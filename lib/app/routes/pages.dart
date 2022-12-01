@@ -152,7 +152,7 @@ abstract class AppPages {
   static final GetPage _editPost = GetPage(
       name: AppRoutes.editPost,
       binding: EditPostBinding(),
-      page: () => EditPostView(),
+      page: () => const EditPostView(),
       transition: Transition.rightToLeft);
 
   /// 草稿箱页面

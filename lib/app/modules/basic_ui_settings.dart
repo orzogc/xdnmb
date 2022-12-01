@@ -18,7 +18,7 @@ class _ShowBottomBar extends StatelessWidget {
     return ValueListenableBuilder<Box>(
       valueListenable: settings.showBottomBarListenable,
       builder: (context, value, child) => SwitchListTile(
-        title: const Text('显示底部栏'),
+        title: const Text('显示底边栏'),
         subtitle: const Text('更改后需要重启应用'),
         value: settings.showBottomBar,
         onChanged: (value) => settings.showBottomBar = value,
@@ -42,7 +42,7 @@ class _AutoHideBottomBar extends StatelessWidget {
       ]),
       builder: (context, child) => SwitchListTile(
         title: Text(
-          '向下滑动时自动隐藏底部栏',
+          '向下滑动时自动隐藏底边栏',
           style: TextStyle(
             color:
                 !settings.showBottomBar ? AppTheme.inactiveSettingColor : null,

@@ -11,6 +11,8 @@ class BackdropController {
 
   VoidCallback? _toggleFrontLayer;
 
+  BackdropController();
+
   void toggleFrontLayer() {
     if (_toggleFrontLayer != null) {
       _toggleFrontLayer!();
@@ -128,7 +130,8 @@ class _BackdropState extends State<Backdrop>
     _animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 300));
 
-    _updateController();
+    // 这里调用_updateController()会导致rebuild
+    //_updateController();
     widget.controller._toggleFrontLayer = _toggleFrontLayer;
 
     _animationController.addStatusListener(_updateController);
@@ -139,7 +142,19 @@ class _BackdropState extends State<Backdrop>
   }
 
   @override
+  void didUpdateWidget(covariant Backdrop oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.controller != oldWidget.controller) {
+      //_updateController();
+      oldWidget.controller._toggleFrontLayer = null;
+      widget.controller._toggleFrontLayer = _toggleFrontLayer;
+    }
+  }
+
+  @override
   void dispose() {
+    widget.controller._toggleFrontLayer = null;
     _animationController.removeStatusListener(_updateController);
     _animationController.removeListener(_truncate);
     _animationController.dispose();

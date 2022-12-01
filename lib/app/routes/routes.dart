@@ -344,7 +344,7 @@ Route? backdropOnGenerateRoute(RouteSettings settings) {
             settings: settings,
             routeName: AppRoutes.editPost,
             binding: EditPostBinding(),
-            page: () => EditPostView(),
+            page: () => const EditPostView(),
             transition: Transition.rightToLeft);
       case AppRoutes.postDrafts:
         return _SwipeablePageRoute(

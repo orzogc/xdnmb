@@ -111,86 +111,90 @@ class _BottomOverlay extends StatelessWidget {
   void _toggle() => _isShowed.value = !_isShowed.value;
 
   @override
-  Widget build(BuildContext context) => ChildSizeNotifier(
-        builder: (context, size, child) => Obx(
-          () => AnimatedPositioned(
-            left: 0,
-            right: 0,
-            bottom: _isShowed.value
-                ? 0
-                : size.height == 0
-                    ? -10000
-                    : -(size.height + MediaQuery.of(context).padding.bottom),
-            curve: Curves.easeOutQuart,
-            duration: _overlayDuration,
-            child: child!,
-          ),
+  Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    return ChildSizeNotifier(
+      builder: (context, size, child) => Obx(
+        () => AnimatedPositioned(
+          left: 0,
+          right: 0,
+          bottom: _isShowed.value
+              ? 0
+              : size.height == 0
+                  ? -10000
+                  : -(size.height + bottomPadding),
+          curve: Curves.easeOutQuart,
+          duration: _overlayDuration,
+          child: child!,
         ),
-        child: ColoredBox(
-          color: AppTheme.overlayBackgroundColor,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Flexible(
-                child: BackButton(
-                  onPressed: () {
-                    hideOverlay();
-                    Get.maybePop();
-                  },
-                  color: AppTheme.colorDark,
-                ),
+      ),
+      child: ColoredBox(
+        color: AppTheme.overlayBackgroundColor,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Flexible(
+              child: BackButton(
+                onPressed: () {
+                  hideOverlay();
+                  Get.maybePop();
+                },
+                color: AppTheme.colorDark,
               ),
+            ),
+            Flexible(
+              child: IconButton(
+                onPressed: () {
+                  final halfSize = size * 0.5;
+                  imageKey.currentState
+                      ?._animateScaleUp(halfSize.width, halfSize.height);
+                },
+                icon: Icon(Icons.zoom_in, color: AppTheme.colorDark),
+              ),
+            ),
+            Flexible(
+              child: IconButton(
+                onPressed: () {
+                  final halfSize = size * 0.5;
+                  imageKey.currentState
+                      ?._animateScaleDown(halfSize.width, halfSize.height);
+                },
+                icon: Icon(Icons.zoom_out, color: AppTheme.colorDark),
+              ),
+            ),
+            Flexible(
+              child: IconButton(
+                onPressed: () => imageKey.currentState?._rotate(size),
+                icon: Icon(Icons.rotate_right, color: AppTheme.colorDark),
+              ),
+            ),
+            Flexible(
+              child: IconButton(
+                onPressed: paint,
+                icon: Icon(Icons.brush, color: AppTheme.colorDark),
+              ),
+            ),
+            Flexible(
+              child: IconButton(
+                onPressed: saveImage,
+                icon: Icon(Icons.save_alt, color: AppTheme.colorDark),
+              ),
+            ),
+            if (isPainted && canReturnImageData && imageData != null)
               Flexible(
                 child: IconButton(
                   onPressed: () {
-                    final halfSize = size * 0.5;
-                    imageKey.currentState
-                        ?._animateScaleUp(halfSize.width, halfSize.height);
+                    Get.back<Uint8List>(result: imageData);
                   },
-                  icon: Icon(Icons.zoom_in, color: AppTheme.colorDark),
+                  icon: Icon(Icons.check, color: AppTheme.colorDark),
                 ),
               ),
-              Flexible(
-                child: IconButton(
-                  onPressed: () {
-                    final halfSize = size * 0.5;
-                    imageKey.currentState
-                        ?._animateScaleDown(halfSize.width, halfSize.height);
-                  },
-                  icon: Icon(Icons.zoom_out, color: AppTheme.colorDark),
-                ),
-              ),
-              Flexible(
-                child: IconButton(
-                  onPressed: () => imageKey.currentState?._rotate(size),
-                  icon: Icon(Icons.rotate_right, color: AppTheme.colorDark),
-                ),
-              ),
-              Flexible(
-                child: IconButton(
-                  onPressed: paint,
-                  icon: Icon(Icons.brush, color: AppTheme.colorDark),
-                ),
-              ),
-              Flexible(
-                child: IconButton(
-                  onPressed: saveImage,
-                  icon: Icon(Icons.save_alt, color: AppTheme.colorDark),
-                ),
-              ),
-              if (isPainted && canReturnImageData && imageData != null)
-                Flexible(
-                  child: IconButton(
-                    onPressed: () {
-                      Get.back<Uint8List>(result: imageData);
-                    },
-                    icon: Icon(Icons.check, color: AppTheme.colorDark),
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _ImageDialog extends StatelessWidget {

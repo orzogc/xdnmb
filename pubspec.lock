@@ -590,10 +590,10 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "6676c04a858761736dc6b166ef14887578c6218f"
+      resolved-ref: e319bc600a8c3e5ab4d414b890dc7844f6f9d6d9
       url: "https://github.com/hui-z/image_gallery_saver.git"
     source: git
-    version: "1.7.1"
+    version: "2.0.0"
   image_painter:
     dependency: "direct main"
     description:
@@ -726,14 +726,7 @@ packages:
       name: mime
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.2"
-  modal_bottom_sheet:
-    dependency: "direct main"
-    description:
-      name: modal_bottom_sheet
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.1.2"
+    version: "1.0.3"
   octo_image:
     dependency: transitive
     description:
@@ -1018,7 +1011,7 @@ packages:
       name: sqflite
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.2.0+3"
+    version: "2.2.1"
   sqflite_common:
     dependency: transitive
     description:
