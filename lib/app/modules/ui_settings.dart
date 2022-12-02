@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../routes/routes.dart';
+import '../widgets/safe_area.dart';
 
 class UISettingsView extends StatelessWidget {
   const UISettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-        left: false,
-        top: false,
-        right: false,
+  Widget build(BuildContext context) => ColoredSafeArea(
         child: Scaffold(
           appBar: AppBar(title: const Text('界面设置')),
           body: ListView(

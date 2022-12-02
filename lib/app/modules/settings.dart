@@ -9,6 +9,7 @@ import '../routes/routes.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import '../widgets/dialog.dart';
+import '../widgets/safe_area.dart';
 
 class _DarkMode extends StatelessWidget {
   // ignore: unused_element
@@ -119,10 +120,7 @@ class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-        left: false,
-        top: false,
-        right: false,
+  Widget build(BuildContext context) => ColoredSafeArea(
         child: Scaffold(
           appBar: AppBar(title: const Text('设置')),
           body: ListView(

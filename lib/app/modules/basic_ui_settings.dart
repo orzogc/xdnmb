@@ -6,6 +6,7 @@ import '../data/services/settings.dart';
 import '../utils/notify.dart';
 import '../utils/theme.dart';
 import '../widgets/dialog.dart';
+import '../widgets/safe_area.dart';
 
 class _ShowBottomBar extends StatelessWidget {
   // ignore: unused_element
@@ -95,7 +96,7 @@ class _FrontLayerDragHeightRatio extends StatelessWidget {
             color: !settings.backdropUI ? AppTheme.inactiveSettingColor : null);
 
         return ListTile(
-          title: Text('幕布下拉手势范围占屏幕高度的比例', style: textStyle),
+          title: Text('幕布下拉手势范围占屏幕高度的比例（不含标题栏）', style: textStyle),
           trailing:
               Text('${settings.frontLayerDragHeightRatio}', style: textStyle),
           onTap: settings.backdropUI
@@ -135,7 +136,7 @@ class _BackLayerDragHeightRatio extends StatelessWidget {
             color: !settings.backdropUI ? AppTheme.inactiveSettingColor : null);
 
         return ListTile(
-          title: Text('幕布上拉手势范围占屏幕高度的比例', style: textStyle),
+          title: Text('幕布上拉手势范围占屏幕高度的比例（不含标题栏）', style: textStyle),
           trailing:
               Text('${settings.backLayerDragHeightRatio}', style: textStyle),
           onTap: settings.backdropUI
@@ -181,6 +182,38 @@ class _HideFloatingButton extends StatelessWidget {
         value: settings.hideFloatingButton,
         onChanged: !settings.showBottomBar
             ? (value) => settings.hideFloatingButton = value
+            : null,
+      ),
+    );
+  }
+}
+
+class _AutoHideFloatingButton extends StatelessWidget {
+  // ignore: unused_element
+  const _AutoHideFloatingButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return NotifyBuilder(
+      animation: Listenable.merge([
+        settings.showBottomBarListenable,
+        settings.hideFloatingButtonListenable,
+        settings.autoHideFloatingButtonListenable,
+      ]),
+      builder: (context, child) => SwitchListTile(
+        title: Text(
+          '向下滑动时自动隐藏右下角的悬浮球',
+          style: TextStyle(
+            color: (settings.showBottomBar || settings.hideFloatingButton)
+                ? AppTheme.inactiveSettingColor
+                : null,
+          ),
+        ),
+        value: settings.autoHideFloatingButton,
+        onChanged: !(settings.showBottomBar || settings.hideFloatingButton)
+            ? (value) => settings.autoHideFloatingButton = value
             : null,
       ),
     );
@@ -297,14 +330,12 @@ class _CompactTabAndForumList extends StatelessWidget {
   }
 }
 
+// TODO: 自动隐藏AppBar
 class BasicUISettingsView extends StatelessWidget {
   const BasicUISettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-        left: false,
-        top: false,
-        right: false,
+  Widget build(BuildContext context) => ColoredSafeArea(
         child: Scaffold(
           appBar: AppBar(title: const Text('界面基本设置')),
           body: ListView(
@@ -317,6 +348,7 @@ class BasicUISettingsView extends StatelessWidget {
               const _BackLayerDragHeightRatio(),
               const Divider(height: 10.0, thickness: 1.0),
               const _HideFloatingButton(),
+              const _AutoHideFloatingButton(),
               if (GetPlatform.isMobile) const _DrawerDragRatio(),
               const _PageDragWidthRatio(),
               const _CompactTabAndForumList(),

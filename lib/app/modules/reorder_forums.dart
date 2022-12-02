@@ -12,6 +12,7 @@ import '../utils/text.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
+import '../widgets/safe_area.dart';
 
 class _AddForum extends StatelessWidget {
   final GlobalKey<_ForumsState> forumListKey;
@@ -239,10 +240,7 @@ class ReorderForumsView extends StatelessWidget {
   const ReorderForumsView({super.key});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-        left: false,
-        top: false,
-        right: false,
+  Widget build(BuildContext context) => ColoredSafeArea(
         child: Scaffold(
           appBar: AppBar(
             title: const Text('版块排序'),

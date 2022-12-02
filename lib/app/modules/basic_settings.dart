@@ -7,6 +7,7 @@ import '../data/services/settings.dart';
 import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
+import '../widgets/safe_area.dart';
 
 class _RestoreTabs extends StatelessWidget {
   // ignore: unused_element
@@ -276,10 +277,7 @@ class BasicSettingsView extends StatelessWidget {
   const BasicSettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-        left: false,
-        top: false,
-        right: false,
+  Widget build(BuildContext context) => ColoredSafeArea(
         child: Scaffold(
           appBar: AppBar(title: const Text('基本设置')),
           body: ListView(

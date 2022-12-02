@@ -7,6 +7,7 @@ import 'package:hive/hive.dart';
 import '../data/services/settings.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
+import '../widgets/safe_area.dart';
 
 class _SaveImagePath extends StatelessWidget {
   // ignore: unused_element
@@ -261,10 +262,7 @@ class AdvancedSettingsView extends StatelessWidget {
   const AdvancedSettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-        left: false,
-        top: false,
-        right: false,
+  Widget build(BuildContext context) => ColoredSafeArea(
         child: Scaffold(
           appBar: AppBar(
             title: const Text('高级设置'),

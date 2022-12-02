@@ -10,6 +10,7 @@ import '../utils/image.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/image.dart';
+import '../widgets/safe_area.dart';
 
 class _Text implements TextDelegate {
   @override
@@ -186,10 +187,7 @@ class PaintView extends GetView<PaintController> {
 
           return true;
         },
-        child: SafeArea(
-          left: false,
-          top: false,
-          right: false,
+        child: ColoredSafeArea(
           child: Scaffold(
             appBar: AppBar(
               title: const Text('涂鸦'),

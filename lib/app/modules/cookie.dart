@@ -16,6 +16,7 @@ import '../utils/toast.dart';
 import '../utils/url.dart';
 import '../widgets/dialog.dart';
 import '../widgets/reload.dart';
+import '../widgets/safe_area.dart';
 
 class _VerifyImage extends StatelessWidget {
   // ignore: unused_element
@@ -478,10 +479,7 @@ class CookieView extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = UserService.to;
 
-    return SafeArea(
-      left: false,
-      top: false,
-      right: false,
+    return ColoredSafeArea(
       child: Scaffold(
         appBar: AppBar(
           title: const Text('饼干'),

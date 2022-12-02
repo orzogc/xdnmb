@@ -62,8 +62,8 @@ abstract class Guide {
         !SettingsService.to.compactTabAndForumList &&
         (ForumListButtonGuide._key.currentState?.mounted ?? false))
       ForumListButtonGuide._key,
-    if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
     if (FeedGuide._key.currentState?.mounted ?? false) FeedGuide._key,
+    if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
     if (EditPostGuide._key.currentState?.mounted ?? false) EditPostGuide._key,
   ];
 

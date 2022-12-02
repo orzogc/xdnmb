@@ -47,7 +47,11 @@ abstract class Settings {
 
   static const String backLayerDragHeightRatio = 'backLayerDragHeightRatio';
 
+  //static const String autoHideAppBar = 'autoHideAppBar';
+
   static const String hideFloatingButton = 'hideFloatingButton';
+
+  static const String autoHideFloatingButton = 'autoHideFloatingButton';
 
   static const String drawerEdgeDragWidthRatio = 'drawerEdgeDragWidthRatio';
 

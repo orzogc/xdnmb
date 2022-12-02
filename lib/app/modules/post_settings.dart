@@ -7,6 +7,7 @@ import '../utils/extensions.dart';
 import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/post.dart';
+import '../widgets/safe_area.dart';
 import '../widgets/scroll.dart';
 
 class _Confirm extends StatelessWidget {
@@ -259,10 +260,7 @@ class PostFontSettingsView extends GetView<PostFontSettingsController> {
   const PostFontSettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-        left: false,
-        top: false,
-        right: false,
+  Widget build(BuildContext context) => ColoredSafeArea(
         child: Scaffold(
           appBar: AppBar(
             title: const Text('串字体设置'),

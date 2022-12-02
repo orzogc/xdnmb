@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../data/models/controller.dart';
 import '../utils/extensions.dart';
 import '../widgets/edit_post.dart';
+import '../widgets/safe_area.dart';
 
 class EditPostController extends GetxController {
   final PostListType postListType;
@@ -89,10 +90,7 @@ class EditPostView extends GetView<EditPostController> {
 
           return false;
         },
-        child: SafeArea(
-          left: false,
-          top: false,
-          right: false,
+        child: ColoredSafeArea(
           child: Scaffold(
             appBar: AppBar(
               title: Text(controller.postListType.isForumType ? '发表新串' : '回串'),

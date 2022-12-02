@@ -11,6 +11,7 @@ import '../utils/toast.dart';
 import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/post.dart';
+import '../widgets/safe_area.dart';
 
 class _PopupMenuButton extends StatelessWidget {
   // ignore: unused_element
@@ -142,10 +143,7 @@ class PostDraftsView extends StatelessWidget {
   const PostDraftsView({super.key});
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-        left: false,
-        top: false,
-        right: false,
+  Widget build(BuildContext context) => ColoredSafeArea(
         child: Scaffold(
           appBar: AppBar(
             title: const Text('草稿'),

@@ -244,11 +244,23 @@ class SettingsService extends GetxService {
   set backLayerDragHeightRatio(double ratio) => _settingsBox.put(
       Settings.backLayerDragHeightRatio, ratio.clamp(0.0, 1.0));
 
+  /* bool get autoHideAppBar =>
+      _settingsBox.get(Settings.autoHideAppBar, defaultValue: false);
+
+  set autoHideAppBar(bool autoHideAppBar) =>
+      _settingsBox.put(Settings.autoHideAppBar, autoHideAppBar); */
+
   bool get hideFloatingButton =>
       _settingsBox.get(Settings.hideFloatingButton, defaultValue: false);
 
   set hideFloatingButton(bool hideFloatingButton) =>
       _settingsBox.put(Settings.hideFloatingButton, hideFloatingButton);
+
+  bool get autoHideFloatingButton =>
+      _settingsBox.get(Settings.autoHideFloatingButton, defaultValue: false);
+
+  set autoHideFloatingButton(bool autoHideFloatingButton) =>
+      _settingsBox.put(Settings.autoHideFloatingButton, autoHideFloatingButton);
 
   double get drawerEdgeDragWidthRatio =>
       (_settingsBox.get(Settings.drawerEdgeDragWidthRatio, defaultValue: 0.25)
@@ -405,7 +417,11 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> backLayerDragHeightRatioListenable;
 
+  //late final ValueListenable<Box> autoHideAppBarListenable;
+
   late final ValueListenable<Box> hideFloatingButtonListenable;
+
+  late final ValueListenable<Box> autoHideFloatingButtonListenable;
 
   late final ValueListenable<Box> drawerEdgeDragWidthRatioListenable;
 
@@ -522,8 +538,12 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.frontLayerDragHeightRatio]);
     backLayerDragHeightRatioListenable =
         _settingsBox.listenable(keys: [Settings.backLayerDragHeightRatio]);
+    /* autoHideAppBarListenable =
+        _settingsBox.listenable(keys: [Settings.autoHideAppBar]); */
     hideFloatingButtonListenable =
         _settingsBox.listenable(keys: [Settings.hideFloatingButton]);
+    autoHideFloatingButtonListenable =
+        _settingsBox.listenable(keys: [Settings.autoHideFloatingButton]);
     drawerEdgeDragWidthRatioListenable = _settingsBox.listenable(
         keys: [Settings.showBottomBar, Settings.drawerEdgeDragWidthRatio]);
     swipeablePageDragWidthRatioListenable = _settingsBox.listenable(keys: [

@@ -12,6 +12,7 @@ import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
 import '../widgets/page_view.dart';
+import '../widgets/safe_area.dart';
 
 class _AppBarTitle extends StatelessWidget {
   final int index;
@@ -342,39 +343,37 @@ class BlacklistView extends GetView<BlacklistController> {
   void _refresh() => controller._index.refresh();
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-      left: false,
-      top: false,
-      right: false,
-      child: Obx(
-        () => Scaffold(
-          appBar: AppBar(
-            title: _AppBarTitle(index: controller._index.value),
-            actions: [
-              _AppBarPopupMenuButton(
-                  index: controller._index.value, refresh: _refresh),
-            ],
-            bottom: PageViewTabBar(
-              pageController: controller._pageController,
-              initialIndex: 0,
-              onIndex: (index) {
-                if (controller._index.value != index) {
-                  controller._pageController.animateToPage(
-                    index,
-                    duration: PageViewTabBar.animationDuration,
-                    curve: Curves.easeIn,
-                  );
-                }
-              },
-              tabs: const [Tab(text: '版块'), Tab(text: '串号'), Tab(text: '饼干')],
+  Widget build(BuildContext context) => ColoredSafeArea(
+        child: Obx(
+          () => Scaffold(
+            appBar: AppBar(
+              title: _AppBarTitle(index: controller._index.value),
+              actions: [
+                _AppBarPopupMenuButton(
+                    index: controller._index.value, refresh: _refresh),
+              ],
+              bottom: PageViewTabBar(
+                pageController: controller._pageController,
+                initialIndex: 0,
+                onIndex: (index) {
+                  if (controller._index.value != index) {
+                    controller._pageController.animateToPage(
+                      index,
+                      duration: PageViewTabBar.animationDuration,
+                      curve: Curves.easeIn,
+                    );
+                  }
+                },
+                tabs: const [Tab(text: '版块'), Tab(text: '串号'), Tab(text: '饼干')],
+              ),
+            ),
+            body: SwipeablePageView(
+              controller: controller._pageController,
+              itemCount: 3,
+              itemBuilder: (context, index) =>
+                  _Body(index: index, refresh: _refresh),
             ),
           ),
-          body: SwipeablePageView(
-            controller: controller._pageController,
-            itemCount: 3,
-            itemBuilder: (context, index) =>
-                _Body(index: index, refresh: _refresh),
-          ),
         ),
-      ));
+      );
 }

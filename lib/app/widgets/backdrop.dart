@@ -165,15 +165,14 @@ class _BackdropState extends State<Backdrop>
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
-    final paddingTop = MediaQuery.of(context).padding.top;
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return Stack(
       children: [
-        Container(
-          color: Theme.of(context).primaryColor,
+        SizedBox(
           height: widget.height - widget.appBarHeight,
           child: Padding(
-            padding: EdgeInsets.only(top: paddingTop),
+            padding: EdgeInsets.only(top: topPadding),
             child: Stack(
               alignment: Alignment.bottomCenter,
               children: [
@@ -214,9 +213,9 @@ class _BackdropState extends State<Backdrop>
                   valueListenable: settings.frontLayerDragHeightRatioListenable,
                   builder: (context, value, child) => SizedBox(
                     width: double.infinity,
-                    height: paddingTop +
+                    height: topPadding +
                         widget.appBarHeight +
-                        (widget.height - paddingTop - widget.appBarHeight) *
+                        (widget.height - topPadding - widget.appBarHeight) *
                             settings.frontLayerDragHeightRatio,
                   ),
                 ),

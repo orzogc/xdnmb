@@ -41,9 +41,12 @@ import '../widgets/forum_list.dart';
 import '../widgets/guide.dart';
 import '../widgets/history.dart';
 import '../widgets/page.dart';
+import '../widgets/safe_area.dart';
 import '../widgets/scroll.dart';
 import '../widgets/tab_list.dart';
 import '../widgets/thread.dart';
+
+const Duration _animationDuration = Duration(milliseconds: 200);
 
 class PostList {
   final PostListType postListType;
@@ -75,17 +78,17 @@ class PostList {
 typedef OnPageCallback = void Function(int page);
 
 abstract class PostListController extends ChangeNotifier {
-  static final RxBool _hideBottomBar = false.obs;
+  static final RxBool _scrollingDown = false.obs;
 
-  static bool get hideBottomBar => _hideBottomBar.value;
+  static bool get _isScrollingDown => _scrollingDown.value;
 
   static void setScrollPosition(ScrollDirection direction) {
     switch (direction) {
       case ScrollDirection.forward:
-        _hideBottomBar.value = false;
+        _scrollingDown.value = false;
         break;
       case ScrollDirection.reverse:
-        _hideBottomBar.value = true;
+        _scrollingDown.value = true;
         break;
       default:
     }
@@ -291,16 +294,14 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
             onTap: (SettingsService.isBackdropUI &&
                     (backdropController?.isShowBackLayer ?? false))
                 ? backdropController?.toggleFrontLayer
-                : (_tabAndForumListController.isShowed
-                    ? _tabAndForumListController.close
-                    : (controller.isThreadType
+                : (!_tabAndForumListController.isShowed
+                    ? (controller.isThreadType
                         ? controller.refresh
-                        : controller.refreshPage)),
+                        : controller.refreshPage)
+                    : null),
             onDoubleTap: SettingsService.isBackdropUI
                 ? backdropController?.toggleFrontLayer
-                : (_tabAndForumListController.isShowed
-                    ? _tabAndForumListController.close
-                    : null),
+                : null,
             child: AppBar(
               primary: !(backdropController?.isShowBackLayer ?? false),
               elevation: controller.isHistory ? 0 : null,
@@ -763,6 +764,8 @@ class _FloatingButton extends StatefulWidget {
 }
 
 class _FloatingButtonState extends State<_FloatingButton> {
+  static const double _diameter = 56.0;
+
   static EditPostBottomSheetController get _bottomSheetController =>
       BottomSheetController.editPostController;
 
@@ -849,6 +852,7 @@ class _FloatingButtonState extends State<_FloatingButton> {
       animation: Listenable.merge([
         ControllerStacksService.to.notifier,
         settings.hideFloatingButtonListenable,
+        settings.autoHideFloatingButtonListenable,
       ]),
       builder: (context, child) => Obx(() {
         final Widget floatingButton = FloatingActionButton(
@@ -859,17 +863,23 @@ class _FloatingButtonState extends State<_FloatingButton> {
           ),
         );
 
-        return ((_hasBottomSheet ||
-                    !(SettingsService.isShowBottomBar ||
-                        settings.hideFloatingButton)) &&
-                PostListController.get().canPost)
-            ? Padding(
-                padding: EdgeInsets.only(bottom: _hasBottomSheet ? 56.0 : 0.0),
-                child: SettingsService.isShowGuide
-                    ? EditPostGuide(floatingButton)
-                    : floatingButton,
-              )
-            : const SizedBox.shrink();
+        return AnimatedSwitcher(
+          duration: _animationDuration,
+          child: ((_hasBottomSheet ||
+                      !(SettingsService.isShowBottomBar ||
+                          settings.hideFloatingButton ||
+                          (settings.autoHideFloatingButton &&
+                              PostListController._isScrollingDown))) &&
+                  PostListController.get().canPost)
+              ? Padding(
+                  padding: EdgeInsets.only(
+                      bottom: _hasBottomSheet ? _diameter : 0.0),
+                  child: SettingsService.isShowGuide
+                      ? EditPostGuide(floatingButton)
+                      : floatingButton,
+                )
+              : const SizedBox.shrink(),
+        );
       }),
     );
   }
@@ -1093,9 +1103,9 @@ class _TabAndForumListButton extends StatelessWidget {
                   ),
           );
 
-          // 延迟200毫秒防止底边栏提前出现
+          // 延迟250毫秒防止底边栏提前出现
           _bottomSheetController.closed?.then((value) => Future.delayed(
-              const Duration(milliseconds: 200),
+              const Duration(milliseconds: 250),
               () => _bottomSheetController._controller = null));
         } else {
           if (!buttonType._isCompact && _tabAndForumListController._isShowed) {
@@ -1232,13 +1242,13 @@ class _BottomBar extends StatelessWidget {
                     : forumListButton,
               ),
             Flexible(
+              child:
+                  settings.shouldShowGuide ? FeedGuide(feedButton) : feedButton,
+            ),
+            Flexible(
               child: settings.shouldShowGuide
                   ? HistoryGuide(historyButton)
                   : historyButton,
-            ),
-            Flexible(
-              child:
-                  settings.shouldShowGuide ? FeedGuide(feedButton) : feedButton,
             ),
             Flexible(
               child: settings.shouldShowGuide
@@ -1269,11 +1279,11 @@ class _BottomBar extends StatelessWidget {
               right: 0,
               bottom: (_editPostController.isShowed ||
                       (settings.autoHideBottomBar &&
-                          PostListController.hideBottomBar))
+                          PostListController._isScrollingDown))
                   ? -(_height + bottomPadding)
                   : 0,
               curve: Curves.easeOutQuart,
-              duration: const Duration(milliseconds: 200),
+              duration: _animationDuration,
               child: bottomAppBar,
             )
           : (!((_tabAndForumListController.isShowed &&
@@ -1301,6 +1311,8 @@ class PostListView extends StatefulWidget {
 
 class _PostListViewState extends State<PostListView>
     with WidgetsBindingObserver {
+  static const Duration _delayDuration = Duration(milliseconds: 300);
+
   static bool _isInitial = true;
 
   static _TabAndForumListController get _tabAndForumListController =>
@@ -1345,12 +1357,12 @@ class _PostListViewState extends State<PostListView>
   }
 
   void _startDrawerGuide() => WidgetsBinding.instance.addPostFrameCallback(
-      (timeStamp) => Future.delayed(const Duration(milliseconds: 300),
-          () => showCase?.startShowCase(Guide.drawerGuides)));
+      (timeStamp) => Future.delayed(
+          _delayDuration, () => showCase?.startShowCase(Guide.drawerGuides)));
 
   void _startEndDrawerGuide() => WidgetsBinding.instance.addPostFrameCallback(
       (timeStamp) => Future.delayed(
-          const Duration(milliseconds: 300),
+          _delayDuration,
           () => showCase?.startShowCase(SettingsService.to.showGuide
               ? Guide.endDrawerGuides
               : Guide.backdropEndDrawerGuides)));
@@ -1394,13 +1406,13 @@ class _PostListViewState extends State<PostListView>
 
   void _startBackdropTabListGuide() =>
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-        await Future.delayed(const Duration(milliseconds: 300));
+        await Future.delayed(_delayDuration);
 
         if (!SettingsService.to.compactTabAndForumList &&
             _tabAndForumListController._isShowed) {
           if (_tabAndForumListController._index != 0) {
             _tabAndForumListController._animateTo(0);
-            await Future.delayed(const Duration(milliseconds: 300));
+            await Future.delayed(_delayDuration);
           }
         }
 
@@ -1413,7 +1425,7 @@ class _PostListViewState extends State<PostListView>
             _tabAndForumListController._isShowed) {
           if (_tabAndForumListController._index != 1) {
             _tabAndForumListController._animateTo(1);
-            await Future.delayed(const Duration(milliseconds: 300));
+            await Future.delayed(_delayDuration);
           }
         }
 
@@ -1489,10 +1501,7 @@ class _PostListViewState extends State<PostListView>
 
     return WillPopScope(
       onWillPop: () => _onWillPop(context),
-      child: SafeArea(
-        left: false,
-        top: false,
-        right: false,
+      child: ColoredSafeArea(
         child: LayoutBuilder(builder: (context, constraints) {
           final width = constraints.maxWidth;
           final height = constraints.maxHeight;
@@ -1574,18 +1583,19 @@ class _PostListViewState extends State<PostListView>
                     : null,
                 floatingActionButton:
                     _FloatingButton(bottomSheetHeight: bottomSheetHeight),
-                bottomNavigationBar: Obx(() =>
-                    (SettingsService.isShowBottomBar &&
-                            !settings.isAutoHideBottomBar &&
-                            bottomBar != null)
-                        ? bottomBar
-                        // 为了能够在显示标签页/版块列表时显示底边栏
-                        : (SettingsService.isShowBottomBar &&
-                                settings.isAutoHideBottomBar &&
-                                BottomSheetController
-                                    ._tabAndForumListController.isShowed)
-                            ? const _BottomBar(isAlwaysShowed: true)
-                            : const SizedBox.shrink()),
+                bottomNavigationBar: Obx(
+                  () => (!settings.isAutoHideBottomBar &&
+                          SettingsService.isShowBottomBar &&
+                          bottomBar != null)
+                      ? bottomBar
+                      // 为了能够在显示标签页/版块列表时显示底边栏
+                      : (SettingsService.isShowBottomBar &&
+                              settings.isAutoHideBottomBar &&
+                              BottomSheetController
+                                  ._tabAndForumListController.isShowed)
+                          ? const _BottomBar(isAlwaysShowed: true)
+                          : const SizedBox.shrink(),
+                ),
               );
 
               final Widget postList =
@@ -1615,12 +1625,16 @@ class _PostListViewState extends State<PostListView>
                       }))
                   : postList;
             } else {
-              return Center(
+              return Material(
+                child: Center(
                   child: Text(
-                      PersistentDataService.isFirstLaunched
-                          ? '启动中，请授予本应用相应权限'
-                          : '启动中',
-                      style: AppTheme.boldRed));
+                    PersistentDataService.isFirstLaunched
+                        ? '启动中，请授予本应用相应权限'
+                        : '启动中',
+                    style: AppTheme.boldRed,
+                  ),
+                ),
+              );
             }
           });
         }),
