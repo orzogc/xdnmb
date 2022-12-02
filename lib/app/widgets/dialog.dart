@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/controller.dart';
@@ -18,6 +19,7 @@ import '../utils/image.dart';
 import '../utils/navigation.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
+import '../utils/time.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'content.dart';
@@ -166,7 +168,11 @@ class NoticeDialog extends StatelessWidget {
       actionsAlignment:
           showCheckbox ? MainAxisAlignment.spaceBetween : MainAxisAlignment.end,
       contentPadding: const EdgeInsets.fromLTRB(24.0, 10.0, 24.0, 5.0),
-      title: const Text('公告'),
+      title: ValueListenableBuilder<Box>(
+          valueListenable: data.noticeDateListenable,
+          builder: (context, value, child) => data.noticeDate != null
+              ? Text('公告 ${formatDay(data.noticeDate!)}')
+              : const Text('公告')),
       content: SingleChildScrollViewWithScrollbar(
         child: isAutoUpdate
             ? FutureBuilder<void>(
@@ -176,12 +182,14 @@ class NoticeDialog extends StatelessWidget {
                       snapshot.hasError) {
                     showToast(exceptionMessage(snapshot.error!));
 
-                    return const Text('加载失败', style: AppTheme.boldRed);
+                    return const Center(
+                      child: Text('加载失败', style: AppTheme.boldRed),
+                    );
                   }
 
                   if (snapshot.connectionState == ConnectionState.done) {
                     return TextContent(
-                      text: data.notice,
+                      text: data.notice ?? '',
                       onLinkTap: (context, link, text) => parseUrl(url: link),
                     );
                   }
@@ -190,7 +198,7 @@ class NoticeDialog extends StatelessWidget {
                 },
               )
             : TextContent(
-                text: data.notice,
+                text: data.notice ?? '',
                 onLinkTap: (context, link, text) => parseUrl(url: link),
               ),
       ),
@@ -237,7 +245,7 @@ class NoticeDialog extends StatelessWidget {
               ],
             ),
           ],
-        )
+        ),
       ],
     );
   }
@@ -326,6 +334,7 @@ class ForumRuleDialog extends StatelessWidget {
   }
 }
 
+// TODO: SimpleDialog自动显示scrollbar
 class NewTab extends StatelessWidget {
   final PostBase post;
 

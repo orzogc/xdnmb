@@ -30,6 +30,24 @@ abstract class AppTheme {
   static const TextStyle boldRed =
       TextStyle(color: Colors.red, fontWeight: FontWeight.bold);
 
+  static final TextStyle postHeaderTextStyle =
+      SettingsService.to.postHeaderTextStyle().apply(color: headerColor);
+
+  static final StrutStyle postHeaderStrutStyle =
+      StrutStyle.fromTextStyle(postHeaderTextStyle);
+
+  static final TextStyle postContentTextStyle =
+      SettingsService.to.postContentTextStyle();
+
+  static final StrutStyle postContentStrutStyle =
+      StrutStyle.fromTextStyle(postContentTextStyle);
+
+  static final TextStyle boldRedPostContentTextStyle =
+      SettingsService.to.postContentTextStyle(AppTheme.boldRed);
+
+  static final StrutStyle boldRedPostContentStrutStyle =
+      StrutStyle.fromTextStyle(boldRedPostContentTextStyle);
+
   static final ThemeData theme = ThemeData(
     brightness: Brightness.light,
     primaryColor: primaryColorLight,

@@ -218,7 +218,6 @@ class _BlockForum extends StatelessWidget {
   }
 }
 
-// TODO: 自动显示scrollbar
 class _ForumDialog extends StatelessWidget {
   final ForumTypeController controller;
 
@@ -388,8 +387,12 @@ class _ForumBodyState extends State<ForumBody> {
               ? ThreadGuide(item)
               : item;
         },
-        noItemsFoundBuilder: (context) => const Center(
-          child: Text('没有串', style: AppTheme.boldRed),
+        noItemsFoundBuilder: (context) => Center(
+          child: Text(
+            '没有串',
+            style: AppTheme.boldRedPostContentTextStyle,
+            strutStyle: AppTheme.boldRedPostContentStrutStyle,
+          ),
         ),
       ),
     );

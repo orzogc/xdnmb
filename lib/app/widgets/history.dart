@@ -406,9 +406,6 @@ class _BrowseHistoryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
-    final textStyle = SettingsService.to
-        .postHeaderTextStyle()
-        .apply(color: AppTheme.headerColor);
 
     return PostListRefresher(
       controller: controller,
@@ -484,7 +481,8 @@ class _BrowseHistoryBody extends StatelessWidget {
                                 padding: const EdgeInsets.only(
                                     left: 10.0, top: 5.0, right: 10.0),
                                 child: PostHeader(
-                                  fontSize: textStyle.fontSize,
+                                  fontSize:
+                                      AppTheme.postHeaderTextStyle.fontSize,
                                   child: OverflowBar(
                                     spacing: 5.0,
                                     alignment: MainAxisAlignment.spaceBetween,
@@ -492,17 +490,17 @@ class _BrowseHistoryBody extends StatelessWidget {
                                     children: [
                                       Text(
                                         '最后浏览时间：${fullFormatTime(browse.item.browseTime)}',
-                                        style: textStyle,
+                                        style: AppTheme.postHeaderTextStyle,
                                         strutStyle:
-                                            StrutStyle.fromTextStyle(textStyle),
+                                            AppTheme.postHeaderStrutStyle,
                                       ),
                                       if (browsePage != null &&
                                           browsePostId != null)
                                         Text(
                                           '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
-                                          style: textStyle,
-                                          strutStyle: StrutStyle.fromTextStyle(
-                                              textStyle),
+                                          style: AppTheme.postHeaderTextStyle,
+                                          strutStyle:
+                                              AppTheme.postHeaderStrutStyle,
                                         ),
                                     ],
                                   ),
@@ -523,8 +521,12 @@ class _BrowseHistoryBody extends StatelessWidget {
               );
             },
           ),
-          noItemsFoundBuilder: (context) => const Center(
-            child: Text('没有浏览记录', style: AppTheme.boldRed),
+          noItemsFoundBuilder: (context) => Center(
+            child: Text(
+              '没有浏览记录',
+              style: AppTheme.boldRedPostContentTextStyle,
+              strutStyle: AppTheme.boldRedPostContentStrutStyle,
+            ),
           ),
         ),
       ),
@@ -621,8 +623,12 @@ class _PostHistoryBody extends StatelessWidget {
               );
             },
           ),
-          noItemsFoundBuilder: (context) => const Center(
-            child: Text('没有主题记录', style: AppTheme.boldRed),
+          noItemsFoundBuilder: (context) => Center(
+            child: Text(
+              '没有主题记录',
+              style: AppTheme.boldRedPostContentTextStyle,
+              strutStyle: AppTheme.boldRedPostContentStrutStyle,
+            ),
           ),
         ),
       ),
@@ -646,9 +652,6 @@ class _ReplyHistoryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
-    final textStyle = SettingsService.to
-        .postHeaderTextStyle()
-        .apply(color: AppTheme.headerColor);
 
     return PostListRefresher(
       controller: controller,
@@ -726,24 +729,24 @@ class _ReplyHistoryBody extends StatelessWidget {
                                     right: 10.0,
                                   ),
                                   child: PostHeader(
-                                    fontSize: textStyle.fontSize,
+                                    fontSize:
+                                        AppTheme.postHeaderTextStyle.fontSize,
                                     child: OverflowBar(
                                       spacing: 5.0,
                                       alignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           '主串：${reply.item.mainPostId.toPostNumber()}',
-                                          style: textStyle,
-                                          strutStyle: StrutStyle.fromTextStyle(
-                                              textStyle),
+                                          style: AppTheme.postHeaderTextStyle,
+                                          strutStyle:
+                                              AppTheme.postHeaderStrutStyle,
                                         ),
                                         if (reply.item.page != null)
                                           Text(
                                             '第 ${reply.item.page} 页',
-                                            style: textStyle,
+                                            style: AppTheme.postHeaderTextStyle,
                                             strutStyle:
-                                                StrutStyle.fromTextStyle(
-                                                    textStyle),
+                                                AppTheme.postHeaderStrutStyle,
                                           ),
                                       ],
                                     ),
@@ -765,8 +768,12 @@ class _ReplyHistoryBody extends StatelessWidget {
               );
             },
           ),
-          noItemsFoundBuilder: (context) => const Center(
-            child: Text('没有回复记录', style: AppTheme.boldRed),
+          noItemsFoundBuilder: (context) => Center(
+            child: Text(
+              '没有回复记录',
+              style: AppTheme.boldRedPostContentTextStyle,
+              strutStyle: AppTheme.boldRedPostContentStrutStyle,
+            ),
           ),
         ),
       ),

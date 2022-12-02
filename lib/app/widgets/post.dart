@@ -25,7 +25,7 @@ class _PostUser extends StatelessWidget {
 
   final bool isPo;
 
-  final TextStyle textStyle;
+  final TextStyle? textStyle;
 
   const _PostUser(
       // ignore: unused_element
@@ -33,16 +33,14 @@ class _PostUser extends StatelessWidget {
       required this.userHash,
       this.isAdmin = false,
       this.isPo = false,
-      required this.textStyle});
+      this.textStyle});
 
   @override
   Widget build(BuildContext context) {
-    final style = textStyle.merge(
-      TextStyle(
-        color: isAdmin ? Colors.red : (isPo ? Colors.cyan.shade700 : null),
-        fontWeight: isPo ? FontWeight.bold : null,
-      ),
-    );
+    final style = (textStyle ?? AppTheme.postHeaderTextStyle).merge(TextStyle(
+      color: isAdmin ? Colors.red : (isPo ? Colors.cyan.shade700 : null),
+      fontWeight: isPo ? FontWeight.bold : null,
+    ));
 
     return htmlToRichText(
       context,
@@ -58,20 +56,22 @@ class _PostTime extends StatelessWidget {
 
   final bool showFullTime;
 
-  final TextStyle textStyle;
+  final TextStyle? textStyle;
 
   const _PostTime(
       // ignore: unused_element
       {super.key,
       required this.postTime,
       this.showFullTime = true,
-      required this.textStyle});
+      this.textStyle});
 
   @override
   Widget build(BuildContext context) => Text(
         showFullTime ? fullFormatTime(postTime) : formatTime(postTime),
-        style: textStyle,
-        strutStyle: StrutStyle.fromTextStyle(textStyle),
+        style: textStyle ?? AppTheme.postHeaderTextStyle,
+        strutStyle: textStyle != null
+            ? StrutStyle.fromTextStyle(textStyle!)
+            : AppTheme.postHeaderStrutStyle,
       );
 }
 
@@ -82,19 +82,22 @@ class _PostId extends StatelessWidget {
 
   final OnPostIdCallback? onPostIdTap;
 
-  final TextStyle textStyle;
+  final TextStyle? textStyle;
 
   const _PostId(
       // ignore: unused_element
       {super.key,
       required this.postId,
       this.onPostIdTap,
-      required this.textStyle});
+      this.textStyle});
 
   @override
   Widget build(BuildContext context) {
     final text = Text(postId.toPostNumber(),
-        style: textStyle, strutStyle: StrutStyle.fromTextStyle(textStyle));
+        style: textStyle ?? AppTheme.postHeaderTextStyle,
+        strutStyle: textStyle != null
+            ? StrutStyle.fromTextStyle(textStyle!)
+            : AppTheme.postHeaderStrutStyle);
 
     return onPostIdTap != null
         ? MouseRegion(
@@ -111,48 +114,52 @@ class _PostId extends StatelessWidget {
 class _PostReplyCount extends StatelessWidget {
   final int replyCount;
 
-  final TextStyle textStyle;
+  final TextStyle? textStyle;
 
   const _PostReplyCount(
       // ignore: unused_element
       {super.key,
       required this.replyCount,
-      required this.textStyle});
+      this.textStyle});
 
   @override
-  Widget build(BuildContext context) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-              padding: const EdgeInsets.only(top: 2.0, right: 2.0),
-              child: Icon(
-                Icons.mode_comment_outlined,
-                size: textStyle.fontSize != null
-                    ? (textStyle.fontSize! + 2.0)
-                    : 16.0,
-                color: AppTheme.headerColor,
-              )),
-          Text(
-            '$replyCount',
-            style: textStyle,
-            strutStyle: StrutStyle.fromTextStyle(textStyle),
-          ),
-        ],
-      );
+  Widget build(BuildContext context) {
+    final style = textStyle ?? AppTheme.postHeaderTextStyle;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+            padding: const EdgeInsets.only(top: 2.0, right: 2.0),
+            child: Icon(
+              Icons.mode_comment_outlined,
+              size: style.fontSize != null ? (style.fontSize! + 2.0) : 16.0,
+              color: AppTheme.headerColor,
+            )),
+        Text(
+          '$replyCount',
+          style: style,
+          strutStyle: textStyle != null
+              ? StrutStyle.fromTextStyle(textStyle!)
+              : AppTheme.postHeaderStrutStyle,
+        ),
+      ],
+    );
+  }
 }
 
 class _PostTitle extends StatelessWidget {
   final String title;
 
-  final TextStyle textStyle;
+  final TextStyle? textStyle;
 
   // ignore: unused_element
-  const _PostTitle({super.key, required this.title, required this.textStyle});
+  const _PostTitle({super.key, required this.title, this.textStyle});
 
   @override
   Widget build(BuildContext context) {
-    final spanTextStyle =
-        textStyle.merge(const TextStyle(fontWeight: FontWeight.bold));
+    final spanTextStyle = (textStyle ?? AppTheme.postContentTextStyle)
+        .merge(const TextStyle(fontWeight: FontWeight.bold));
 
     return RichText(
       text: TextSpan(
@@ -164,7 +171,7 @@ class _PostTitle extends StatelessWidget {
             textStyle: spanTextStyle,
           ),
         ],
-        style: textStyle.merge(
+        style: (textStyle ?? AppTheme.postContentTextStyle).merge(
           const TextStyle(
             color: AppTheme.headerColor,
             fontWeight: FontWeight.normal,
@@ -179,15 +186,15 @@ class _PostTitle extends StatelessWidget {
 class _PostName extends StatelessWidget {
   final String name;
 
-  final TextStyle textStyle;
+  final TextStyle? textStyle;
 
   // ignore: unused_element
-  const _PostName({super.key, required this.name, required this.textStyle});
+  const _PostName({super.key, required this.name, this.textStyle});
 
   @override
   Widget build(BuildContext context) {
-    final spanTextStyle =
-        textStyle.merge(const TextStyle(fontWeight: FontWeight.bold));
+    final spanTextStyle = (textStyle ?? AppTheme.postContentTextStyle)
+        .merge(const TextStyle(fontWeight: FontWeight.bold));
 
     return RichText(
       text: TextSpan(
@@ -199,7 +206,7 @@ class _PostName extends StatelessWidget {
             textStyle: spanTextStyle,
           ),
         ],
-        style: textStyle.merge(
+        style: (textStyle ?? AppTheme.postContentTextStyle).merge(
           const TextStyle(
             color: AppTheme.headerColor,
             fontWeight: FontWeight.normal,
@@ -212,21 +219,28 @@ class _PostName extends StatelessWidget {
 }
 
 class _PostSage extends StatelessWidget {
-  final TextStyle textStyle;
+  final TextStyle? textStyle;
 
   // ignore: unused_element
-  const _PostSage({super.key, required this.textStyle});
+  const _PostSage({super.key, this.textStyle});
 
   @override
   Widget build(BuildContext context) {
-    final fontSize = textStyle.fontSize;
+    final style = textStyle ?? AppTheme.postContentTextStyle;
+    final fontSize = style.fontSize;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.ideographic,
       children: [
         Flexible(
-            child: Text('本串已经被SAGE', style: textStyle.merge(AppTheme.boldRed))),
+            child: Text(
+          '本串已经被SAGE',
+          style: style.merge(AppTheme.boldRed),
+          strutStyle: textStyle != null
+              ? StrutStyle.fromTextStyle(textStyle!)
+              : AppTheme.postContentStrutStyle,
+        )),
         const SizedBox(width: 5.0),
         QuestionTooltip(
           message: '被SAGE的串不会因为新回复而被顶上来，且一定时间后无法回复',
@@ -246,7 +260,7 @@ class PostDraft extends StatelessWidget {
 
   final int? contentMaxLines;
 
-  final TextStyle textStyle;
+  final TextStyle? textStyle;
 
   PostDraft(
       {super.key,
@@ -258,7 +272,9 @@ class PostDraft extends StatelessWidget {
       : assert((title?.isNotEmpty ?? false) ||
             (name?.isNotEmpty ?? false) ||
             (content?.isNotEmpty ?? false)),
-        textStyle = SettingsService.to.postContentTextStyle(textStyle);
+        textStyle = textStyle != null
+            ? SettingsService.to.postContentTextStyle(textStyle)
+            : null;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -279,12 +295,14 @@ class PostDraft extends StatelessWidget {
                       collapseText: '收起',
                       linkColor: AppTheme.highlightColor,
                       maxLines: contentMaxLines!,
-                      style: textStyle,
+                      style: textStyle ?? AppTheme.postContentTextStyle,
                     )
                   : Text(
                       content!,
                       style: textStyle,
-                      strutStyle: StrutStyle.fromTextStyle(textStyle),
+                      strutStyle: textStyle != null
+                          ? StrutStyle.fromTextStyle(textStyle!)
+                          : AppTheme.postContentStrutStyle,
                     ),
           ],
         ),
@@ -308,7 +326,7 @@ class PostContent extends StatelessWidget {
 
   final OnPostIdCallback? onPostIdTap;
 
-  late final TextStyle headerTextStyle;
+  late final TextStyle? headerTextStyle;
 
   PostBase get post => content.post;
 
@@ -338,9 +356,11 @@ class PostContent extends StatelessWidget {
       TextStyle? headerTextStyle}) {
     final settings = SettingsService.to;
 
-    this.headerTextStyle = settings
-        .postHeaderTextStyle(headerTextStyle)
-        .apply(color: AppTheme.headerColor);
+    this.headerTextStyle = headerTextStyle != null
+        ? settings
+            .postHeaderTextStyle(headerTextStyle)
+            .apply(color: AppTheme.headerColor)
+        : null;
 
     content = Content(
         post: post,
@@ -352,7 +372,9 @@ class PostContent extends StatelessWidget {
         canReturnImageData: canReturnImageData,
         canTapHiddenText: canTapHiddenText,
         hiddenTextColor: hiddenTextColor,
-        textStyle: settings.postContentTextStyle(contentTextStyle));
+        textStyle: contentTextStyle != null
+            ? settings.postContentTextStyle(contentTextStyle)
+            : AppTheme.postContentTextStyle);
   }
 
   @override
@@ -370,11 +392,14 @@ class PostContent extends StatelessWidget {
           if (post is Tip)
             Text(
               '来自X岛匿名版官方的内容',
-              style: headerTextStyle,
-              strutStyle: StrutStyle.fromTextStyle(headerTextStyle),
+              style: headerTextStyle ?? AppTheme.postHeaderTextStyle,
+              strutStyle: headerTextStyle != null
+                  ? StrutStyle.fromTextStyle(headerTextStyle!)
+                  : AppTheme.postHeaderStrutStyle,
             ),
           PostHeader(
-            fontSize: headerTextStyle.fontSize,
+            fontSize:
+                (headerTextStyle ?? AppTheme.postHeaderTextStyle).fontSize,
             height: headerHeight,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -405,7 +430,8 @@ class PostContent extends StatelessWidget {
                     child: ForumName(
                       forumId: forumId,
                       maxLines: 1,
-                      textStyle: headerTextStyle,
+                      textStyle:
+                          headerTextStyle ?? AppTheme.postHeaderTextStyle,
                     ),
                   ),
                 if (showReplyCount && replyCount != null)

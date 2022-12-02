@@ -1173,7 +1173,10 @@ class ImageView extends StatelessWidget {
                                     alignment: Alignment.topCenter,
                                     child: Text(
                                       '图片加载失败: $error',
-                                      style: AppTheme.boldRed,
+                                      style:
+                                          AppTheme.boldRedPostContentTextStyle,
+                                      strutStyle:
+                                          AppTheme.boldRedPostContentStrutStyle,
                                     ),
                                   ),
                                 ],

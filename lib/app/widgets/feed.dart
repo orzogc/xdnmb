@@ -55,9 +55,7 @@ class FeedAppBarTitle extends StatelessWidget {
   const FeedAppBarTitle({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const Text('订阅');
-  }
+  Widget build(BuildContext context) => const Text('订阅');
 }
 
 class _FeedDialog extends StatelessWidget {
@@ -183,8 +181,12 @@ class _FeedBodyState extends State<FeedBody> {
                   )
                 : const SizedBox.shrink(),
           ),
-          noItemsFoundBuilder: (context) => const Center(
-            child: Text('没有订阅', style: AppTheme.boldRed),
+          noItemsFoundBuilder: (context) => Center(
+            child: Text(
+              '没有订阅',
+              style: AppTheme.boldRedPostContentTextStyle,
+              strutStyle: AppTheme.boldRedPostContentStrutStyle,
+            ),
           ),
         ),
       ),

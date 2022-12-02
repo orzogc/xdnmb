@@ -244,10 +244,14 @@ class _PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
         final controller = PostListController.get();
 
         final Widget button = IconButton(
+            tooltip: '菜单',
             icon: const Icon(Icons.menu),
             onPressed: () {
               if (backdropController != null) {
                 backdropController!.showBackLayer();
+              } else if (SettingsService.isShowBottomBar &&
+                  !_tabAndForumListController.isShowed) {
+                _tabAndForumListController.show();
               } else {
                 Scaffold.of(context).openDrawer();
               }
@@ -726,7 +730,7 @@ class BottomSheetController<T> {
   BottomSheetController();
 
   void show() {
-    if (_show != null) {
+    if (!isShowed && _show != null) {
       _show!();
     }
   }
@@ -766,17 +770,20 @@ class _FloatingButton extends StatefulWidget {
 class _FloatingButtonState extends State<_FloatingButton> {
   static const double _diameter = 56.0;
 
-  static EditPostBottomSheetController get _bottomSheetController =>
+  static EditPostBottomSheetController get _editPostController =>
       BottomSheetController.editPostController;
 
-  static bool get _hasBottomSheet => _bottomSheetController.isShowed;
+  static BottomSheetController get _tabAndForumListController =>
+      BottomSheetController._tabAndForumListController;
+
+  static bool get _hasBottomSheet => _editPostController.isShowed;
 
   static EditPostCallback? get _editPost => EditPostCallback.bottomSheet;
 
   void _bottomSheet([EditPostController? controller]) {
     if (mounted) {
       if (!_hasBottomSheet) {
-        _bottomSheetController._controller = showBottomSheet(
+        _editPostController._controller = showBottomSheet(
           context: context,
           shape: Border(
               top: BorderSide(
@@ -787,8 +794,8 @@ class _FloatingButtonState extends State<_FloatingButton> {
               controller: controller, height: widget.bottomSheetHeight),
         );
 
-        _bottomSheetController.closed?.then((value) async {
-          _bottomSheetController._controller = null;
+        _editPostController.closed?.then((value) async {
+          _editPostController._controller = null;
 
           if (_editPost != null) {
             final isPosted = _editPost!.isPosted();
@@ -820,7 +827,7 @@ class _FloatingButtonState extends State<_FloatingButton> {
         _editPost!.setPostList(
             PostList.fromController(controller), controller.forumId);
       } else {
-        _bottomSheetController.close();
+        _editPostController.close();
       }
     }
   }
@@ -829,16 +836,26 @@ class _FloatingButtonState extends State<_FloatingButton> {
   void initState() {
     super.initState();
 
-    _bottomSheetController._show = _bottomSheet;
-    _bottomSheetController._showEditPost = _bottomSheet;
+    _editPostController._show = _bottomSheet;
+    _editPostController._showEditPost = _bottomSheet;
+
+    if (SettingsService.isShowBottomBar && !SettingsService.isBackdropUI) {
+      _tabAndForumListController._show =
+          () => _TabAndForumListButton._showTabAndForumList(context);
+    }
 
     ControllerStacksService.to.notifier.addListener(_refreshBottomSheet);
   }
 
   @override
   void dispose() {
-    _bottomSheetController._show = null;
-    _bottomSheetController._showEditPost = null;
+    _editPostController._show = null;
+    _editPostController._showEditPost = null;
+
+    if (SettingsService.isShowBottomBar && !SettingsService.isBackdropUI) {
+      _tabAndForumListController._show = null;
+    }
+
     ControllerStacksService.to.notifier.removeListener(_refreshBottomSheet);
 
     super.dispose();
@@ -952,6 +969,8 @@ class _TabAndForumListController {
 
   TabController? _tabController;
 
+  int? _lastIndex;
+
   bool get _isShowed => _tabController != null;
 
   int? get _index => _isShowed ? _tabController!.index : null;
@@ -990,6 +1009,9 @@ class _TabAndForumListState extends State<_TabAndForumList>
 
   late final TabController _tabController;
 
+  void _setLastIndex() =>
+      _tabAndForumListController._lastIndex = _tabController.index;
+
   @override
   void initState() {
     super.initState();
@@ -997,10 +1019,13 @@ class _TabAndForumListState extends State<_TabAndForumList>
     _tabController = TabController(
         initialIndex: widget.initialIndex, length: 2, vsync: this);
     _tabAndForumListController._tabController = _tabController;
+    _setLastIndex();
+    _tabController.addListener(_setLastIndex);
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_setLastIndex);
     _tabAndForumListController._tabController = null;
     _tabController.dispose();
 
@@ -1072,14 +1097,46 @@ class _TabAndForumListButton extends StatelessWidget {
   static _TabAndForumListController get _tabAndForumListController =>
       _TabAndForumListController._controller;
 
+  static void _showTabAndForumList(BuildContext context,
+      [_TabAndForumListButtonType? buttonType]) {
+    _bottomSheetController._controller = buttonType != null
+        ? showBottomSheet(
+            context: context,
+            builder: (context) => buttonType._isCompact
+                ? const _CompactTabAndForumList(
+                    smallTabBar: true, onTap: _closeBottomSheet)
+                : _TabAndForumList(
+                    initialIndex: buttonType._isTabList ? 0 : 1,
+                    smallTabBar: true,
+                    onTap: _closeBottomSheet,
+                  ),
+          )
+        : showBottomSheet(
+            context: context,
+            builder: (context) => SettingsService.to.isCompactTabAndForumList
+                ? const _CompactTabAndForumList(
+                    smallTabBar: true, onTap: _closeBottomSheet)
+                : _TabAndForumList(
+                    initialIndex: _tabAndForumListController._lastIndex ?? 0,
+                    smallTabBar: true,
+                    onTap: _closeBottomSheet,
+                  ),
+          );
+
+    // 延迟250毫秒防止底边栏提前出现
+    _bottomSheetController.closed?.then((value) => Future.delayed(
+        const Duration(milliseconds: 250),
+        () => _bottomSheetController._controller = null));
+  }
+
+  static void _closeBottomSheet() => _bottomSheetController.close();
+
   final _TabAndForumListButtonType buttonType;
 
   const _TabAndForumListButton(
       // ignore: unused_element
       {super.key,
       required this.buttonType});
-
-  void _closeBottomSheet() => _bottomSheetController.close();
 
   @override
   Widget build(BuildContext context) {
@@ -1091,22 +1148,7 @@ class _TabAndForumListButton extends StatelessWidget {
           : (buttonType._isForumList ? '版块' : '标签页/版块'),
       onPressed: () {
         if (!_bottomSheetController.isShowed) {
-          _bottomSheetController._controller = showBottomSheet(
-            context: context,
-            builder: (context) => buttonType._isCompact
-                ? _CompactTabAndForumList(
-                    smallTabBar: true, onTap: _closeBottomSheet)
-                : _TabAndForumList(
-                    initialIndex: buttonType._isForumList ? 1 : 0,
-                    smallTabBar: true,
-                    onTap: _closeBottomSheet,
-                  ),
-          );
-
-          // 延迟250毫秒防止底边栏提前出现
-          _bottomSheetController.closed?.then((value) => Future.delayed(
-              const Duration(milliseconds: 250),
-              () => _bottomSheetController._controller = null));
+          _showTabAndForumList(context, buttonType);
         } else {
           if (!buttonType._isCompact && _tabAndForumListController._isShowed) {
             if (buttonType._isTabList) {
@@ -1314,6 +1356,12 @@ class _PostListViewState extends State<PostListView>
   static const Duration _delayDuration = Duration(milliseconds: 300);
 
   static bool _isInitial = true;
+
+  static EditPostBottomSheetController get _editPostBSController =>
+      BottomSheetController.editPostController;
+
+  static BottomSheetController get _tabAndForumListBSController =>
+      BottomSheetController._tabAndForumListController;
 
   static _TabAndForumListController get _tabAndForumListController =>
       _TabAndForumListController._controller;
@@ -1551,7 +1599,7 @@ class _PostListViewState extends State<PostListView>
               final Widget body = Column(
                 children: [
                   Expanded(child: PostListPage(key: PostListPage.pageKey)),
-                  if (BottomSheetController.editPostController.isShowed)
+                  if (_editPostBSController.isShowed)
                     SizedBox(height: bottomSheetHeight),
                 ],
               );
@@ -1591,8 +1639,7 @@ class _PostListViewState extends State<PostListView>
                       // 为了能够在显示标签页/版块列表时显示底边栏
                       : (SettingsService.isShowBottomBar &&
                               settings.isAutoHideBottomBar &&
-                              BottomSheetController
-                                  ._tabAndForumListController.isShowed)
+                              _tabAndForumListBSController.isShowed)
                           ? const _BottomBar(isAlwaysShowed: true)
                           : const SizedBox.shrink(),
                 ),

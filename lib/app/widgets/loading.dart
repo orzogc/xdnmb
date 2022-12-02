@@ -7,16 +7,21 @@ class Quotation extends StatelessWidget {
   const Quotation({super.key});
 
   @override
-  Widget build(BuildContext context) => Align(
-        alignment: Alignment.topCenter,
-        child: Text(
-          '加载中',
-          style: TextStyle(
-            color: AppTheme.specialTextColor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
+  Widget build(BuildContext context) {
+    final textStyle = AppTheme.postContentTextStyle.merge(TextStyle(
+      color: AppTheme.specialTextColor,
+      fontWeight: FontWeight.bold,
+    ));
+
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Text(
+        '加载中',
+        style: textStyle,
+        strutStyle: StrutStyle.fromTextStyle(textStyle),
+      ),
+    );
+  }
 }
 
 class QuotationLoadingIndicator extends StatelessWidget {

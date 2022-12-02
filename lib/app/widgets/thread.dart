@@ -615,7 +615,6 @@ class _ThreadBodyState extends State<ThreadBody> {
     return posts;
   }
 
-  // TODO: 修正字体大小
   Widget _itemBuilder(BuildContext context, PostWithPage postWithPage) {
     final post = postWithPage.post;
 
@@ -623,7 +622,11 @@ class _ThreadBodyState extends State<ThreadBody> {
       return const SizedBox.shrink();
     } else if (post is _DumbPost) {
       return _itemWithDivider(Center(
-        child: Text('第${postWithPage.page}页 空页', style: AppTheme.boldRed),
+        child: Text(
+          '第${postWithPage.page}页 空页',
+          style: AppTheme.boldRedPostContentTextStyle,
+          strutStyle: AppTheme.boldRedPostContentStrutStyle,
+        ),
       ));
     }
 
@@ -715,8 +718,12 @@ class _ThreadBodyState extends State<ThreadBody> {
                           },
                           itemBuilder: (context, post, index) =>
                               _itemBuilder(context, post),
-                          noItemsFoundBuilder: (context) => const Center(
-                            child: Text('没有串', style: AppTheme.boldRed),
+                          noItemsFoundBuilder: (context) => Center(
+                            child: Text(
+                              '没有串',
+                              style: AppTheme.boldRedPostContentTextStyle,
+                              strutStyle: AppTheme.boldRedPostContentStrutStyle,
+                            ),
                           ),
                           onNoMoreItems: () => _isNoMoreItems = true,
                           onRefresh: () {
@@ -744,8 +751,12 @@ class _ThreadBodyState extends State<ThreadBody> {
               )
             : GestureDetector(
                 onTap: controller.refresh,
-                child: const Center(
-                  child: Text('本串已被屏蔽', style: AppTheme.boldRed),
+                child: Center(
+                  child: Text(
+                    '本串已被屏蔽',
+                    style: AppTheme.boldRedPostContentTextStyle,
+                    strutStyle: AppTheme.boldRedPostContentStrutStyle,
+                  ),
                 ),
               );
       },

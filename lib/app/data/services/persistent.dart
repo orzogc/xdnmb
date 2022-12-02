@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:get/get.dart';
@@ -36,9 +37,15 @@ class PersistentDataService extends GetxService {
   set firstLaunched(bool firstLaunched) =>
       _dataBox.put(PersistentData.firstLaunched, firstLaunched);
 
-  String get notice => _dataBox.get(PersistentData.notice, defaultValue: '');
+  String? get notice => _dataBox.get(PersistentData.notice, defaultValue: null);
 
-  set notice(String notice) => _dataBox.put(PersistentData.notice, notice);
+  set notice(String? notice) => _dataBox.put(PersistentData.notice, notice);
+
+  DateTime? get noticeDate =>
+      _dataBox.get(PersistentData.noticeDate, defaultValue: null);
+
+  set noticeDate(DateTime? date) =>
+      _dataBox.put(PersistentData.noticeDate, date);
 
   double? get keyboardHeight =>
       _dataBox.get(PersistentData.keyboardHeight, defaultValue: null);
@@ -73,6 +80,8 @@ class PersistentDataService extends GetxService {
   set controllerStackListIndex(int index) =>
       _dataBox.put(PersistentData.controllerStackListIndex, index);
 
+  late final ValueListenable<Box> noticeDateListenable;
+
   StreamSubscription<bool>? _keyboardSubscription;
 
   static Future<void> getData() async {
@@ -87,9 +96,13 @@ class PersistentDataService extends GetxService {
       .bottom;
 
   void saveNotice(Notice notice) {
-    if (notice.isValid && this.notice != notice.content) {
-      this.notice = notice.content;
-      SettingsService.to.showNotice = true;
+    if (notice.isValid &&
+        (this.notice != notice.content || noticeDate != notice.date)) {
+      if (notice.content.isNotEmpty) {
+        this.notice = notice.content;
+        noticeDate = notice.date;
+        SettingsService.to.showNotice = true;
+      }
     }
   }
 
@@ -104,7 +117,7 @@ class PersistentDataService extends GetxService {
         await Future.delayed(const Duration(milliseconds: 500));
       }
 
-      if (notice.isNotEmpty) {
+      if (notice?.isNotEmpty ?? false) {
         await showNoticeDialog(showCheckbox: true);
       }
     }
@@ -131,6 +144,9 @@ class PersistentDataService extends GetxService {
     super.onInit();
 
     _dataBox = await Hive.openBox(HiveBoxName.data);
+
+    noticeDateListenable =
+        _dataBox.listenable(keys: [PersistentData.noticeDate]);
 
     if (GetPlatform.isMobile) {
       bottomHeight.value = _bottomHeight();

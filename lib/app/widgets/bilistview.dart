@@ -274,34 +274,40 @@ class _BiListViewState<T> extends State<BiListView<T>>
           }
         }
       },
-      child: DefaultTextStyle.merge(
-        style: AppTheme.boldRed,
-        child: _MinHeightIndicator(
-          child: ValueListenableBuilder<Box>(
-            valueListenable: user.browseCookieListenable,
-            builder: (context, value, child) {
-              final Widget text =
-                  (!user.hasBrowseCookie && message.contains('饼干'))
-                      ? const Text('没有饼干，点击管理饼干')
-                      : const Text('点击重新尝试');
+      child: _MinHeightIndicator(
+        child: ValueListenableBuilder<Box>(
+          valueListenable: user.browseCookieListenable,
+          builder: (context, value, child) {
+            final Widget text =
+                (!user.hasBrowseCookie && message.contains('饼干'))
+                    ? Text('没有饼干，点击管理饼干',
+                        style: AppTheme.boldRedPostContentTextStyle,
+                        strutStyle: AppTheme.boldRedPostContentStrutStyle)
+                    : Text('点击重新尝试',
+                        style: AppTheme.boldRedPostContentTextStyle,
+                        strutStyle: AppTheme.boldRedPostContentStrutStyle);
 
-              return Column(
-                mainAxisAlignment: isAtCenter
-                    ? MainAxisAlignment.center
-                    : MainAxisAlignment.start,
-                children: [
-                  Text('错误：$message'),
-                  text,
-                ],
-              );
-            },
-          ),
+            return Column(
+              mainAxisAlignment: isAtCenter
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
+              children: [
+                Text('错误：$message',
+                    style: AppTheme.boldRedPostContentTextStyle,
+                    strutStyle: AppTheme.boldRedPostContentStrutStyle),
+                text,
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
   Widget _noMoreItems(BuildContext context) {
+    final textStyle = AppTheme.postContentTextStyle.merge(TextStyle(
+        color: AppTheme.specialTextColor, fontWeight: FontWeight.bold));
+
     if (widget.onNoMoreItems != null) {
       widget.onNoMoreItems!();
     }
@@ -320,10 +326,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
                           onPressed: _loadMore,
                           child: Text(
                             '上拉或点击刷新',
-                            style: TextStyle(
-                              color: AppTheme.specialTextColor,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: textStyle,
+                            strutStyle: StrutStyle.fromTextStyle(textStyle),
                           ),
                         ),
                 ),
@@ -334,10 +338,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
               alignment: Alignment.topCenter,
               child: Text(
                 '已经抵达X岛的尽头',
-                style: TextStyle(
-                  color: AppTheme.specialTextColor,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: textStyle,
+                strutStyle: StrutStyle.fromTextStyle(textStyle),
               ),
             ),
           );
