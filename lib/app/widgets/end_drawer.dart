@@ -117,7 +117,7 @@ class AppEndDrawer extends StatelessWidget {
         HistoryButton(showLabel: true, onTapEnd: Get.back);
     final Widget feedButton = FeedButton(showLabel: true, onTapEnd: Get.back);
     final Widget settingsButton =
-        SettingsButton(showLabel: true, beforeOpenSettings: Get.back);
+        SettingsButton(showLabel: true, onTapPrelude: Get.back);
 
     return SettingsService.isBackdropUI
         ? Drawer(

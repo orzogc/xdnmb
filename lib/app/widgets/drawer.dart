@@ -21,7 +21,7 @@ class _DrawerHeader extends StatelessWidget {
     final Widget searchButton =
         SearchButton(iconColor: color, afterSearch: Get.back);
     final Widget settingsButton =
-        SettingsButton(iconColor: color, beforeOpenSettings: Get.back);
+        SettingsButton(iconColor: color, onTapPrelude: Get.back);
 
     return SizedBox(
       height: appBarHeight + MediaQuery.of(context).padding.top,

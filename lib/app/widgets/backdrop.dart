@@ -5,36 +5,38 @@ import 'package:hive/hive.dart';
 import '../data/services/settings.dart';
 
 class BackdropController {
+  static final BackdropController controller = BackdropController();
+
   final RxBool _isShowBackLayer = false.obs;
+
+  VoidCallback? _toggleFrontLayer;
 
   bool get isShowBackLayer => _isShowBackLayer.value;
 
-  VoidCallback? _toggleFrontLayer;
+  bool get _hasBackdrop => _toggleFrontLayer != null;
 
   BackdropController();
 
   void toggleFrontLayer() {
-    if (_toggleFrontLayer != null) {
+    if (_hasBackdrop) {
       _toggleFrontLayer!();
     }
   }
 
   void showBackLayer() {
-    if (_toggleFrontLayer != null && !_isShowBackLayer.value) {
+    if (_hasBackdrop && !_isShowBackLayer.value) {
       _toggleFrontLayer!();
     }
   }
 
   void hideBackLayer() {
-    if (_toggleFrontLayer != null && _isShowBackLayer.value) {
+    if (_hasBackdrop && _isShowBackLayer.value) {
       _toggleFrontLayer!();
     }
   }
 }
 
 class Backdrop extends StatefulWidget {
-  final BackdropController controller;
-
   final double height;
 
   final double appBarHeight;
@@ -46,7 +48,6 @@ class Backdrop extends StatefulWidget {
   const Backdrop(
       {super.key,
       required this.height,
-      required this.controller,
       required this.appBarHeight,
       required this.frontLayer,
       required this.backLayer});
@@ -65,7 +66,7 @@ class _BackdropState extends State<Backdrop>
       _animationController.status != AnimationStatus.dismissed;
 
   void _updateController([AnimationStatus? status]) =>
-      widget.controller._isShowBackLayer.value = _isShowBackLayer;
+      BackdropController.controller._isShowBackLayer.value = _isShowBackLayer;
 
   void _toggleFrontLayer() {
     if (mounted && !_animationController.isAnimating) {
@@ -132,7 +133,7 @@ class _BackdropState extends State<Backdrop>
 
     // 这里调用_updateController()会导致rebuild
     //_updateController();
-    widget.controller._toggleFrontLayer = _toggleFrontLayer;
+    BackdropController.controller._toggleFrontLayer = _toggleFrontLayer;
 
     _animationController.addStatusListener(_updateController);
     _animationController.addListener(_truncate);
@@ -142,19 +143,8 @@ class _BackdropState extends State<Backdrop>
   }
 
   @override
-  void didUpdateWidget(covariant Backdrop oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (widget.controller != oldWidget.controller) {
-      //_updateController();
-      oldWidget.controller._toggleFrontLayer = null;
-      widget.controller._toggleFrontLayer = _toggleFrontLayer;
-    }
-  }
-
-  @override
   void dispose() {
-    widget.controller._toggleFrontLayer = null;
+    BackdropController.controller._toggleFrontLayer = null;
     _animationController.removeStatusListener(_updateController);
     _animationController.removeListener(_truncate);
     _animationController.dispose();

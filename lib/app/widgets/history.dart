@@ -10,7 +10,6 @@ import '../data/models/history.dart';
 import '../data/models/post.dart';
 import '../data/models/reply.dart';
 import '../data/services/history.dart';
-import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';

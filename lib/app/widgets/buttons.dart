@@ -161,22 +161,12 @@ class SettingsButton extends StatelessWidget {
 
   final VoidCallback? onTapPrelude;
 
-  final VoidCallback? beforeOpenSettings;
-
   const SettingsButton(
-      {super.key,
-      this.showLabel = false,
-      this.iconColor,
-      this.onTapPrelude,
-      this.beforeOpenSettings});
+      {super.key, this.showLabel = false, this.iconColor, this.onTapPrelude});
 
   void _onTap() {
     if (onTapPrelude != null) {
       onTapPrelude!();
-    }
-
-    if (beforeOpenSettings != null) {
-      beforeOpenSettings!();
     }
     AppRoutes.toSettings();
   }

@@ -92,12 +92,20 @@ class AppBarMenuGuide extends StatelessWidget {
   const AppBarMenuGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: SettingsService.to.showGuide ? '标签页菜单' : '标签页和版块列表菜单',
-        description: SettingsService.to.showGuide ? '点击打开标签页' : '点击打开标签页和版块列表',
-        child: child,
-      );
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return Showcase(
+      key: _key,
+      title: (settings.showGuide && !SettingsService.isShowBottomBar)
+          ? '标签页菜单'
+          : '标签页和版块列表菜单',
+      description: (settings.showGuide && !SettingsService.isShowBottomBar)
+          ? '点击打开标签页'
+          : '点击打开标签页和版块列表',
+      child: child,
+    );
+  }
 }
 
 class AppBarTitleGuide extends StatelessWidget {

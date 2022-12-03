@@ -20,7 +20,6 @@ import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/loading.dart';
 import '../widgets/post.dart';
-import '../widgets/safe_area.dart';
 import '../widgets/size.dart';
 import 'paint.dart';
 
@@ -1083,7 +1082,10 @@ class ImageView extends StatelessWidget {
 
         return true;
       },
-      child: ColoredSafeArea(
+      child: SafeArea(
+        left: false,
+        top: false,
+        right: false,
         child: LayoutBuilder(builder: (context, constraints) {
           final size = Size(
               constraints.maxWidth, constraints.maxHeight - media.padding.top);

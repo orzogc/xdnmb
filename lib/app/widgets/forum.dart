@@ -266,16 +266,8 @@ class _ForumBodyState extends State<ForumBody> {
 
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
         if (mounted) {
-          if (settings.showBackdropGuide &&
-              Get.isRegistered<BackdropController>()) {
-            final BackdropController backdropController =
-                Get.find<BackdropController>();
-            backdropController.hideBackLayer();
-          }
-
-          if (settings.showGuide) {
-            scaffold.closeDrawer();
-          }
+          BackdropController.controller.hideBackLayer();
+          scaffold.closeDrawer();
           scaffold.closeEndDrawer();
           await Future.delayed(const Duration(milliseconds: 300));
 
