@@ -36,12 +36,54 @@ class DumpItem extends StatelessWidget {
 
 typedef FetchPage<T> = Future<List<T>> Function(int page);
 
-typedef GetFunctionCallback = void Function(VoidCallback function);
-
 typedef GetPageCallback = int Function();
 
+class BiListViewController {
+  /// 正在加载更多
+  final RxBool _isLoadingMore = false.obs;
+
+  /// 正在上拉加载更多
+  bool _isLoading = false;
+
+  /// 正在下拉刷新
+  bool _isRefreshing = false;
+
+  int _lastPage = 0;
+
+  bool _isFetchingUp = false;
+
+  bool _isFetchingDown = false;
+
+  VoidCallback? _loadMore;
+
+  /// 正在加载更多
+  bool get isLoadingMore => _isLoadingMore.value;
+
+  /// 正在上拉加载更多
+  bool get isLoading => _isLoading;
+
+  /// 正在下拉刷新
+  bool get isRefreshing => _isRefreshing;
+
+  int get lastPage => _lastPage;
+
+  bool get isFetchingUp => _isFetchingUp;
+
+  bool get isFetchingDown => _isFetchingDown;
+
+  BiListViewController();
+
+  void loadMore() {
+    if (_loadMore != null) {
+      _loadMore!();
+    }
+  }
+}
+
 class BiListView<T> extends StatefulWidget {
-  final ScrollController? controller;
+  final BiListViewController controller;
+
+  final ScrollController? scrollController;
 
   final int initialPage;
 
@@ -61,17 +103,16 @@ class BiListView<T> extends StatefulWidget {
 
   final VoidCallback? onNoMoreItems;
 
-  final VoidCallback? onRefresh;
-
-  final GetFunctionCallback? getLoadMore;
+  final VoidCallback? onRefreshAndLoadMore;
 
   final FetchPage<T>? fetchFallback;
 
   final GetPageCallback? getMaxPage;
 
-  const BiListView(
+  BiListView(
       {super.key,
-      this.controller,
+      BiListViewController? controller,
+      this.scrollController,
       required this.initialPage,
       this.firstPage = 1,
       this.lastPage,
@@ -81,12 +122,12 @@ class BiListView<T> extends StatefulWidget {
       this.separator,
       this.noItemsFoundBuilder,
       this.onNoMoreItems,
-      this.onRefresh,
-      this.getLoadMore,
+      this.onRefreshAndLoadMore,
       this.fetchFallback,
       this.getMaxPage})
       : assert(
-            getMaxPage == null || (lastPage == null && fetchFallback != null));
+            getMaxPage == null || (lastPage == null && fetchFallback != null)),
+        controller = controller ?? BiListViewController();
 
   @override
   State<BiListView<T>> createState() => _BiListViewState<T>();
@@ -105,27 +146,17 @@ class _BiListViewState<T> extends State<BiListView<T>>
     controlFinishLoad: true,
   );
 
-  final RxBool _isLoadingMore = false.obs;
-
-  bool _isLoading = false;
-
-  bool _isRefreshing = false;
-
-  int _lastPage = 0;
-
   int _itemListLength = 0;
 
   late ScrollController _scrollController;
 
   final RxBool _isOutOfBoundary = true.obs;
 
-  bool _isFetchingUp = false;
-
-  bool _isFetchingDown = false;
+  //final RxBool _toRefresh = false.obs;
 
   Future<void> _fetchUpPage(int page, [bool rethrowError = false]) async {
-    if (!_isFetchingUp) {
-      _isFetchingUp = true;
+    if (!widget.controller._isFetchingUp) {
+      widget.controller._isFetchingUp = true;
 
       try {
         final lastPage = widget.lastPage;
@@ -157,14 +188,14 @@ class _BiListViewState<T> extends State<BiListView<T>>
           _pagingUpController?.error = e;
         }
       } finally {
-        _isFetchingUp = false;
+        widget.controller._isFetchingUp = false;
       }
     }
   }
 
   Future<void> _fetchDownPage(int page, [bool rethrowError = false]) async {
-    if (!_isFetchingDown) {
-      _isFetchingDown = true;
+    if (!widget.controller._isFetchingDown) {
+      widget.controller._isFetchingDown = true;
 
       try {
         final lastPage = widget.lastPage;
@@ -178,19 +209,20 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
           List<T> list = await widget.fetch(page);
 
-          if (_isLoadingMore.value && _pagingDownController?.itemList != null) {
+          if (widget.controller.isLoadingMore &&
+              _pagingDownController?.itemList != null) {
             _pagingDownController?.itemList!.removeRange(
                 _itemListLength, (_pagingDownController?.itemList)!.length);
           }
 
           if (list.isNotEmpty) {
-            _lastPage = page;
+            widget.controller._lastPage = page;
             _itemListLength = _pagingDownController?.itemList?.length ?? 0;
           } else if (widget.getMaxPage != null &&
               widget.fetchFallback != null &&
               page <= widget.getMaxPage!()) {
             list = await widget.fetchFallback!(page);
-            _lastPage = page;
+            widget.controller._lastPage = page;
             _itemListLength = _pagingDownController?.itemList?.length ?? 0;
           }
 
@@ -208,18 +240,20 @@ class _BiListViewState<T> extends State<BiListView<T>>
           _pagingDownController?.error = e;
         }
       } finally {
-        _isFetchingDown = false;
+        widget.controller._isFetchingDown = false;
       }
     }
   }
 
   Future<void> _refresh() async {
-    if (!_isRefreshing && !_isFetchingUp && !_isFetchingDown) {
-      _isRefreshing = true;
+    if (!widget.controller._isRefreshing &&
+        !widget.controller._isFetchingUp &&
+        !widget.controller._isFetchingDown) {
+      widget.controller._isRefreshing = true;
 
       try {
-        if (widget.onRefresh != null) {
-          widget.onRefresh!();
+        if (widget.onRefreshAndLoadMore != null) {
+          widget.onRefreshAndLoadMore!();
         }
 
         if (widget.initialPage == widget.firstPage) {
@@ -235,25 +269,27 @@ class _BiListViewState<T> extends State<BiListView<T>>
       } catch (e) {
         showToast('刷新出现错误：${exceptionMessage(e)}');
       } finally {
-        _isRefreshing = false;
+        widget.controller._isRefreshing = false;
       }
     }
   }
 
   Future<void> _loadMore() async {
-    if (!_isLoadingMore.value && !_isFetchingDown) {
-      _isLoadingMore.value = true;
+    if (!widget.controller.isLoadingMore &&
+        !widget.controller._isFetchingDown) {
+      widget.controller._isLoadingMore.value = true;
 
       try {
-        if (widget.onRefresh != null) {
-          widget.onRefresh!();
+        if (widget.onRefreshAndLoadMore != null) {
+          widget.onRefreshAndLoadMore!();
         }
 
-        await _fetchDownPage(_lastPage, true);
+        await _fetchDownPage(widget.controller._lastPage, true);
       } catch (e) {
         showToast('加载出现错误：${exceptionMessage(e)}');
       } finally {
-        _isLoadingMore.value = false;
+        widget.controller._isLoadingMore.value = false;
+        //_toRefresh.value = !_toRefresh.value;
       }
     }
   }
@@ -316,7 +352,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
         ? (widget.canLoadMoreAtBottom
             ? _MinHeightIndicator(
                 child: Obx(
-                  () => _isLoadingMore.value
+                  () => widget.controller.isLoadingMore
                       ? const Quotation()
                       : TextButton(
                           style: TextButton.styleFrom(
@@ -381,31 +417,35 @@ class _BiListViewState<T> extends State<BiListView<T>>
     _pagingUpController!.addPageRequestListener(_fetchUpPage);
     _pagingDownController!.addPageRequestListener(_fetchDownPage);
 
-    _scrollController = widget.controller ?? ScrollController();
+    _scrollController = widget.scrollController ?? ScrollController();
     _scrollController.addListener(_checkBoundary);
 
-    if (widget.getLoadMore != null) {
-      widget.getLoadMore!(_loadMore);
-    }
+    widget.controller._loadMore = _loadMore;
   }
 
   @override
   void didUpdateWidget(covariant BiListView<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.controller != oldWidget.controller) {
+    if (widget.scrollController != oldWidget.scrollController) {
       final oldController = _scrollController;
       oldController.removeListener(_checkBoundary);
-      if (oldWidget.controller == null) {
+      if (oldWidget.scrollController == null) {
         oldController.dispose();
       }
-      _scrollController = widget.controller ?? ScrollController();
+      _scrollController = widget.scrollController ?? ScrollController();
       _scrollController.addListener(_checkBoundary);
+    }
+
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller._loadMore = null;
+      widget.controller._loadMore = _loadMore;
     }
   }
 
   @override
   void dispose() {
+    widget.controller._loadMore = null;
     _pagingUpController?.removePageRequestListener(_fetchUpPage);
     _pagingUpController?.dispose();
     _pagingUpController = null;
@@ -415,7 +455,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
     _refreshController?.dispose();
     _refreshController = null;
     _scrollController.removeListener(_checkBoundary);
-    if (widget.controller == null) {
+    if (widget.scrollController == null) {
       _scrollController.dispose();
     }
 
@@ -435,21 +475,21 @@ class _BiListViewState<T> extends State<BiListView<T>>
             ? const MaterialFooter(clamping: false)
             : null,
         onRefresh: () async {
-          if (!_isRefreshing) {
+          if (!widget.controller._isRefreshing) {
             await _refresh();
             _refreshController?.finishRefresh();
           }
         },
         onLoad: (widget.lastPage == null && widget.canLoadMoreAtBottom)
             ? () async {
-                if (!_isLoading) {
-                  _isLoading = true;
+                if (!widget.controller._isLoading) {
+                  widget.controller._isLoading = true;
 
                   try {
                     await _loadMore();
                     _refreshController?.finishLoad();
                   } finally {
-                    _isLoading = false;
+                    widget.controller._isLoading = false;
                   }
                 }
               }
@@ -457,53 +497,58 @@ class _BiListViewState<T> extends State<BiListView<T>>
         noMoreRefresh: true,
         noMoreLoad: widget.lastPage == null ? true : false,
         childBuilder: (context, physics) => Obx(
-          () => Scrollable(
-            controller: _scrollController,
-            physics: _isOutOfBoundary.value
-                ? physics
-                : const ClampingScrollPhysics(
-                    parent: RangeMaintainingScrollPhysics()),
-            viewportBuilder: (context, position) => Viewport(
-              offset: position,
-              center: _downKey,
-              slivers: [
-                if (widget.initialPage > 1)
+          () {
+            // 加载更多后需要刷新，否则某些Widget可能不会更新（不确定能否修复）
+            //_toRefresh.value;
+
+            return Scrollable(
+              controller: _scrollController,
+              physics: _isOutOfBoundary.value
+                  ? physics
+                  : const ClampingScrollPhysics(
+                      parent: RangeMaintainingScrollPhysics()),
+              viewportBuilder: (context, position) => Viewport(
+                offset: position,
+                center: _downKey,
+                slivers: [
+                  if (widget.initialPage > 1)
+                    PagedSliverList(
+                      pagingController: _pagingUpController!,
+                      builderDelegate: PagedChildBuilderDelegate<T>(
+                        itemBuilder: _itemBuilder,
+                        firstPageErrorIndicatorBuilder: (context) =>
+                            _errorWidgetBuilder(_pagingUpController!, true),
+                        newPageErrorIndicatorBuilder: (context) =>
+                            _errorWidgetBuilder(_pagingUpController!),
+                        firstPageProgressIndicatorBuilder: (context) =>
+                            const QuotationLoadingIndicator(),
+                        newPageProgressIndicatorBuilder: (context) =>
+                            const _MinHeightIndicator(child: Quotation()),
+                        noItemsFoundIndicatorBuilder: (context) =>
+                            const SizedBox.shrink(),
+                      ),
+                    ),
                   PagedSliverList(
-                    pagingController: _pagingUpController!,
+                    key: _downKey,
+                    pagingController: _pagingDownController!,
                     builderDelegate: PagedChildBuilderDelegate<T>(
                       itemBuilder: _itemBuilder,
                       firstPageErrorIndicatorBuilder: (context) =>
-                          _errorWidgetBuilder(_pagingUpController!, true),
+                          _errorWidgetBuilder(_pagingDownController!, true),
                       newPageErrorIndicatorBuilder: (context) =>
-                          _errorWidgetBuilder(_pagingUpController!),
+                          _errorWidgetBuilder(_pagingDownController!),
                       firstPageProgressIndicatorBuilder: (context) =>
                           const QuotationLoadingIndicator(),
                       newPageProgressIndicatorBuilder: (context) =>
                           const _MinHeightIndicator(child: Quotation()),
-                      noItemsFoundIndicatorBuilder: (context) =>
-                          const SizedBox.shrink(),
+                      noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
+                      noMoreItemsIndicatorBuilder: _noMoreItems,
                     ),
                   ),
-                PagedSliverList(
-                  key: _downKey,
-                  pagingController: _pagingDownController!,
-                  builderDelegate: PagedChildBuilderDelegate<T>(
-                    itemBuilder: _itemBuilder,
-                    firstPageErrorIndicatorBuilder: (context) =>
-                        _errorWidgetBuilder(_pagingDownController!, true),
-                    newPageErrorIndicatorBuilder: (context) =>
-                        _errorWidgetBuilder(_pagingDownController!),
-                    firstPageProgressIndicatorBuilder: (context) =>
-                        const QuotationLoadingIndicator(),
-                    newPageProgressIndicatorBuilder: (context) =>
-                        const _MinHeightIndicator(child: Quotation()),
-                    noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
-                    noMoreItemsIndicatorBuilder: _noMoreItems,
-                  ),
-                ),
-              ],
-            ),
-          ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );

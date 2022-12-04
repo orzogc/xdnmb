@@ -147,7 +147,7 @@ class _FeedBodyState extends State<FeedBody> {
         builder: (context, scrollController, refresh) =>
             BiListView<Visible<PostWithPage>>(
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
-          controller: scrollController,
+          scrollController: scrollController,
           initialPage: widget.controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async =>

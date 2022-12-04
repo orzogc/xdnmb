@@ -454,6 +454,8 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   late StreamSubscription<int> _pageSubscription;
 
+  final BiListViewController biListViewController = BiListViewController();
+
   Future<void> _saveBrowseHistory() async {
     if (!_isSavingBrowseHistory) {
       _isSavingBrowseHistory = true;
@@ -562,7 +564,10 @@ class _ThreadBodyState extends State<ThreadBody> {
             _isToJump.value = false;
           }
         } else {
-          updateHistory();
+          // 用户主动加载的不要保存
+          if (!biListViewController.isLoadingMore) {
+            updateHistory();
+          }
         }
       } else {
         _isToJump.value = false;
@@ -706,7 +711,8 @@ class _ThreadBodyState extends State<ThreadBody> {
                         maintainSize: true,
                         child: BiListView<PostWithPage>(
                           key: ValueKey<int>(_refresh),
-                          controller: _anchorController,
+                          controller: biListViewController,
+                          scrollController: _anchorController,
                           initialPage: firstPage,
                           fetch: (page) async {
                             try {
@@ -726,19 +732,11 @@ class _ThreadBodyState extends State<ThreadBody> {
                             ),
                           ),
                           onNoMoreItems: () => _isNoMoreItems = true,
-                          onRefresh: () {
+                          onRefreshAndLoadMore: () {
                             if (isBlocked()) {
                               controller.refresh();
                             }
                           },
-                          getLoadMore: controller.isThread
-                              ? (function) => (controller as ThreadController)
-                                      .loadMore = () {
-                                    if (_isNoMoreItems) {
-                                      function();
-                                    }
-                                  }
-                              : null,
                           fetchFallback: (page) => Future.value(
                             [PostWithPage(const _DumbPost(), page)],
                           ),
@@ -802,6 +800,11 @@ class _ThreadBodyState extends State<ThreadBody> {
     if (replyCount != null) {
       _maxPage = replyCount > 0 ? (replyCount / 19).ceil() : 1;
     }
+
+    if (widget.controller.isThread) {
+      (widget.controller as ThreadController).loadMore =
+          biListViewController.loadMore;
+    }
   }
 
   @override
@@ -809,16 +812,28 @@ class _ThreadBodyState extends State<ThreadBody> {
     super.didUpdateWidget(oldWidget);
 
     if (widget.controller != oldWidget.controller) {
+      if (oldWidget.controller.isThread) {
+        (oldWidget.controller as ThreadController).loadMore = null;
+      }
       oldWidget.controller.removeListener(_cancelJump);
       oldWidget.controller.removeListener(_addRefresh);
+
       widget.controller.addListener(_addRefresh);
       _pageSubscription.cancel();
       _pageSubscription = widget.controller.listenPage(_trySave);
+      if (widget.controller.isThread) {
+        (widget.controller as ThreadController).loadMore =
+            biListViewController.loadMore;
+      }
     }
   }
 
   @override
   void dispose() {
+    if (widget.controller.isThread) {
+      (widget.controller as ThreadController).loadMore = null;
+    }
+
     _isToJump.value = false;
     _anchorController.removeListener(_setScrollDirection);
     _anchorController.dispose();

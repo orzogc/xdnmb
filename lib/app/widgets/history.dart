@@ -416,7 +416,7 @@ class _BrowseHistoryBody extends StatelessWidget {
               controller._getDateRange(_BrowseHistoryBody._index),
               refresh,
               value)),
-          controller: scrollController,
+          scrollController: scrollController,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.browseHistoryList(
@@ -560,7 +560,7 @@ class _PostHistoryBody extends StatelessWidget {
               controller._getDateRange(_PostHistoryBody._index),
               refresh,
               value)),
-          controller: scrollController,
+          scrollController: scrollController,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.postDataList(
@@ -662,7 +662,7 @@ class _ReplyHistoryBody extends StatelessWidget {
               controller._getDateRange(_ReplyHistoryBody._index),
               refresh,
               value)),
-          controller: scrollController,
+          scrollController: scrollController,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.replyDataList(

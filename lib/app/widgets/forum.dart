@@ -320,7 +320,7 @@ class _ForumBodyState extends State<ForumBody> {
       builder: (context, scrollController, refresh) =>
           BiListView<ThreadWithPage>(
         key: ValueKey<int>(refresh),
-        controller: scrollController,
+        scrollController: scrollController,
         initialPage: controller.page,
         // 版块的最大页固定为100
         lastPage:
