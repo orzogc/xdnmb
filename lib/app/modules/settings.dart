@@ -45,13 +45,24 @@ class _Feedback extends StatelessWidget {
       );
 }
 
-class _AuthorSponsor extends StatelessWidget {
+class _AuthorQRCodeSponsor extends StatelessWidget {
   // ignore: unused_element
-  const _AuthorSponsor({super.key});
+  const _AuthorQRCodeSponsor({super.key});
 
   @override
   Widget build(BuildContext context) => ListTile(
-        title: const Text('赞助客户端作者'),
+        title: const Text('赞助客户端作者（微信赞赏码）'),
+        onTap: () => Get.dialog(const RewardQRCode()),
+      );
+}
+
+class _AuthorUrlSponsor extends StatelessWidget {
+  // ignore: unused_element
+  const _AuthorUrlSponsor({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        title: const Text('赞助客户端作者（爱发电）'),
         subtitle: const Text(Urls.authorSponsor),
         onTap: () => launchURL(Urls.authorSponsor),
       );
@@ -128,13 +139,14 @@ class SettingsView extends StatelessWidget {
               ListTile(title: Text('饼干'), onTap: AppRoutes.toUser),
               ListTile(title: Text('黑名单'), onTap: AppRoutes.toBlacklist),
               ListTile(title: Text('基本设置'), onTap: AppRoutes.toBasicSettings),
+              ListTile(title: Text('界面设置'), onTap: AppRoutes.toUISettings),
               ListTile(
                   title: Text('高级设置'), onTap: AppRoutes.toAdvancedSettings),
-              ListTile(title: Text('界面设置'), onTap: AppRoutes.toUISettings),
               _DarkMode(),
               _Feedback(),
               ListTile(title: Text('客户端作者'), subtitle: Text('Orzogc')),
-              _AuthorSponsor(),
+              _AuthorQRCodeSponsor(),
+              _AuthorUrlSponsor(),
               _AppSource(),
               _AppLicense(),
               _AppVersion(),

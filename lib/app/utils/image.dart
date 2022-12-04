@@ -60,11 +60,12 @@ Image? getImage(Uint8List imageData) {
   return null;
 }
 
-Future<bool> saveImageData(Uint8List imageData) async {
+// 保存成功返回`true`，失败返回`false`
+Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
   final savePath = ImageService.savePath;
 
   try {
-    final filename = _imageFilename(imageData);
+    final filename = imageName ?? _imageFilename(imageData);
 
     if (GetPlatform.isIOS) {
       if (ImageService.to.hasPhotoLibraryPermission) {

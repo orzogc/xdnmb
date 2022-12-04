@@ -268,8 +268,12 @@ class _SponsorDialog extends StatelessWidget {
     return SimpleDialog(
       children: [
         SimpleDialogOption(
+          onPressed: () => Get.dialog(const RewardQRCode()),
+          child: Text('赞助客户端作者（微信赞赏码）', style: textStyle),
+        ),
+        SimpleDialogOption(
           onPressed: () => launchURL(Urls.authorSponsor),
-          child: Text('赞助客户端作者', style: textStyle),
+          child: Text('赞助客户端作者（爱发电）', style: textStyle),
         ),
         SimpleDialogOption(
           onPressed: () => launchURL(Urls.xdnmbSponsor),

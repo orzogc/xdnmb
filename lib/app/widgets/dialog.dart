@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:xdnmb_api/xdnmb_api.dart';
+import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/models/controller.dart';
 import '../data/models/forum.dart';
@@ -12,6 +12,7 @@ import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
+import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
@@ -28,30 +29,13 @@ import 'forum_name.dart';
 import 'scroll.dart';
 import 'thread.dart';
 
-Future<T?> postListDialog<T>(
-  Widget widget, {
-  int? index,
-  bool barrierDismissible = true,
-  Color? barrierColor,
-  bool useSafeArea = true,
-  Object? arguments,
-  Duration? transitionDuration,
-  Curve? transitionCurve,
-  String? name,
-  RouteSettings? routeSettings,
-}) =>
-    Get.dialog<T>(
-      widget,
-      barrierDismissible: barrierDismissible,
-      barrierColor: barrierColor,
-      useSafeArea: useSafeArea,
-      navigatorKey: postListkey(index),
-      arguments: arguments,
-      transitionDuration: transitionDuration,
-      transitionCurve: transitionCurve,
-      name: name,
-      routeSettings: routeSettings,
-    );
+Future<T?> postListDialog<T>(Widget widget, {int? index}) => Get.dialog<T>(
+    Obx(() => BottomBar.isShowed
+        ? Container(
+            margin: const EdgeInsets.only(bottom: BottomBar.height),
+            child: widget)
+        : widget),
+    navigatorKey: postListkey(index));
 
 Future<T?> showNoticeDialog<T>(
         {bool showCheckbox = false, bool isAutoUpdate = false}) =>
@@ -655,4 +639,29 @@ class DoubleRangeDialog extends StatelessWidget {
       ],
     );
   }
+}
+
+class RewardQRCode extends StatelessWidget {
+  const RewardQRCode({super.key});
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        actionsPadding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
+        title: const Text('微信赞赏码'),
+        content:
+            const Image(image: AssetImage('assets/image/reward_qrcode.png')),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              final data = await DefaultAssetBundle.of(context)
+                  .load('assets/image/reward_qrcode.png');
+              await saveImageData(
+                  data.buffer.asUint8List(), 'reward_qrcode.png');
+
+              Get.back();
+            },
+            child: const Text('保存'),
+          ),
+        ],
+      );
 }

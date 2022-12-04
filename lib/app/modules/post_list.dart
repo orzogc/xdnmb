@@ -1113,7 +1113,7 @@ class _TabAndForumListButton extends StatelessWidget {
       _TabAndForumListController._controller;
 
   static const EdgeInsets _listPadding =
-      EdgeInsets.only(bottom: _BottomBar._height);
+      EdgeInsets.only(bottom: BottomBar.height);
 
   static void _showTabAndForumList([_TabAndForumListButtonType? buttonType]) {
     final settings = SettingsService.to;
@@ -1205,8 +1205,11 @@ class _TabAndForumListButton extends StatelessWidget {
   }
 }
 
-class _BottomBar extends StatelessWidget {
-  static const double _height = 48.0;
+void showFloatingButtonAndBottomBar() =>
+    PostListController.setScrollPosition(ScrollDirection.forward);
+
+class BottomBar extends StatelessWidget {
+  static const double height = 48.0;
 
   static EditPostBottomSheetController get _editPostController =>
       BottomSheetController.editPostController;
@@ -1214,8 +1217,14 @@ class _BottomBar extends StatelessWidget {
   static BottomSheetController get _tabAndForumListController =>
       BottomSheetController._tabAndForumListController;
 
+  static bool get isShowed =>
+      !(_editPostController.isShowed ||
+          (!_tabAndForumListController.isShowed &&
+              PostListController._isScrollingDown)) &&
+      SettingsService.to.autoHideBottomBar;
+
   // ignore: unused_element
-  const _BottomBar({super.key});
+  const BottomBar({super.key});
 
   void _closeBottomSheet() => _tabAndForumListController.close();
 
@@ -1224,7 +1233,7 @@ class _BottomBar extends StatelessWidget {
     final settings = SettingsService.to;
     final color = Theme.of(context).colorScheme.onPrimary;
     final hideOffset =
-        (_height + MediaQuery.of(context).padding.bottom) / _height;
+        (height + MediaQuery.of(context).padding.bottom) / height;
 
     final Widget searchButton = SearchButton(
       iconColor: color,
@@ -1269,7 +1278,7 @@ class _BottomBar extends StatelessWidget {
 
     final Widget bottomAppBar = Container(
       color: Theme.of(context).primaryColor,
-      height: _height,
+      height: height,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -1604,7 +1613,7 @@ class _PostListViewState extends State<PostListView>
                   ? ValueListenableBuilder<Box>(
                       valueListenable:
                           settings.compactTabAndForumListListenable,
-                      builder: (context, value, child) => _BottomBar(
+                      builder: (context, value, child) => BottomBar(
                         key: ValueKey<bool>(settings.compactTabAndForumList),
                       ),
                     )

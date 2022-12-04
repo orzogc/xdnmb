@@ -77,7 +77,7 @@ class _Restore extends StatelessWidget {
               child: const Text('恢复默认数值'),
             ),
             Text(
-              '更改后需要重启应用',
+              '点击右上角更改，需要重启应用',
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium
