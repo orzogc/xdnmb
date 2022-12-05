@@ -244,11 +244,11 @@ class SettingsService extends GetxService {
   set backLayerDragHeightRatio(double ratio) => _settingsBox.put(
       Settings.backLayerDragHeightRatio, ratio.clamp(0.0, 1.0));
 
-  /* bool get autoHideAppBar =>
+  bool get autoHideAppBar =>
       _settingsBox.get(Settings.autoHideAppBar, defaultValue: false);
 
   set autoHideAppBar(bool autoHideAppBar) =>
-      _settingsBox.put(Settings.autoHideAppBar, autoHideAppBar); */
+      _settingsBox.put(Settings.autoHideAppBar, autoHideAppBar);
 
   bool get hideFloatingButton =>
       _settingsBox.get(Settings.hideFloatingButton, defaultValue: false);
@@ -417,7 +417,7 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> backLayerDragHeightRatioListenable;
 
-  //late final ValueListenable<Box> autoHideAppBarListenable;
+  late final ValueListenable<Box> autoHideAppBarListenable;
 
   late final ValueListenable<Box> hideFloatingButtonListenable;
 
@@ -538,8 +538,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.frontLayerDragHeightRatio]);
     backLayerDragHeightRatioListenable =
         _settingsBox.listenable(keys: [Settings.backLayerDragHeightRatio]);
-    /* autoHideAppBarListenable =
-        _settingsBox.listenable(keys: [Settings.autoHideAppBar]); */
+    autoHideAppBarListenable =
+        _settingsBox.listenable(keys: [Settings.autoHideAppBar]);
     hideFloatingButtonListenable =
         _settingsBox.listenable(keys: [Settings.hideFloatingButton]);
     autoHideFloatingButtonListenable =

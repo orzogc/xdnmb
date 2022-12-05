@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -39,37 +41,12 @@ typedef FetchPage<T> = Future<List<T>> Function(int page);
 typedef GetPageCallback = int Function();
 
 class BiListViewController {
-  /// 正在加载更多
-  final RxBool _isLoadingMore = false.obs;
-
-  /// 正在上拉加载更多
-  bool _isLoading = false;
-
-  /// 正在下拉刷新
-  bool _isRefreshing = false;
-
-  int _lastPage = 0;
-
-  bool _isFetchingUp = false;
-
-  bool _isFetchingDown = false;
+  bool _isLoadingMore = false;
 
   VoidCallback? _loadMore;
 
   /// 正在加载更多
-  bool get isLoadingMore => _isLoadingMore.value;
-
-  /// 正在上拉加载更多
-  bool get isLoading => _isLoading;
-
-  /// 正在下拉刷新
-  bool get isRefreshing => _isRefreshing;
-
-  int get lastPage => _lastPage;
-
-  bool get isFetchingUp => _isFetchingUp;
-
-  bool get isFetchingDown => _isFetchingDown;
+  bool get isLoadingMore => _isLoadingMore;
 
   BiListViewController();
 
@@ -97,6 +74,8 @@ class BiListView<T> extends StatefulWidget {
 
   final ItemWidgetBuilder<T> itemBuilder;
 
+  final Widget? header;
+
   final Widget? separator;
 
   final WidgetBuilder? noItemsFoundBuilder;
@@ -119,6 +98,7 @@ class BiListView<T> extends StatefulWidget {
       this.canLoadMoreAtBottom = true,
       required this.fetch,
       required this.itemBuilder,
+      this.header,
       this.separator,
       this.noItemsFoundBuilder,
       this.onNoMoreItems,
@@ -152,11 +132,28 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
   final RxBool _isOutOfBoundary = true.obs;
 
+  /// 正在加载更多
+  final RxBool _isLoadingMore = false.obs;
+
+  /// 正在上拉加载更多
+  bool _isLoading = false;
+
+  /// 正在下拉刷新
+  bool _isRefreshing = false;
+
+  int _lastPage = 0;
+
+  bool _isFetchingUp = false;
+
+  bool _isFetchingDown = false;
+
   //final RxBool _toRefresh = false.obs;
 
+  late StreamSubscription<bool> _isLoadingMoreSubscription;
+
   Future<void> _fetchUpPage(int page, [bool rethrowError = false]) async {
-    if (!widget.controller._isFetchingUp) {
-      widget.controller._isFetchingUp = true;
+    if (!_isFetchingUp) {
+      _isFetchingUp = true;
 
       try {
         final lastPage = widget.lastPage;
@@ -188,14 +185,14 @@ class _BiListViewState<T> extends State<BiListView<T>>
           _pagingUpController?.error = e;
         }
       } finally {
-        widget.controller._isFetchingUp = false;
+        _isFetchingUp = false;
       }
     }
   }
 
   Future<void> _fetchDownPage(int page, [bool rethrowError = false]) async {
-    if (!widget.controller._isFetchingDown) {
-      widget.controller._isFetchingDown = true;
+    if (!_isFetchingDown) {
+      _isFetchingDown = true;
 
       try {
         final lastPage = widget.lastPage;
@@ -209,20 +206,19 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
           List<T> list = await widget.fetch(page);
 
-          if (widget.controller.isLoadingMore &&
-              _pagingDownController?.itemList != null) {
+          if (_isLoadingMore.value && _pagingDownController?.itemList != null) {
             _pagingDownController?.itemList!.removeRange(
                 _itemListLength, (_pagingDownController?.itemList)!.length);
           }
 
           if (list.isNotEmpty) {
-            widget.controller._lastPage = page;
+            _lastPage = page;
             _itemListLength = _pagingDownController?.itemList?.length ?? 0;
           } else if (widget.getMaxPage != null &&
               widget.fetchFallback != null &&
               page <= widget.getMaxPage!()) {
             list = await widget.fetchFallback!(page);
-            widget.controller._lastPage = page;
+            _lastPage = page;
             _itemListLength = _pagingDownController?.itemList?.length ?? 0;
           }
 
@@ -240,16 +236,14 @@ class _BiListViewState<T> extends State<BiListView<T>>
           _pagingDownController?.error = e;
         }
       } finally {
-        widget.controller._isFetchingDown = false;
+        _isFetchingDown = false;
       }
     }
   }
 
   Future<void> _refresh() async {
-    if (!widget.controller._isRefreshing &&
-        !widget.controller._isFetchingUp &&
-        !widget.controller._isFetchingDown) {
-      widget.controller._isRefreshing = true;
+    if (!_isRefreshing && !_isFetchingUp && !_isFetchingDown) {
+      _isRefreshing = true;
 
       try {
         if (widget.onRefreshAndLoadMore != null) {
@@ -269,26 +263,25 @@ class _BiListViewState<T> extends State<BiListView<T>>
       } catch (e) {
         showToast('刷新出现错误：${exceptionMessage(e)}');
       } finally {
-        widget.controller._isRefreshing = false;
+        _isRefreshing = false;
       }
     }
   }
 
   Future<void> _loadMore() async {
-    if (!widget.controller.isLoadingMore &&
-        !widget.controller._isFetchingDown) {
-      widget.controller._isLoadingMore.value = true;
+    if (!_isLoadingMore.value && !_isFetchingDown) {
+      _isLoadingMore.value = true;
 
       try {
         if (widget.onRefreshAndLoadMore != null) {
           widget.onRefreshAndLoadMore!();
         }
 
-        await _fetchDownPage(widget.controller._lastPage, true);
+        await _fetchDownPage(_lastPage, true);
       } catch (e) {
         showToast('加载出现错误：${exceptionMessage(e)}');
       } finally {
-        widget.controller._isLoadingMore.value = false;
+        _isLoadingMore.value = false;
         //_toRefresh.value = !_toRefresh.value;
       }
     }
@@ -352,7 +345,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
         ? (widget.canLoadMoreAtBottom
             ? _MinHeightIndicator(
                 child: Obx(
-                  () => widget.controller.isLoadingMore
+                  () => _isLoadingMore.value
                       ? const Quotation()
                       : TextButton(
                           style: TextButton.styleFrom(
@@ -421,6 +414,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
     _scrollController.addListener(_checkBoundary);
 
     widget.controller._loadMore = _loadMore;
+    _isLoadingMoreSubscription = _isLoadingMore
+        .listen((value) => widget.controller._isLoadingMore = value);
   }
 
   @override
@@ -438,13 +433,17 @@ class _BiListViewState<T> extends State<BiListView<T>>
     }
 
     if (widget.controller != oldWidget.controller) {
+      _isLoadingMoreSubscription.cancel();
       oldWidget.controller._loadMore = null;
       widget.controller._loadMore = _loadMore;
+      _isLoadingMoreSubscription = _isLoadingMore
+          .listen((value) => widget.controller._isLoadingMore = value);
     }
   }
 
   @override
   void dispose() {
+    _isLoadingMoreSubscription.cancel();
     widget.controller._loadMore = null;
     _pagingUpController?.removePageRequestListener(_fetchUpPage);
     _pagingUpController?.dispose();
@@ -475,21 +474,21 @@ class _BiListViewState<T> extends State<BiListView<T>>
             ? const MaterialFooter(clamping: false)
             : null,
         onRefresh: () async {
-          if (!widget.controller._isRefreshing) {
+          if (!_isRefreshing) {
             await _refresh();
             _refreshController?.finishRefresh();
           }
         },
         onLoad: (widget.lastPage == null && widget.canLoadMoreAtBottom)
             ? () async {
-                if (!widget.controller._isLoading) {
-                  widget.controller._isLoading = true;
+                if (!_isLoading) {
+                  _isLoading = true;
 
                   try {
                     await _loadMore();
                     _refreshController?.finishLoad();
                   } finally {
-                    widget.controller._isLoading = false;
+                    _isLoading = false;
                   }
                 }
               }
@@ -511,6 +510,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
                 offset: position,
                 center: _downKey,
                 slivers: [
+                  if (widget.header != null)
+                    SliverToBoxAdapter(child: widget.header),
                   if (widget.initialPage > 1)
                     PagedSliverList(
                       pagingController: _pagingUpController!,

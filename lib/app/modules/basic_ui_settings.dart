@@ -19,7 +19,7 @@ class _ShowBottomBar extends StatelessWidget {
     return ValueListenableBuilder<Box>(
       valueListenable: settings.showBottomBarListenable,
       builder: (context, value, child) => SwitchListTile(
-        title: const Text('显示底边栏'),
+        title: const Text('显示底边栏以取代侧边栏'),
         subtitle: const Text('更改后需要重启应用'),
         value: settings.showBottomBar,
         onChanged: (value) => settings.showBottomBar = value,
