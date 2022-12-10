@@ -22,7 +22,7 @@ class QuestionTooltip extends StatelessWidget {
         return Tooltip(
           triggerMode: TooltipTriggerMode.tap,
           showDuration: const Duration(seconds: 5),
-          preferBelow: false,
+          preferBelow: settings.isAutoHideAppBar,
           message: message,
           child: DecoratedBox(
             decoration: BoxDecoration(

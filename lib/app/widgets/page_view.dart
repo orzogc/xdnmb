@@ -11,13 +11,17 @@ typedef OnIndexCallback = void Function(int index);
 class PageViewTabBar extends StatefulWidget implements PreferredSizeWidget {
   static const animationDuration = kTabScrollDuration;
 
+  static const double height = _height + _indicatorWeight;
+
   static const double _height = 46.0;
+
+  static const double _indicatorWeight = 2.0;
 
   final PageController pageController;
 
   final int initialIndex;
 
-  final double indicatorWeight;
+  //final double indicatorWeight;
 
   final OnIndexCallback onIndex;
 
@@ -32,17 +36,15 @@ class PageViewTabBar extends StatefulWidget implements PreferredSizeWidget {
       }
     }
 
-    return Size.fromHeight(maxHeight + indicatorWeight);
+    return Size.fromHeight(maxHeight + _indicatorWeight);
   }
 
   const PageViewTabBar(
       {super.key,
       required this.pageController,
       required this.initialIndex,
-      this.indicatorWeight = 2,
       required this.onIndex,
-      required this.tabs})
-      : assert(indicatorWeight > 0.0);
+      required this.tabs});
 
   @override
   State<PageViewTabBar> createState() => _PageViewTabBarState();
@@ -108,7 +110,7 @@ class _PageViewTabBarState extends State<PageViewTabBar>
   @override
   Widget build(BuildContext context) => TabBar(
       controller: _controller,
-      indicatorWeight: widget.indicatorWeight,
+      indicatorWeight: PageViewTabBar._indicatorWeight,
       tabs: widget.tabs);
 }
 

@@ -29,6 +29,7 @@ import 'edit_post.dart';
 import 'forum_name.dart';
 import 'loading.dart';
 import 'post.dart';
+import 'post_list.dart';
 
 class _DumbPost implements PostBase {
   @override
@@ -446,8 +447,6 @@ class _ThreadBodyState extends State<ThreadBody> {
   /// 第一次加载是否要跳转
   final RxBool _isToJump = false.obs;
 
-  int _refresh = 0;
-
   bool _isNoMoreItems = false;
 
   int _maxPage = 1;
@@ -522,24 +521,27 @@ class _ThreadBodyState extends State<ThreadBody> {
               WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                 Future.delayed(const Duration(milliseconds: 50), () async {
                   try {
-                    if (_isToJump.value) {
+                    if (mounted && _isToJump.value) {
                       await _anchorController.scrollToIndex(
                           index: index, scrollSpeed: 10.0);
 
-                      if (firstPost.id != id) {
-                        while (_isToJump.value &&
-                            id != widget.controller.browsePostId &&
-                            !_isNoMoreItems) {
-                          await Future.delayed(const Duration(milliseconds: 50),
-                              () async {
-                            if (_isToJump.value) {
-                              await _anchorController.scrollToIndex(
-                                  index: index, scrollSpeed: 10.0);
-                            }
-                          });
+                      if (mounted) {
+                        if (firstPost.id != id) {
+                          while (mounted &&
+                              _isToJump.value &&
+                              id != widget.controller.browsePostId &&
+                              !_isNoMoreItems) {
+                            await Future.delayed(
+                                const Duration(milliseconds: 50), () async {
+                              if (mounted && _isToJump.value) {
+                                await _anchorController.scrollToIndex(
+                                    index: index, scrollSpeed: 10.0);
+                              }
+                            });
+                          }
+                        } else {
+                          updateHistory();
                         }
-                      } else {
-                        updateHistory();
                       }
                     }
                   } catch (e) {
@@ -700,19 +702,23 @@ class _ThreadBodyState extends State<ThreadBody> {
 
         return !isBlocked()
             ? Obx(
-                () {
-                  return Stack(
-                    children: [
-                      if (_isToJump.value) const QuotationLoadingIndicator(),
-                      Visibility(
-                        visible: !_isToJump.value,
-                        maintainState: true,
-                        maintainAnimation: true,
-                        maintainSize: true,
-                        child: BiListView<PostWithPage>(
-                          key: ValueKey<int>(_refresh),
+                () => Stack(
+                  children: [
+                    if (_isToJump.value) const QuotationLoadingIndicator(),
+                    Visibility(
+                      visible: !_isToJump.value,
+                      maintainState: true,
+                      maintainAnimation: true,
+                      maintainSize: true,
+                      child: PostListRefresher(
+                        controller: controller,
+                        scrollController: _anchorController,
+                        builder: (context, scrollController, refresh) =>
+                            BiListView<PostWithPage>(
+                          key: ValueKey<int>(refresh),
                           controller: biListViewController,
-                          scrollController: _anchorController,
+                          scrollController: scrollController,
+                          postListController: controller,
                           initialPage: firstPage,
                           fetch: (page) async {
                             try {
@@ -724,6 +730,10 @@ class _ThreadBodyState extends State<ThreadBody> {
                           },
                           itemBuilder: (context, post, index) =>
                               _itemBuilder(context, post),
+                          header: PostListHeader(
+                            controller: controller,
+                            scrollController: scrollController,
+                          ),
                           noItemsFoundBuilder: (context) => Center(
                             child: Text(
                               '没有串',
@@ -743,9 +753,9 @@ class _ThreadBodyState extends State<ThreadBody> {
                           getMaxPage: () => _maxPage,
                         ),
                       ),
-                    ],
-                  );
-                },
+                    ),
+                  ],
+                ),
               )
             : GestureDetector(
                 onTap: controller.refresh,
@@ -769,14 +779,6 @@ class _ThreadBodyState extends State<ThreadBody> {
     widget.controller.addListener(_cancelJump);
   }
 
-  void _addRefresh() {
-    _refresh++;
-    _isNoMoreItems = false;
-  }
-
-  void _setScrollDirection() => PostListController.setScrollPosition(
-      _anchorController.position.userScrollDirection);
-
   void _trySave(int page) => widget.controller.trySave();
 
   @override
@@ -784,6 +786,8 @@ class _ThreadBodyState extends State<ThreadBody> {
     super.initState();
 
     _anchorController = AnchorScrollController(
+      initialScrollOffset:
+          PostListAppBar.height - widget.controller.headerHeight,
       onIndexChanged: (index, userScroll) {
         widget.controller.page = index.getPageFromPostIndex();
         widget.controller.browsePostId = index.getPostIdFromPostIndex();
@@ -791,9 +795,7 @@ class _ThreadBodyState extends State<ThreadBody> {
         _saveBrowseHistory();
       },
     );
-    _anchorController.addListener(_setScrollDirection);
 
-    widget.controller.addListener(_addRefresh);
     _pageSubscription = widget.controller.listenPage(_trySave);
 
     final replyCount = widget.controller.post?.replyCount;
@@ -816,9 +818,7 @@ class _ThreadBodyState extends State<ThreadBody> {
         (oldWidget.controller as ThreadController).loadMore = null;
       }
       oldWidget.controller.removeListener(_cancelJump);
-      oldWidget.controller.removeListener(_addRefresh);
 
-      widget.controller.addListener(_addRefresh);
       _pageSubscription.cancel();
       _pageSubscription = widget.controller.listenPage(_trySave);
       if (widget.controller.isThread) {
@@ -835,10 +835,8 @@ class _ThreadBodyState extends State<ThreadBody> {
     }
 
     _isToJump.value = false;
-    _anchorController.removeListener(_setScrollDirection);
     _anchorController.dispose();
     widget.controller.removeListener(_cancelJump);
-    widget.controller.removeListener(_addRefresh);
     _pageSubscription.cancel();
 
     super.dispose();

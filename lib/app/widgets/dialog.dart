@@ -26,16 +26,30 @@ import '../utils/url.dart';
 import 'content.dart';
 import 'edit_post.dart';
 import 'forum_name.dart';
+import 'page_view.dart';
 import 'scroll.dart';
 import 'thread.dart';
 
-Future<T?> postListDialog<T>(Widget widget, {int? index}) => Get.dialog<T>(
-    Obx(() => BottomBar.isShowed
+Future<T?> postListDialog<T>(Widget widget, {int? index}) {
+  final controller = PostListController.get(index);
+
+  return Get.dialog<T>(Obx(() {
+    final isAutoHideAppBar = SettingsService.to.isAutoHideAppBar;
+    final isShowBottomBar = PostListBottomBar.isShowed;
+
+    return (isAutoHideAppBar || isShowBottomBar)
         ? Container(
-            margin: const EdgeInsets.only(bottom: BottomBar.height),
+            margin: EdgeInsets.only(
+              top: (isAutoHideAppBar
+                      ? (AnimatedAppBarController.controller.height ?? 0.0)
+                      : 0.0) +
+                  (controller.isHistory ? PageViewTabBar.height : 0.0),
+              bottom: isShowBottomBar ? PostListBottomBar.height : 0.0,
+            ),
             child: widget)
-        : widget),
-    navigatorKey: postListkey(index));
+        : widget;
+  }), navigatorKey: postListkey(index));
+}
 
 Future<T?> showNoticeDialog<T>(
         {bool showCheckbox = false, bool isAutoUpdate = false}) =>

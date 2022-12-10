@@ -73,6 +73,8 @@ class SettingsService extends GetxService {
 
   late final RxBool _isAutoHideBottomBar;
 
+  late final RxBool _isAutoHideAppBar;
+
   late final RxDouble _drawerDragRatio;
 
   late final RxBool _isCompactTabAndForumList;
@@ -247,8 +249,12 @@ class SettingsService extends GetxService {
   bool get autoHideAppBar =>
       _settingsBox.get(Settings.autoHideAppBar, defaultValue: false);
 
-  set autoHideAppBar(bool autoHideAppBar) =>
-      _settingsBox.put(Settings.autoHideAppBar, autoHideAppBar);
+  set autoHideAppBar(bool autoHideAppBar) {
+    _settingsBox.put(Settings.autoHideAppBar, autoHideAppBar);
+    _isAutoHideAppBar.value = autoHideAppBar;
+  }
+
+  bool get isAutoHideAppBar => _isAutoHideAppBar.value;
 
   bool get hideFloatingButton =>
       _settingsBox.get(Settings.hideFloatingButton, defaultValue: false);
@@ -555,6 +561,7 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.compactTabAndForumList]);
 
     _isAutoHideBottomBar = autoHideBottomBar.obs;
+    _isAutoHideAppBar = autoHideAppBar.obs;
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
     _isCompactTabAndForumList = compactTabAndForumList.obs;
 

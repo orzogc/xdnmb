@@ -417,6 +417,7 @@ class _BrowseHistoryBody extends StatelessWidget {
               refresh,
               value)),
           scrollController: scrollController,
+          postListController: controller,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.browseHistoryList(
@@ -460,19 +461,16 @@ class _BrowseHistoryBody extends StatelessWidget {
                           onTap: () => AppRoutes.toThread(
                               mainPostId: browse.item.id,
                               mainPost: browse.item),
-                          onLongPress: () => postListDialog(
-                            _HistoryDialog(
-                              mainPost: browse.item,
-                              confirmDelete: false,
-                              onDelete: () async {
-                                await history
-                                    .deleteBrowseHistory(browse.item.id);
-                                showToast(
-                                    '删除 ${browse.item.toPostNumber()} 的浏览记录');
-                                browse.isVisible.value = false;
-                              },
-                            ),
-                          ),
+                          onLongPress: () => postListDialog(_HistoryDialog(
+                            mainPost: browse.item,
+                            confirmDelete: false,
+                            onDelete: () async {
+                              await history.deleteBrowseHistory(browse.item.id);
+                              showToast(
+                                  '删除 ${browse.item.toPostNumber()} 的浏览记录');
+                              browse.isVisible.value = false;
+                            },
+                          )),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -520,6 +518,10 @@ class _BrowseHistoryBody extends StatelessWidget {
               );
             },
           ),
+          header: PostListHeader(
+            controller: controller,
+            scrollController: scrollController,
+          ),
           noItemsFoundBuilder: (context) => Center(
             child: Text(
               '没有浏览记录',
@@ -561,6 +563,7 @@ class _PostHistoryBody extends StatelessWidget {
               refresh,
               value)),
           scrollController: scrollController,
+          postListController: controller,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.postDataList(
@@ -603,24 +606,26 @@ class _PostHistoryBody extends StatelessWidget {
                                   mainPostId: post.id, mainPost: post);
                             }
                           },
-                          onLongPress: (post) => postListDialog(
-                            _HistoryDialog(
-                              mainPost: post,
-                              onDelete: () async {
-                                await history.deletePostData(mainPost.item.id);
-                                mainPost.item.postId != null
-                                    ? showToast(
-                                        '删除主题 ${mainPost.item.postId?.toPostNumber()} 的记录')
-                                    : showToast('删除主题记录');
-                                mainPost.isVisible.value = false;
-                              },
-                            ),
-                          ),
+                          onLongPress: (post) => postListDialog(_HistoryDialog(
+                            mainPost: post,
+                            onDelete: () async {
+                              await history.deletePostData(mainPost.item.id);
+                              mainPost.item.postId != null
+                                  ? showToast(
+                                      '删除主题 ${mainPost.item.postId?.toPostNumber()} 的记录')
+                                  : showToast('删除主题记录');
+                              mainPost.isVisible.value = false;
+                            },
+                          )),
                         ),
                       )
                     : const SizedBox.shrink(),
               );
             },
+          ),
+          header: PostListHeader(
+            controller: controller,
+            scrollController: scrollController,
           ),
           noItemsFoundBuilder: (context) => Center(
             child: Text(
@@ -663,6 +668,7 @@ class _ReplyHistoryBody extends StatelessWidget {
               refresh,
               value)),
           scrollController: scrollController,
+          postListController: controller,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.replyDataList(
@@ -703,21 +709,19 @@ class _ReplyHistoryBody extends StatelessWidget {
                                         reply.item.postId != null)
                                     ? reply.item.postId
                                     : null),
-                            onLongPress: () => postListDialog(
-                              _HistoryDialog(
-                                mainPost: reply.item.toMainPost(),
-                                post: post,
-                                onDelete: () async {
-                                  await history.deletePostData(reply.item.id);
-                                  reply.item.postId != null
-                                      ? showToast(
-                                          '删除回复 ${reply.item.postId?.toPostNumber()} 的记录')
-                                      : showToast('删除回复记录');
-                                  reply.isVisible.value = false;
-                                },
-                                page: reply.item.page,
-                              ),
-                            ),
+                            onLongPress: () => postListDialog(_HistoryDialog(
+                              mainPost: reply.item.toMainPost(),
+                              post: post,
+                              onDelete: () async {
+                                await history.deletePostData(reply.item.id);
+                                reply.item.postId != null
+                                    ? showToast(
+                                        '删除回复 ${reply.item.postId?.toPostNumber()} 的记录')
+                                    : showToast('删除回复记录');
+                                reply.isVisible.value = false;
+                              },
+                              page: reply.item.page,
+                            )),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -766,6 +770,10 @@ class _ReplyHistoryBody extends StatelessWidget {
                 },
               );
             },
+          ),
+          header: PostListHeader(
+            controller: controller,
+            scrollController: scrollController,
           ),
           noItemsFoundBuilder: (context) => Center(
             child: Text(

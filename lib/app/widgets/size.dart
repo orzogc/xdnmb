@@ -21,9 +21,11 @@ class _ChildSizeNotifierState extends State<ChildSizeNotifier> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _notifier.value = (context.findRenderObject() as RenderBox).size,
-    );
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (mounted) {
+        _notifier.value = (context.findRenderObject() as RenderBox).size;
+      }
+    });
   }
 
   @override

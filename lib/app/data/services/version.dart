@@ -132,7 +132,7 @@ class CheckAppVersionService extends GetxService {
 
     await _getLatestVersion();
 
-    debugPrint('获取应用最新版本成功');
+    debugPrint('获取应用最新版本完成');
     isReady = true;
   }
 

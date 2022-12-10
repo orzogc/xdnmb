@@ -267,7 +267,7 @@ class _ForumBodyState extends State<ForumBody> {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
         if (mounted) {
           BackdropController.controller.hideBackLayer();
-          showFloatingButtonAndBottomBar();
+          showHidden();
           scaffold.closeDrawer();
           scaffold.closeEndDrawer();
           await Future.delayed(const Duration(milliseconds: 300));
@@ -321,6 +321,7 @@ class _ForumBodyState extends State<ForumBody> {
           BiListView<ThreadWithPage>(
         key: ValueKey<int>(refresh),
         scrollController: scrollController,
+        postListController: controller,
         initialPage: controller.page,
         // 版块的最大页固定为100
         lastPage:
@@ -380,6 +381,10 @@ class _ForumBodyState extends State<ForumBody> {
               ? ThreadGuide(item)
               : item;
         },
+        header: PostListHeader(
+          controller: controller,
+          scrollController: scrollController,
+        ),
         noItemsFoundBuilder: (context) => Center(
           child: Text(
             '没有串',

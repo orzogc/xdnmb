@@ -27,6 +27,8 @@ abstract class AppTheme {
 
   static const Color headerColor = Colors.grey;
 
+  static const Curve slideCurve = Curves.easeOutQuart;
+
   static const TextStyle boldRed =
       TextStyle(color: Colors.red, fontWeight: FontWeight.bold);
 

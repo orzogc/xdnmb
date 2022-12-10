@@ -20,6 +20,7 @@ import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/loading.dart';
 import '../widgets/post.dart';
+import '../widgets/safe_area.dart';
 import '../widgets/size.dart';
 import 'paint.dart';
 
@@ -51,7 +52,7 @@ class _TopOverlay extends StatelessWidget {
                 : size.height == 0
                     ? -10000
                     : -size.height,
-            curve: Curves.easeOutQuart,
+            curve: AppTheme.slideCurve,
             duration: _overlayDuration,
             child: child!,
           ),
@@ -112,7 +113,7 @@ class _BottomOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
 
     return ChildSizeNotifier(
       builder: (context, size, child) => Obx(
@@ -124,7 +125,7 @@ class _BottomOverlay extends StatelessWidget {
               : size.height == 0
                   ? -10000
                   : -(size.height + bottomPadding),
-          curve: Curves.easeOutQuart,
+          curve: AppTheme.slideCurve,
           duration: _overlayDuration,
           child: child!,
         ),
@@ -1082,150 +1083,150 @@ class ImageView extends StatelessWidget {
 
         return true;
       },
-      child: SafeArea(
-        left: false,
-        top: false,
-        right: false,
-        child: LayoutBuilder(builder: (context, constraints) {
-          final size = Size(
-              constraints.maxWidth, constraints.maxHeight - media.padding.top);
+      child: Obx(
+        () => ColoredSafeArea(
+          color: Colors.black.withOpacity(_opacity.value),
+          child: LayoutBuilder(builder: (context, constraints) {
+            final size = Size(constraints.maxWidth,
+                constraints.maxHeight - media.padding.top);
 
-          return Obx(() {
-            _controller._isShowOverlay = false;
+            return Obx(() {
+              _controller._isShowOverlay = false;
 
-            if (_controller.post.value != null) {
-              _controller._topOverlay = _TopOverlay(
-                  post: _controller.post.value!,
-                  poUserHash: _controller.poUserHash);
-            } else {
-              _controller._topOverlay = null;
-            }
+              if (_controller.post.value != null) {
+                _controller._topOverlay = _TopOverlay(
+                    post: _controller.post.value!,
+                    poUserHash: _controller.poUserHash);
+              } else {
+                _controller._topOverlay = null;
+              }
 
-            _controller._bottomOverlay = _BottomOverlay(
-                imageKey: _imageKey,
-                imageData: _controller.imageData.value,
-                isPainted: _controller._isPainted,
-                canReturnImageData: _controller.canReturnImageData,
-                hideOverlay: _hideOverlay,
-                paint: _paint,
-                saveImage: _saveImage,
-                size: size);
+              _controller._bottomOverlay = _BottomOverlay(
+                  imageKey: _imageKey,
+                  imageData: _controller.imageData.value,
+                  isPainted: _controller._isPainted,
+                  canReturnImageData: _controller.canReturnImageData,
+                  hideOverlay: _hideOverlay,
+                  paint: _paint,
+                  saveImage: _saveImage,
+                  size: size);
 
-            final CachedNetworkImage? thumbImage =
-                _controller.post.value != null
-                    ? CachedNetworkImage(
-                        imageUrl: _controller.post.value!.thumbImageUrl()!,
-                        cacheManager: XdnmbImageCacheManager(),
-                        errorWidget: (context, url, error) =>
-                            loadingImageErrorBuilder(context, url, error,
-                                showError: false),
-                        imageBuilder: (context, imageProvider) =>
-                            _Image<CachedNetworkImageProvider>(
-                          tag: _controller.tag,
-                          provider: imageProvider as CachedNetworkImageProvider,
-                          setOpacity: _setOpacity,
-                          hideOverlay: _hideOverlay,
-                          size: size,
-                        ),
-                      )
-                    : null;
+              final CachedNetworkImage? thumbImage = _controller.post.value !=
+                      null
+                  ? CachedNetworkImage(
+                      imageUrl: _controller.post.value!.thumbImageUrl()!,
+                      cacheManager: XdnmbImageCacheManager(),
+                      errorWidget: (context, url, error) =>
+                          loadingImageErrorBuilder(context, url, error,
+                              showError: false),
+                      imageBuilder: (context, imageProvider) =>
+                          _Image<CachedNetworkImageProvider>(
+                        tag: _controller.tag,
+                        provider: imageProvider as CachedNetworkImageProvider,
+                        setOpacity: _setOpacity,
+                        hideOverlay: _hideOverlay,
+                        size: size,
+                      ),
+                    )
+                  : null;
 
-            return Scaffold(
-              backgroundColor: Colors.black.withOpacity(_opacity.value),
-              body: Stack(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: media.padding.top),
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: _toggleOverlay,
-                      onSecondaryTap: () {
-                        _hideOverlay();
-                        Get.maybePop();
-                      },
-                      child: (_controller.post.value != null &&
-                              thumbImage != null)
-                          ? CachedNetworkImage(
-                              imageUrl: _controller.post.value!.imageUrl()!,
-                              cacheManager: XdnmbImageCacheManager(),
-                              progressIndicatorBuilder:
-                                  (context, url, progress) => Stack(
-                                children: [
-                                  Obx(
-                                    () => !isLoaded.value
-                                        ? thumbImage
-                                        : const SizedBox.shrink(),
-                                  ),
-                                  const Align(
-                                    alignment: Alignment.topCenter,
-                                    child: Quotation(),
-                                  ),
-                                  if (progress.progress != null)
-                                    Center(
-                                      child: CircularProgressIndicator(
-                                        value: progress.progress,
+              return Scaffold(
+                backgroundColor: Colors.transparent,
+                body: Stack(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(top: media.padding.top),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: _toggleOverlay,
+                        onSecondaryTap: () {
+                          _hideOverlay();
+                          Get.maybePop();
+                        },
+                        child: (_controller.post.value != null &&
+                                thumbImage != null)
+                            ? CachedNetworkImage(
+                                imageUrl: _controller.post.value!.imageUrl()!,
+                                cacheManager: XdnmbImageCacheManager(),
+                                progressIndicatorBuilder:
+                                    (context, url, progress) => Stack(
+                                  children: [
+                                    Obx(
+                                      () => !isLoaded.value
+                                          ? thumbImage
+                                          : const SizedBox.shrink(),
+                                    ),
+                                    const Align(
+                                      alignment: Alignment.topCenter,
+                                      child: Quotation(),
+                                    ),
+                                    if (progress.progress != null)
+                                      Center(
+                                        child: CircularProgressIndicator(
+                                          value: progress.progress,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                errorWidget: (context, url, error) => Stack(
+                                  children: [
+                                    thumbImage,
+                                    Align(
+                                      alignment: Alignment.topCenter,
+                                      child: Text(
+                                        '图片加载失败: $error',
+                                        style: AppTheme
+                                            .boldRedPostContentTextStyle,
+                                        strutStyle: AppTheme
+                                            .boldRedPostContentStrutStyle,
                                       ),
                                     ),
-                                ],
-                              ),
-                              errorWidget: (context, url, error) => Stack(
-                                children: [
-                                  thumbImage,
-                                  Align(
-                                    alignment: Alignment.topCenter,
-                                    child: Text(
-                                      '图片加载失败: $error',
-                                      style:
-                                          AppTheme.boldRedPostContentTextStyle,
-                                      strutStyle:
-                                          AppTheme.boldRedPostContentStrutStyle,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              imageBuilder: (context, imageProvider) {
-                                isLoaded.value = true;
+                                  ],
+                                ),
+                                imageBuilder: (context, imageProvider) {
+                                  isLoaded.value = true;
 
-                                return _Image<CachedNetworkImageProvider>(
-                                  key: _imageKey,
-                                  tag: _controller.tag,
-                                  provider: imageProvider
-                                      as CachedNetworkImageProvider,
-                                  setOpacity: _setOpacity,
-                                  hideOverlay: _hideOverlay,
-                                  canShowDialog: true,
-                                  paint: _paint,
-                                  saveImage: _saveImage,
-                                  size: size,
-                                );
-                              },
-                            )
-                          : (_controller.imageData.value != null
-                              ? _Image<MemoryImage>(
-                                  key: _imageKey,
-                                  tag: _controller.tag,
-                                  provider:
-                                      MemoryImage(_controller.imageData.value!),
-                                  setOpacity: _setOpacity,
-                                  hideOverlay: _hideOverlay,
-                                  canShowDialog: true,
-                                  paint: _paint,
-                                  saveImage: _saveImage,
-                                  size: size,
-                                )
-                              : const SizedBox.shrink()),
+                                  return _Image<CachedNetworkImageProvider>(
+                                    key: _imageKey,
+                                    tag: _controller.tag,
+                                    provider: imageProvider
+                                        as CachedNetworkImageProvider,
+                                    setOpacity: _setOpacity,
+                                    hideOverlay: _hideOverlay,
+                                    canShowDialog: true,
+                                    paint: _paint,
+                                    saveImage: _saveImage,
+                                    size: size,
+                                  );
+                                },
+                              )
+                            : (_controller.imageData.value != null
+                                ? _Image<MemoryImage>(
+                                    key: _imageKey,
+                                    tag: _controller.tag,
+                                    provider: MemoryImage(
+                                        _controller.imageData.value!),
+                                    setOpacity: _setOpacity,
+                                    hideOverlay: _hideOverlay,
+                                    canShowDialog: true,
+                                    paint: _paint,
+                                    saveImage: _saveImage,
+                                    size: size,
+                                  )
+                                : const SizedBox.shrink()),
+                      ),
                     ),
-                  ),
-                  if (_controller.post.value != null &&
-                      _controller._topOverlay != null)
-                    _controller._topOverlay!,
-                  if (_controller._bottomOverlay != null)
-                    _controller._bottomOverlay!,
-                ],
-              ),
-            );
-          });
-        }),
+                    if (_controller.post.value != null &&
+                        _controller._topOverlay != null)
+                      _controller._topOverlay!,
+                    if (_controller._bottomOverlay != null)
+                      _controller._bottomOverlay!,
+                  ],
+                ),
+              );
+            });
+          }),
+        ),
       ),
     );
   }

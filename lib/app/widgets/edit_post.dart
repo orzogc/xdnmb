@@ -1873,9 +1873,13 @@ class _EditPostState extends State<EditPost> {
 
     final data = PersistentDataService.to;
     final media = MediaQuery.of(context);
+    final padding = EdgeInsets.fromWindowPadding(
+        WidgetsBinding.instance.window.viewPadding,
+        WidgetsBinding.instance.window.devicePixelRatio);
     final fullHeight = media.size.height -
-        Scaffold.of(context).appBarMaxHeight! -
-        media.padding.bottom;
+        padding.top -
+        PostListAppBar.height -
+        padding.bottom;
 
     return ValueListenableBuilder<double>(
       valueListenable: data.bottomHeight,

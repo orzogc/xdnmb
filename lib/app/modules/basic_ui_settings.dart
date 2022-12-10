@@ -158,6 +158,25 @@ class _BackLayerDragHeightRatio extends StatelessWidget {
   }
 }
 
+class _AutoHideAppBar extends StatelessWidget {
+  // ignore: unused_element
+  const _AutoHideAppBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder(
+      valueListenable: settings.autoHideAppBarListenable,
+      builder: (context, value, child) => SwitchListTile(
+        title: const Text('向下滑动时自动隐藏标题栏'),
+        value: settings.autoHideAppBar,
+        onChanged: (value) => settings.autoHideAppBar = value,
+      ),
+    );
+  }
+}
+
 class _HideFloatingButton extends StatelessWidget {
   // ignore: unused_element
   const _HideFloatingButton({super.key});
@@ -330,7 +349,6 @@ class _CompactTabAndForumList extends StatelessWidget {
   }
 }
 
-// TODO: 自动隐藏AppBar
 class BasicUISettingsView extends StatelessWidget {
   const BasicUISettingsView({super.key});
 
@@ -347,6 +365,7 @@ class BasicUISettingsView extends StatelessWidget {
               const _FrontLayerDragHeightRatio(),
               const _BackLayerDragHeightRatio(),
               const Divider(height: 10.0, thickness: 1.0),
+              const _AutoHideAppBar(),
               const _HideFloatingButton(),
               const _AutoHideFloatingButton(),
               if (GetPlatform.isMobile) const _DrawerDragRatio(),

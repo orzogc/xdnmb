@@ -148,6 +148,7 @@ class _FeedBodyState extends State<FeedBody> {
             BiListView<Visible<PostWithPage>>(
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
           scrollController: scrollController,
+          postListController: widget.controller,
           initialPage: widget.controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async =>
@@ -180,6 +181,10 @@ class _FeedBodyState extends State<FeedBody> {
                     ),
                   )
                 : const SizedBox.shrink(),
+          ),
+          header: PostListHeader(
+            controller: widget.controller,
+            scrollController: scrollController,
           ),
           noItemsFoundBuilder: (context) => Center(
             child: Text(

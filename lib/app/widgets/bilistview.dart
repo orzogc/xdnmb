@@ -2,16 +2,87 @@ import 'dart:async';
 
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
+import '../data/services/settings.dart';
 import '../data/services/user.dart';
+import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'loading.dart';
+
+class _BiListViewportOffset implements ViewportOffset {
+  final ViewportOffset position;
+
+  final PostListController controller;
+
+  double get _offset => -(PostListAppBar.height - controller.headerHeight);
+
+  _BiListViewportOffset({required this.position, required this.controller});
+
+  @override
+  bool get allowImplicitScrolling => position.allowImplicitScrolling;
+
+  @override
+  bool get hasListeners => position.hasListeners;
+
+  @override
+  bool get hasPixels => position.hasPixels;
+
+  @override
+  double get pixels => position.pixels + _offset;
+
+  @override
+  ScrollDirection get userScrollDirection => position.userScrollDirection;
+
+  @override
+  void addListener(VoidCallback listener) => position.addListener(listener);
+
+  @override
+  Future<void> animateTo(double to,
+          {required Duration duration, required Curve curve}) =>
+      position.animateTo(to - _offset, duration: duration, curve: curve);
+
+  @override
+  bool applyContentDimensions(double minScrollExtent, double maxScrollExtent) =>
+      position.applyContentDimensions(
+          minScrollExtent - _offset, maxScrollExtent - _offset);
+
+  @override
+  bool applyViewportDimension(double viewportDimension) =>
+      position.applyViewportDimension(viewportDimension);
+
+  @override
+  void correctBy(double correction) => position.correctBy(correction);
+
+  @override
+  void debugFillDescription(List<String> description) =>
+      position.debugFillDescription(description);
+
+  @override
+  void dispose() => position.dispose();
+
+  @override
+  void jumpTo(double pixels) => position.jumpTo(pixels - _offset);
+
+  @override
+  Future<void> moveTo(double to,
+          {Duration? duration, Curve? curve, bool? clamp}) =>
+      position.moveTo(to - _offset,
+          duration: duration, curve: curve, clamp: clamp);
+
+  @override
+  void notifyListeners() => position.notifyListeners();
+
+  @override
+  void removeListener(VoidCallback listener) =>
+      position.removeListener(listener);
+}
 
 class _MinHeightIndicator extends StatelessWidget {
   static const double _minHeight = 90.0;
@@ -28,6 +99,7 @@ class _MinHeightIndicator extends StatelessWidget {
       );
 }
 
+// TODO: thread用这个
 /// 什么都不显示的[Widget]
 class DumpItem extends StatelessWidget {
   const DumpItem({super.key});
@@ -58,9 +130,11 @@ class BiListViewController {
 }
 
 class BiListView<T> extends StatefulWidget {
-  final BiListViewController controller;
+  final BiListViewController? controller;
 
   final ScrollController? scrollController;
+
+  final PostListController? postListController;
 
   final int initialPage;
 
@@ -88,10 +162,11 @@ class BiListView<T> extends StatefulWidget {
 
   final GetPageCallback? getMaxPage;
 
-  BiListView(
+  const BiListView(
       {super.key,
-      BiListViewController? controller,
+      this.controller,
       this.scrollController,
+      this.postListController,
       required this.initialPage,
       this.firstPage = 1,
       this.lastPage,
@@ -106,8 +181,7 @@ class BiListView<T> extends StatefulWidget {
       this.fetchFallback,
       this.getMaxPage})
       : assert(
-            getMaxPage == null || (lastPage == null && fetchFallback != null)),
-        controller = controller ?? BiListViewController();
+            getMaxPage == null || (lastPage == null && fetchFallback != null));
 
   @override
   State<BiListView<T>> createState() => _BiListViewState<T>();
@@ -147,9 +221,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
   bool _isFetchingDown = false;
 
-  //final RxBool _toRefresh = false.obs;
-
-  late StreamSubscription<bool> _isLoadingMoreSubscription;
+  StreamSubscription<bool>? _isLoadingMoreSubscription;
 
   Future<void> _fetchUpPage(int page, [bool rethrowError = false]) async {
     if (!_isFetchingUp) {
@@ -375,13 +447,16 @@ class _BiListViewState<T> extends State<BiListView<T>>
   }
 
   void _checkBoundary() {
-    final position = _scrollController.position;
+    if (_scrollController.hasClients) {
+      final position = _scrollController.position;
 
-    if (position.pixels >= position.maxScrollExtent ||
-        position.pixels <= position.minScrollExtent) {
-      _isOutOfBoundary.value = true;
-    } else {
-      _isOutOfBoundary.value = false;
+      // 留1像素的空间
+      if (position.pixels >= position.maxScrollExtent - 1.0 ||
+          position.pixels <= position.minScrollExtent + 1.0) {
+        _isOutOfBoundary.value = true;
+      } else {
+        _isOutOfBoundary.value = false;
+      }
     }
   }
 
@@ -413,9 +488,11 @@ class _BiListViewState<T> extends State<BiListView<T>>
     _scrollController = widget.scrollController ?? ScrollController();
     _scrollController.addListener(_checkBoundary);
 
-    widget.controller._loadMore = _loadMore;
-    _isLoadingMoreSubscription = _isLoadingMore
-        .listen((value) => widget.controller._isLoadingMore = value);
+    if (widget.controller != null) {
+      widget.controller!._loadMore = _loadMore;
+      _isLoadingMoreSubscription = _isLoadingMore
+          .listen((value) => widget.controller!._isLoadingMore = value);
+    }
   }
 
   @override
@@ -433,18 +510,22 @@ class _BiListViewState<T> extends State<BiListView<T>>
     }
 
     if (widget.controller != oldWidget.controller) {
-      _isLoadingMoreSubscription.cancel();
-      oldWidget.controller._loadMore = null;
-      widget.controller._loadMore = _loadMore;
-      _isLoadingMoreSubscription = _isLoadingMore
-          .listen((value) => widget.controller._isLoadingMore = value);
+      _isLoadingMoreSubscription?.cancel();
+      _isLoadingMoreSubscription = null;
+      oldWidget.controller?._loadMore = null;
+      if (widget.controller != null) {
+        widget.controller!._loadMore = _loadMore;
+        _isLoadingMoreSubscription = _isLoadingMore
+            .listen((value) => widget.controller!._isLoadingMore = value);
+      }
     }
   }
 
   @override
   void dispose() {
-    _isLoadingMoreSubscription.cancel();
-    widget.controller._loadMore = null;
+    _isLoadingMoreSubscription?.cancel();
+    _isLoadingMoreSubscription = null;
+    widget.controller?._loadMore = null;
     _pagingUpController?.removePageRequestListener(_fetchUpPage);
     _pagingUpController?.dispose();
     _pagingUpController = null;
@@ -464,6 +545,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
+    final settings = SettingsService.to;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5.0),
@@ -507,7 +590,12 @@ class _BiListViewState<T> extends State<BiListView<T>>
                   : const ClampingScrollPhysics(
                       parent: RangeMaintainingScrollPhysics()),
               viewportBuilder: (context, position) => Viewport(
-                offset: position,
+                offset: (settings.isAutoHideAppBar &&
+                        widget.postListController != null)
+                    ? _BiListViewportOffset(
+                        position: position,
+                        controller: widget.postListController!)
+                    : position,
                 center: _downKey,
                 slivers: [
                   if (widget.header != null)

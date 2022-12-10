@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
 import '../data/services/settings.dart';
+import '../utils/theme.dart';
+
+typedef OnShowBackLayerCallback = void Function(bool isShowed);
 
 class BackdropController {
   static final BackdropController controller = BackdropController();
@@ -24,22 +29,27 @@ class BackdropController {
   }
 
   void showBackLayer() {
-    if (_hasBackdrop && !_isShowBackLayer.value) {
+    if (_hasBackdrop && !isShowBackLayer) {
       _toggleFrontLayer!();
     }
   }
 
   void hideBackLayer() {
-    if (_hasBackdrop && _isShowBackLayer.value) {
+    if (_hasBackdrop && isShowBackLayer) {
       _toggleFrontLayer!();
     }
   }
+
+  StreamSubscription<bool> listen(OnShowBackLayerCallback callback) =>
+      _isShowBackLayer.listen(callback);
 }
 
 class Backdrop extends StatefulWidget {
   final double height;
 
   final double appBarHeight;
+
+  final double topPadding;
 
   final Widget frontLayer;
 
@@ -49,6 +59,7 @@ class Backdrop extends StatefulWidget {
       {super.key,
       required this.height,
       required this.appBarHeight,
+      required this.topPadding,
       required this.frontLayer,
       required this.backLayer});
 
@@ -58,12 +69,30 @@ class Backdrop extends StatefulWidget {
 
 class _BackdropState extends State<Backdrop>
     with SingleTickerProviderStateMixin<Backdrop> {
+  static const Duration _duration = Duration(milliseconds: 300);
+
   late final AnimationController _animationController;
+
+  late final Animation<Offset> _slideAnimation;
 
   late final Animation<double> _scaleAnimation;
 
+  double get _frontLayerBodyHeight => widget.height - widget.appBarHeight;
+
   bool get _isShowBackLayer =>
       _animationController.status != AnimationStatus.dismissed;
+
+  void _showBackLayer() =>
+      _animationController.animateTo(_animationController.upperBound,
+          duration: _duration *
+              (_animationController.upperBound - _animationController.value),
+          curve: AppTheme.slideCurve);
+
+  void _hideBackLayer() =>
+      _animationController.animateBack(_animationController.lowerBound,
+          duration: _duration *
+              (_animationController.value - _animationController.lowerBound),
+          curve: AppTheme.slideCurve);
 
   void _updateController([AnimationStatus? status]) =>
       BackdropController.controller._isShowBackLayer.value = _isShowBackLayer;
@@ -71,41 +100,32 @@ class _BackdropState extends State<Backdrop>
   void _toggleFrontLayer() {
     if (mounted && !_animationController.isAnimating) {
       if (!_isShowBackLayer) {
-        _animationController.value =
-            MediaQuery.of(context).padding.top / widget.height;
-        _animationController.fling(velocity: 2.0);
+        _animationController.value = widget.topPadding / widget.height;
+        _showBackLayer();
       } else {
-        _animationController.fling(velocity: -2.0);
+        _hideBackLayer();
       }
     }
   }
 
   void _truncate() {
     if (_animationController.value <
-            (MediaQuery.of(context).padding.top - 0.001) / widget.height &&
-        _animationController.value > 0.0) {
-      _animationController.value = 0.0;
+            (widget.topPadding - 0.001) / widget.height &&
+        _animationController.value > _animationController.lowerBound) {
+      _animationController.value = _animationController.lowerBound;
     }
   }
 
-  Animation<Offset> _animationOffSet() => Tween(
-          begin: const Offset(0.0, 0.0),
-          end: Offset(
-              0.0, (widget.height - widget.appBarHeight) / widget.height))
-      .animate(_animationController);
-
   void _onVerticalDragStart(DragStartDetails details) {
     if (!_isShowBackLayer) {
-      _animationController.value =
-          MediaQuery.of(context).padding.top / widget.height;
+      _animationController.value = widget.topPadding / widget.height;
     }
   }
 
   void _onVerticalDragUpdate(DragUpdateDetails details) {
     final delta = details.primaryDelta;
     if (delta != null) {
-      _animationController.value +=
-          delta / (widget.height - widget.appBarHeight);
+      _animationController.value += delta / _frontLayerBodyHeight;
     }
   }
 
@@ -113,13 +133,13 @@ class _BackdropState extends State<Backdrop>
     final velocity = details.primaryVelocity;
     if (velocity != null) {
       if (velocity > 0.0) {
-        _animationController.forward();
+        _showBackLayer();
       } else if (velocity < 0.0) {
-        _animationController.reverse();
+        _hideBackLayer();
       } else if (velocity == 0.0 && _animationController.value > 0.5) {
-        _animationController.forward();
+        _showBackLayer();
       } else {
-        _animationController.reverse();
+        _hideBackLayer();
       }
     }
   }
@@ -128,8 +148,8 @@ class _BackdropState extends State<Backdrop>
   void initState() {
     super.initState();
 
-    _animationController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 300));
+    _animationController =
+        AnimationController(vsync: this, duration: _duration);
 
     // 这里调用_updateController()会导致rebuild
     //_updateController();
@@ -138,6 +158,10 @@ class _BackdropState extends State<Backdrop>
     _animationController.addStatusListener(_updateController);
     _animationController.addListener(_truncate);
 
+    _slideAnimation = Tween(
+            begin: Offset.zero,
+            end: Offset(0.0, _frontLayerBodyHeight / widget.height))
+        .animate(_animationController);
     _scaleAnimation =
         Tween(begin: 0.85, end: 1.0).animate(_animationController);
   }
@@ -155,14 +179,13 @@ class _BackdropState extends State<Backdrop>
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
-    final topPadding = MediaQuery.of(context).padding.top;
 
     return Stack(
       children: [
         SizedBox(
           height: widget.height - widget.appBarHeight,
           child: Padding(
-            padding: EdgeInsets.only(top: topPadding),
+            padding: EdgeInsets.only(top: widget.topPadding),
             child: Stack(
               alignment: Alignment.bottomCenter,
               children: [
@@ -190,7 +213,7 @@ class _BackdropState extends State<Backdrop>
           ),
         ),
         SlideTransition(
-          position: _animationOffSet(),
+          position: _slideAnimation,
           child: Stack(
             children: [
               widget.frontLayer,
@@ -203,9 +226,11 @@ class _BackdropState extends State<Backdrop>
                   valueListenable: settings.frontLayerDragHeightRatioListenable,
                   builder: (context, value, child) => SizedBox(
                     width: double.infinity,
-                    height: topPadding +
+                    height: widget.topPadding +
                         widget.appBarHeight +
-                        (widget.height - topPadding - widget.appBarHeight) *
+                        (widget.height -
+                                widget.topPadding -
+                                widget.appBarHeight) *
                             settings.frontLayerDragHeightRatio,
                   ),
                 ),
