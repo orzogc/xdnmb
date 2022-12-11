@@ -990,7 +990,7 @@ class ImageView extends StatelessWidget {
             debugPrint('缓存图片路径：${info.file.path}');
             if (GetPlatform.isIOS) {
               if (ImageService.to.hasPhotoLibraryPermission) {
-                final Map<String, dynamic> result =
+                final result =
                     await ImageGallerySaver.saveFile(info.file.path,
                         name: fileName);
                 if (result['isSuccess']) {

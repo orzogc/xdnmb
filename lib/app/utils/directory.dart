@@ -39,16 +39,12 @@ Future<void> getDatabasePath() async {
 
 /// 获取默认图片保存文件夹
 Future<void> getDefaultSaveImagePath() async {
-  if (ImageService.savePath == null) {
+  if (ImageService.savePath == null && !(GetPlatform.isIOS || GetPlatform.isMacOS)) {
     if (GetPlatform.isAndroid) {
       // Android上图片默认保存在Pictures/xdnmb文件夹里
       final picturesPath = await ExternalPath.getExternalStoragePublicDirectory(
           ExternalPath.DIRECTORY_PICTURES);
       ImageService.savePath = join(picturesPath, directoryName);
-    } else if (GetPlatform.isIOS || GetPlatform.isMacOS) {
-      // macOS上图片默认保存在应用文档文件夹里，iOS则为临时保存图片
-      final directory = await getApplicationDocumentsDirectory();
-      ImageService.savePath = directory.path;
     } else if (GetPlatform.isLinux) {
       // Linux上图片默认保存在 ~/Pictures/xdnmb
       final picturesPath = getUserDirectory('PICTURES')?.path ??
@@ -61,6 +57,12 @@ Future<void> getDefaultSaveImagePath() async {
     } else {
       throw 'Unsupported platform: ${Platform.operatingSystem}';
     }
+  } else if (GetPlatform.isIOS || GetPlatform.isMacOS) {
+      // iOS 系统在一些情况下（如更新应用后），目录会发生改变，所以不能缓存
+      // macOS上图片默认保存在应用文档文件夹里，iOS则为临时保存图片
+      final directory = GetPlatform.isIOS ? 
+        await getTemporaryDirectory() : await getApplicationDocumentsDirectory();
+      ImageService.savePath = directory.path;
   }
 
   // 文件夹不存在则新建文件夹

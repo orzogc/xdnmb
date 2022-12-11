@@ -74,7 +74,7 @@ Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
           final file = File(path);
           await file.writeAsBytes(imageData);
 
-          final Map<String, dynamic> result =
+          final result =
               await ImageGallerySaver.saveFile(file.path, name: filename);
           await file.delete();
           if (result['isSuccess']) {
@@ -85,7 +85,7 @@ Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
             return false;
           }
         } else {
-          final Map<String, dynamic> result = await ImageGallerySaver.saveImage(
+          final result = await ImageGallerySaver.saveImage(
               imageData,
               quality: 100,
               name: filename);
