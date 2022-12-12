@@ -17,7 +17,7 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/misc.dart';
+import '../utils/post_list.dart';
 import '../utils/navigation.dart';
 import '../utils/notify.dart';
 import '../utils/text.dart';
@@ -321,7 +321,6 @@ class _ForumBodyState extends State<ForumBody> {
           BiListView<ThreadWithPage>(
         key: ValueKey<int>(refresh),
         scrollController: scrollController,
-        postListController: controller,
         initialPage: controller.page,
         // 版块的最大页固定为100
         lastPage:
@@ -381,10 +380,7 @@ class _ForumBodyState extends State<ForumBody> {
               ? ThreadGuide(item)
               : item;
         },
-        header: PostListHeader(
-          controller: controller,
-          scrollController: scrollController,
-        ),
+        header: PostListHeader(controller: controller),
         noItemsFoundBuilder: (context) => Center(
           child: Text(
             '没有串',

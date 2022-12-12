@@ -65,15 +65,17 @@ class SettingsService extends GetxService {
 
   static late final bool isBackdropUI;
 
+  static late final RxBool _isAutoHideAppBar;
+
   static bool get isSwipeablePage => isShowBottomBar || isBackdropUI;
+
+  static bool get isAutoHideAppBar => _isAutoHideAppBar.value;
 
   late final Box _settingsBox;
 
   final RxBool hasBeenDarkMode = false.obs;
 
   late final RxBool _isAutoHideBottomBar;
-
-  late final RxBool _isAutoHideAppBar;
 
   late final RxDouble _drawerDragRatio;
 
@@ -253,8 +255,6 @@ class SettingsService extends GetxService {
     _settingsBox.put(Settings.autoHideAppBar, autoHideAppBar);
     _isAutoHideAppBar.value = autoHideAppBar;
   }
-
-  bool get isAutoHideAppBar => _isAutoHideAppBar.value;
 
   bool get hideFloatingButton =>
       _settingsBox.get(Settings.hideFloatingButton, defaultValue: false);

@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../../utils/padding.dart';
 import '../../widgets/dialog.dart';
 import '../models/hive.dart';
 import '../models/persistent.dart';
@@ -90,10 +90,7 @@ class PersistentDataService extends GetxService {
     isFirstLaunched = box.get(PersistentData.firstLaunched, defaultValue: true);
   }
 
-  static double _bottomHeight() => EdgeInsets.fromWindowPadding(
-          WidgetsBinding.instance.window.viewInsets,
-          WidgetsBinding.instance.window.devicePixelRatio)
-      .bottom;
+  static double get _bottomHeight => getViewInsets().bottom;
 
   void saveNotice(Notice notice) {
     if (notice.isValid &&
@@ -125,7 +122,7 @@ class PersistentDataService extends GetxService {
 
   void updateKeyboardHeight() {
     if (GetPlatform.isMobile) {
-      final height = _bottomHeight();
+      final height = _bottomHeight;
 
       _maxBottomHeight = max(_maxBottomHeight, height);
 
@@ -149,7 +146,7 @@ class PersistentDataService extends GetxService {
         _dataBox.listenable(keys: [PersistentData.noticeDate]);
 
     if (GetPlatform.isMobile) {
-      bottomHeight.value = _bottomHeight();
+      bottomHeight.value = _bottomHeight;
 
       _keyboardSubscription = KeyboardVisibilityController()
           .onChange

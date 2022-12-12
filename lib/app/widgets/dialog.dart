@@ -34,15 +34,13 @@ Future<T?> postListDialog<T>(Widget widget, {int? index}) {
   final controller = PostListController.get(index);
 
   return Get.dialog<T>(Obx(() {
-    final isAutoHideAppBar = SettingsService.to.isAutoHideAppBar;
+    final isAutoHideAppBar = SettingsService.isAutoHideAppBar;
     final isShowBottomBar = PostListBottomBar.isShowed;
 
     return (isAutoHideAppBar || isShowBottomBar)
         ? Container(
             margin: EdgeInsets.only(
-              top: (isAutoHideAppBar
-                      ? (AnimatedAppBarController.controller.height ?? 0.0)
-                      : 0.0) +
+              top: (isAutoHideAppBar ? PostListController.appBarHeight : 0.0) +
                   (controller.isHistory ? PageViewTabBar.height : 0.0),
               bottom: isShowBottomBar ? PostListBottomBar.height : 0.0,
             ),

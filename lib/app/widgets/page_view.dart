@@ -21,8 +21,6 @@ class PageViewTabBar extends StatefulWidget implements PreferredSizeWidget {
 
   final int initialIndex;
 
-  //final double indicatorWeight;
-
   final OnIndexCallback onIndex;
 
   final List<Widget> tabs;

@@ -17,7 +17,7 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/misc.dart';
+import '../utils/post_list.dart';
 import '../utils/navigation.dart';
 import '../utils/notify.dart';
 import '../utils/theme.dart';
@@ -442,7 +442,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   BrowseHistory? _history;
 
-  late final AnchorScrollController _anchorController;
+  late final PostListScrollController _anchorController;
 
   /// 第一次加载是否要跳转
   final RxBool _isToJump = false.obs;
@@ -718,7 +718,6 @@ class _ThreadBodyState extends State<ThreadBody> {
                           key: ValueKey<int>(refresh),
                           controller: biListViewController,
                           scrollController: scrollController,
-                          postListController: controller,
                           initialPage: firstPage,
                           fetch: (page) async {
                             try {
@@ -730,10 +729,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                           },
                           itemBuilder: (context, post, index) =>
                               _itemBuilder(context, post),
-                          header: PostListHeader(
-                            controller: controller,
-                            scrollController: scrollController,
-                          ),
+                          header: PostListHeader(controller: controller),
                           noItemsFoundBuilder: (context) => Center(
                             child: Text(
                               '没有串',
@@ -775,6 +771,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   void _setToJump() {
     _isToJump.value = true;
+    widget.controller.scrollStatus = PostListScrollStatus.outOfAppBarRange;
     widget.controller.removeListener(_cancelJump);
     widget.controller.addListener(_cancelJump);
   }
@@ -785,9 +782,8 @@ class _ThreadBodyState extends State<ThreadBody> {
   void initState() {
     super.initState();
 
-    _anchorController = AnchorScrollController(
-      initialScrollOffset:
-          PostListAppBar.height - widget.controller.headerHeight,
+    _anchorController = PostListScrollController(
+      controller: widget.controller,
       onIndexChanged: (index, userScroll) {
         widget.controller.page = index.getPageFromPostIndex();
         widget.controller.browsePostId = index.getPostIdFromPostIndex();

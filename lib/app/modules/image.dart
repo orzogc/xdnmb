@@ -15,6 +15,7 @@ import '../data/services/settings.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/image.dart';
+import '../utils/padding.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
@@ -113,7 +114,7 @@ class _BottomOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+    final bottomPadding = getViewPadding().bottom;
 
     return ChildSizeNotifier(
       builder: (context, size, child) => Obx(
@@ -990,9 +991,8 @@ class ImageView extends StatelessWidget {
             debugPrint('缓存图片路径：${info.file.path}');
             if (GetPlatform.isIOS) {
               if (ImageService.to.hasPhotoLibraryPermission) {
-                final result =
-                    await ImageGallerySaver.saveFile(info.file.path,
-                        name: fileName);
+                final result = await ImageGallerySaver.saveFile(info.file.path,
+                    name: fileName);
                 if (result['isSuccess']) {
                   showToast('图片保存到相册成功');
                 } else {

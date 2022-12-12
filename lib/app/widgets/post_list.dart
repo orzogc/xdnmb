@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -7,6 +9,164 @@ import '../data/services/settings.dart';
 import '../modules/post_list.dart';
 import '../utils/extensions.dart';
 import '../utils/notify.dart';
+
+class _PostListScrollPosition extends ScrollPositionWithSingleContext {
+  final PostListController controller;
+
+  bool _isShowing = false;
+
+  bool _isHiding = false;
+
+  _PostListScrollPosition(
+      {required this.controller,
+      required super.physics,
+      required super.context,
+      super.initialPixels = 0.0,
+      super.keepScrollOffset = true,
+      super.oldPosition,
+      super.debugLabel});
+
+  @override
+  void updateUserScrollDirection(ScrollDirection value) {
+    super.updateUserScrollDirection(value);
+
+    PostListController.scrollDirection = value;
+  }
+
+  @override
+  void applyUserOffset(double delta) {
+    if (SettingsService.isAutoHideAppBar) {
+      updateUserScrollDirection(
+          delta > 0.0 ? ScrollDirection.forward : ScrollDirection.reverse);
+      final offset = physics.applyPhysicsToUserOffset(this, delta);
+
+      switch (controller.scrollStatus) {
+        case PostListScrollStatus.outOfMinScrollExtent:
+          final topPostition = pixels - minScrollExtent - offset;
+          if (controller.headerHeight > 0.0 &&
+              topPostition >= 0.0 &&
+              topPostition <= controller.headerHeight) {
+            controller.scrollStatus = PostListScrollStatus.inAppBarRange;
+            controller.setAppBarHeight(controller.headerHeight - topPostition);
+            setPixels(minScrollExtent);
+          } else if (topPostition > controller.headerHeight) {
+            controller.scrollStatus = PostListScrollStatus.outOfAppBarRange;
+            controller.setAppBarHeight(0);
+            setPixels(pixels - offset - controller.headerHeight);
+          } else {
+            final overscroll = setPixels(pixels - offset);
+            // 为了能够切换`ScrollPhysics`
+            if (overscroll < 0.0) {
+              notifyListeners();
+            }
+          }
+
+          break;
+        case PostListScrollStatus.inAppBarRange:
+          final height = controller.headerHeight + offset;
+
+          if (height >= 0.0 && height <= PostListAppBar.height) {
+            controller.setAppBarHeight(height);
+            //setPixels(minScrollExtent + PostListAppBar.height - height);
+          } else if (height < 0.0) {
+            controller.scrollStatus = PostListScrollStatus.outOfAppBarRange;
+            controller.setAppBarHeight(0.0);
+            setPixels(pixels - offset);
+          } else {
+            controller.scrollStatus = PostListScrollStatus.outOfMinScrollExtent;
+            controller.setAppBarHeight(PostListAppBar.height);
+            // 这里可能不准确
+            setPixels(pixels + PostListAppBar.height - height);
+          }
+
+          break;
+        case PostListScrollStatus.outOfAppBarRange:
+          if (offset < 0.0) {
+            final topPostition = pixels - minScrollExtent - offset;
+
+            if (controller.headerHeight > 0.0 &&
+                topPostition >= 0.0 &&
+                topPostition <= controller.headerHeight) {
+              controller.scrollStatus = PostListScrollStatus.inAppBarRange;
+              controller
+                  .setAppBarHeight(controller.headerHeight - topPostition);
+              setPixels(minScrollExtent);
+            } else if (topPostition < 0.0) {
+              // 一般不会有这种情况
+              controller.scrollStatus = PostListScrollStatus.outOfAppBarRange;
+              setPixels(pixels - offset);
+            } else {
+              if (controller.headerHeight > 0.0 && !_isHiding) {
+                _isHiding = true;
+                PostListController.hideAppBar(() => _isHiding = false);
+              }
+
+              setPixels(pixels - offset);
+            }
+          } else if (offset > 0.0) {
+            final topPostition = pixels - minScrollExtent - offset;
+            if (topPostition >= 0.0 && topPostition <= PostListAppBar.height) {
+              setPixels(pixels - offset);
+            } else if (topPostition < 0.0) {
+              if (PostListAppBar.height - controller.headerHeight >=
+                  -topPostition) {
+                controller.scrollStatus = PostListScrollStatus.inAppBarRange;
+                controller
+                    .setAppBarHeight(controller.headerHeight - topPostition);
+                setPixels(minScrollExtent);
+              } else {
+                controller.scrollStatus =
+                    PostListScrollStatus.outOfMinScrollExtent;
+                controller.setAppBarHeight(PostListAppBar.height);
+                setPixels(minScrollExtent +
+                    topPostition +
+                    PostListAppBar.height -
+                    controller.headerHeight);
+              }
+            } else {
+              if (controller.headerHeight < PostListAppBar.height &&
+                  !_isShowing) {
+                _isShowing = true;
+                PostListController.showAppBar(() => _isShowing = false);
+              }
+
+              setPixels(pixels - offset);
+            }
+          }
+
+          break;
+      }
+    } else {
+      super.applyUserOffset(delta);
+    }
+  }
+}
+
+class PostListScrollController extends AnchorScrollController {
+  final PostListController controller;
+
+  PostListScrollController(
+      {required this.controller,
+      super.initialScrollOffset = 0.0,
+      super.keepScrollOffset = true,
+      super.debugLabel,
+      super.onIndexChanged,
+      super.fixedItemSize,
+      super.anchorOffset});
+
+  @override
+  ScrollPosition createScrollPosition(ScrollPhysics physics,
+          ScrollContext context, ScrollPosition? oldPosition) =>
+      _PostListScrollPosition(
+        controller: controller,
+        physics: physics,
+        context: context,
+        initialPixels: initialScrollOffset,
+        keepScrollOffset: keepScrollOffset,
+        oldPosition: oldPosition,
+        debugLabel: debugLabel,
+      );
+}
 
 typedef PostListRefresherBuilder = Widget Function(
     BuildContext context, ScrollController scrollController, int refresh);
@@ -36,28 +196,36 @@ class _PostListRefresherState extends State<PostListRefresher> {
 
   int _refresh = 0;
 
+  late double _headerHeight;
+
+  late StreamSubscription<double> _headerHeightSubscription;
+
   void _addRefresh() => _refresh++;
 
-  void _setScrollDirection() {
+  void _correctOffset(double offset) {
     if (_scrollController.hasClients) {
-      PostListController.scrollDirection =
-          _scrollController.position.userScrollDirection;
+      _scrollController.position
+          .correctPixels(_scrollController.offset + offset);
+    }
+  }
+
+  void _setScrollOffset(double height) {
+    if (height != _headerHeight) {
+      if (widget.controller.scrollStatus.isOutOfAppBarRange) {
+        _correctOffset(height - _headerHeight);
+      }
+
+      _headerHeight = height;
     }
   }
 
   void _setScrollController() {
     _scrollController = widget.scrollController ??
-        (widget.useAnchorScrollController
-            ? AnchorScrollController(
-                initialScrollOffset:
-                    PostListAppBar.height - widget.controller.headerHeight,
-                onIndexChanged: (index, userScroll) =>
-                    widget.controller.page = index.getPageFromPostIndex(),
-              )
-            : ScrollController(
-                initialScrollOffset:
-                    PostListAppBar.height - widget.controller.headerHeight));
-    _scrollController.addListener(_setScrollDirection);
+        PostListScrollController(
+          controller: widget.controller,
+          onIndexChanged: (index, userScroll) =>
+              widget.controller.page = index.getPageFromPostIndex(),
+        );
   }
 
   @override
@@ -65,37 +233,48 @@ class _PostListRefresherState extends State<PostListRefresher> {
     super.initState();
 
     _setScrollController();
+    _headerHeight = widget.controller.headerHeight;
 
     widget.controller.addListener(_addRefresh);
+    _headerHeightSubscription =
+        widget.controller.listenHeaderHeight(_setScrollOffset);
+    widget.controller.correctOffset = _correctOffset;
   }
 
   @override
   void didUpdateWidget(covariant PostListRefresher oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller.removeListener(_addRefresh);
+      _headerHeightSubscription.cancel();
+      oldWidget.controller.correctOffset = null;
+
+      _headerHeight = widget.controller.headerHeight;
+      widget.controller.addListener(_addRefresh);
+      _headerHeightSubscription =
+          widget.controller.listenHeaderHeight(_setScrollOffset);
+      widget.controller.correctOffset = _correctOffset;
+    }
+
     if (widget.scrollController != oldWidget.scrollController) {
-      _scrollController.removeListener(_setScrollDirection);
       if (oldWidget.scrollController == null) {
         _scrollController.dispose();
       }
 
       _setScrollController();
     }
-
-    if (widget.controller != oldWidget.controller) {
-      oldWidget.controller.removeListener(_addRefresh);
-      widget.controller.addListener(_addRefresh);
-    }
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_setScrollDirection);
+    widget.controller.removeListener(_addRefresh);
+    _headerHeightSubscription.cancel();
+    widget.controller.correctOffset = null;
+
     if (widget.scrollController == null) {
       _scrollController.dispose();
     }
-
-    widget.controller.removeListener(_addRefresh);
 
     super.dispose();
   }
@@ -107,97 +286,15 @@ class _PostListRefresherState extends State<PostListRefresher> {
           widget.builder(context, _scrollController, _refresh));
 }
 
-class _Anchor extends StatefulWidget {
-  final PostListController controller;
-
-  final ScrollController scrollController;
-
-  const _Anchor(
-      // ignore: unused_element
-      {super.key,
-      required this.controller,
-      required this.scrollController});
-
-  @override
-  State<_Anchor> createState() => _AnchorState();
-}
-
-class _AnchorState extends State<_Anchor> {
-  void _setAppBarHeight() {
-    if (mounted &&
-        widget.scrollController.hasClients &&
-        widget.scrollController.position.userScrollDirection !=
-            ScrollDirection.idle) {
-      final renderBox = context.findRenderObject();
-      final viewport = RenderAbstractViewport.of(renderBox);
-      if (renderBox != null && viewport != null) {
-        final offset = viewport.getOffsetToReveal(renderBox, 0);
-
-        final height = widget.scrollController.position.pixels - offset.offset;
-        if (height >= 0 && height <= PostListAppBar.height) {
-          widget.controller.appBarHeight = PostListAppBar.height - height;
-        } else {
-          widget.controller.appBarHeight = null;
-        }
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    widget.scrollController.addListener(_setAppBarHeight);
-  }
-
-  @override
-  void didUpdateWidget(covariant _Anchor oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (widget.scrollController != oldWidget.scrollController) {
-      oldWidget.scrollController.removeListener(_setAppBarHeight);
-      widget.scrollController.addListener(_setAppBarHeight);
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.scrollController.removeListener(_setAppBarHeight);
-
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
-}
-
 class PostListHeader extends StatelessWidget {
   final PostListController controller;
 
-  final ScrollController scrollController;
-
-  const PostListHeader(
-      {super.key, required this.controller, required this.scrollController});
+  const PostListHeader({super.key, required this.controller});
 
   @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return Obx(() {
-      final height = controller.appBarHeight;
-
-      return settings.isAutoHideAppBar
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (height != null)
-                  SizedBox(
-                      height: PostListAppBar.height - controller.headerHeight),
-                _Anchor(
-                    controller: controller, scrollController: scrollController),
-              ],
-            )
-          : const SizedBox.shrink();
-    });
-  }
+  Widget build(BuildContext context) =>
+      Obx(() => (SettingsService.isAutoHideAppBar &&
+              controller.scrollStatus.isInAppBarRange)
+          ? SizedBox(height: PostListAppBar.height - controller.headerHeight)
+          : const SizedBox.shrink());
 }

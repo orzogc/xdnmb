@@ -13,7 +13,7 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/misc.dart';
+import '../utils/post_list.dart';
 import '../utils/navigation.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -148,7 +148,6 @@ class _FeedBodyState extends State<FeedBody> {
             BiListView<Visible<PostWithPage>>(
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
           scrollController: scrollController,
-          postListController: widget.controller,
           initialPage: widget.controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async =>
@@ -182,10 +181,7 @@ class _FeedBodyState extends State<FeedBody> {
                   )
                 : const SizedBox.shrink(),
           ),
-          header: PostListHeader(
-            controller: widget.controller,
-            scrollController: scrollController,
-          ),
+          header: PostListHeader(controller: widget.controller),
           noItemsFoundBuilder: (context) => Center(
             child: Text(
               '没有订阅',

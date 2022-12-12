@@ -15,7 +15,7 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/misc.dart';
+import '../utils/post_list.dart';
 import '../utils/navigation.dart';
 import '../utils/notify.dart';
 import '../utils/theme.dart';
@@ -417,7 +417,6 @@ class _BrowseHistoryBody extends StatelessWidget {
               refresh,
               value)),
           scrollController: scrollController,
-          postListController: controller,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.browseHistoryList(
@@ -518,10 +517,7 @@ class _BrowseHistoryBody extends StatelessWidget {
               );
             },
           ),
-          header: PostListHeader(
-            controller: controller,
-            scrollController: scrollController,
-          ),
+          header: PostListHeader(controller: controller),
           noItemsFoundBuilder: (context) => Center(
             child: Text(
               '没有浏览记录',
@@ -563,7 +559,6 @@ class _PostHistoryBody extends StatelessWidget {
               refresh,
               value)),
           scrollController: scrollController,
-          postListController: controller,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.postDataList(
@@ -623,10 +618,7 @@ class _PostHistoryBody extends StatelessWidget {
               );
             },
           ),
-          header: PostListHeader(
-            controller: controller,
-            scrollController: scrollController,
-          ),
+          header: PostListHeader(controller: controller),
           noItemsFoundBuilder: (context) => Center(
             child: Text(
               '没有主题记录',
@@ -668,7 +660,6 @@ class _ReplyHistoryBody extends StatelessWidget {
               refresh,
               value)),
           scrollController: scrollController,
-          postListController: controller,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async => (await history.replyDataList(
@@ -771,10 +762,7 @@ class _ReplyHistoryBody extends StatelessWidget {
               );
             },
           ),
-          header: PostListHeader(
-            controller: controller,
-            scrollController: scrollController,
-          ),
+          header: PostListHeader(controller: controller),
           noItemsFoundBuilder: (context) => Center(
             child: Text(
               '没有回复记录',
@@ -873,82 +861,88 @@ class _HistoryBodyState extends State<HistoryBody> {
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          Material(
-            elevation: 4,
-            color: Theme.of(context).primaryColor,
-            child: PageViewTabBar(
-              pageController: widget.controller._pageController,
-              initialIndex: widget.controller.pageIndex,
-              onIndex: (index) {
-                if (widget.controller.pageIndex != index) {
-                  popAllPopup();
-                  widget.controller._pageController.animateToPage(index,
-                      duration: PageViewTabBar.animationDuration,
-                      curve: Curves.easeIn);
-                }
-              },
-              tabs: const [Tab(text: '浏览'), Tab(text: '主题'), Tab(text: '回复')],
-            ),
-          ),
-          Expanded(
-            child: SwipeablePageView(
-              controller: widget.controller._pageController,
-              itemCount: 3,
-              itemBuilder: (context, index) {
-                late final Widget body;
-                switch (index) {
-                  case _BrowseHistoryBody._index:
-                    body = _BrowseHistoryBody(
-                        controller: widget.controller, getImage: _getImage);
-                    break;
-                  case _PostHistoryBody._index:
-                    body = _PostHistoryBody(
-                        controller: widget.controller, getImage: _getImage);
-                    break;
-                  case _ReplyHistoryBody._index:
-                    body = _ReplyHistoryBody(
-                        controller: widget.controller, getImage: _getImage);
-                    break;
-                  default:
-                    body = const Center(
-                      child: Text('未知记录', style: AppTheme.boldRed),
-                    );
-                }
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
-                return Column(
-                  children: [
-                    Obx(
-                      () {
-                        final range = widget.controller._getDateRange();
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: PageViewTabBar.height),
+          child: SwipeablePageView(
+            controller: widget.controller._pageController,
+            itemCount: 3,
+            itemBuilder: (context, index) {
+              late final Widget body;
+              switch (index) {
+                case _BrowseHistoryBody._index:
+                  body = _BrowseHistoryBody(
+                      controller: widget.controller, getImage: _getImage);
+                  break;
+                case _PostHistoryBody._index:
+                  body = _PostHistoryBody(
+                      controller: widget.controller, getImage: _getImage);
+                  break;
+                case _ReplyHistoryBody._index:
+                  body = _ReplyHistoryBody(
+                      controller: widget.controller, getImage: _getImage);
+                  break;
+                default:
+                  body = const Center(
+                    child: Text('未知记录', style: AppTheme.boldRed),
+                  );
+              }
 
-                        return range != null
-                            ? ListTile(
-                                title: Center(
-                                  child: range.start != range.end
-                                      ? Text(
-                                          '${formatDay(range.start)} - ${formatDay(range.end)}',
-                                        )
-                                      : Text(formatDay(range.start)),
-                                ),
-                                trailing: IconButton(
-                                  onPressed: () {
-                                    widget.controller._setDateRange(null);
-                                    //widget.controller.refreshPage();
-                                  },
-                                  icon: const Icon(Icons.close),
-                                ),
-                              )
-                            : const SizedBox.shrink();
-                      },
-                    ),
-                    Expanded(child: body),
-                  ],
-                );
-              },
-            ),
+              return Column(
+                children: [
+                  Obx(
+                    () {
+                      final range = widget.controller._getDateRange();
+
+                      return range != null
+                          ? ListTile(
+                              title: Center(
+                                child: range.start != range.end
+                                    ? Text(
+                                        '${formatDay(range.start)} - ${formatDay(range.end)}',
+                                      )
+                                    : Text(formatDay(range.start)),
+                              ),
+                              trailing: IconButton(
+                                onPressed: () {
+                                  widget.controller._setDateRange(null);
+                                  //widget.controller.refreshPage();
+                                },
+                                icon: const Icon(Icons.close),
+                              ),
+                            )
+                          : const SizedBox.shrink();
+                    },
+                  ),
+                  Expanded(child: body),
+                ],
+              );
+            },
           ),
-        ],
-      );
+        ),
+        Material(
+          elevation:
+              theme.appBarTheme.elevation ?? PostListAppBar.defaultElevation,
+          color: theme.primaryColor,
+          child: PageViewTabBar(
+            pageController: widget.controller._pageController,
+            initialIndex: widget.controller.pageIndex,
+            onIndex: (index) {
+              if (widget.controller.pageIndex != index) {
+                popAllPopup();
+                widget.controller._pageController.animateToPage(index,
+                    duration: PageViewTabBar.animationDuration,
+                    curve: Curves.easeIn);
+              }
+            },
+            tabs: const [Tab(text: '浏览'), Tab(text: '主题'), Tab(text: '回复')],
+          ),
+        ),
+      ],
+    );
+  }
 }

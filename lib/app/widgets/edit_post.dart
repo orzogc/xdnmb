@@ -36,6 +36,7 @@ import '../utils/extensions.dart';
 import '../utils/image.dart';
 import '../utils/icons.dart';
 import '../utils/notify.dart';
+import '../utils/padding.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -1873,9 +1874,7 @@ class _EditPostState extends State<EditPost> {
 
     final data = PersistentDataService.to;
     final media = MediaQuery.of(context);
-    final padding = EdgeInsets.fromWindowPadding(
-        WidgetsBinding.instance.window.viewPadding,
-        WidgetsBinding.instance.window.devicePixelRatio);
+    final padding = getViewPadding();
     final fullHeight = media.size.height -
         padding.top -
         PostListAppBar.height -

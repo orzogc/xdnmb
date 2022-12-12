@@ -2,87 +2,16 @@ import 'dart:async';
 
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
-import '../data/services/settings.dart';
 import '../data/services/user.dart';
-import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'loading.dart';
-
-class _BiListViewportOffset implements ViewportOffset {
-  final ViewportOffset position;
-
-  final PostListController controller;
-
-  double get _offset => -(PostListAppBar.height - controller.headerHeight);
-
-  _BiListViewportOffset({required this.position, required this.controller});
-
-  @override
-  bool get allowImplicitScrolling => position.allowImplicitScrolling;
-
-  @override
-  bool get hasListeners => position.hasListeners;
-
-  @override
-  bool get hasPixels => position.hasPixels;
-
-  @override
-  double get pixels => position.pixels + _offset;
-
-  @override
-  ScrollDirection get userScrollDirection => position.userScrollDirection;
-
-  @override
-  void addListener(VoidCallback listener) => position.addListener(listener);
-
-  @override
-  Future<void> animateTo(double to,
-          {required Duration duration, required Curve curve}) =>
-      position.animateTo(to - _offset, duration: duration, curve: curve);
-
-  @override
-  bool applyContentDimensions(double minScrollExtent, double maxScrollExtent) =>
-      position.applyContentDimensions(
-          minScrollExtent - _offset, maxScrollExtent - _offset);
-
-  @override
-  bool applyViewportDimension(double viewportDimension) =>
-      position.applyViewportDimension(viewportDimension);
-
-  @override
-  void correctBy(double correction) => position.correctBy(correction);
-
-  @override
-  void debugFillDescription(List<String> description) =>
-      position.debugFillDescription(description);
-
-  @override
-  void dispose() => position.dispose();
-
-  @override
-  void jumpTo(double pixels) => position.jumpTo(pixels - _offset);
-
-  @override
-  Future<void> moveTo(double to,
-          {Duration? duration, Curve? curve, bool? clamp}) =>
-      position.moveTo(to - _offset,
-          duration: duration, curve: curve, clamp: clamp);
-
-  @override
-  void notifyListeners() => position.notifyListeners();
-
-  @override
-  void removeListener(VoidCallback listener) =>
-      position.removeListener(listener);
-}
 
 class _MinHeightIndicator extends StatelessWidget {
   static const double _minHeight = 90.0;
@@ -99,7 +28,6 @@ class _MinHeightIndicator extends StatelessWidget {
       );
 }
 
-// TODO: thread用这个
 /// 什么都不显示的[Widget]
 class DumpItem extends StatelessWidget {
   const DumpItem({super.key});
@@ -134,8 +62,6 @@ class BiListView<T> extends StatefulWidget {
 
   final ScrollController? scrollController;
 
-  final PostListController? postListController;
-
   final int initialPage;
 
   final int firstPage;
@@ -166,7 +92,6 @@ class BiListView<T> extends StatefulWidget {
       {super.key,
       this.controller,
       this.scrollController,
-      this.postListController,
       required this.initialPage,
       this.firstPage = 1,
       this.lastPage,
@@ -189,9 +114,13 @@ class BiListView<T> extends StatefulWidget {
 
 class _BiListViewState<T> extends State<BiListView<T>>
     with AutomaticKeepAliveClientMixin<BiListView<T>> {
+  late final int _initialPage;
+
   PagingController<int, T>? _pagingUpController;
 
   PagingController<int, T>? _pagingDownController;
+
+  final Key _upKey = UniqueKey();
 
   final Key _downKey = UniqueKey();
 
@@ -322,7 +251,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
           widget.onRefreshAndLoadMore!();
         }
 
-        if (widget.initialPage == widget.firstPage) {
+        if (_initialPage == widget.firstPage) {
           _pagingUpController?.refresh();
           _pagingDownController?.refresh();
         } else {
@@ -478,9 +407,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
   void initState() {
     super.initState();
 
-    _pagingUpController =
-        PagingController(firstPageKey: widget.initialPage - 1);
-    _pagingDownController = PagingController(firstPageKey: widget.initialPage);
+    _initialPage = widget.initialPage;
+
+    _pagingUpController = PagingController(firstPageKey: _initialPage - 1);
+    _pagingDownController = PagingController(firstPageKey: _initialPage);
 
     _pagingUpController!.addPageRequestListener(_fetchUpPage);
     _pagingDownController!.addPageRequestListener(_fetchDownPage);
@@ -505,6 +435,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
       if (oldWidget.scrollController == null) {
         oldController.dispose();
       }
+
       _scrollController = widget.scrollController ?? ScrollController();
       _scrollController.addListener(_checkBoundary);
     }
@@ -513,6 +444,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
       _isLoadingMoreSubscription?.cancel();
       _isLoadingMoreSubscription = null;
       oldWidget.controller?._loadMore = null;
+
       if (widget.controller != null) {
         widget.controller!._loadMore = _loadMore;
         _isLoadingMoreSubscription = _isLoadingMore
@@ -545,8 +477,6 @@ class _BiListViewState<T> extends State<BiListView<T>>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
-    final settings = SettingsService.to;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5.0),
@@ -590,18 +520,14 @@ class _BiListViewState<T> extends State<BiListView<T>>
                   : const ClampingScrollPhysics(
                       parent: RangeMaintainingScrollPhysics()),
               viewportBuilder: (context, position) => Viewport(
-                offset: (settings.isAutoHideAppBar &&
-                        widget.postListController != null)
-                    ? _BiListViewportOffset(
-                        position: position,
-                        controller: widget.postListController!)
-                    : position,
+                offset: position,
                 center: _downKey,
                 slivers: [
                   if (widget.header != null)
                     SliverToBoxAdapter(child: widget.header),
-                  if (widget.initialPage > 1)
+                  if (_initialPage > 1)
                     PagedSliverList(
+                      key: _upKey,
                       pagingController: _pagingUpController!,
                       builderDelegate: PagedChildBuilderDelegate<T>(
                         itemBuilder: _itemBuilder,
