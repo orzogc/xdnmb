@@ -4,7 +4,8 @@ publish_to: 'none'
 version: 0.2.1-alpha+4
 
 environment:
-  sdk: ">=2.18.4 <3.0.0"
+  sdk: ">=2.18.5 <3.0.0"
+  flutter: ">=3.3.9"
 
 dependencies:
   align_positioned: ^3.0.0

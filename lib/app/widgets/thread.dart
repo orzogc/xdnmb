@@ -771,7 +771,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   void _setToJump() {
     _isToJump.value = true;
-    widget.controller.scrollStatus = PostListScrollStatus.outOfAppBarRange;
+    widget.controller.scrollState = PostListScrollState.outOfAppBarRange;
     widget.controller.removeListener(_cancelJump);
     widget.controller.addListener(_cancelJump);
   }

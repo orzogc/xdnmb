@@ -1213,7 +1213,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "419f994acf3e701907e5aabe60d7043f9191f34e"
+      resolved-ref: b5a759a570630f42045394e2340266b0e58f781a
       url: "https://github.com/orzogc/xdnmb_api.git"
     source: git
     version: "0.1.0"
@@ -1239,5 +1239,5 @@ packages:
     source: hosted
     version: "3.1.1"
 sdks:
-  dart: ">=2.18.4 <3.0.0"
-  flutter: ">=3.3.0"
+  dart: ">=2.18.5 <3.0.0"
+  flutter: ">=3.3.9"

@@ -76,7 +76,7 @@ class PostList {
   int get hashCode => Object.hash(postListType, id);
 }
 
-enum PostListScrollStatus {
+enum PostListScrollState {
   outOfMinScrollExtent,
   inAppBarRange,
   outOfAppBarRange;
@@ -143,14 +143,16 @@ abstract class PostListController extends ChangeNotifier {
 
   bool _isDisposed = false;
 
-  final Rx<PostListScrollStatus> _scrollStatus =
-      Rx(PostListScrollStatus.inAppBarRange);
+  final Rx<PostListScrollState> _scrollState =
+      Rx(PostListScrollState.inAppBarRange);
 
   final RxDouble _headerHeight = appBarHeight.obs;
 
   OnHeightCallback? _setAppBarHeight;
 
-  OnOffsetCallback? correctOffset;
+  OnOffsetCallback? correctScrollOffset;
+
+  VoidCallback? updateScrollState;
 
   PostListType get postListType;
 
@@ -160,9 +162,9 @@ abstract class PostListController extends ChangeNotifier {
 
   set page(int page) => _page.value = page;
 
-  PostListScrollStatus get scrollStatus => _scrollStatus.value;
+  PostListScrollState get scrollState => _scrollState.value;
 
-  set scrollStatus(PostListScrollStatus status) => _scrollStatus.value = status;
+  set scrollState(PostListScrollState status) => _scrollState.value = status;
 
   double get headerHeight =>
       _headerHeight.value.clamp(0.0, PostListAppBar.height);
@@ -233,8 +235,14 @@ abstract class PostListController extends ChangeNotifier {
   }
 
   void jumpToOffset(double offset) {
-    if (correctOffset != null) {
-      correctOffset!(offset);
+    if (correctScrollOffset != null) {
+      correctScrollOffset!(offset);
+    }
+  }
+
+  void toUpdateScrollState() {
+    if (updateScrollState != null) {
+      updateScrollState!();
     }
   }
 
@@ -484,7 +492,7 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
   set _height(double height) => _animationController.value =
       (PostListAppBar.height - height) / PostListAppBar.height;
 
-  PostListScrollStatus get _scrollStatus => widget.controller.scrollStatus;
+  PostListScrollState get _scrollState => widget.controller.scrollState;
 
   double get _headerHeight => widget.controller.headerHeight;
 
@@ -513,13 +521,15 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
   void _setHeaderHeight() => _headerHeight = _height;
 
   void _update() {
-    if (!_scrollStatus.isOutOfAppBarRange) {
+    widget.controller.toUpdateScrollState();
+
+    if (!_scrollState.isOutOfAppBarRange) {
       final height = _height;
       if (height <= _headerHeight) {
         _height = _headerHeight;
       } else {
-        widget.controller.scrollStatus = PostListScrollStatus.outOfAppBarRange;
-        _setHeaderHeight();
+        widget.controller.scrollState = PostListScrollState.outOfAppBarRange;
+        _headerHeight = height;
         widget.controller.jumpToOffset(height - _headerHeight);
       }
     } else {
@@ -549,7 +559,7 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
     widget.controller._setAppBarHeight = _setAppBarHeight;
     _backdropSubscription = BackdropController.controller.listen((isShowed) {
       if (isShowed) {
-        widget.controller.scrollStatus = PostListScrollStatus.outOfAppBarRange;
+        widget.controller.scrollState = PostListScrollState.outOfAppBarRange;
         _show();
         PostListController.scrollDirection = ScrollDirection.idle;
       }
