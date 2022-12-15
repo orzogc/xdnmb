@@ -21,4 +21,5 @@ Future<void> initHive() async {
   Hive.registerAdapter<PostBaseData>(PostBaseDataAdapter());
   Hive.registerAdapter<PostListType>(PostListTypeAdapter());
   Hive.registerAdapter<PostListControllerData>(PostListControllerDataAdapter());
+  Hive.registerAdapter<Search>(SearchAdapter());
 }

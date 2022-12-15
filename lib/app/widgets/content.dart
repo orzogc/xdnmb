@@ -88,6 +88,8 @@ class Content extends StatefulWidget {
 
   final TextStyle? textStyle;
 
+  final OnTextCallback? onText;
+
   const Content(
       {super.key,
       required this.post,
@@ -99,7 +101,8 @@ class Content extends StatefulWidget {
       this.canReturnImageData = false,
       this.canTapHiddenText = false,
       this.hiddenTextColor,
-      this.textStyle})
+      this.textStyle,
+      this.onText})
       : assert(onImagePainted == null || displayImage),
         assert(!canReturnImageData || (displayImage && onImagePainted != null)),
         assert(!canTapHiddenText || onLinkTap != null);
@@ -123,13 +126,22 @@ class _ContentState extends State<Content> {
     }
   }
 
+  String? _onText(BuildContext context, String text) {
+    String? text_;
+    if (widget.onText != null) {
+      text_ = widget.onText!(context, text);
+    }
+
+    return Regex.onText(text_ ?? text) ?? text_;
+  }
+
   void _setHtmlText() {
     if (!_hasHiddenText) {
       _htmlText = HtmlText(
         context,
         widget.post.content,
         onLinkTap: widget.onLinkTap,
-        onText: (context, text) => Regex.onText(text),
+        onText: _onText,
         onTextRecursiveParse: true,
         textStyle: widget.textStyle,
       );
@@ -145,7 +157,7 @@ class _ContentState extends State<Content> {
         context,
         _text!,
         onLinkTap: widget.onLinkTap,
-        onText: (context, text) => Regex.onText(text),
+        onText: _onText,
         onTextRecursiveParse: true,
         onTags: onHiddenTag(
           (context, element, textStyle) {

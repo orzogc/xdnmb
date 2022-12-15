@@ -70,6 +70,46 @@ class PostBaseDataAdapter extends TypeAdapter<PostBaseData> {
           typeId == other.typeId;
 }
 
+class SearchAdapter extends TypeAdapter<Search> {
+  @override
+  final int typeId = 10;
+
+  @override
+  Search read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return Search(
+      text: fields[0] as String,
+      caseSensitive: fields[1] as bool,
+      useWildcard: fields[2] as bool,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Search obj) {
+    writer
+      ..writeByte(3)
+      ..writeByte(0)
+      ..write(obj.text)
+      ..writeByte(1)
+      ..write(obj.caseSensitive)
+      ..writeByte(2)
+      ..write(obj.useWildcard);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SearchAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
 class PostListControllerDataAdapter
     extends TypeAdapter<PostListControllerData> {
   @override
@@ -88,13 +128,14 @@ class PostListControllerDataAdapter
       post: fields[3] as PostBaseData?,
       pageIndex: fields[4] as int?,
       dateRange: (fields[5] as List?)?.cast<DateTimeRange?>(),
+      search: (fields[6] as List?)?.cast<Search?>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, PostListControllerData obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.postListType)
       ..writeByte(1)
@@ -106,7 +147,9 @@ class PostListControllerDataAdapter
       ..writeByte(4)
       ..write(obj.pageIndex)
       ..writeByte(5)
-      ..write(obj.dateRange);
+      ..write(obj.dateRange)
+      ..writeByte(6)
+      ..write(obj.search);
   }
 
   @override

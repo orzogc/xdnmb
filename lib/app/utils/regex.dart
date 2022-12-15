@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../data/models/controller.dart';
 import '../routes/routes.dart';
 import 'extensions.dart';
+import 'theme.dart';
 
 abstract class Regex {
   static const String _postReference1 = r'(?:&gt;)*No\.([0-9]+)';
@@ -27,6 +29,8 @@ abstract class Regex {
 
   static const String _xdnmbHtml = r'(.+)(?=\.html$)|(.+)';
 
+  static const String _escape = r'[/\-\\^$*+?.()|[\]{}]';
+
   static final RegExp _textRegex =
       RegExp('$_postReference1|$_postReference2|$_postReference3|$_link');
 
@@ -40,6 +44,8 @@ abstract class Regex {
   static final RegExp _xdnmbHostRegex = RegExp(_xdnmbHost);
 
   static final RegExp _xdnmbHtmlRegex = RegExp(_xdnmbHtml);
+
+  static final RegExp _escapeRegex = RegExp(_escape);
 
   static String? replaceHiddenTag(String text) {
     if (text.contains(_hasHiddenTagRegex)) {
@@ -100,6 +106,26 @@ abstract class Regex {
     final match = _xdnmbHtmlRegex.firstMatch(text);
 
     return match?[1] ?? match?[2];
+  }
+
+  static String? onSearchText({required String text, required Search search}) {
+    final searchText =
+        search.text.replaceAllMapped(_escapeRegex, (match) => '\\${match[0]}');
+
+    bool isReplaced = false;
+
+    text = text.replaceAllMapped(
+        RegExp(searchText, caseSensitive: search.caseSensitive), (match) {
+      isReplaced = true;
+
+      return '<span style="color:red;font-weight:${AppTheme.postContentBoldFontWeight.toCssStyle()}">${match[0]}</span>';
+    });
+
+    if (isReplaced) {
+      return text;
+    }
+
+    return null;
   }
 }
 

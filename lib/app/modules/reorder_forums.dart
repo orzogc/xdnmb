@@ -58,6 +58,7 @@ class _AddForum extends StatelessWidget {
                 final overlay = context.loaderOverlay;
                 try {
                   overlay.show();
+
                   final forumId = int.parse(id!);
                   final forum = ForumData.fromHtmlForum(
                       await client.getHtmlForumInfo(forumId));

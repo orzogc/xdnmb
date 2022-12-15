@@ -409,36 +409,34 @@ class _Image extends StatelessWidget {
 typedef _OnCheckCallback = void Function(bool isCheck);
 
 class _AttachDeviceInfo extends StatelessWidget {
-  final bool isCheck;
+  final bool isChecked;
 
   final _OnCheckCallback onCheck;
 
   const _AttachDeviceInfo(
       // ignore: unused_element
       {super.key,
-      required this.isCheck,
+      required this.isChecked,
       required this.onCheck});
 
   @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Padding(
-            padding: GetPlatform.isLinux
-                ? const EdgeInsets.only(top: 5.0)
-                : EdgeInsets.zero,
-            child: Checkbox(
-              value: isCheck,
-              onChanged: (value) {
-                if (value != null) {
-                  onCheck(value);
-                }
-              },
-            ),
-          ),
-          const Flexible(child: Text('附加应用和设备信息')),
-          const SizedBox(width: 5),
-          const QuestionTooltip(message: '提供这些信息以便开发者更好地解决问题'),
-        ],
+  Widget build(BuildContext context) => CheckboxListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 5.0),
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.ideographic,
+          children: const [
+            Flexible(child: Text('附加应用和设备信息')),
+            SizedBox(width: 5),
+            QuestionTooltip(message: '提供这些信息以便开发者更好地解决问题'),
+          ],
+        ),
+        value: isChecked,
+        onChanged: (value) {
+          if (value != null) {
+            onCheck(value);
+          }
+        },
       );
 }
 
@@ -1747,7 +1745,7 @@ class _EditPostState extends State<EditPost> {
             Obx(
               () => _canAttachDeviceInfo
                   ? _AttachDeviceInfo(
-                      isCheck: _isAttachDeviceInfo.value,
+                      isChecked: _isAttachDeviceInfo.value,
                       onCheck: (isCheck) => _isAttachDeviceInfo.value = isCheck)
                   : const SizedBox.shrink(),
             ),

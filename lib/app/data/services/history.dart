@@ -5,6 +5,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../../utils/directory.dart';
 import '../../utils/extensions.dart';
+import '../models/controller.dart';
 import '../models/history.dart';
 import '../models/post.dart';
 import '../models/reply.dart';
@@ -45,13 +46,37 @@ class PostHistoryService extends GetxService {
   Future<bool> deleteBrowseHistory(int postId) =>
       _isar.writeTxn(() => _browseHistory.delete(postId));
 
-  Future<void> clearBrowseHistory([DateTimeRange? range]) =>
+  Future<void> clearBrowseHistory({DateTimeRange? range, Search? search}) =>
       _isar.writeTxn(() async {
-        if (range != null) {
-          await _browseHistory
-              .where()
-              .browseTimeBetween(range.start, range.end.addOneDay(),
-                  includeUpper: false)
+        if (range != null || search != null) {
+          QueryBuilder<BrowseHistory, BrowseHistory, dynamic> query =
+              _browseHistory.where();
+
+          if (range != null) {
+            query = (query
+                    as QueryBuilder<BrowseHistory, BrowseHistory, QWhereClause>)
+                .browseTimeBetween(range.start, range.end.addOneDay(),
+                    includeUpper: false);
+          }
+
+          if (search != null) {
+            if (search.useWildcard) {
+              query =
+                  (query as QueryBuilder<BrowseHistory, BrowseHistory, QFilter>)
+                      .filter()
+                      .contentMatches('*${search.text}*',
+                          caseSensitive: search.caseSensitive);
+            } else {
+              query =
+                  (query as QueryBuilder<BrowseHistory, BrowseHistory, QFilter>)
+                      .filter()
+                      .contentContains(search.text,
+                          caseSensitive: search.caseSensitive);
+            }
+          }
+
+          (query as QueryBuilder<BrowseHistory, BrowseHistory,
+                  QQueryOperations>)
               .deleteAll();
         } else {
           await _browseHistory.clear();
@@ -59,24 +84,44 @@ class PostHistoryService extends GetxService {
       });
 
   /// 包括start，不包括end
-  Future<List<BrowseHistory>> browseHistoryList(int start, int end,
-      [DateTimeRange? range]) {
-    assert(start <= end);
+  Future<List<BrowseHistory>> browseHistoryList(
+      {int? start, int? end, DateTimeRange? range, Search? search}) {
+    assert((search != null && start == null && end == null) ||
+        (search == null && start != null && end != null && start <= end));
 
-    return range != null
-        ? _browseHistory
-            .where(sort: Sort.desc)
-            .browseTimeBetween(range.start, range.end.addOneDay(),
-                includeUpper: false)
-            .offset(start)
-            .limit(end - start)
-            .findAll()
-        : _browseHistory
-            .where(sort: Sort.desc)
-            .anyBrowseTime()
-            .offset(start)
-            .limit(end - start)
-            .findAll();
+    QueryBuilder<BrowseHistory, BrowseHistory, dynamic> query =
+        _browseHistory.where(sort: Sort.desc);
+
+    if (range != null) {
+      query =
+          (query as QueryBuilder<BrowseHistory, BrowseHistory, QWhereClause>)
+              .browseTimeBetween(range.start, range.end.addOneDay(),
+                  includeUpper: false);
+    } else {
+      query = (query as QueryBuilder<BrowseHistory, BrowseHistory, QWhere>)
+          .anyBrowseTime();
+    }
+
+    if (search != null) {
+      if (search.useWildcard) {
+        query = (query as QueryBuilder<BrowseHistory, BrowseHistory, QFilter>)
+            .filter()
+            .contentMatches('*${search.text}*',
+                caseSensitive: search.caseSensitive);
+      } else {
+        query = (query as QueryBuilder<BrowseHistory, BrowseHistory, QFilter>)
+            .filter()
+            .contentContains(search.text, caseSensitive: search.caseSensitive);
+      }
+    } else {
+      query = (query as QueryBuilder<BrowseHistory, BrowseHistory, QOffset>)
+          .offset(start!)
+          .limit(end! - start);
+    }
+
+    return (query
+            as QueryBuilder<BrowseHistory, BrowseHistory, QQueryOperations>)
+        .findAll();
   }
 
   Future<PostData?> _getPostData(int id) => _postData.get(id);
@@ -109,13 +154,32 @@ class PostHistoryService extends GetxService {
     }
   }
 
-  Future<void> clearPostData([DateTimeRange? range]) =>
+  Future<void> clearPostData({DateTimeRange? range, Search? search}) =>
       _isar.writeTxn(() async {
-        if (range != null) {
-          await _postData
-              .where()
-              .postTimeBetween(range.start, range.end.addOneDay(),
-                  includeUpper: false)
+        if (range != null || search != null) {
+          QueryBuilder<PostData, PostData, dynamic> query = _postData.where();
+
+          if (range != null) {
+            query = (query as QueryBuilder<PostData, PostData, QWhereClause>)
+                .postTimeBetween(range.start, range.end.addOneDay(),
+                    includeUpper: false);
+          }
+
+          if (search != null) {
+            if (search.useWildcard) {
+              query = (query as QueryBuilder<PostData, PostData, QFilter>)
+                  .filter()
+                  .contentMatches('*${search.text}*',
+                      caseSensitive: search.caseSensitive);
+            } else {
+              query = (query as QueryBuilder<PostData, PostData, QFilter>)
+                  .filter()
+                  .contentContains(search.text,
+                      caseSensitive: search.caseSensitive);
+            }
+          }
+
+          (query as QueryBuilder<PostData, PostData, QQueryOperations>)
               .deleteAll();
         } else {
           await _postData.clear();
@@ -123,24 +187,41 @@ class PostHistoryService extends GetxService {
       });
 
   /// 包括start，不包括end
-  Future<List<PostData>> postDataList(int start, int end,
-      [DateTimeRange? range]) {
-    assert(start <= end);
+  Future<List<PostData>> postDataList(
+      {int? start, int? end, DateTimeRange? range, Search? search}) {
+    assert((search != null && start == null && end == null) ||
+        (search == null && start != null && end != null && start <= end));
 
-    return range != null
-        ? _postData
-            .where(sort: Sort.desc)
-            .postTimeBetween(range.start, range.end.addOneDay(),
-                includeUpper: false)
-            .offset(start)
-            .limit(end - start)
-            .findAll()
-        : _postData
-            .where(sort: Sort.desc)
-            .anyPostTime()
-            .offset(start)
-            .limit(end - start)
-            .findAll();
+    QueryBuilder<PostData, PostData, dynamic> query =
+        _postData.where(sort: Sort.desc);
+
+    if (range != null) {
+      query = (query as QueryBuilder<PostData, PostData, QWhereClause>)
+          .postTimeBetween(range.start, range.end.addOneDay(),
+              includeUpper: false);
+    } else {
+      query = (query as QueryBuilder<PostData, PostData, QWhere>).anyPostTime();
+    }
+
+    if (search != null) {
+      if (search.useWildcard) {
+        query = (query as QueryBuilder<PostData, PostData, QFilter>)
+            .filter()
+            .contentMatches('*${search.text}*',
+                caseSensitive: search.caseSensitive);
+      } else {
+        query = (query as QueryBuilder<PostData, PostData, QFilter>)
+            .filter()
+            .contentContains(search.text, caseSensitive: search.caseSensitive);
+      }
+    } else {
+      query = (query as QueryBuilder<PostData, PostData, QOffset>)
+          .offset(start!)
+          .limit(end! - start);
+    }
+
+    return (query as QueryBuilder<PostData, PostData, QQueryOperations>)
+        .findAll();
   }
 
   Future<ReplyData?> _getReplyData(int id) => _replyData.get(id);
@@ -181,13 +262,33 @@ class PostHistoryService extends GetxService {
     }
   }
 
-  Future<void> clearReplyData([DateTimeRange? range]) =>
+  Future<void> clearReplyData({DateTimeRange? range, Search? search}) =>
       _isar.writeTxn(() async {
-        if (range != null) {
-          await _replyData
-              .where()
-              .postTimeBetween(range.start, range.end.addOneDay(),
-                  includeUpper: false)
+        if (range != null || search != null) {
+          QueryBuilder<ReplyData, ReplyData, dynamic> query =
+              _replyData.where();
+
+          if (range != null) {
+            query = (query as QueryBuilder<ReplyData, ReplyData, QWhereClause>)
+                .postTimeBetween(range.start, range.end.addOneDay(),
+                    includeUpper: false);
+          }
+
+          if (search != null) {
+            if (search.useWildcard) {
+              query = (query as QueryBuilder<ReplyData, ReplyData, QFilter>)
+                  .filter()
+                  .contentMatches('*${search.text}*',
+                      caseSensitive: search.caseSensitive);
+            } else {
+              query = (query as QueryBuilder<ReplyData, ReplyData, QFilter>)
+                  .filter()
+                  .contentContains(search.text,
+                      caseSensitive: search.caseSensitive);
+            }
+          }
+
+          (query as QueryBuilder<ReplyData, ReplyData, QQueryOperations>)
               .deleteAll();
         } else {
           await _replyData.clear();
@@ -195,24 +296,42 @@ class PostHistoryService extends GetxService {
       });
 
   /// 包括start，不包括end
-  Future<List<ReplyData>> replyDataList(int start, int end,
-      [DateTimeRange? range]) {
-    assert(start <= end);
+  Future<List<ReplyData>> replyDataList(
+      {int? start, int? end, DateTimeRange? range, Search? search}) {
+    assert((search != null && start == null && end == null) ||
+        (search == null && start != null && end != null && start <= end));
 
-    return range != null
-        ? _replyData
-            .where(sort: Sort.desc)
-            .postTimeBetween(range.start, range.end.addOneDay(),
-                includeUpper: false)
-            .offset(start)
-            .limit(end - start)
-            .findAll()
-        : _replyData
-            .where(sort: Sort.desc)
-            .anyPostTime()
-            .offset(start)
-            .limit(end - start)
-            .findAll();
+    QueryBuilder<ReplyData, ReplyData, dynamic> query =
+        _replyData.where(sort: Sort.desc);
+
+    if (range != null) {
+      query = (query as QueryBuilder<ReplyData, ReplyData, QWhereClause>)
+          .postTimeBetween(range.start, range.end.addOneDay(),
+              includeUpper: false);
+    } else {
+      query =
+          (query as QueryBuilder<ReplyData, ReplyData, QWhere>).anyPostTime();
+    }
+
+    if (search != null) {
+      if (search.useWildcard) {
+        query = (query as QueryBuilder<ReplyData, ReplyData, QFilter>)
+            .filter()
+            .contentMatches('*${search.text}*',
+                caseSensitive: search.caseSensitive);
+      } else {
+        query = (query as QueryBuilder<ReplyData, ReplyData, QFilter>)
+            .filter()
+            .contentContains(search.text, caseSensitive: search.caseSensitive);
+      }
+    } else {
+      query = (query as QueryBuilder<ReplyData, ReplyData, QOffset>)
+          .offset(start!)
+          .limit(end! - start);
+    }
+
+    return (query as QueryBuilder<ReplyData, ReplyData, QQueryOperations>)
+        .findAll();
   }
 
   @override

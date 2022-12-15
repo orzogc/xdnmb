@@ -158,7 +158,7 @@ class _FeedBodyState extends State<FeedBody> {
             () => feed.isVisible.value
                 ? AnchorItemWrapper(
                     key: feed.item.toValueKey(),
-                    controller: scrollController as AnchorScrollController,
+                    controller: scrollController,
                     index: feed.item.toIndex(),
                     child: PostCard(
                       child: PostInkWell(

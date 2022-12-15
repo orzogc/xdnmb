@@ -157,9 +157,12 @@ abstract class AppRoutes {
       ControllerStacksService.to.pushController(FeedController(page));
 
   static void toHistory<T>(
-          {int index = 0, int page = 1, List<DateTimeRange?>? dateRange}) =>
+          {int index = 0,
+          int page = 1,
+          List<DateTimeRange?>? dateRange,
+          List<Search?>? search}) =>
       ControllerStacksService.to.pushController(HistoryController(
-          page: page, pageIndex: index, dateRange: dateRange));
+          page: page, pageIndex: index, dateRange: dateRange, search: search));
 
   static Future<T?>? toImage<T>(ImageController controller) =>
       Get.toNamed<T>(image, arguments: controller);

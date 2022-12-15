@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -96,6 +97,8 @@ typedef OnOffsetCallback = void Function(double offset);
 
 typedef AppBarCallback = void Function([VoidCallback? callback]);
 
+typedef GetPositionCallback = double? Function();
+
 abstract class PostListController extends ChangeNotifier {
   static final Rx<ScrollDirection> _scrollDirection = Rx(ScrollDirection.idle);
 
@@ -106,6 +109,8 @@ abstract class PostListController extends ChangeNotifier {
   static AppBarCallback? _showAppBar;
 
   static AppBarCallback? _hideAppBar;
+
+  static VoidCallback? _stopAppBarAnimation;
 
   static set scrollDirection(ScrollDirection direction) {
     _scrollDirection.value = direction;
@@ -137,6 +142,12 @@ abstract class PostListController extends ChangeNotifier {
     }
   }
 
+  static void stopAppBarAnimation() {
+    if (_stopAppBarAnimation != null) {
+      _stopAppBarAnimation!();
+    }
+  }
+
   final RxInt _page;
 
   VoidCallback? save;
@@ -152,7 +163,7 @@ abstract class PostListController extends ChangeNotifier {
 
   OnOffsetCallback? correctScrollOffset;
 
-  VoidCallback? updateScrollState;
+  GetPositionCallback? getTopPosition;
 
   PostListType get postListType;
 
@@ -174,6 +185,8 @@ abstract class PostListController extends ChangeNotifier {
     _headerHeight.value = height_;
     _appBarHeight.value = height_;
   }
+
+  double? get topPosition => getTopPosition != null ? getTopPosition!() : null;
 
   bool get isThread => postListType.isThread;
 
@@ -237,12 +250,6 @@ abstract class PostListController extends ChangeNotifier {
   void jumpToOffset(double offset) {
     if (correctScrollOffset != null) {
       correctScrollOffset!(offset);
-    }
-  }
-
-  void toUpdateScrollState() {
-    if (updateScrollState != null) {
-      updateScrollState!();
     }
   }
 
@@ -369,13 +376,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
             title = const FeedAppBarTitle();
             break;
           case PostListType.history:
-            title = Obx(() {
-              final controller_ = controller as HistoryController;
-
-              return HistoryAppBarTitle(controller_,
-                  key: ValueKey<HistoryBottomBarKey>(
-                      HistoryBottomBarKey.fromController(controller_)));
-            });
+            title = HistoryAppBarTitle(controller as HistoryController);
             break;
         }
 
@@ -521,10 +522,8 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
   void _setHeaderHeight() => _headerHeight = _height;
 
   void _update() {
-    widget.controller.toUpdateScrollState();
-
+    final height = _height;
     if (!_scrollState.isOutOfAppBarRange) {
-      final height = _height;
       if (height <= _headerHeight) {
         _height = _headerHeight;
       } else {
@@ -533,7 +532,14 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
         widget.controller.jumpToOffset(height - _headerHeight);
       }
     } else {
-      _setHeaderHeight();
+      final topPosition = widget.controller.topPosition;
+      if (topPosition != null &&
+          topPosition >= 0.0 &&
+          topPosition <= PostListAppBar.height) {
+        _height = max(height, PostListAppBar.height - topPosition);
+      } else {
+        _headerHeight = height;
+      }
     }
   }
 
@@ -552,6 +558,7 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
     _animationController.addListener(_setHeaderHeight);
     PostListController._showAppBar = _show;
     PostListController._hideAppBar = _hide;
+    PostListController._stopAppBarAnimation = _animationController.stop;
 
     _slideAnimation = Tween(begin: Offset.zero, end: const Offset(0.0, -1.0))
         .animate(_animationController);
@@ -585,6 +592,7 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
     PostListController._appBarHeight.value = PostListAppBar.height;
     PostListController._showAppBar = null;
     PostListController._hideAppBar = null;
+    PostListController._stopAppBarAnimation = null;
     _animationController.dispose();
 
     super.dispose();

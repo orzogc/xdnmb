@@ -26,11 +26,38 @@ class _PostListScrollPosition extends ScrollPositionWithSingleContext {
       super.oldPosition,
       super.debugLabel});
 
+  double _getTopPosition([double? offset]) =>
+      pixels - minScrollExtent - (offset ?? 0.0);
+
+  void _correctOffset(double offset) => correctPixels(pixels + offset);
+
+  void _stopAnimation() {
+    if (_isShowing || _isHiding) {
+      PostListController.stopAppBarAnimation();
+    }
+  }
+
   @override
   void updateUserScrollDirection(ScrollDirection value) {
     super.updateUserScrollDirection(value);
 
     PostListController.scrollDirection = value;
+  }
+
+  @override
+  double applyBoundaryConditions(double value) {
+    final overscroll = super.applyBoundaryConditions(value);
+    final offset = value - overscroll;
+
+    // 阻止向上滑动露出多余空间
+    if (controller.scrollState.isInAppBarRange && offset < 0.0) {
+      controller.setAppBarHeight(PostListController.appBarHeight - offset);
+      correctPixels(pixels - offset);
+
+      return value;
+    }
+
+    return overscroll;
   }
 
   @override
@@ -42,7 +69,7 @@ class _PostListScrollPosition extends ScrollPositionWithSingleContext {
 
       switch (controller.scrollState) {
         case PostListScrollState.outOfMinScrollExtent:
-          final topPostition = pixels - minScrollExtent - offset;
+          final topPostition = _getTopPosition(offset);
           if (controller.headerHeight > 0.0 &&
               topPostition >= 0.0 &&
               topPostition <= controller.headerHeight) {
@@ -81,17 +108,21 @@ class _PostListScrollPosition extends ScrollPositionWithSingleContext {
 
           break;
         case PostListScrollState.outOfAppBarRange:
-          if (offset < 0.0) {
-            final topPostition = pixels - minScrollExtent - offset;
+          final topPostition = _getTopPosition(offset);
 
+          if (offset < 0.0) {
             if (controller.headerHeight > 0.0 &&
                 topPostition >= 0.0 &&
                 topPostition <= controller.headerHeight) {
+              _stopAnimation();
+
               controller.scrollState = PostListScrollState.inAppBarRange;
               controller
                   .setAppBarHeight(controller.headerHeight - topPostition);
               setPixels(minScrollExtent);
             } else if (topPostition < 0.0) {
+              _stopAnimation();
+
               // 一般不会有这种情况
               controller.scrollState = PostListScrollState.outOfAppBarRange;
               setPixels(pixels - offset);
@@ -104,10 +135,13 @@ class _PostListScrollPosition extends ScrollPositionWithSingleContext {
               setPixels(pixels - offset);
             }
           } else if (offset > 0.0) {
-            final topPostition = pixels - minScrollExtent - offset;
             if (topPostition >= 0.0 && topPostition <= PostListAppBar.height) {
+              _stopAnimation();
+
               setPixels(pixels - offset);
             } else if (topPostition < 0.0) {
+              _stopAnimation();
+
               if (PostListAppBar.height - controller.headerHeight >=
                   -topPostition) {
                 controller.scrollState = PostListScrollState.inAppBarRange;
@@ -168,13 +202,13 @@ class PostListScrollController extends AnchorScrollController {
       );
 }
 
-typedef PostListRefresherBuilder = Widget Function(
-    BuildContext context, ScrollController scrollController, int refresh);
+typedef PostListRefresherBuilder = Widget Function(BuildContext context,
+    PostListScrollController scrollController, int refresh);
 
 class PostListRefresher extends StatefulWidget {
   final PostListController controller;
 
-  final ScrollController? scrollController;
+  final PostListScrollController? scrollController;
 
   final bool useAnchorScrollController;
 
@@ -192,7 +226,7 @@ class PostListRefresher extends StatefulWidget {
 }
 
 class _PostListRefresherState extends State<PostListRefresher> {
-  late ScrollController _scrollController;
+  late PostListScrollController _scrollController;
 
   int _refresh = 0;
 
@@ -204,8 +238,8 @@ class _PostListRefresherState extends State<PostListRefresher> {
 
   void _correctScrollOffset(double offset) {
     if (_scrollController.hasClients) {
-      _scrollController.position
-          .correctPixels(_scrollController.offset + offset);
+      (_scrollController.position as _PostListScrollPosition)
+          ._correctOffset(offset);
     }
   }
 
@@ -219,29 +253,17 @@ class _PostListRefresherState extends State<PostListRefresher> {
     }
   }
 
-  void _setScrollController() {
-    _scrollController = widget.scrollController ??
-        PostListScrollController(
-          controller: widget.controller,
-          onIndexChanged: (index, userScroll) =>
-              widget.controller.page = index.getPageFromPostIndex(),
-        );
-  }
+  void _setScrollController() => _scrollController = widget.scrollController ??
+      PostListScrollController(
+        controller: widget.controller,
+        onIndexChanged: (index, userScroll) =>
+            widget.controller.page = index.getPageFromPostIndex(),
+      );
 
-  void _updateScrollState() {
-    if (_scrollController.hasClients) {
-      final position = _scrollController.position;
-      final topPostition = position.pixels - position.minScrollExtent;
-      if (topPostition >= 0.0 && topPostition <= PostListAppBar.height) {
-        widget.controller.scrollState = PostListScrollState.inAppBarRange;
-      } else if (topPostition < 0.0) {
-        widget.controller.scrollState =
-            PostListScrollState.outOfMinScrollExtent;
-      } else {
-        widget.controller.scrollState = PostListScrollState.outOfAppBarRange;
-      }
-    }
-  }
+  double? _getTopPosition() => _scrollController.hasClients
+      ? (_scrollController.position as _PostListScrollPosition)
+          ._getTopPosition()
+      : null;
 
   @override
   void initState() {
@@ -254,7 +276,7 @@ class _PostListRefresherState extends State<PostListRefresher> {
     _headerHeightSubscription =
         widget.controller.listenHeaderHeight(_setScrollOffset);
     widget.controller.correctScrollOffset = _correctScrollOffset;
-    widget.controller.updateScrollState = _updateScrollState;
+    widget.controller.getTopPosition = _getTopPosition;
   }
 
   @override
@@ -265,14 +287,14 @@ class _PostListRefresherState extends State<PostListRefresher> {
       oldWidget.controller.removeListener(_addRefresh);
       _headerHeightSubscription.cancel();
       oldWidget.controller.correctScrollOffset = null;
-      oldWidget.controller.updateScrollState = null;
+      oldWidget.controller.getTopPosition = null;
 
       _headerHeight = widget.controller.headerHeight;
       widget.controller.addListener(_addRefresh);
       _headerHeightSubscription =
           widget.controller.listenHeaderHeight(_setScrollOffset);
       widget.controller.correctScrollOffset = _correctScrollOffset;
-      widget.controller.updateScrollState = _updateScrollState;
+      widget.controller.getTopPosition = _getTopPosition;
     }
 
     if (widget.scrollController != oldWidget.scrollController) {
@@ -289,7 +311,7 @@ class _PostListRefresherState extends State<PostListRefresher> {
     widget.controller.removeListener(_addRefresh);
     _headerHeightSubscription.cancel();
     widget.controller.correctScrollOffset = null;
-    widget.controller.updateScrollState = null;
+    widget.controller.getTopPosition = null;
 
     if (widget.scrollController == null) {
       _scrollController.dispose();

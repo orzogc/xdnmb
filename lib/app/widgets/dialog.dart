@@ -156,7 +156,7 @@ class NoticeDialog extends StatelessWidget {
     final data = PersistentDataService.to;
     final settings = SettingsService.to;
     final textStyle = Theme.of(context).textTheme.titleMedium;
-    final isCheck = false.obs;
+    final isChecked = false.obs;
 
     return AlertDialog(
       actionsPadding:
@@ -211,10 +211,10 @@ class NoticeDialog extends StatelessWidget {
                         : EdgeInsets.zero,
                     child: Obx(
                       () => Checkbox(
-                        value: isCheck.value,
+                        value: isChecked.value,
                         onChanged: (value) {
                           if (value != null) {
-                            isCheck.value = value;
+                            isChecked.value = value;
                           }
                         },
                       ),
@@ -229,7 +229,7 @@ class NoticeDialog extends StatelessWidget {
                 TextButton(
                   onPressed: () {
                     if (showCheckbox) {
-                      settings.showNotice = !isCheck.value;
+                      settings.showNotice = !isChecked.value;
                     }
                     postListBack();
                   },

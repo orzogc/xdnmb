@@ -37,10 +37,14 @@ class _PostUser extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = (textStyle ?? AppTheme.postHeaderTextStyle).merge(TextStyle(
-      color: isAdmin ? Colors.red : (isPo ? Colors.cyan.shade700 : null),
-      fontWeight: isPo ? FontWeight.bold : null,
-    ));
+    TextStyle style = (textStyle ?? AppTheme.postHeaderTextStyle).merge(
+      TextStyle(
+          color: isAdmin ? Colors.red : (isPo ? Colors.cyan.shade700 : null)),
+    );
+    final fontWeight = style.fontWeight;
+    if (fontWeight == null || fontWeight.toInt() < FontWeight.bold.toInt()) {
+      style = style.merge(const TextStyle(fontWeight: FontWeight.bold));
+    }
 
     return htmlToRichText(
       context,
@@ -158,8 +162,12 @@ class _PostTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final spanTextStyle = (textStyle ?? AppTheme.postContentTextStyle)
-        .merge(const TextStyle(fontWeight: FontWeight.bold));
+    TextStyle spanTextStyle = (textStyle ?? AppTheme.postContentTextStyle);
+    final fontWeight = spanTextStyle.fontWeight?.toInt();
+    if (fontWeight == null || fontWeight < FontWeight.bold.toInt()) {
+      spanTextStyle =
+          spanTextStyle.merge(const TextStyle(fontWeight: FontWeight.bold));
+    }
 
     return RichText(
       text: TextSpan(
@@ -193,8 +201,12 @@ class _PostName extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final spanTextStyle = (textStyle ?? AppTheme.postContentTextStyle)
-        .merge(const TextStyle(fontWeight: FontWeight.bold));
+    TextStyle spanTextStyle = (textStyle ?? AppTheme.postContentTextStyle);
+    final fontWeight = spanTextStyle.fontWeight?.toInt();
+    if (fontWeight == null || fontWeight < FontWeight.bold.toInt()) {
+      spanTextStyle =
+          spanTextStyle.merge(const TextStyle(fontWeight: FontWeight.bold));
+    }
 
     return RichText(
       text: TextSpan(
@@ -228,6 +240,7 @@ class _PostSage extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = textStyle ?? AppTheme.postContentTextStyle;
     final fontSize = style.fontSize;
+    final fontWeight = style.fontWeight;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -236,7 +249,13 @@ class _PostSage extends StatelessWidget {
         Flexible(
             child: Text(
           '本串已经被SAGE',
-          style: style.merge(AppTheme.boldRed),
+          style: style.merge(TextStyle(
+            color: Colors.red,
+            fontWeight: (fontWeight == null ||
+                    fontWeight.toInt() < FontWeight.bold.toInt())
+                ? FontWeight.bold
+                : fontWeight,
+          )),
           strutStyle: textStyle != null
               ? StrutStyle.fromTextStyle(textStyle!)
               : AppTheme.postContentStrutStyle,
@@ -346,6 +365,7 @@ class PostContent extends StatelessWidget {
       bool canTapHiddenText = false,
       Color? hiddenTextColor,
       TextStyle? contentTextStyle,
+      OnTextCallback? onText,
       this.showFullTime = true,
       this.showPostId = true,
       this.showForumName = true,
@@ -374,7 +394,8 @@ class PostContent extends StatelessWidget {
         hiddenTextColor: hiddenTextColor,
         textStyle: contentTextStyle != null
             ? settings.postContentTextStyle(contentTextStyle)
-            : AppTheme.postContentTextStyle);
+            : AppTheme.postContentTextStyle,
+        onText: onText);
   }
 
   @override
@@ -485,6 +506,7 @@ class PostInkWell extends StatelessWidget {
       bool canTapHiddenText = false,
       Color? hiddenTextColor,
       TextStyle? contentTextStyle,
+      OnTextCallback? onText,
       bool showFullTime = true,
       bool showPostId = true,
       bool showForumName = true,
@@ -508,6 +530,7 @@ class PostInkWell extends StatelessWidget {
             canTapHiddenText: canTapHiddenText,
             hiddenTextColor: hiddenTextColor,
             contentTextStyle: contentTextStyle,
+            onText: onText,
             showFullTime: showFullTime,
             showPostId: showPostId,
             showForumName: showForumName,

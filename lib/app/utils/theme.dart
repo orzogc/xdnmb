@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 import '../data/services/settings.dart';
+import '../utils/extensions.dart';
 
 abstract class AppTheme {
   static final Color primaryColorLight = Colors.red.shade300;
@@ -49,6 +50,13 @@ abstract class AppTheme {
 
   static final StrutStyle boldRedPostContentStrutStyle =
       StrutStyle.fromTextStyle(boldRedPostContentTextStyle);
+
+  static final FontWeight postContentBoldFontWeight =
+      (postContentTextStyle.fontWeight != null &&
+              postContentTextStyle.fontWeight!.toInt() >
+                  FontWeight.bold.toInt())
+          ? postContentTextStyle.fontWeight!
+          : FontWeight.bold;
 
   static final ThemeData theme = ThemeData(
     brightness: Brightness.light,

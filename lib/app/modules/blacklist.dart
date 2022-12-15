@@ -221,8 +221,8 @@ class _Body extends StatelessWidget {
             final timelineName =
                 forums.forumName(forum.timelineId, isTimeline: true);
 
-            return RichText(
-              text: (forumName != null && timelineName != null)
+            return Text.rich(
+              (forumName != null && timelineName != null)
                   ? TextSpan(
                       text: '确定在 ',
                       children: [
@@ -237,7 +237,6 @@ class _Body extends StatelessWidget {
                           ],
                         ),
                       ],
-                      style: textStyle,
                     )
                   : (forumName != null
                       ? TextSpan(
@@ -247,9 +246,8 @@ class _Body extends StatelessWidget {
                                 textStyle: textStyle),
                             const TextSpan(text: ' ？'),
                           ],
-                          style: textStyle,
                         )
-                      : TextSpan(text: '确定取消屏蔽版块？', style: textStyle)),
+                      : const TextSpan(text: '确定取消屏蔽版块？')),
             );
           },
           deleteToastContent: (forum) {

@@ -152,9 +152,14 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
   StreamSubscription<bool>? _isLoadingMoreSubscription;
 
+  String? _pagingUpError;
+
+  String? _pagingDownError;
+
   Future<void> _fetchUpPage(int page, [bool rethrowError = false]) async {
     if (!_isFetchingUp) {
       _isFetchingUp = true;
+      _pagingUpError = null;
 
       try {
         final lastPage = widget.lastPage;
@@ -194,6 +199,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
   Future<void> _fetchDownPage(int page, [bool rethrowError = false]) async {
     if (!_isFetchingDown) {
       _isFetchingDown = true;
+      _pagingDownError = null;
 
       try {
         final lastPage = widget.lastPage;
@@ -288,19 +294,28 @@ class _BiListViewState<T> extends State<BiListView<T>>
     }
   }
 
-  Widget _errorWidgetBuilder(PagingController<int, T> controller,
-      [bool isAtCenter = false]) {
+  Widget _errorWidgetBuilder(
+      {required bool isPagingUp, bool isAtCenter = false}) {
     final user = UserService.to;
-    final message = exceptionMessage(controller.error ?? '未知错误');
-    showToast(message);
+    final controller = isPagingUp ? _pagingUpController : _pagingDownController;
+    final message = exceptionMessage(controller?.error ?? '未知错误');
+    // 防止重复显示错误信息
+    if (message != (isPagingUp ? _pagingUpError : _pagingDownError)) {
+      showToast(message);
+      if (isPagingUp) {
+        _pagingUpError = message;
+      } else {
+        _pagingDownError = message;
+      }
+    }
 
     return InkWell(
       onTap: () {
-        if (controller.error != null) {
+        if (controller?.error != null) {
           if (!user.hasBrowseCookie && message.contains('饼干')) {
             AppRoutes.toUser();
           } else {
-            controller.retryLastFailedRequest();
+            controller?.retryLastFailedRequest();
           }
         }
       },
@@ -459,9 +474,13 @@ class _BiListViewState<T> extends State<BiListView<T>>
     _isLoadingMoreSubscription = null;
     widget.controller?._loadMore = null;
     _pagingUpController?.removePageRequestListener(_fetchUpPage);
+    _pagingUpController?.error = null;
+    _pagingUpController?.itemList = null;
     _pagingUpController?.dispose();
     _pagingUpController = null;
     _pagingDownController?.removePageRequestListener(_fetchDownPage);
+    _pagingDownController?.error = null;
+    _pagingDownController?.itemList = null;
     _pagingDownController?.dispose();
     _pagingDownController = null;
     _refreshController?.dispose();
@@ -532,9 +551,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
                       builderDelegate: PagedChildBuilderDelegate<T>(
                         itemBuilder: _itemBuilder,
                         firstPageErrorIndicatorBuilder: (context) =>
-                            _errorWidgetBuilder(_pagingUpController!, true),
+                            _errorWidgetBuilder(
+                                isPagingUp: true, isAtCenter: true),
                         newPageErrorIndicatorBuilder: (context) =>
-                            _errorWidgetBuilder(_pagingUpController!),
+                            _errorWidgetBuilder(isPagingUp: true),
                         firstPageProgressIndicatorBuilder: (context) =>
                             const QuotationLoadingIndicator(),
                         newPageProgressIndicatorBuilder: (context) =>
@@ -549,9 +569,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
                     builderDelegate: PagedChildBuilderDelegate<T>(
                       itemBuilder: _itemBuilder,
                       firstPageErrorIndicatorBuilder: (context) =>
-                          _errorWidgetBuilder(_pagingDownController!, true),
+                          _errorWidgetBuilder(
+                              isPagingUp: false, isAtCenter: true),
                       newPageErrorIndicatorBuilder: (context) =>
-                          _errorWidgetBuilder(_pagingDownController!),
+                          _errorWidgetBuilder(isPagingUp: false),
                       firstPageProgressIndicatorBuilder: (context) =>
                           const QuotationLoadingIndicator(),
                       newPageProgressIndicatorBuilder: (context) =>

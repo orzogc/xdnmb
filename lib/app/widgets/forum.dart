@@ -353,7 +353,7 @@ class _ForumBodyState extends State<ForumBody> {
                     mainPost.isBlocked())
                 ? AnchorItemWrapper(
                     key: thread.toValueKey(),
-                    controller: scrollController as AnchorScrollController,
+                    controller: scrollController,
                     index: thread.toIndex(),
                     child: PostCard(
                       child: PostInkWell(

@@ -203,6 +203,34 @@ enum PostListType {
   bool get isXdnmbApi => isThreadType || isForumType || isFeed;
 }
 
+@HiveType(typeId: 10)
+class Search {
+  @HiveField(0)
+  final String text;
+
+  @HiveField(1)
+  final bool caseSensitive;
+
+  @HiveField(2)
+  final bool useWildcard;
+
+  const Search(
+      {required this.text,
+      this.caseSensitive = false,
+      this.useWildcard = false});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Search &&
+          text == other.text &&
+          caseSensitive == other.caseSensitive &&
+          useWildcard == other.useWildcard);
+
+  @override
+  int get hashCode => Object.hash(text, caseSensitive, useWildcard);
+}
+
 @HiveType(typeId: 9)
 class PostListControllerData extends HiveObject {
   @HiveField(0)
@@ -223,13 +251,17 @@ class PostListControllerData extends HiveObject {
   @HiveField(5)
   final List<DateTimeRange?>? dateRange;
 
+  @HiveField(6)
+  final List<Search?>? search;
+
   PostListControllerData(
       {required this.postListType,
       this.id,
       this.page = 1,
       this.post,
       this.pageIndex,
-      this.dateRange});
+      this.dateRange,
+      this.search});
 
   factory PostListControllerData.fromController(PostListController controller) {
     switch (controller.postListType) {
@@ -256,7 +288,8 @@ class PostListControllerData extends HiveObject {
             postListType: (controller as HistoryController).postListType,
             page: controller.page,
             pageIndex: controller.pageIndex,
-            dateRange: controller.dateRange);
+            dateRange: controller.dateRange,
+            search: controller.search);
     }
   }
 
@@ -274,7 +307,10 @@ class PostListControllerData extends HiveObject {
         return FeedController(page);
       case PostListType.history:
         return HistoryController(
-            page: page, pageIndex: pageIndex!, dateRange: dateRange!);
+            page: page,
+            pageIndex: pageIndex!,
+            dateRange: dateRange,
+            search: search);
     }
   }
 }

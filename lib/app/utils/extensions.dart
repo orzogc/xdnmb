@@ -130,6 +130,8 @@ extension DateTimeExtension on DateTime {
 extension FontWeightExtension on FontWeight {
   int toInt() => index + 1;
 
+  int toCssStyle() => toInt() * 100;
+
   static FontWeight fromInt(int n) {
     if (n < SettingsService.minFontWeight ||
         n > SettingsService.maxFontWeight) {
