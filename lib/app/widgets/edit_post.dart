@@ -40,6 +40,7 @@ import '../utils/padding.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
+import 'checkbox.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
 import 'image.dart';
@@ -420,23 +421,20 @@ class _AttachDeviceInfo extends StatelessWidget {
       required this.onCheck});
 
   @override
-  Widget build(BuildContext context) => CheckboxListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 5.0),
-        title: Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.ideographic,
-          children: const [
-            Flexible(child: Text('附加应用和设备信息')),
-            SizedBox(width: 5),
-            QuestionTooltip(message: '提供这些信息以便开发者更好地解决问题'),
-          ],
-        ),
-        value: isChecked,
-        onChanged: (value) {
-          if (value != null) {
-            onCheck(value);
-          }
-        },
+  Widget build(BuildContext context) => Row(
+        children: [
+          AppCheckbox(
+            value: isChecked,
+            onChanged: (value) {
+              if (value != null) {
+                onCheck(value);
+              }
+            },
+          ),
+          const Flexible(child: Text('附加应用和设备信息')),
+          const SizedBox(width: 5),
+          const QuestionTooltip(message: '提供这些信息以便开发者更好地解决问题'),
+        ],
       );
 }
 

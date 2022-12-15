@@ -23,15 +23,15 @@ import '../utils/theme.dart';
 import '../utils/time.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
+import 'checkbox.dart';
 import 'content.dart';
 import 'edit_post.dart';
 import 'forum_name.dart';
-import 'page_view.dart';
 import 'scroll.dart';
 import 'thread.dart';
 
 Future<T?> postListDialog<T>(Widget widget, {int? index}) {
-  final controller = PostListController.get(index);
+  final data = PersistentDataService.to;
 
   return Get.dialog<T>(Obx(() {
     final isAutoHideAppBar = SettingsService.isAutoHideAppBar;
@@ -40,9 +40,10 @@ Future<T?> postListDialog<T>(Widget widget, {int? index}) {
     return (isAutoHideAppBar || isShowBottomBar)
         ? Container(
             margin: EdgeInsets.only(
-              top: (isAutoHideAppBar ? PostListController.appBarHeight : 0.0) +
-                  (controller.isHistory ? PageViewTabBar.height : 0.0),
-              bottom: isShowBottomBar ? PostListBottomBar.height : 0.0,
+              top: (isAutoHideAppBar ? PostListController.appBarHeight : 0.0),
+              bottom: (!data.isKeyboardVisible.value && isShowBottomBar)
+                  ? PostListBottomBar.height
+                  : 0.0,
             ),
             child: widget)
         : widget;
@@ -205,19 +206,14 @@ class NoticeDialog extends StatelessWidget {
             if (showCheckbox)
               Row(
                 children: [
-                  Padding(
-                    padding: GetPlatform.isLinux
-                        ? const EdgeInsets.only(top: 5.0)
-                        : EdgeInsets.zero,
-                    child: Obx(
-                      () => Checkbox(
-                        value: isChecked.value,
-                        onChanged: (value) {
-                          if (value != null) {
-                            isChecked.value = value;
-                          }
-                        },
-                      ),
+                  Obx(
+                    () => AppCheckbox(
+                      value: isChecked.value,
+                      onChanged: (value) {
+                        if (value != null) {
+                          isChecked.value = value;
+                        }
+                      },
                     ),
                   ),
                   Flexible(child: Text('不再提示此条公告', style: textStyle)),

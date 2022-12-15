@@ -42,7 +42,8 @@ class _PostUser extends StatelessWidget {
           color: isAdmin ? Colors.red : (isPo ? Colors.cyan.shade700 : null)),
     );
     final fontWeight = style.fontWeight;
-    if (fontWeight == null || fontWeight.toInt() < FontWeight.bold.toInt()) {
+    if ((isAdmin || isPo) &&
+        (fontWeight == null || fontWeight.toInt() < FontWeight.bold.toInt())) {
       style = style.merge(const TextStyle(fontWeight: FontWeight.bold));
     }
 

@@ -24,6 +24,7 @@ import '../utils/theme.dart';
 import '../utils/time.dart';
 import '../utils/toast.dart';
 import 'bilistview.dart';
+import 'checkbox.dart';
 import 'dialog.dart';
 import 'page_view.dart';
 import 'post.dart';
@@ -296,37 +297,19 @@ class _SearchDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme.bodyMedium;
     String? searchText;
-    final text = controller._text();
     final search = controller._getSearch();
     final caseSensitive = (search?.caseSensitive ?? false).obs;
     final useWildcard = (search?.useWildcard ?? false).obs;
 
     return InputDialog(
-      title: Text('搜索$text记录'),
       content: Form(
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("搜索内容尽量不要是HTML标签和样式相关字符串，比如'font'、'color'、'br'"),
-            const Text.rich(TextSpan(text: '通配符 ', children: [
-              TextSpan(
-                children: [
-                  TextSpan(text: '*', style: AppTheme.boldRed),
-                  TextSpan(text: ' 匹配零个或多个任意字符'),
-                ],
-              ),
-            ])),
-            const Text.rich(TextSpan(text: '通配符 ', children: [
-              TextSpan(
-                children: [
-                  TextSpan(text: '?', style: AppTheme.boldRed),
-                  TextSpan(text: ' 匹配任意一个字符，通常汉字包含三个或四个字符'),
-                ],
-              ),
-            ])),
             TextFormField(
               decoration: const InputDecoration(labelText: '搜索内容'),
               autofocus: true,
@@ -336,33 +319,60 @@ class _SearchDialog extends StatelessWidget {
                   (value == null || value.isEmpty) ? '请输入搜索内容' : null,
             ),
             Obx(
-              () => CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('英文字母区分大小写'),
-                value: caseSensitive.value,
-                onChanged: (value) {
-                  if (value != null) {
-                    caseSensitive.value = value;
-                  }
-                },
+              () => Row(
+                children: [
+                  AppCheckbox(
+                    value: caseSensitive.value,
+                    onChanged: (value) {
+                      if (value != null) {
+                        caseSensitive.value = value;
+                      }
+                    },
+                  ),
+                  Flexible(child: Text('英文字母区分大小写', style: textStyle)),
+                ],
               ),
             ),
             Obx(
-              () => CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('使用通配符'),
-                value: useWildcard.value,
-                onChanged: (value) {
-                  if (value != null) {
-                    useWildcard.value = value;
-                  }
-                },
+              () => Row(
+                children: [
+                  AppCheckbox(
+                    value: useWildcard.value,
+                    onChanged: (value) {
+                      if (value != null) {
+                        useWildcard.value = value;
+                      }
+                    },
+                  ),
+                  Flexible(child: Text('使用通配符', style: textStyle)),
+                ],
               ),
             ),
           ],
         ),
       ),
       actions: [
+        TextButton(
+          onPressed: () {
+            postListDialog(const ConfirmCancelDialog(
+              contentWidget: Text.rich(TextSpan(
+                text: "搜索内容尽量不要是HTML标签和样式相关字符串，比如'font'、'color'、'br'。\n通配符 ",
+                children: [
+                  TextSpan(
+                    children: [
+                      TextSpan(text: '*', style: AppTheme.boldRed),
+                      TextSpan(text: ' 匹配零个或多个任意字符。\n通配符 '),
+                      TextSpan(text: '?', style: AppTheme.boldRed),
+                      TextSpan(text: ' 匹配任意一个字符，通常汉字包含三个或四个字符。'),
+                    ],
+                  ),
+                ],
+              )),
+              onConfirm: postListBack,
+            ));
+          },
+          child: const Text('搜索说明'),
+        ),
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
