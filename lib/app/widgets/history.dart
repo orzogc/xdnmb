@@ -420,7 +420,8 @@ class _ClearDialog extends StatelessWidget {
             }
           }
 
-          postListBack();
+          WidgetsBinding.instance
+              .addPostFrameCallback((timeStamp) => postListBack());
         },
         onCancel: () => postListBack(),
       ),

@@ -1067,9 +1067,13 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
 
   static EditPostCallback? get _editPost => EditPostCallback.bottomSheet;
 
-  void _bottomSheet([EditPostController? controller]) {
+  void _toggleEditPostBottomSheet([EditPostController? controller]) {
     if (mounted) {
       if (!_hasBottomSheet) {
+        if (_tabAndForumListController.isShowed) {
+          _tabAndForumListController.close();
+        }
+
         _editPostController._controller = showBottomSheet(
           context: context,
           shape: Border(
@@ -1095,14 +1099,14 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
                           canPost: postListController.canPost)) ??
                       false)) {
                 if (postListController.canPost) {
-                  _bottomSheet(controller);
+                  _toggleEditPostBottomSheet(controller);
                 }
               }
             }
           }
         });
       } else {
-        Get.back();
+        _editPostController.close();
       }
     }
   }
@@ -1119,17 +1123,18 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
     }
   }
 
+  void _showTabAndForumList() => _TabAndForumListButton._showTabAndForumList(
+      topPadding: widget.topPadding);
+
   @override
   void initState() {
     super.initState();
 
-    _editPostController._show = _bottomSheet;
-    _editPostController._showEditPost = _bottomSheet;
+    _editPostController._show = _toggleEditPostBottomSheet;
+    _editPostController._showEditPost = _toggleEditPostBottomSheet;
 
     if (SettingsService.isShowBottomBar && !SettingsService.isBackdropUI) {
-      _tabAndForumListController._show = () =>
-          _TabAndForumListButton._showTabAndForumList(
-              topPadding: widget.topPadding);
+      _tabAndForumListController._show = _showTabAndForumList;
     }
 
     ControllerStacksService.to.notifier.addListener(_refreshBottomSheet);
@@ -1162,7 +1167,7 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
       builder: (context, child) => Obx(() {
         final Widget floatingButton = FloatingActionButton(
           tooltip: _hasBottomSheet ? '收起' : '发串',
-          onPressed: _bottomSheet,
+          onPressed: _toggleEditPostBottomSheet,
           child: Icon(
             _hasBottomSheet ? Icons.arrow_downward : Icons.edit,
           ),
@@ -1436,6 +1441,9 @@ class _TabAndForumListButton extends StatelessWidget {
   static _TabAndForumListController get _tabAndForumListController =>
       _TabAndForumListController._controller;
 
+  static BottomSheetController get _editPostBottomSheetController =>
+      BottomSheetController.editPostController;
+
   static void _showTabAndForumList(
       {_TabAndForumListButtonType? buttonType, double? topPadding}) {
     final settings = SettingsService.to;
@@ -1445,6 +1453,10 @@ class _TabAndForumListButton extends StatelessWidget {
     final state = PostListView._scaffoldKey.currentState;
 
     if (state != null) {
+      if (_editPostBottomSheetController.isShowed) {
+        _editPostBottomSheetController.close();
+      }
+
       _bottomSheetController._controller = buttonType != null
           ? state.showBottomSheet(
               (context) => buttonType._isCompact
@@ -1597,8 +1609,11 @@ class PostListBottomBar extends StatelessWidget {
     );
     final Widget editPostButton = IconButton(
       onPressed: () {
-        _closeBottomSheet();
-        _editPostController.showEditPost();
+        final controller = PostListController.get();
+        if (controller.canPost) {
+          // 会先关闭标签页和版块列表
+          _editPostController.showEditPost();
+        }
       },
       tooltip: '发串',
       icon: const Icon(Icons.edit),

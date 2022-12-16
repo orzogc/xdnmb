@@ -182,8 +182,8 @@ class SettingsService extends GetxService {
   set fixedImageDisposeRatio(double ratio) =>
       _settingsBox.put(Settings.fixedImageDisposeRatio, ratio.clamp(0.0, 1.0));
 
-  bool get fixMissingFont =>
-      _settingsBox.get(Settings.fixMissingFont, defaultValue: false);
+  bool get fixMissingFont => _settingsBox.get(Settings.fixMissingFont,
+      defaultValue: GetPlatform.isIOS);
 
   set fixMissingFont(bool fixMissingFont) =>
       _settingsBox.put(Settings.fixMissingFont, fixMissingFont);
@@ -442,7 +442,8 @@ class SettingsService extends GetxService {
 
     ImageService.savePath = box.get(Settings.saveImagePath, defaultValue: null);
     // 是否修复字体，结果保存在`fixMissingFont`
-    isFixMissingFont = box.get(Settings.fixMissingFont, defaultValue: false);
+    isFixMissingFont =
+        box.get(Settings.fixMissingFont, defaultValue: GetPlatform.isIOS);
     isRestoreForumPage =
         box.get(Settings.restoreForumPage, defaultValue: false);
     isShowBottomBar =
