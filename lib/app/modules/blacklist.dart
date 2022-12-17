@@ -294,7 +294,20 @@ class _Body extends StatelessWidget {
   }
 }
 
-class BlacklistController extends GetxController {
+class BlacklistView extends StatefulWidget {
+  static const int _forumIndex = 0;
+
+  static const int _postIndex = 1;
+
+  static const int _userIndex = 2;
+
+  const BlacklistView({super.key});
+
+  @override
+  State<BlacklistView> createState() => _BlacklistViewState();
+}
+
+class _BlacklistViewState extends State<BlacklistView> {
   final PageController _pageController = PageController();
 
   final RxInt _index = 0.obs;
@@ -306,56 +319,38 @@ class BlacklistController extends GetxController {
     }
   }
 
+  void _refresh() => _index.refresh();
+
   @override
-  void onInit() {
-    super.onInit();
+  void initState() {
+    super.initState();
 
     _pageController.addListener(_updateIndex);
   }
 
   @override
-  void onClose() {
+  void dispose() {
     _pageController.removeListener(_updateIndex);
     _pageController.dispose();
 
-    super.onClose();
+    super.dispose();
   }
-}
-
-class BlacklistBinding implements Bindings {
-  @override
-  void dependencies() {
-    Get.put(BlacklistController());
-  }
-}
-
-class BlacklistView extends GetView<BlacklistController> {
-  static const int _forumIndex = 0;
-
-  static const int _postIndex = 1;
-
-  static const int _userIndex = 2;
-
-  const BlacklistView({super.key});
-
-  void _refresh() => controller._index.refresh();
 
   @override
   Widget build(BuildContext context) => ColoredSafeArea(
         child: Obx(
           () => Scaffold(
             appBar: AppBar(
-              title: _AppBarTitle(index: controller._index.value),
+              title: _AppBarTitle(index: _index.value),
               actions: [
-                _AppBarPopupMenuButton(
-                    index: controller._index.value, refresh: _refresh),
+                _AppBarPopupMenuButton(index: _index.value, refresh: _refresh),
               ],
               bottom: PageViewTabBar(
-                pageController: controller._pageController,
+                pageController: _pageController,
                 initialIndex: 0,
                 onIndex: (index) {
-                  if (controller._index.value != index) {
-                    controller._pageController.animateToPage(
+                  if (_index.value != index) {
+                    _pageController.animateToPage(
                       index,
                       duration: PageViewTabBar.animationDuration,
                       curve: Curves.easeIn,
@@ -366,7 +361,7 @@ class BlacklistView extends GetView<BlacklistController> {
               ),
             ),
             body: SwipeablePageView(
-              controller: controller._pageController,
+              controller: _pageController,
               itemCount: 3,
               itemBuilder: (context, index) =>
                   _Body(index: index, refresh: _refresh),

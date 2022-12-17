@@ -295,7 +295,6 @@ class _PageDragWidthRatio extends StatelessWidget {
 
         return ListTile(
           title: Text('左侧边缘滑动返回上一页的范围占屏幕宽度的比例', style: textStyle),
-          subtitle: Text('更改后需要重启应用', style: textStyle),
           trailing:
               Text('${settings.swipeablePageDragWidthRatio}', style: textStyle),
           onTap: (settings.showBottomBar || settings.backdropUI)

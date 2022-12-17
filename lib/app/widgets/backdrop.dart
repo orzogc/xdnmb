@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
 import '../data/services/settings.dart';
+import '../utils/padding.dart';
 import '../utils/theme.dart';
 
 typedef OnShowBackLayerCallback = void Function(bool isShowed);
@@ -179,6 +180,8 @@ class _BackdropState extends State<Backdrop>
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
+    final theme = Theme.of(context);
+    final bottomPadding = getViewPadding().bottom;
 
     return Stack(
       children: [
@@ -238,6 +241,16 @@ class _BackdropState extends State<Backdrop>
             ],
           ),
         ),
+        if (bottomPadding > 0.0)
+          Positioned.fill(
+            top: widget.height,
+            bottom: widget.height + bottomPadding,
+            child: Container(
+              width: double.infinity,
+              height: bottomPadding,
+              color: theme.primaryColor,
+            ),
+          ),
       ],
     );
   }

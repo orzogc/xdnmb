@@ -269,26 +269,89 @@ abstract class PathNames {
   static const String paint = 'paint';
 }
 
-class _SwipeablePageRoute extends SwipeablePageRoute {
-  final Bindings? binding;
+class AppSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
+  bool _maintainState = false;
+
+  double _backGestureDetectionWidth = Get.mediaQuery.size.width *
+      SettingsService.to.swipeablePageDragWidthRatio;
+
+  @override
+  bool get maintainState => _maintainState;
+
+  @override
+  double get backGestureDetectionWidth => _backGestureDetectionWidth;
 
   @override
   WidgetBuilder get builder => (context) {
-        if (binding != null) {
-          binding!.dependencies();
-        }
+        _active();
 
         return super.builder(context);
       };
 
-  _SwipeablePageRoute(
-      {RouteSettings? settings, this.binding, required WidgetBuilder builder})
+  AppSwipeablePageRoute(
+      {RouteSettings? settings, required WidgetBuilder builder})
       : super(
             settings: settings,
+            canSwipe: SettingsService.isSwipeablePage,
             canOnlySwipeFromEdge: true,
-            backGestureDetectionWidth: Get.mediaQuery.size.width *
-                SettingsService.to.swipeablePageDragWidthRatio,
-            builder: builder);
+            builder: builder) {
+    SettingsService.to.swipeablePageDragWidthRatioListenable
+        .addListener(_dragWidth);
+  }
+
+  void _active() {
+    if (isActive && !_maintainState) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        if (isActive && !_maintainState) {
+          _maintainState = true;
+          changedInternalState();
+        }
+      });
+    }
+  }
+
+  void _dragWidth() =>
+      setState(() => _backGestureDetectionWidth = Get.mediaQuery.size.width *
+          SettingsService.to.swipeablePageDragWidthRatio);
+
+  @override
+  void dispose() {
+    SettingsService.to.swipeablePageDragWidthRatioListenable
+        .removeListener(_dragWidth);
+
+    super.dispose();
+  }
+}
+
+class AppPageTransitionsBuilder extends SwipeablePageTransitionsBuilder {
+  const AppPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+      PageRoute<T> route,
+      BuildContext context,
+      Animation<double> animation,
+      Animation<double> secondaryAnimation,
+      Widget child) {
+    final settings = SettingsService.to;
+
+    return ValueListenableBuilder(
+      valueListenable: settings.swipeablePageDragWidthRatioListenable,
+      builder: (context, value, child_) =>
+          SwipeablePageRoute.buildPageTransitions<T>(
+        route,
+        context,
+        animation,
+        secondaryAnimation,
+        child,
+        canSwipe: () => SettingsService.isSwipeablePage,
+        canOnlySwipeFromEdge: true,
+        backGestureDetectionWidth:
+            Get.mediaQuery.size.width * settings.swipeablePageDragWidthRatio,
+        transitionBuilder: transitionBuilder,
+      ),
+    );
+  }
 }
 
 /// Backdrop UI下生成[Route]
@@ -306,29 +369,27 @@ Route? backdropOnGenerateRoute(RouteSettings settings) {
             transition: Transition.fadeIn,
             opaque: false);
       case AppRoutes.settings:
-        return _SwipeablePageRoute(
+        return AppSwipeablePageRoute(
             settings: settings, builder: (context) => const SettingsView());
       case AppRoutes.userPath:
-        return _SwipeablePageRoute(
+        return AppSwipeablePageRoute(
             settings: settings, builder: (context) => const CookieView());
       case AppRoutes.blacklistPath:
-        return _SwipeablePageRoute(
-            settings: settings,
-            binding: BlacklistBinding(),
-            builder: (context) => const BlacklistView());
+        return AppSwipeablePageRoute(
+            settings: settings, builder: (context) => const BlacklistView());
       case AppRoutes.basicSettingsPath:
-        return _SwipeablePageRoute(
+        return AppSwipeablePageRoute(
             settings: settings,
             builder: (context) => const BasicSettingsView());
       case AppRoutes.advancedSettingsPath:
-        return _SwipeablePageRoute(
+        return AppSwipeablePageRoute(
             settings: settings,
             builder: (context) => const AdvancedSettingsView());
       case AppRoutes.uiSettingsPath:
-        return _SwipeablePageRoute(
+        return AppSwipeablePageRoute(
             settings: settings, builder: (context) => const UISettingsView());
       case AppRoutes.basicUISettingsPath:
-        return _SwipeablePageRoute(
+        return AppSwipeablePageRoute(
             settings: settings,
             builder: (context) => const BasicUISettingsView());
       case AppRoutes.postUISettingsPath:
@@ -339,7 +400,7 @@ Route? backdropOnGenerateRoute(RouteSettings settings) {
             page: () => const PostFontSettingsView(),
             transition: Transition.rightToLeft);
       case AppRoutes.reorderForums:
-        return _SwipeablePageRoute(
+        return AppSwipeablePageRoute(
             settings: settings,
             builder: (context) => const ReorderForumsView());
       case AppRoutes.editPost:
@@ -350,7 +411,7 @@ Route? backdropOnGenerateRoute(RouteSettings settings) {
             page: () => const EditPostView(),
             transition: Transition.rightToLeft);
       case AppRoutes.postDrafts:
-        return _SwipeablePageRoute(
+        return AppSwipeablePageRoute(
             settings: settings, builder: (context) => const PostDraftsView());
       case AppRoutes.paint:
         return GetPageRoute(

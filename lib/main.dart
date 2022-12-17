@@ -12,7 +12,6 @@ import 'app/data/services/persistent.dart';
 import 'app/data/services/services.dart';
 import 'app/data/services/settings.dart';
 import 'app/modules/post_list.dart';
-import 'app/routes/pages.dart';
 import 'app/routes/routes.dart';
 import 'app/utils/directory.dart';
 import 'app/utils/hive.dart';
@@ -47,14 +46,10 @@ class _XdnmbApp extends StatelessWidget {
   Widget build(BuildContext context) => GetMaterialApp(
         title: '霞岛',
         initialBinding: servicesBindings(),
-        getPages: !SettingsService.isSwipeablePage ? getPages : null,
         initialRoute: AppRoutes.home,
-        onGenerateInitialRoutes: SettingsService.isSwipeablePage
-            ? (initialRoute) =>
-                [SwipeablePageRoute(builder: (context) => const PostListView())]
-            : null,
-        onGenerateRoute:
-            SettingsService.isSwipeablePage ? backdropOnGenerateRoute : null,
+        onGenerateInitialRoutes: (initialRoute) =>
+            [SwipeablePageRoute(builder: (context) => const PostListView())],
+        onGenerateRoute: backdropOnGenerateRoute,
         theme: AppTheme.theme,
         darkTheme: AppTheme.darkTheme,
         builder: EasyLoading.init(),

@@ -7,7 +7,6 @@ import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 import '../data/models/controller.dart';
 import '../data/models/draft.dart';
@@ -629,7 +628,7 @@ class _PostListHeader extends StatelessWidget {
       Obx(() => SizedBox(height: controller.headerHeight));
 }
 
-class _PostListGetPageRoute<T> extends GetPageRoute<T> {
+/* class _PostListGetPageRoute<T> extends GetPageRoute<T> {
   bool _maintainState = false;
 
   @override
@@ -654,45 +653,12 @@ class _PostListGetPageRoute<T> extends GetPageRoute<T> {
       }
     });
   }
-}
-
-class _PostListSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
-  bool _maintainState = false;
-
-  @override
-  bool get maintainState => _maintainState;
-
-  @override
-  WidgetBuilder get builder => (context) {
-        _active();
-
-        return super.builder(context);
-      };
-
-  _PostListSwipeablePageRoute(
-      {super.settings,
-      super.canOnlySwipeFromEdge,
-      super.backGestureDetectionWidth,
-      super.backGestureDetectionStartOffset,
-      required super.builder});
-
-  void _active() {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      if (isActive) {
-        _maintainState = true;
-        changedInternalState();
-      }
-    });
-  }
-}
+} */
 
 class _PostListPage<T> extends Page<T> {
   final PostListController controller;
 
-  final double? backGestureDetectionWidth;
-
-  const _PostListPage(
-      {super.key, required this.controller, this.backGestureDetectionWidth});
+  const _PostListPage({super.key, required this.controller});
 
   Widget _buildWidget() {
     final settings = SettingsService.to;
@@ -740,33 +706,21 @@ class _PostListPage<T> extends Page<T> {
     );
   }
 
-  Route<T> _buildRoute() =>
-      (SettingsService.isSwipeablePage && backGestureDetectionWidth != null)
-          ? _PostListSwipeablePageRoute(
-              settings: this,
-              canOnlySwipeFromEdge: true,
-              backGestureDetectionWidth: backGestureDetectionWidth!,
-              builder: (context) => _buildWidget(),
-            )
-          : _PostListGetPageRoute(
-              settings: this,
-              transition: Transition.rightToLeft,
-              page: _buildWidget,
-            );
-
   @override
-  Route<T> createRoute(BuildContext context) => _buildRoute();
+  Route<T> createRoute(BuildContext context) => AppSwipeablePageRoute(
+        settings: this,
+        builder: (context) => _buildWidget(),
+      );
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is _PostListPage<T> &&
           key == other.key &&
-          controller == other.controller &&
-          backGestureDetectionWidth == other.backGestureDetectionWidth);
+          controller == other.controller);
 
   @override
-  int get hashCode => Object.hash(key, controller, backGestureDetectionWidth);
+  int get hashCode => Object.hash(key, controller);
 }
 
 class PostListPage extends StatefulWidget {
@@ -797,8 +751,7 @@ class PostListPageState extends State<PostListPage> {
 
   void jumpToLast() => jumpToPage(ControllerStacksService.to.length - 1);
 
-  Widget _buildNavigator(
-      BuildContext context, int index, double? backGestureDetectionWidth) {
+  Widget _buildNavigator(BuildContext context, int index) {
     debugPrint('build navigator: $index');
 
     final stacks = ControllerStacksService.to;
@@ -812,7 +765,6 @@ class PostListPageState extends State<PostListPage> {
             _PostListPage(
               key: ValueKey(controller.key),
               controller: controller.controller,
-              backGestureDetectionWidth: backGestureDetectionWidth,
             ),
         ],
         onPopPage: (route, result) {
@@ -841,32 +793,19 @@ class PostListPageState extends State<PostListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = SettingsService.to;
+    //final settings = SettingsService.to;
     final stacks = ControllerStacksService.to;
     final scaffold = Scaffold.of(context);
 
     debugPrint('build page');
 
-    final Widget page = LayoutBuilder(
-      builder: (context, constraints) {
-        final double? backGestureDetectionWidth =
-            SettingsService.isSwipeablePage
-                ? constraints.maxWidth * settings.swipeablePageDragWidthRatio
-                : null;
-
-        return Obx(
-          () => PageView.builder(
-            controller: _pageController,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: stacks.length,
-            itemBuilder: (context, index) => _buildNavigator(
-              context,
-              index,
-              backGestureDetectionWidth,
-            ),
-          ),
-        );
-      },
+    final Widget page = Obx(
+      () => PageView.builder(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: stacks.length,
+        itemBuilder: (context, index) => _buildNavigator(context, index),
+      ),
     );
 
     return GetPlatform.isDesktop
@@ -2009,7 +1948,11 @@ class _PostListViewState extends State<PostListView>
                       const PostListAppBar(),
                     if (!_backdropController.isShowBackLayer &&
                         topPadding > 0.0)
-                      Container(height: topPadding, color: theme.primaryColor),
+                      Container(
+                        width: double.infinity,
+                        height: topPadding,
+                        color: theme.primaryColor,
+                      ),
                   ],
                 );
               }

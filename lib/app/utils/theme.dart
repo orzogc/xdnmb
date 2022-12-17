@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 import '../data/services/settings.dart';
+import '../routes/routes.dart';
 import '../utils/extensions.dart';
 
 abstract class AppTheme {
@@ -106,16 +106,10 @@ abstract class AppTheme {
             const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
         unselectedLabelStyle: const TextStyle(fontSize: 14.0)),
     indicatorColor: Colors.blue,
-    pageTransitionsTheme: PageTransitionsTheme(builders: {
-      TargetPlatform.android: SettingsService.isSwipeablePage
-          ? const SwipeablePageTransitionsBuilder()
-          : const ZoomPageTransitionsBuilder(),
-      TargetPlatform.iOS: SettingsService.isSwipeablePage
-          ? const SwipeablePageTransitionsBuilder()
-          : const CupertinoPageTransitionsBuilder(),
-      TargetPlatform.macOS: SettingsService.isSwipeablePage
-          ? const SwipeablePageTransitionsBuilder()
-          : const CupertinoPageTransitionsBuilder(),
+    pageTransitionsTheme: const PageTransitionsTheme(builders: {
+      TargetPlatform.android: AppPageTransitionsBuilder(),
+      TargetPlatform.iOS: AppPageTransitionsBuilder(),
+      TargetPlatform.macOS: AppPageTransitionsBuilder(),
     }),
   );
 
@@ -166,16 +160,10 @@ abstract class AppTheme {
             const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
         unselectedLabelStyle: const TextStyle(fontSize: 14.0)),
     indicatorColor: Colors.white,
-    pageTransitionsTheme: PageTransitionsTheme(builders: {
-      TargetPlatform.android: SettingsService.isSwipeablePage
-          ? const SwipeablePageTransitionsBuilder()
-          : const ZoomPageTransitionsBuilder(),
-      TargetPlatform.iOS: SettingsService.isSwipeablePage
-          ? const SwipeablePageTransitionsBuilder()
-          : const CupertinoPageTransitionsBuilder(),
-      TargetPlatform.macOS: SettingsService.isSwipeablePage
-          ? const SwipeablePageTransitionsBuilder()
-          : const CupertinoPageTransitionsBuilder(),
+    pageTransitionsTheme: const PageTransitionsTheme(builders: {
+      TargetPlatform.android: AppPageTransitionsBuilder(),
+      TargetPlatform.iOS: AppPageTransitionsBuilder(),
+      TargetPlatform.macOS: AppPageTransitionsBuilder(),
     }),
     textTheme: const TextTheme(
       displayLarge: TextStyle(),

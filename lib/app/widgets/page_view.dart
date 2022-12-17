@@ -127,6 +127,7 @@ class SwipeablePageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
+    final settings = SettingsService.to;
 
     return (SettingsService.isSwipeablePage && GetPlatform.isMobile)
         ? Listener(
@@ -136,7 +137,7 @@ class SwipeablePageView extends StatelessWidget {
                 if (controller?.page == 0.0 &&
                     event.position.dx <=
                         media.size.width *
-                            SettingsService.to.swipeablePageDragWidthRatio) {
+                            settings.swipeablePageDragWidthRatio) {
                   route.canSwipe = true;
                   _isScrollable.value = false;
                 } else {
