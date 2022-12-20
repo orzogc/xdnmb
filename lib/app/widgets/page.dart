@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/state_manager.dart';
+import 'package:get/get.dart';
 
 import '../modules/post_list.dart';
 import '../utils/extensions.dart';

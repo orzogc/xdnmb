@@ -26,8 +26,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: fix
-      resolved-ref: "7fe6b8efa9051ab9ac9c7f9aeef7251e454b74bb"
+      ref: xdnmb
+      resolved-ref: "46bd3ccb6ef93a542c50988cc8df01a5349efa64"
       url: "https://github.com/orzogc/anchor_scroll_controller.git"
     source: git
     version: "0.4.1"
@@ -929,7 +929,7 @@ packages:
       name: quiver
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.1.0"
+    version: "3.2.0"
   responsive_grid_list:
     dependency: "direct main"
     description:

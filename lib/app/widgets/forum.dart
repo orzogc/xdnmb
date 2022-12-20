@@ -314,7 +314,7 @@ class _ForumBodyState extends State<ForumBody> {
     final controller = widget.controller;
     final id = controller.id;
 
-    return PostListRefresher(
+    return PostListScrollView(
       controller: controller,
       useAnchorScrollController: true,
       builder: (context, scrollController, refresh) =>
@@ -380,7 +380,6 @@ class _ForumBodyState extends State<ForumBody> {
               ? ThreadGuide(item)
               : item;
         },
-        header: PostListHeader(controller: controller),
         noItemsFoundBuilder: (context) => Center(
           child: Text(
             '没有串',

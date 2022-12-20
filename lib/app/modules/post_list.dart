@@ -90,14 +90,6 @@ enum PostListScrollState {
 
 typedef OnPageCallback = void Function(int page);
 
-typedef OnHeightCallback = void Function(double height);
-
-typedef OnOffsetCallback = void Function(double offset);
-
-typedef AppBarCallback = void Function([VoidCallback? callback]);
-
-typedef GetPositionCallback = double? Function();
-
 abstract class PostListController extends ChangeNotifier {
   static final Rx<ScrollDirection> _scrollDirection = Rx(ScrollDirection.idle);
 
@@ -105,11 +97,7 @@ abstract class PostListController extends ChangeNotifier {
 
   static final RxDouble _appBarHeight = PostListAppBar.height.obs;
 
-  static AppBarCallback? _showAppBar;
-
-  static AppBarCallback? _hideAppBar;
-
-  static VoidCallback? _stopAppBarAnimation;
+  static VoidCallback? _showAppBar;
 
   static set scrollDirection(ScrollDirection direction) {
     _scrollDirection.value = direction;
@@ -129,21 +117,9 @@ abstract class PostListController extends ChangeNotifier {
 
   static double get appBarHeight => _appBarHeight.value;
 
-  static void showAppBar([VoidCallback? callback]) {
+  static void showAppBar() {
     if (_showAppBar != null) {
-      _showAppBar!(callback);
-    }
-  }
-
-  static void hideAppBar([VoidCallback? callback]) {
-    if (_hideAppBar != null) {
-      _hideAppBar!(callback);
-    }
-  }
-
-  static void stopAppBarAnimation() {
-    if (_stopAppBarAnimation != null) {
-      _stopAppBarAnimation!();
+      _showAppBar!();
     }
   }
 
@@ -153,16 +129,9 @@ abstract class PostListController extends ChangeNotifier {
 
   bool _isDisposed = false;
 
-  final Rx<PostListScrollState> _scrollState =
-      Rx(PostListScrollState.inAppBarRange);
+  final Rxn<ScrollController> _scrollController = Rxn(null);
 
-  final RxDouble _headerHeight = appBarHeight.obs;
-
-  OnHeightCallback? _setAppBarHeight;
-
-  OnOffsetCallback? correctScrollOffset;
-
-  GetPositionCallback? getTopPosition;
+  double _headerHeight = appBarHeight;
 
   PostListType get postListType;
 
@@ -172,20 +141,18 @@ abstract class PostListController extends ChangeNotifier {
 
   set page(int page) => _page.value = page;
 
-  PostListScrollState get scrollState => _scrollState.value;
+  ScrollController? get scrollController => _scrollController.value;
 
-  set scrollState(PostListScrollState status) => _scrollState.value = status;
+  set scrollController(ScrollController? controller) =>
+      _scrollController.value = controller;
 
-  double get headerHeight =>
-      _headerHeight.value.clamp(0.0, PostListAppBar.height);
+  double get headerHeight => _headerHeight.clamp(0.0, PostListAppBar.height);
 
   set headerHeight(double height) {
     final height_ = height.clamp(0.0, PostListAppBar.height);
-    _headerHeight.value = height_;
+    _headerHeight = height_;
     _appBarHeight.value = height_;
   }
-
-  double? get topPosition => getTopPosition != null ? getTopPosition!() : null;
 
   bool get isThread => postListType.isThread;
 
@@ -240,24 +207,8 @@ abstract class PostListController extends ChangeNotifier {
     }
   }
 
-  void setAppBarHeight(double height) {
-    if (_setAppBarHeight != null) {
-      _setAppBarHeight!(height);
-    }
-  }
-
-  void jumpToOffset(double offset) {
-    if (correctScrollOffset != null) {
-      correctScrollOffset!(offset);
-    }
-  }
-
   StreamSubscription<int> listenPage(OnPageCallback onPage) =>
       _page.listen(onPage);
-
-  StreamSubscription<double> listenHeaderHeight(
-          OnHeightCallback onHeaderHeight) =>
-      _headerHeight.listen(onHeaderHeight);
 
   @override
   void dispose() {
@@ -396,11 +347,10 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                     : null),
             child: AppBar(
               primary: !(_backdropController.isShowBackLayer ||
-                  SettingsService.isAutoHideAppBar),
-              elevation:
-                  (SettingsService.isAutoHideAppBar || controller.isHistory)
-                      ? 0.0
-                      : null,
+                  settings.isAutoHideAppBar),
+              elevation: (settings.isAutoHideAppBar || controller.isHistory)
+                  ? 0.0
+                  : null,
               leading: !(_backdropController.isShowBackLayer ||
                       _tabAndForumListController.isShowed)
                   ? (stacks.controllersCount() > 1
@@ -451,7 +401,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           );
 
-          return SettingsService.isAutoHideAppBar
+          return settings.isAutoHideAppBar
               ? SizedBox(
                   height: height,
                   child: _AnimatedAppBar(controller: controller, child: appBar))
@@ -485,6 +435,14 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
 
   late final StreamSubscription<bool> _backdropSubscription;
 
+  ScrollController? _scrollController;
+
+  late StreamSubscription<ScrollController?> _scrollControllerSubscription;
+
+  bool _isShowing = false;
+
+  bool _isHiding = false;
+
   double get _height =>
       (_animationController.upperBound - _animationController.value) *
       PostListAppBar.height;
@@ -492,55 +450,96 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
   set _height(double height) => _animationController.value =
       (PostListAppBar.height - height) / PostListAppBar.height;
 
-  PostListScrollState get _scrollState => widget.controller.scrollState;
+  void _show() {
+    if (!_isShowing) {
+      _isShowing = true;
 
-  double get _headerHeight => widget.controller.headerHeight;
-
-  set _headerHeight(double height) => widget.controller.headerHeight = height;
-
-  void _show([VoidCallback? callback]) {
-    _animationController
-        .animateBack(_animationController.lowerBound,
-            duration: _animationDuration *
-                (_animationController.value - _animationController.lowerBound),
-            curve: AppTheme.slideCurve)
-        .whenCompleteOrCancel(callback ?? () {});
+      _animationController
+          .animateBack(_animationController.lowerBound,
+              duration: _animationDuration *
+                  (_animationController.value -
+                      _animationController.lowerBound),
+              curve: AppTheme.slideCurve)
+          .whenCompleteOrCancel(() => _isShowing = false);
+    }
   }
 
-  void _hide([VoidCallback? callback]) {
-    _animationController
-        .animateTo(_animationController.upperBound,
-            duration: _animationDuration *
-                (_animationController.upperBound - _animationController.value),
-            curve: AppTheme.slideCurve)
-        .whenCompleteOrCancel(callback ?? () {});
+  void _hide() {
+    if (!_isHiding) {
+      _isHiding = true;
+
+      _animationController
+          .animateTo(_animationController.upperBound,
+              duration: _animationDuration *
+                  (_animationController.upperBound -
+                      _animationController.value),
+              curve: AppTheme.slideCurve)
+          .whenCompleteOrCancel(() => _isHiding = false);
+    }
   }
 
-  void _setAppBarHeight(double height) => _height = height;
+  void _updateController([double? oldHeight]) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (_scrollController != null && _scrollController!.hasClients) {
+        final position = _scrollController!.position;
+        final offset = position.pixels - position.minScrollExtent;
 
-  void _setHeaderHeight() => _headerHeight = _height;
+        if (oldHeight != null) {
+          if (offset >= 0.0 && offset <= PostListAppBar.height) {
+            _height = max(oldHeight, PostListAppBar.height - offset);
+          }
+        }
+      } else {}
+    });
+  }
 
-  void _update() {
-    final height = _height;
-    if (!_scrollState.isOutOfAppBarRange) {
-      if (height <= _headerHeight) {
-        _height = _headerHeight;
+  void _updateHeight() {
+    final scrollController = _scrollController;
+    if (scrollController != null && scrollController.hasClients) {
+      final height = _height;
+      final position = scrollController.position;
+      final offset = position.pixels - position.minScrollExtent;
+
+      if (offset >= 0.0 && offset <= PostListAppBar.height) {
+        if ((position.userScrollDirection != ScrollDirection.forward ||
+                height != PostListAppBar.height) &&
+            !_isShowing) {
+          _height = PostListAppBar.height - offset;
+        }
+      } else if (offset < 0.0) {
+        _height = PostListAppBar.height;
       } else {
-        widget.controller.scrollState = PostListScrollState.outOfAppBarRange;
-        _headerHeight = height;
-        widget.controller.jumpToOffset(height - _headerHeight);
-      }
-    } else {
-      final topPosition = widget.controller.topPosition;
-      if (topPosition != null &&
-          topPosition >= 0.0 &&
-          topPosition <= PostListAppBar.height) {
-        _height = max(height, PostListAppBar.height - topPosition);
-      } else {
-        _headerHeight = height;
+        switch (position.userScrollDirection) {
+          case ScrollDirection.forward:
+            if (offset > 2 * PostListAppBar.height) {
+              if (height < PostListAppBar.height) {
+                _show();
+              }
+            }
+
+            break;
+          case ScrollDirection.reverse:
+            if (height > 0.0) {
+              _hide();
+            }
+
+            break;
+          default:
+        }
       }
     }
   }
+
+  void _updateScrollController(ScrollController? controller) {
+    if (_scrollController != controller) {
+      _scrollController?.removeListener(_updateHeight);
+      _scrollController = controller;
+      _updateController();
+      _scrollController?.addListener(_updateHeight);
+    }
+  }
+
+  void _setHeight() => widget.controller.headerHeight = _height;
 
   double _elevation(double? elevation) => !widget.controller.isHistory
       ? ((_animationController.upperBound - _animationController.value) *
@@ -553,19 +552,20 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
 
     _animationController =
         AnimationController(vsync: this, duration: _animationDuration);
-    _setHeaderHeight();
-    _animationController.addListener(_setHeaderHeight);
-    PostListController._showAppBar = _show;
-    PostListController._hideAppBar = _hide;
-    PostListController._stopAppBarAnimation = _animationController.stop;
+    _animationController.addListener(_setHeight);
 
     _slideAnimation = Tween(begin: Offset.zero, end: const Offset(0.0, -1.0))
         .animate(_animationController);
 
-    widget.controller._setAppBarHeight = _setAppBarHeight;
+    PostListController._showAppBar = _show;
+    _scrollController = widget.controller.scrollController;
+    _updateController();
+    _scrollController?.addListener(_updateHeight);
+    _scrollControllerSubscription =
+        widget.controller._scrollController.listen(_updateScrollController);
+
     _backdropSubscription = BackdropController.controller.listen((isShowed) {
       if (isShowed) {
-        widget.controller.scrollState = PostListScrollState.outOfAppBarRange;
         _show();
         PostListController.scrollDirection = ScrollDirection.idle;
       }
@@ -576,22 +576,32 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
   void didUpdateWidget(covariant _AnimatedAppBar oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    if (widget.controller.scrollController !=
+        oldWidget.controller.scrollController) {
+      _scrollControllerSubscription.cancel();
+      _scrollController?.removeListener(_updateHeight);
+      _scrollController = null;
+
+      _scrollController = widget.controller.scrollController;
+      _scrollController?.addListener(_updateHeight);
+      _scrollControllerSubscription =
+          widget.controller._scrollController.listen(_updateScrollController);
+    }
+
     if (widget.controller != oldWidget.controller) {
-      oldWidget.controller._setAppBarHeight = null;
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) => _update());
-      widget.controller._setAppBarHeight = _setAppBarHeight;
+      _updateController(oldWidget.controller.headerHeight);
     }
   }
 
   @override
   void dispose() {
-    widget.controller._setAppBarHeight = null;
     _backdropSubscription.cancel();
-    _animationController.removeListener(_setHeaderHeight);
     PostListController._appBarHeight.value = PostListAppBar.height;
     PostListController._showAppBar = null;
-    PostListController._hideAppBar = null;
-    PostListController._stopAppBarAnimation = null;
+    _scrollControllerSubscription.cancel();
+    _scrollController?.removeListener(_updateHeight);
+    _scrollController = null;
+    _animationController.removeListener(_setHeight);
     _animationController.dispose();
 
     super.dispose();
@@ -615,17 +625,6 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
       ),
     );
   }
-}
-
-class _PostListHeader extends StatelessWidget {
-  final PostListController controller;
-
-  // ignore: unused_element
-  const _PostListHeader({super.key, required this.controller});
-
-  @override
-  Widget build(BuildContext context) =>
-      Obx(() => SizedBox(height: controller.headerHeight));
 }
 
 class _PostListPage<T> extends Page<T> {
@@ -666,14 +665,7 @@ class _PostListPage<T> extends Page<T> {
                   ? theme.cardColor
                   : theme.scaffoldBackgroundColor)
               : theme.scaffoldBackgroundColor,
-          child: SettingsService.isAutoHideAppBar
-              ? Column(
-                  children: [
-                    _PostListHeader(controller: controller),
-                    Expanded(child: body),
-                  ],
-                )
-              : body,
+          child: body,
         );
       },
     );
@@ -767,7 +759,6 @@ class PostListPageState extends State<PostListPage> {
 
   @override
   Widget build(BuildContext context) {
-    //final settings = SettingsService.to;
     final stacks = ControllerStacksService.to;
     final scaffold = Scaffold.of(context);
 
@@ -1157,10 +1148,12 @@ class _CompactTabAndForumList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
     final Widget column = LayoutBuilder(
       builder: (context, constraints) => Obx(
         () => SizedBox(
-          height: (SettingsService.isAutoHideAppBar &&
+          height: (settings.isAutoHideAppBar &&
                   !SettingsService.isBackdropUI &&
                   topPadding != null)
               ? (constraints.maxHeight -
@@ -1272,12 +1265,13 @@ class _TabAndForumListState extends State<_TabAndForumList>
 
   @override
   Widget build(BuildContext context) {
+    final settings = SettingsService.to;
     final textTheme = Theme.of(context).textTheme;
 
     final Widget column = LayoutBuilder(
       builder: (context, constraints) => Obx(
         () => SizedBox(
-          height: (SettingsService.isAutoHideAppBar &&
+          height: (settings.isAutoHideAppBar &&
                   !SettingsService.isBackdropUI &&
                   widget.topPadding != null)
               ? (constraints.maxHeight -
@@ -1646,9 +1640,6 @@ class _PostListViewState extends State<PostListView>
   static EditPostBottomSheetController get _editPostBSController =>
       BottomSheetController.editPostController;
 
-  /* static BottomSheetController get _tabAndForumListBSController =>
-      BottomSheetController._tabAndForumListController; */
-
   static _TabAndForumListController get _tabAndForumListController =>
       _TabAndForumListController._controller;
 
@@ -1899,7 +1890,7 @@ class _PostListViewState extends State<PostListView>
                 ],
               );
 
-              if (SettingsService.isAutoHideAppBar) {
+              if (settings.isAutoHideAppBar) {
                 body = Stack(
                   children: [
                     if (topPadding > 0.0)
@@ -1944,10 +1935,9 @@ class _PostListViewState extends State<PostListView>
               Widget scaffold = Scaffold(
                 key: PostListView._scaffoldKey,
                 primary: !(_backdropController.isShowBackLayer ||
-                    SettingsService.isAutoHideAppBar),
-                appBar: !SettingsService.isAutoHideAppBar
-                    ? const PostListAppBar()
-                    : null,
+                    settings.isAutoHideAppBar),
+                appBar:
+                    !settings.isAutoHideAppBar ? const PostListAppBar() : null,
                 body: body,
                 drawerEnableOpenDragGesture:
                     !(SettingsService.isSwipeablePage ||

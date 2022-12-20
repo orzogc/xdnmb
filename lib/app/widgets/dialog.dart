@@ -31,10 +31,11 @@ import 'scroll.dart';
 import 'thread.dart';
 
 Future<T?> postListDialog<T>(Widget widget, {int? index}) {
+  final settings = SettingsService.to;
   final data = PersistentDataService.to;
 
   return Get.dialog<T>(Obx(() {
-    final isAutoHideAppBar = SettingsService.isAutoHideAppBar;
+    final isAutoHideAppBar = settings.isAutoHideAppBar;
     final isShowBottomBar = PostListBottomBar.isShowed;
 
     return (isAutoHideAppBar || isShowBottomBar)

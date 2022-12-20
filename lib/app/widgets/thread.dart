@@ -442,7 +442,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   BrowseHistory? _history;
 
-  late final PostListScrollController _anchorController;
+  late final AnchorScrollController _anchorController;
 
   /// 第一次加载是否要跳转
   final RxBool _isToJump = false.obs;
@@ -690,9 +690,10 @@ class _ThreadBodyState extends State<ThreadBody> {
     final blacklist = BlacklistService.to;
     final postId = controller.id;
 
-    return NotifyBuilder(
-      animation: controller,
-      builder: (context, child) {
+    return PostListScrollView(
+      controller: controller,
+      scrollController: _anchorController,
+      builder: (context, scrollController, refresh) {
         final firstPage = controller.page;
 
         bool isBlocked() {
@@ -701,6 +702,11 @@ class _ThreadBodyState extends State<ThreadBody> {
           return (mainPost == null || !mainPost.isAdmin) &&
               (blacklist.hasPost(postId) ||
                   (mainPost != null && blacklist.hasUser(mainPost.userHash)));
+        }
+
+        if (isBlocked()) {
+          WidgetsBinding.instance
+              .addPostFrameCallback((timeStamp) => showHidden());
         }
 
         return !isBlocked()
@@ -713,44 +719,38 @@ class _ThreadBodyState extends State<ThreadBody> {
                       maintainState: true,
                       maintainAnimation: true,
                       maintainSize: true,
-                      child: PostListRefresher(
-                        controller: controller,
-                        scrollController: _anchorController,
-                        builder: (context, scrollController, refresh) =>
-                            BiListView<PostWithPage>(
-                          key: ValueKey<int>(refresh),
-                          controller: biListViewController,
-                          scrollController: scrollController,
-                          initialPage: firstPage,
-                          fetch: (page) async {
-                            try {
-                              return await _fetch(firstPage, page);
-                            } catch (e) {
-                              _isToJump.value = false;
-                              rethrow;
-                            }
-                          },
-                          itemBuilder: (context, post, index) =>
-                              _itemBuilder(context, post),
-                          header: PostListHeader(controller: controller),
-                          noItemsFoundBuilder: (context) => Center(
-                            child: Text(
-                              '没有串',
-                              style: AppTheme.boldRedPostContentTextStyle,
-                              strutStyle: AppTheme.boldRedPostContentStrutStyle,
-                            ),
+                      child: BiListView<PostWithPage>(
+                        key: ValueKey<int>(refresh),
+                        controller: biListViewController,
+                        scrollController: scrollController,
+                        initialPage: firstPage,
+                        fetch: (page) async {
+                          try {
+                            return await _fetch(firstPage, page);
+                          } catch (e) {
+                            _isToJump.value = false;
+                            rethrow;
+                          }
+                        },
+                        itemBuilder: (context, post, index) =>
+                            _itemBuilder(context, post),
+                        noItemsFoundBuilder: (context) => Center(
+                          child: Text(
+                            '没有串',
+                            style: AppTheme.boldRedPostContentTextStyle,
+                            strutStyle: AppTheme.boldRedPostContentStrutStyle,
                           ),
-                          onNoMoreItems: () => _isNoMoreItems = true,
-                          onRefreshAndLoadMore: () {
-                            if (isBlocked()) {
-                              controller.refresh();
-                            }
-                          },
-                          fetchFallback: (page) => Future.value(
-                            [PostWithPage(const _DumbPost(), page)],
-                          ),
-                          getMaxPage: () => _maxPage,
                         ),
+                        onNoMoreItems: () => _isNoMoreItems = true,
+                        onRefreshAndLoadMore: () {
+                          if (isBlocked()) {
+                            controller.refresh();
+                          }
+                        },
+                        fetchFallback: (page) => Future.value(
+                          [PostWithPage(const _DumbPost(), page)],
+                        ),
+                        getMaxPage: () => _maxPage,
                       ),
                     ),
                   ],
@@ -774,7 +774,6 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   void _setToJump() {
     _isToJump.value = true;
-    controller.scrollState = PostListScrollState.outOfAppBarRange;
     controller.removeListener(_cancelJump);
     controller.addListener(_cancelJump);
   }
@@ -785,8 +784,12 @@ class _ThreadBodyState extends State<ThreadBody> {
   void initState() {
     super.initState();
 
-    _anchorController = PostListScrollController(
-      controller: controller,
+    final autoHideAppBar = SettingsService.to.autoHideAppBar;
+
+    _anchorController = AnchorScrollController(
+      initialScrollOffset:
+          autoHideAppBar ? -PostListController.appBarHeight : 0.0,
+      getAnchorOffset: autoHideAppBar ? () => controller.headerHeight : null,
       onIndexChanged: (index, userScroll) {
         controller.page = index.getPageFromPostIndex();
         controller.browsePostId = index.getPostIdFromPostIndex();

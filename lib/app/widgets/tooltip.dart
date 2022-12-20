@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/state_manager.dart';
+import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
 import '../utils/theme.dart';
@@ -22,7 +22,7 @@ class QuestionTooltip extends StatelessWidget {
         return Tooltip(
           triggerMode: TooltipTriggerMode.tap,
           showDuration: const Duration(seconds: 5),
-          preferBelow: SettingsService.isAutoHideAppBar,
+          preferBelow: settings.isAutoHideAppBar,
           message: message,
           child: DecoratedBox(
             decoration: BoxDecoration(

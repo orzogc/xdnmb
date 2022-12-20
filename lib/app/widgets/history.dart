@@ -652,7 +652,7 @@ class _BrowseHistoryBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
 
-    return PostListRefresher(
+    return PostListScrollView(
       controller: controller,
       builder: (context, scrollController, refresh) =>
           ValueListenableBuilder<bool>(
@@ -697,7 +697,6 @@ class _BrowseHistoryBody extends StatelessWidget {
             },
             itemBuilder: (context, browse, index) => _BrowseHistoryItem(
                 browse: browse, getImage: getImage, search: search),
-            header: PostListHeader(controller: controller),
             noItemsFoundBuilder: (context) => Center(
               child: Text(
                 '没有浏览记录',
@@ -805,7 +804,7 @@ class _PostHistoryBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
 
-    return PostListRefresher(
+    return PostListScrollView(
       controller: controller,
       builder: (context, scrollController, refresh) =>
           ValueListenableBuilder<bool>(
@@ -850,7 +849,6 @@ class _PostHistoryBody extends StatelessWidget {
             },
             itemBuilder: (context, mainPost, index) => _PostHistoryItem(
                 mainPost: mainPost, getImage: getImage, search: search),
-            header: PostListHeader(controller: controller),
             noItemsFoundBuilder: (context) => Center(
               child: Text(
                 '没有主题记录',
@@ -1000,7 +998,7 @@ class _ReplyHistoryBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final history = PostHistoryService.to;
 
-    return PostListRefresher(
+    return PostListScrollView(
       controller: controller,
       builder: (context, scrollController, refresh) =>
           ValueListenableBuilder<bool>(
@@ -1045,7 +1043,6 @@ class _ReplyHistoryBody extends StatelessWidget {
             },
             itemBuilder: (context, reply, index) => _ReplyHistoryItem(
                 reply: reply, getImage: getImage, search: search),
-            header: PostListHeader(controller: controller),
             noItemsFoundBuilder: (context) => Center(
               child: Text(
                 '没有回复记录',
@@ -1076,6 +1073,8 @@ class _HistoryBodyState extends State<HistoryBody> {
   late StreamSubscription<List<DateTimeRange?>> _dateRangeSubscription;
 
   final HashMap<int, _Image?> _images = HashMap();
+
+  late final int _initialIndex;
 
   Future<_Image?> _getImage(int postId) async {
     if (!_images.containsKey(postId)) {
@@ -1115,6 +1114,8 @@ class _HistoryBodyState extends State<HistoryBody> {
   @override
   void initState() {
     super.initState();
+
+    _initialIndex = widget.controller.pageIndex;
 
     _pageIndexSubscription = widget.controller._pageIndex.listen(_trySave);
     _dateRangeSubscription = widget.controller._dateRange.listen(_trySave);
@@ -1240,22 +1241,29 @@ class _HistoryBodyState extends State<HistoryBody> {
             },
           ),
         ),
-        Material(
-          elevation:
-              theme.appBarTheme.elevation ?? PostListAppBar.defaultElevation,
-          color: theme.primaryColor,
-          child: PageViewTabBar(
-            pageController: widget.controller._pageController,
-            initialIndex: widget.controller.pageIndex,
-            onIndex: (index) {
-              if (widget.controller.pageIndex != index) {
-                popAllPopup();
-                widget.controller._pageController.animateToPage(index,
-                    duration: PageViewTabBar.animationDuration,
-                    curve: Curves.easeIn);
-              }
-            },
-            tabs: const [Tab(text: '浏览'), Tab(text: '主题'), Tab(text: '回复')],
+        Obx(
+          () => Positioned(
+            left: 0.0,
+            top: PostListController.appBarHeight,
+            right: 0.0,
+            child: Material(
+              elevation: theme.appBarTheme.elevation ??
+                  PostListAppBar.defaultElevation,
+              color: theme.primaryColor,
+              child: PageViewTabBar(
+                pageController: widget.controller._pageController,
+                initialIndex: _initialIndex,
+                onIndex: (index) {
+                  if (widget.controller.pageIndex != index) {
+                    popAllPopup();
+                    widget.controller._pageController.animateToPage(index,
+                        duration: PageViewTabBar.animationDuration,
+                        curve: Curves.easeIn);
+                  }
+                },
+                tabs: const [Tab(text: '浏览'), Tab(text: '主题'), Tab(text: '回复')],
+              ),
+            ),
           ),
         ),
       ],

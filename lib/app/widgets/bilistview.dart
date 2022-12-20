@@ -6,7 +6,9 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
+import '../data/services/settings.dart';
 import '../data/services/user.dart';
+import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/theme.dart';
@@ -26,6 +28,36 @@ class _MinHeightIndicator extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: _minHeight),
         child: child,
       );
+}
+
+class _BiListViewRefreshHeader extends MaterialHeader {
+  const _BiListViewRefreshHeader({super.clamping});
+
+  @override
+  Widget build(BuildContext context, IndicatorState state) {
+    final settings = SettingsService.to;
+
+    return Obx(() => settings.isAutoHideAppBar
+        ? Padding(
+            padding: EdgeInsets.only(top: PostListController.appBarHeight),
+            child: super.build(context, state),
+          )
+        : super.build(context, state));
+  }
+}
+
+class _BiListViewHeader extends StatelessWidget {
+  // ignore: unused_element
+  const _BiListViewHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return Obx(() => settings.isAutoHideAppBar
+        ? const SizedBox(height: PostListAppBar.height)
+        : const SizedBox.shrink());
+  }
 }
 
 /// 什么都不显示的[Widget]
@@ -74,8 +106,6 @@ class BiListView<T> extends StatefulWidget {
 
   final ItemWidgetBuilder<T> itemBuilder;
 
-  final Widget? header;
-
   final Widget? separator;
 
   final WidgetBuilder? noItemsFoundBuilder;
@@ -98,7 +128,6 @@ class BiListView<T> extends StatefulWidget {
       this.canLoadMoreAtBottom = true,
       required this.fetch,
       required this.itemBuilder,
-      this.header,
       this.separator,
       this.noItemsFoundBuilder,
       this.onNoMoreItems,
@@ -501,7 +530,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
       padding: const EdgeInsets.symmetric(horizontal: 5.0),
       child: EasyRefresh.builder(
         controller: _refreshController,
-        header: const MaterialHeader(clamping: false),
+        header: const _BiListViewRefreshHeader(clamping: false),
         footer: widget.lastPage == null
             ? const MaterialFooter(clamping: false)
             : null,
@@ -542,8 +571,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
                 offset: position,
                 center: _downKey,
                 slivers: [
-                  if (widget.header != null)
-                    SliverToBoxAdapter(child: widget.header),
+                  const SliverToBoxAdapter(child: _BiListViewHeader()),
                   if (_initialPage > 1)
                     PagedSliverList(
                       key: _upKey,

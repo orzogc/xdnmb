@@ -141,7 +141,7 @@ class _FeedBodyState extends State<FeedBody> {
 
     return ValueListenableBuilder<Box>(
       valueListenable: settings.feedIdListenable,
-      builder: (context, value, child) => PostListRefresher(
+      builder: (context, value, child) => PostListScrollView(
         controller: widget.controller,
         useAnchorScrollController: true,
         builder: (context, scrollController, refresh) =>
@@ -181,7 +181,6 @@ class _FeedBodyState extends State<FeedBody> {
                   )
                 : const SizedBox.shrink(),
           ),
-          header: PostListHeader(controller: widget.controller),
           noItemsFoundBuilder: (context) => Center(
             child: Text(
               '没有订阅',
