@@ -4,8 +4,14 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/blacklist.dart';
 import '../data/services/settings.dart';
+import 'image.dart';
+import 'regex.dart';
 
 const int _int32Max = 4294967295;
+
+const int imageHashLength = 20;
+
+const int _imageNameHashLength = 13;
 
 extension ParseStringExtension on String? {
   int? tryParseInt() => this != null ? int.tryParse(this!) : null;
@@ -55,6 +61,25 @@ extension PostExtension on PostBase {
     final blacklist = BlacklistService.to;
 
     return !isAdmin && (blacklist.hasPost(id) || blacklist.hasUser(userHash));
+  }
+
+  String? thumbImageKey() =>
+      hasImage() ? hashImage('thumb/${imageFile()}', imageHashLength) : null;
+
+  String? imageKey() =>
+      hasImage() ? hashImage('image/${imageFile()}', imageHashLength) : null;
+
+  String? imageHashFileName() {
+    if (hasImage()) {
+      final imageName = imageFile()!;
+      final hash = hashImage(imageName, _imageNameHashLength);
+
+      return (Regex.replaceImageHash(imageName: imageName, hash: hash)
+              ?.replaceAll('/', '-')) ??
+          hash;
+    }
+
+    return null;
   }
 }
 

@@ -455,20 +455,24 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   final BiListViewController biListViewController = BiListViewController();
 
+  late final Future<void> _getHistory;
+
+  ThreadTypeController get controller => widget.controller;
+
   Future<void> _saveBrowseHistory() async {
     if (!_isSavingBrowseHistory) {
       _isSavingBrowseHistory = true;
 
       try {
         await Future.delayed(_saveBrowseHistoryPeriod, () async {
-          final post = widget.controller.post;
-          final browsePostId = widget.controller.browsePostId;
-          if (post is Post && browsePostId != null) {
+          final post = controller.post;
+          final browsePostId = controller.browsePostId;
+          if (_history != null && post is Post && browsePostId != null) {
             _history!.update(
                 mainPost: post,
-                browsePage: widget.controller.page,
+                browsePage: controller.page,
                 browsePostId: browsePostId,
-                isOnlyPo: widget.controller.isOnlyPoThread);
+                isOnlyPo: controller.isOnlyPoThread);
             await PostHistoryService.to.saveBrowseHistory(_history!);
           }
         });
@@ -478,10 +482,10 @@ class _ThreadBodyState extends State<ThreadBody> {
     }
   }
 
-  void _saveHistoryAndJumpToIndex(Thread thread, int firstPage, int page) {
+  Future<void> _saveHistoryAndJumpToIndex(
+      Thread thread, int firstPage, int page) async {
     if (page == firstPage) {
       final history = PostHistoryService.to;
-      final controller = widget.controller;
       final jumpToId = controller.jumpToId;
       final isOnlyPoThread = controller.isOnlyPoThread;
 
@@ -506,9 +510,11 @@ class _ThreadBodyState extends State<ThreadBody> {
               browsePage: page,
               browsePostId: firstPost.id,
               isOnlyPo: isOnlyPoThread);
-          history.saveBrowseHistory(_history!);
-          _isToJump.value = false;
-        } else if (_isToJump.value) {
+          await history.saveBrowseHistory(_history!);
+          //_isToJump.value = false;
+        }
+
+        if (_history != null && _isToJump.value) {
           final index = jumpToId?.postIdToPostIndex(page) ??
               _history!.toIndex(isOnlyPo: isOnlyPoThread);
           if (index != null) {
@@ -529,7 +535,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                         if (firstPost.id != id) {
                           while (mounted &&
                               _isToJump.value &&
-                              id != widget.controller.browsePostId &&
+                              id != controller.browsePostId &&
                               !_isNoMoreItems) {
                             await Future.delayed(
                                 const Duration(milliseconds: 50), () async {
@@ -580,7 +586,6 @@ class _ThreadBodyState extends State<ThreadBody> {
   Future<List<PostWithPage>> _fetch(int firstPage, int page) async {
     final client = XdnmbClientService.to.client;
     final blacklist = BlacklistService.to;
-    final controller = widget.controller;
     final postId = controller.id;
 
     final thread = controller.isThread
@@ -604,7 +609,7 @@ class _ThreadBodyState extends State<ThreadBody> {
       return [];
     }
 
-    _saveHistoryAndJumpToIndex(thread, firstPage, page);
+    await _saveHistoryAndJumpToIndex(thread, firstPage, page);
 
     final List<PostWithPage> posts = [];
     if (page == 1) {
@@ -638,7 +643,6 @@ class _ThreadBodyState extends State<ThreadBody> {
     }
 
     final theme = Theme.of(context);
-    final controller = widget.controller;
     final mainPost = controller.post;
 
     final Widget item = PostInkWell(
@@ -684,7 +688,6 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   Widget _body() {
     final blacklist = BlacklistService.to;
-    final controller = widget.controller;
     final postId = controller.id;
 
     return NotifyBuilder(
@@ -771,54 +774,78 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   void _setToJump() {
     _isToJump.value = true;
-    widget.controller.scrollState = PostListScrollState.outOfAppBarRange;
-    widget.controller.removeListener(_cancelJump);
-    widget.controller.addListener(_cancelJump);
+    controller.scrollState = PostListScrollState.outOfAppBarRange;
+    controller.removeListener(_cancelJump);
+    controller.addListener(_cancelJump);
   }
 
-  void _trySave(int page) => widget.controller.trySave();
+  void _trySave(int page) => controller.trySave();
 
   @override
   void initState() {
     super.initState();
 
     _anchorController = PostListScrollController(
-      controller: widget.controller,
+      controller: controller,
       onIndexChanged: (index, userScroll) {
-        widget.controller.page = index.getPageFromPostIndex();
-        widget.controller.browsePostId = index.getPostIdFromPostIndex();
+        controller.page = index.getPageFromPostIndex();
+        controller.browsePostId = index.getPostIdFromPostIndex();
 
         _saveBrowseHistory();
       },
     );
 
-    _pageSubscription = widget.controller.listenPage(_trySave);
+    _pageSubscription = controller.listenPage(_trySave);
 
-    final replyCount = widget.controller.post?.replyCount;
+    final replyCount = controller.post?.replyCount;
     if (replyCount != null) {
       _maxPage = replyCount > 0 ? (replyCount / 19).ceil() : 1;
     }
 
-    if (widget.controller.isThread) {
-      (widget.controller as ThreadController).loadMore =
-          biListViewController.loadMore;
+    if (controller.isThread) {
+      (controller as ThreadController).loadMore = biListViewController.loadMore;
     }
+
+    _getHistory = Future(() async {
+      final settings = SettingsService.to;
+
+      _history = await PostHistoryService.to.getBrowseHistory(controller.id);
+
+      if (controller.jumpToId == null) {
+        if (!controller.cancelAutoJump &&
+            settings.isJumpToLastBrowsePage &&
+            _history != null) {
+          final page = controller.isThread
+              ? _history!.browsePage
+              : _history!.onlyPoBrowsePage;
+          if (page != null) {
+            controller.page = page;
+
+            if (settings.isJumpToLastBrowsePosition) {
+              _setToJump();
+            }
+          }
+        }
+      } else {
+        _setToJump();
+      }
+    });
   }
 
   @override
   void didUpdateWidget(covariant ThreadBody oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.controller != oldWidget.controller) {
+    if (controller != oldWidget.controller) {
       if (oldWidget.controller.isThread) {
         (oldWidget.controller as ThreadController).loadMore = null;
       }
       oldWidget.controller.removeListener(_cancelJump);
 
       _pageSubscription.cancel();
-      _pageSubscription = widget.controller.listenPage(_trySave);
-      if (widget.controller.isThread) {
-        (widget.controller as ThreadController).loadMore =
+      _pageSubscription = controller.listenPage(_trySave);
+      if (controller.isThread) {
+        (controller as ThreadController).loadMore =
             biListViewController.loadMore;
       }
     }
@@ -826,66 +853,35 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   @override
   void dispose() {
-    if (widget.controller.isThread) {
-      (widget.controller as ThreadController).loadMore = null;
+    if (controller.isThread) {
+      (controller as ThreadController).loadMore = null;
     }
 
     _isToJump.value = false;
     _anchorController.dispose();
-    widget.controller.removeListener(_cancelJump);
+    controller.removeListener(_cancelJump);
     _pageSubscription.cancel();
 
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-    final controller = widget.controller;
-    final postId = controller.id;
-    final cancelAutoJump = controller.cancelAutoJump;
-    final jumpToId = controller.jumpToId;
+  Widget build(BuildContext context) => FutureBuilder<void>(
+        future: _getHistory,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasError) {
+            showToast('读取数据库出错：${snapshot.error!}');
+          }
 
-    return FutureBuilder(
-      future: _history == null
-          ? Future(() async {
-              _history = await PostHistoryService.to.getBrowseHistory(postId);
+          if (snapshot.connectionState == ConnectionState.none ||
+              snapshot.connectionState == ConnectionState.done) {
+            return _body();
+          }
 
-              if (jumpToId == null) {
-                if (!cancelAutoJump &&
-                    settings.isJumpToLastBrowsePage &&
-                    _history != null) {
-                  final page = controller.isThread
-                      ? _history!.browsePage
-                      : _history!.onlyPoBrowsePage;
-                  if (page != null) {
-                    controller.page = page;
-
-                    if (settings.isJumpToLastBrowsePosition) {
-                      _setToJump();
-                    }
-                  }
-                }
-              } else {
-                _setToJump();
-              }
-            })
-          : null,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasError) {
-          showToast('读取数据库出错：${snapshot.error!}');
-        }
-
-        if (snapshot.connectionState == ConnectionState.none ||
-            snapshot.connectionState == ConnectionState.done) {
-          return _body();
-        }
-
-        return const SizedBox.shrink();
-      },
-    );
-  }
+          return const SizedBox.shrink();
+        },
+      );
 }
 
 Widget _itemWithDivider(Widget widget) => Column(

@@ -98,17 +98,17 @@ class _AppLicense extends StatelessWidget {
 }
 
 class _AppVersion extends StatelessWidget {
+  final Future<String> _getVersion =
+      PackageInfo.fromPlatform().then((info) => info.version);
+
   // ignore: unused_element
-  const _AppVersion({super.key});
+  _AppVersion({super.key});
 
   @override
   Widget build(BuildContext context) => ListTile(
         title: const Text('版本'),
         subtitle: FutureBuilder<String>(
-          future: Future(() async {
-            final info = await PackageInfo.fromPlatform();
-            return info.version;
-          }),
+          future: _getVersion,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done &&
                 snapshot.hasData) {
@@ -135,20 +135,22 @@ class SettingsView extends StatelessWidget {
         child: Scaffold(
           appBar: AppBar(title: const Text('设置')),
           body: ListView(
-            children: const [
-              ListTile(title: Text('饼干'), onTap: AppRoutes.toUser),
-              ListTile(title: Text('黑名单'), onTap: AppRoutes.toBlacklist),
-              ListTile(title: Text('基本设置'), onTap: AppRoutes.toBasicSettings),
-              ListTile(title: Text('界面设置'), onTap: AppRoutes.toUISettings),
-              ListTile(
+            children: [
+              const ListTile(title: Text('饼干'), onTap: AppRoutes.toUser),
+              const ListTile(title: Text('黑名单'), onTap: AppRoutes.toBlacklist),
+              const ListTile(
+                  title: Text('基本设置'), onTap: AppRoutes.toBasicSettings),
+              const ListTile(
+                  title: Text('界面设置'), onTap: AppRoutes.toUISettings),
+              const ListTile(
                   title: Text('高级设置'), onTap: AppRoutes.toAdvancedSettings),
-              _DarkMode(),
-              _Feedback(),
-              ListTile(title: Text('客户端作者'), subtitle: Text('Orzogc')),
-              _AuthorQRCodeSponsor(),
-              _AuthorUrlSponsor(),
-              _AppSource(),
-              _AppLicense(),
+              const _DarkMode(),
+              const _Feedback(),
+              const ListTile(title: Text('客户端作者'), subtitle: Text('Orzogc')),
+              const _AuthorQRCodeSponsor(),
+              const _AuthorUrlSponsor(),
+              const _AppSource(),
+              const _AppLicense(),
               _AppVersion(),
             ],
           ),

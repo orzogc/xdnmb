@@ -100,6 +100,48 @@ class _Confirm extends StatelessWidget {
       );
 }
 
+typedef _BuildPainter = Widget Function(Uint8List image);
+
+class _Canvas extends StatelessWidget {
+  final BoxConstraints constraints;
+
+  final _BuildPainter painter;
+
+  final Future<Uint8List> _paint;
+
+  // ignore: unused_element
+  _Canvas({super.key, required this.constraints, required this.painter})
+      : _paint = Future(() async {
+          debugPrint(
+              'blank image size: ${constraints.maxWidth} ${constraints.maxHeight - 52}');
+          final recorder = PictureRecorder();
+          final canvas = Canvas(recorder);
+          canvas.drawPaint(Paint()..color = Colors.white);
+          final image = await recorder.endRecording().toImage(
+              constraints.maxWidth.floor(), constraints.maxHeight.floor() - 52);
+          final data = await image.toByteData(format: ImageByteFormat.png);
+          return data!.buffer.asUint8List();
+        });
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<Uint8List>(
+        future: _paint,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasError) {
+            showToast('加载空白图片出错：${snapshot.error!}');
+          }
+
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasData) {
+            return painter(snapshot.data!);
+          }
+
+          return const SizedBox.shrink();
+        },
+      );
+}
+
 class PaintController extends GetxController {
   final Rxn<Uint8List> image;
 
@@ -129,34 +171,8 @@ class PaintView extends GetView<PaintController> {
   Widget _imagePainter() => _painter(controller.image.value!);
 
   Widget _blankPainter() => LayoutBuilder(
-        builder: (context, constraints) => FutureBuilder<Uint8List>(
-          future: Future(() async {
-            debugPrint(
-                'blank image size: ${constraints.maxWidth} ${constraints.maxHeight - 52}');
-            final recorder = PictureRecorder();
-            final canvas = Canvas(recorder);
-            canvas.drawPaint(Paint()..color = Colors.white);
-            final image = await recorder.endRecording().toImage(
-                constraints.maxWidth.floor(),
-                constraints.maxHeight.floor() - 52);
-            final data = await image.toByteData(format: ImageByteFormat.png);
-            return data!.buffer.asUint8List();
-          }),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done &&
-                snapshot.hasError) {
-              showToast('加载空白图片出错：${snapshot.error!}');
-            }
-
-            if (snapshot.connectionState == ConnectionState.done &&
-                snapshot.hasData) {
-              return _painter(snapshot.data!);
-            }
-
-            return const SizedBox.shrink();
-          },
-        ),
-      );
+      builder: (context, constraints) =>
+          _Canvas(constraints: constraints, painter: _painter));
 
   @override
   Widget build(BuildContext context) => WillPopScope(

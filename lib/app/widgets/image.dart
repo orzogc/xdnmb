@@ -11,6 +11,7 @@ import '../data/services/image.dart';
 import '../data/services/persistent.dart';
 import '../modules/image.dart';
 import '../routes/routes.dart';
+import '../utils/extensions.dart';
 import '../utils/image.dart';
 import '../utils/toast.dart';
 
@@ -76,6 +77,9 @@ class ThumbImage extends StatelessWidget {
                     imageUrl: _hasError.value
                         ? post.imageUrl()!
                         : post.thumbImageUrl()!,
+                    cacheKey: _hasError.value
+                        ? post.imageKey()!
+                        : post.thumbImageKey()!,
                     fit: BoxFit.contain,
                     cacheManager: XdnmbImageCacheManager(),
                     progressIndicatorBuilder: loadingThumbImageIndicatorBuilder,

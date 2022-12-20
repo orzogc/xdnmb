@@ -628,33 +628,6 @@ class _PostListHeader extends StatelessWidget {
       Obx(() => SizedBox(height: controller.headerHeight));
 }
 
-/* class _PostListGetPageRoute<T> extends GetPageRoute<T> {
-  bool _maintainState = false;
-
-  @override
-  bool get maintainState => _maintainState;
-
-  @override
-  GetPageBuilder? get page => super.page != null
-      ? () {
-          _active();
-
-          return super.page!();
-        }
-      : null;
-
-  _PostListGetPageRoute({super.settings, super.transition, super.page});
-
-  void _active() {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      if (isActive) {
-        _maintainState = true;
-        changedInternalState();
-      }
-    });
-  }
-} */
-
 class _PostListPage<T> extends Page<T> {
   final PostListController controller;
 
@@ -709,6 +682,7 @@ class _PostListPage<T> extends Page<T> {
   @override
   Route<T> createRoute(BuildContext context) => AppSwipeablePageRoute(
         settings: this,
+        maintainState: false,
         builder: (context) => _buildWidget(),
       );
 

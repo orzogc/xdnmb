@@ -13,7 +13,6 @@ import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'dialog.dart';
 import 'post.dart';
-import 'reload.dart';
 
 class _Dialog extends StatelessWidget {
   final PostBase post;
@@ -55,9 +54,7 @@ class _Dialog extends StatelessWidget {
   }
 }
 
-class ReferenceCard extends StatelessWidget {
-  static const Widget _errorText = Text('加载失败，点击重试', style: AppTheme.boldRed);
-
+class ReferenceCard extends StatefulWidget {
   final int postId;
 
   /// 引用串的主串ID（非被引用串）
@@ -69,22 +66,33 @@ class ReferenceCard extends StatelessWidget {
       {super.key, required this.postId, this.mainPostId, this.poUserHash});
 
   @override
-  Widget build(BuildContext context) {
-    final client = XdnmbClientService.to.client;
-    Object? error;
+  State<ReferenceCard> createState() => _ReferenceCardState();
+}
 
-    return LayoutBuilder(
-      builder: (context, constraints) => Card(
-        margin: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: Padding(
-          padding: const EdgeInsets.all(5.0),
-          child: TapToReload(
-            builder: (context, child) => FutureBuilder<HtmlReference>(
-              future: Future(() async {
-                debugPrint('获取串 ${postId.toPostNumber()} 的引用');
+class _ReferenceCardState extends State<ReferenceCard> {
+  late Future<HtmlReference> _getReference;
 
-                return client.getHtmlReference(postId);
-              }),
+  Future<HtmlReference> _toGetReference() {
+    debugPrint('获取串 ${widget.postId.toPostNumber()} 的引用');
+
+    return XdnmbClientService.to.client.getHtmlReference(widget.postId);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _getReference = _toGetReference();
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, constraints) => Card(
+          margin: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Padding(
+            padding: const EdgeInsets.all(5.0),
+            child: FutureBuilder<HtmlReference>(
+              future: _getReference,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.done &&
                     snapshot.hasData) {
@@ -104,12 +112,12 @@ class ReferenceCard extends StatelessWidget {
                                 children: [
                                   PostInkWell(
                                     post: post,
-                                    poUserHash: poUserHash,
+                                    poUserHash: widget.poUserHash,
                                     onLinkTap: (context, link, text) =>
                                         parseUrl(
                                             url: link,
-                                            mainPostId: this.mainPostId,
-                                            poUserHash: poUserHash),
+                                            mainPostId: widget.mainPostId,
+                                            poUserHash: widget.poUserHash),
                                     canTapHiddenText: true,
                                     showForumName: false,
                                     showReplyCount: false,
@@ -124,7 +132,7 @@ class ReferenceCard extends StatelessWidget {
                                     hoverColor: Theme.of(context).cardColor,
                                   ),
                                   if (mainPostId != null &&
-                                      mainPostId != this.mainPostId)
+                                      mainPostId != widget.mainPostId)
                                     Padding(
                                       padding: const EdgeInsets.all(10.0),
                                       child: TextButton(
@@ -152,31 +160,32 @@ class ReferenceCard extends StatelessWidget {
 
                 if (snapshot.connectionState == ConnectionState.done &&
                     snapshot.hasError) {
-                  showToast(exceptionMessage(snapshot.error!));
-                  error = snapshot.error!;
+                  final error = exceptionMessage(snapshot.error!);
+                  showToast(error);
 
-                  return child!(context);
+                  return GestureDetector(
+                    onTap: () {
+                      if (mounted) {
+                        setState(() {
+                          _getReference = _toGetReference();
+                        });
+                      }
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('错误：$error', style: AppTheme.boldRed),
+                        const Text('加载失败，点击重试', style: AppTheme.boldRed),
+                      ],
+                    ),
+                  );
                 }
 
                 return const CircularProgressIndicator();
               },
             ),
-            tapped: (context) => error != null
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '错误：${exceptionMessage(error!)}',
-                        style: AppTheme.boldRed,
-                      ),
-                      _errorText,
-                    ],
-                  )
-                : _errorText,
           ),
         ),
-      ),
-    );
-  }
+      );
 }

@@ -327,6 +327,8 @@ class _Image extends StatelessWidget {
 
   final UniqueKey _tag = UniqueKey();
 
+  final Future<Uint8List>? _readImageFile;
+
   _Image(
       // ignore: unused_element
       {super.key,
@@ -339,7 +341,9 @@ class _Image extends StatelessWidget {
       required this.onWatermark,
       required this.onImageFileLoaded,
       required this.onImagePainted})
-      : assert(imagePath != null || imageData != null);
+      : assert(imagePath != null || imageData != null),
+        _readImageFile =
+            imageData == null ? File(imagePath!).readAsBytes() : null;
 
   Widget _memoryImage(Uint8List imageData) => Image.memory(
         imageData,
@@ -349,7 +353,7 @@ class _Image extends StatelessWidget {
       );
 
   Widget _fileImage() => FutureBuilder<Uint8List>(
-        future: Future(() => File(imagePath!).readAsBytes()),
+        future: _readImageFile,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasError) {

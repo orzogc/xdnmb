@@ -147,7 +147,9 @@ class NoticeDialog extends StatelessWidget {
 
   final bool isAutoUpdate;
 
-  const NoticeDialog(
+  final Future<void> _updateNotice = PersistentDataService.to.updateNotice();
+
+  NoticeDialog(
       {super.key, this.showCheckbox = false, this.isAutoUpdate = false})
       : assert(
             (showCheckbox && !isAutoUpdate) || (!showCheckbox && isAutoUpdate));
@@ -173,7 +175,7 @@ class NoticeDialog extends StatelessWidget {
       content: SingleChildScrollViewWithScrollbar(
         child: isAutoUpdate
             ? FutureBuilder<void>(
-                future: data.updateNotice(),
+                future: _updateNotice,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.done &&
                       snapshot.hasError) {
@@ -246,32 +248,37 @@ class NoticeDialog extends StatelessWidget {
 class ForumRuleDialog extends StatelessWidget {
   final int forumId;
 
-  const ForumRuleDialog(this.forumId, {super.key});
+  final Future<void> _getForumRule;
+
+  ForumRuleDialog(this.forumId, {super.key})
+      : _getForumRule = Future(() async {
+          final forums = ForumListService.to;
+
+          final entry = forums.forums.toList().asMap().entries.singleWhere(
+              (entry) => entry.value.isForum && entry.value.id == forumId);
+
+          if (entry.value.isDeprecated) {
+            final htmlForum =
+                await XdnmbClientService.to.client.getHtmlForumInfo(forumId);
+            final forum = ForumData.fromHtmlForum(htmlForum);
+            forum.userDefinedName = entry.value.userDefinedName;
+            forum.isHidden = entry.value.isHidden;
+            await forums.updateForum(entry.key, forum);
+
+            debugPrint('更新废弃版块成功');
+          }
+        });
 
   @override
   Widget build(BuildContext context) {
     final forums = ForumListService.to;
 
     return FutureBuilder<void>(
-      future: Future(() async {
-        final entry = forums.forums.toList().asMap().entries.singleWhere(
-            (entry) => entry.value.isForum && entry.value.id == forumId);
-
-        if (entry.value.isDeprecated) {
-          final htmlForum =
-              await XdnmbClientService.to.client.getHtmlForumInfo(forumId);
-          final forum = ForumData.fromHtmlForum(htmlForum);
-          forum.userDefinedName = entry.value.userDefinedName;
-          forum.isHidden = entry.value.isHidden;
-          await forums.updateForum(entry.key, forum);
-
-          debugPrint('更新废弃版块成功');
-        }
-      }),
+      future: _getForumRule,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasError) {
-          debugPrint('更新版规出现错误：${snapshot.error}');
+          showToast('更新版规出现错误：${exceptionMessage(snapshot.error!)}');
         }
 
         final forum = forums.forum(forumId);
@@ -296,6 +303,7 @@ class ForumRuleDialog extends StatelessWidget {
                             WidgetSpan(
                               child: CachedNetworkImage(
                                 imageUrl: image,
+                                cacheKey: hashImage(image, imageHashLength),
                                 cacheManager: XdnmbImageCacheManager(),
                                 progressIndicatorBuilder:
                                     loadingThumbImageIndicatorBuilder,

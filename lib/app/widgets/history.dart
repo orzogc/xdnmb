@@ -523,6 +523,118 @@ class _HistoryDialog extends StatelessWidget {
   }
 }
 
+class _BrowseHistoryItem extends StatelessWidget {
+  final Visible<BrowseHistory> browse;
+
+  final _GetImageCallback getImage;
+
+  final Search? search;
+
+  final Future<void> _getBrowseHistory;
+
+  _BrowseHistoryItem(
+      // ignore: unused_element
+      {super.key,
+      required this.browse,
+      required this.getImage,
+      this.search})
+      : _getBrowseHistory = Future(() async {
+          if (browse.item.hasImage) {
+            final image = await getImage(browse.item.id);
+            if (image != null) {
+              browse.item.image = image.image;
+              browse.item.imageExtension = image.imageExtension;
+            }
+          }
+        });
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<void>(
+        future: _getBrowseHistory,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasError) {
+            debugPrint(
+                '获取串 ${browse.item.toPostNumber()} 的引用出错：${snapshot.error}');
+          }
+
+          int? browsePage;
+          int? browsePostId;
+          if (browse.item.browsePage != null) {
+            browsePage = browse.item.browsePage;
+            browsePostId = browse.item.browsePostId;
+          } else {
+            browsePage = browse.item.onlyPoBrowsePage;
+            browsePostId = browse.item.onlyPoBrowsePostId;
+          }
+
+          return Obx(
+            () => browse.isVisible.value
+                ? PostCard(
+                    key: ValueKey<int>(browse.item.id),
+                    child: InkWell(
+                      onTap: () => AppRoutes.toThread(
+                          mainPostId: browse.item.id, mainPost: browse.item),
+                      onLongPress: () => postListDialog(_HistoryDialog(
+                        mainPost: browse.item,
+                        confirmDelete: false,
+                        onDelete: () async {
+                          await PostHistoryService.to
+                              .deleteBrowseHistory(browse.item.id);
+                          showToast('删除 ${browse.item.toPostNumber()} 的浏览记录');
+                          browse.isVisible.value = false;
+                        },
+                      )),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 10.0, top: 5.0, right: 10.0),
+                            child: PostHeader(
+                              fontSize: AppTheme.postHeaderTextStyle.fontSize,
+                              child: OverflowBar(
+                                spacing: 5.0,
+                                alignment: MainAxisAlignment.spaceBetween,
+                                overflowSpacing: 5.0,
+                                children: [
+                                  Text(
+                                    '最后浏览时间：${fullFormatTime(browse.item.browseTime)}',
+                                    style: AppTheme.postHeaderTextStyle,
+                                    strutStyle: AppTheme.postHeaderStrutStyle,
+                                  ),
+                                  if (browsePage != null &&
+                                      browsePostId != null)
+                                    Text(
+                                      '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
+                                      style: AppTheme.postHeaderTextStyle,
+                                      strutStyle: AppTheme.postHeaderStrutStyle,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          PostContent(
+                            post: browse.item,
+                            poUserHash: browse.item.userHash,
+                            contentMaxLines: 8,
+                            onText: (search != null && !search!.useWildcard)
+                                ? (context, text) => Regex.onSearchText(
+                                    text: text, search: search!)
+                                : null,
+                            showFullTime: false,
+                            showReplyCount: false,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          );
+        },
+      );
+}
+
 class _BrowseHistoryBody extends StatelessWidget {
   static const _index = 0;
 
@@ -583,104 +695,8 @@ class _BrowseHistoryBody extends StatelessWidget {
 
               return data;
             },
-            itemBuilder: (context, browse, index) => FutureBuilder<void>(
-              future: Future(() async {
-                if (browse.item.hasImage) {
-                  final image = await getImage(browse.item.id);
-                  if (image != null) {
-                    browse.item.image = image.image;
-                    browse.item.imageExtension = image.imageExtension;
-                  }
-                }
-              }),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done &&
-                    snapshot.hasError) {
-                  debugPrint(
-                      '获取串 ${browse.item.toPostNumber()} 的引用出错：${snapshot.error}');
-                }
-
-                int? browsePage;
-                int? browsePostId;
-                if (browse.item.browsePage != null) {
-                  browsePage = browse.item.browsePage;
-                  browsePostId = browse.item.browsePostId;
-                } else {
-                  browsePage = browse.item.onlyPoBrowsePage;
-                  browsePostId = browse.item.onlyPoBrowsePostId;
-                }
-
-                return Obx(
-                  () => browse.isVisible.value
-                      ? PostCard(
-                          key: ValueKey<int>(browse.item.id),
-                          child: InkWell(
-                            onTap: () => AppRoutes.toThread(
-                                mainPostId: browse.item.id,
-                                mainPost: browse.item),
-                            onLongPress: () => postListDialog(_HistoryDialog(
-                              mainPost: browse.item,
-                              confirmDelete: false,
-                              onDelete: () async {
-                                await history
-                                    .deleteBrowseHistory(browse.item.id);
-                                showToast(
-                                    '删除 ${browse.item.toPostNumber()} 的浏览记录');
-                                browse.isVisible.value = false;
-                              },
-                            )),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: 10.0, top: 5.0, right: 10.0),
-                                  child: PostHeader(
-                                    fontSize:
-                                        AppTheme.postHeaderTextStyle.fontSize,
-                                    child: OverflowBar(
-                                      spacing: 5.0,
-                                      alignment: MainAxisAlignment.spaceBetween,
-                                      overflowSpacing: 5.0,
-                                      children: [
-                                        Text(
-                                          '最后浏览时间：${fullFormatTime(browse.item.browseTime)}',
-                                          style: AppTheme.postHeaderTextStyle,
-                                          strutStyle:
-                                              AppTheme.postHeaderStrutStyle,
-                                        ),
-                                        if (browsePage != null &&
-                                            browsePostId != null)
-                                          Text(
-                                            '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
-                                            style: AppTheme.postHeaderTextStyle,
-                                            strutStyle:
-                                                AppTheme.postHeaderStrutStyle,
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                PostContent(
-                                  post: browse.item,
-                                  poUserHash: browse.item.userHash,
-                                  contentMaxLines: 8,
-                                  onText: (search != null &&
-                                          !search.useWildcard)
-                                      ? (context, text) => Regex.onSearchText(
-                                          text: text, search: search)
-                                      : null,
-                                  showFullTime: false,
-                                  showReplyCount: false,
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                );
-              },
-            ),
+            itemBuilder: (context, browse, index) => _BrowseHistoryItem(
+                browse: browse, getImage: getImage, search: search),
             header: PostListHeader(controller: controller),
             noItemsFoundBuilder: (context) => Center(
               child: Text(
@@ -692,6 +708,82 @@ class _BrowseHistoryBody extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _PostHistoryItem extends StatelessWidget {
+  final Visible<PostData> mainPost;
+
+  final _GetImageCallback getImage;
+
+  final Search? search;
+
+  final Future<void> _getPostHistory;
+
+  _PostHistoryItem(
+      // ignore: unused_element
+      {super.key,
+      required this.mainPost,
+      required this.getImage,
+      this.search})
+      : _getPostHistory = Future(() async {
+          if (mainPost.item.postId != null && mainPost.item.hasImage) {
+            final image = await getImage(mainPost.item.postId!);
+            if (image != null) {
+              mainPost.item.image = image.image;
+              mainPost.item.imageExtension = image.imageExtension;
+            }
+          }
+        });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _getPostHistory,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasError) {
+          debugPrint(
+              '获取串 ${mainPost.item.postId?.toPostNumber()} 的引用出错：${snapshot.error}');
+        }
+
+        return Obx(
+          () => mainPost.isVisible.value
+              ? PostCard(
+                  key: ValueKey<int>(mainPost.item.id),
+                  child: PostInkWell(
+                    post: mainPost.item.toPost(),
+                    poUserHash: mainPost.item.userHash,
+                    contentMaxLines: 8,
+                    onText: (search != null && !search!.useWildcard)
+                        ? (context, text) =>
+                            Regex.onSearchText(text: text, search: search!)
+                        : null,
+                    showPostId: mainPost.item.postId != null ? true : false,
+                    showReplyCount: false,
+                    onTap: (post) {
+                      if (post.id > 0) {
+                        AppRoutes.toThread(mainPostId: post.id, mainPost: post);
+                      }
+                    },
+                    onLongPress: (post) => postListDialog(_HistoryDialog(
+                      mainPost: post,
+                      onDelete: () async {
+                        await PostHistoryService.to
+                            .deletePostData(mainPost.item.id);
+                        mainPost.item.postId != null
+                            ? showToast(
+                                '删除主题 ${mainPost.item.postId?.toPostNumber()} 的记录')
+                            : showToast('删除主题记录');
+                        mainPost.isVisible.value = false;
+                      },
+                    )),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        );
+      },
     );
   }
 }
@@ -756,62 +848,8 @@ class _PostHistoryBody extends StatelessWidget {
 
               return data;
             },
-            itemBuilder: (context, mainPost, index) => FutureBuilder<void>(
-              future: Future(() async {
-                if (mainPost.item.postId != null && mainPost.item.hasImage) {
-                  final image = await getImage(mainPost.item.postId!);
-                  if (image != null) {
-                    mainPost.item.image = image.image;
-                    mainPost.item.imageExtension = image.imageExtension;
-                  }
-                }
-              }),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done &&
-                    snapshot.hasError) {
-                  debugPrint(
-                      '获取串 ${mainPost.item.postId?.toPostNumber()} 的引用出错：${snapshot.error}');
-                }
-
-                return Obx(
-                  () => mainPost.isVisible.value
-                      ? PostCard(
-                          key: ValueKey<int>(mainPost.item.id),
-                          child: PostInkWell(
-                            post: mainPost.item.toPost(),
-                            poUserHash: mainPost.item.userHash,
-                            contentMaxLines: 8,
-                            onText: (search != null && !search.useWildcard)
-                                ? (context, text) => Regex.onSearchText(
-                                    text: text, search: search)
-                                : null,
-                            showPostId:
-                                mainPost.item.postId != null ? true : false,
-                            showReplyCount: false,
-                            onTap: (post) {
-                              if (post.id > 0) {
-                                AppRoutes.toThread(
-                                    mainPostId: post.id, mainPost: post);
-                              }
-                            },
-                            onLongPress: (post) =>
-                                postListDialog(_HistoryDialog(
-                              mainPost: post,
-                              onDelete: () async {
-                                await history.deletePostData(mainPost.item.id);
-                                mainPost.item.postId != null
-                                    ? showToast(
-                                        '删除主题 ${mainPost.item.postId?.toPostNumber()} 的记录')
-                                    : showToast('删除主题记录');
-                                mainPost.isVisible.value = false;
-                              },
-                            )),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                );
-              },
-            ),
+            itemBuilder: (context, mainPost, index) => _PostHistoryItem(
+                mainPost: mainPost, getImage: getImage, search: search),
             header: PostListHeader(controller: controller),
             noItemsFoundBuilder: (context) => Center(
               child: Text(
@@ -823,6 +861,124 @@ class _PostHistoryBody extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _ReplyHistoryItem extends StatelessWidget {
+  final Visible<ReplyData> reply;
+
+  final _GetImageCallback getImage;
+
+  final Search? search;
+
+  final Future<void> _getReplyHistory;
+
+  _ReplyHistoryItem(
+      // ignore: unused_element
+      {super.key,
+      required this.reply,
+      required this.getImage,
+      this.search})
+      : _getReplyHistory = Future(() async {
+          if (reply.item.postId != null && reply.item.hasImage) {
+            final image = await getImage(reply.item.postId!);
+            if (image != null) {
+              reply.item.image = image.image;
+              reply.item.imageExtension = image.imageExtension;
+            }
+          }
+        });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _getReplyHistory,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasError) {
+          debugPrint(
+              '获取串 ${reply.item.postId?.toPostNumber()} 的引用出错：${snapshot.error}');
+        }
+
+        return Obx(
+          () {
+            final post = reply.item.toPost();
+
+            return reply.isVisible.value
+                ? PostCard(
+                    key: ValueKey<int>(reply.item.id),
+                    child: InkWell(
+                      onTap: () => AppRoutes.toThread(
+                          mainPostId: reply.item.mainPostId,
+                          page: reply.item.page ?? 1,
+                          jumpToId: (reply.item.page != null &&
+                                  reply.item.postId != null)
+                              ? reply.item.postId
+                              : null),
+                      onLongPress: () => postListDialog(_HistoryDialog(
+                        mainPost: reply.item.toMainPost(),
+                        post: post,
+                        onDelete: () async {
+                          await PostHistoryService.to
+                              .deletePostData(reply.item.id);
+                          reply.item.postId != null
+                              ? showToast(
+                                  '删除回复 ${reply.item.postId?.toPostNumber()} 的记录')
+                              : showToast('删除回复记录');
+                          reply.isVisible.value = false;
+                        },
+                        page: reply.item.page,
+                      )),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: 10.0,
+                              top: 5.0,
+                              right: 10.0,
+                            ),
+                            child: PostHeader(
+                              fontSize: AppTheme.postHeaderTextStyle.fontSize,
+                              child: OverflowBar(
+                                spacing: 5.0,
+                                alignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '主串：${reply.item.mainPostId.toPostNumber()}',
+                                    style: AppTheme.postHeaderTextStyle,
+                                    strutStyle: AppTheme.postHeaderStrutStyle,
+                                  ),
+                                  if (reply.item.page != null)
+                                    Text(
+                                      '第 ${reply.item.page} 页',
+                                      style: AppTheme.postHeaderTextStyle,
+                                      strutStyle: AppTheme.postHeaderStrutStyle,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          PostContent(
+                            post: post,
+                            contentMaxLines: 8,
+                            onText: (search != null && !search!.useWildcard)
+                                ? (context, text) => Regex.onSearchText(
+                                    text: text, search: search!)
+                                : null,
+                            showPostId:
+                                reply.item.postId != null ? true : false,
+                            showReplyCount: false,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink();
+          },
+        );
+      },
     );
   }
 }
@@ -887,108 +1043,8 @@ class _ReplyHistoryBody extends StatelessWidget {
 
               return data;
             },
-            itemBuilder: (context, reply, index) => FutureBuilder<void>(
-              future: Future(() async {
-                if (reply.item.postId != null && reply.item.hasImage) {
-                  final image = await getImage(reply.item.postId!);
-                  if (image != null) {
-                    reply.item.image = image.image;
-                    reply.item.imageExtension = image.imageExtension;
-                  }
-                }
-              }),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done &&
-                    snapshot.hasError) {
-                  debugPrint(
-                      '获取串 ${reply.item.postId?.toPostNumber()} 的引用出错：${snapshot.error}');
-                }
-
-                return Obx(
-                  () {
-                    final post = reply.item.toPost();
-
-                    return reply.isVisible.value
-                        ? PostCard(
-                            key: ValueKey<int>(reply.item.id),
-                            child: InkWell(
-                              onTap: () => AppRoutes.toThread(
-                                  mainPostId: reply.item.mainPostId,
-                                  page: reply.item.page ?? 1,
-                                  jumpToId: (reply.item.page != null &&
-                                          reply.item.postId != null)
-                                      ? reply.item.postId
-                                      : null),
-                              onLongPress: () => postListDialog(_HistoryDialog(
-                                mainPost: reply.item.toMainPost(),
-                                post: post,
-                                onDelete: () async {
-                                  await history.deletePostData(reply.item.id);
-                                  reply.item.postId != null
-                                      ? showToast(
-                                          '删除回复 ${reply.item.postId?.toPostNumber()} 的记录')
-                                      : showToast('删除回复记录');
-                                  reply.isVisible.value = false;
-                                },
-                                page: reply.item.page,
-                              )),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: 10.0,
-                                      top: 5.0,
-                                      right: 10.0,
-                                    ),
-                                    child: PostHeader(
-                                      fontSize:
-                                          AppTheme.postHeaderTextStyle.fontSize,
-                                      child: OverflowBar(
-                                        spacing: 5.0,
-                                        alignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            '主串：${reply.item.mainPostId.toPostNumber()}',
-                                            style: AppTheme.postHeaderTextStyle,
-                                            strutStyle:
-                                                AppTheme.postHeaderStrutStyle,
-                                          ),
-                                          if (reply.item.page != null)
-                                            Text(
-                                              '第 ${reply.item.page} 页',
-                                              style:
-                                                  AppTheme.postHeaderTextStyle,
-                                              strutStyle:
-                                                  AppTheme.postHeaderStrutStyle,
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  PostContent(
-                                    post: post,
-                                    contentMaxLines: 8,
-                                    onText: (search != null &&
-                                            !search.useWildcard)
-                                        ? (context, text) => Regex.onSearchText(
-                                            text: text, search: search)
-                                        : null,
-                                    showPostId: reply.item.postId != null
-                                        ? true
-                                        : false,
-                                    showReplyCount: false,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : const SizedBox.shrink();
-                  },
-                );
-              },
-            ),
+            itemBuilder: (context, reply, index) => _ReplyHistoryItem(
+                reply: reply, getImage: getImage, search: search),
             header: PostListHeader(controller: controller),
             noItemsFoundBuilder: (context) => Center(
               child: Text(
@@ -1004,6 +1060,7 @@ class _ReplyHistoryBody extends StatelessWidget {
   }
 }
 
+// TODO: 高亮显示使用通配符的搜索结果
 class HistoryBody extends StatefulWidget {
   final HistoryController controller;
 
@@ -1023,6 +1080,7 @@ class _HistoryBodyState extends State<HistoryBody> {
   Future<_Image?> _getImage(int postId) async {
     if (!_images.containsKey(postId)) {
       debugPrint('历史记录里的串 ${postId.toPostNumber()} 有图片，开始获取其引用');
+
       try {
         final reference =
             await XdnmbClientService.to.client.getReference(postId);

@@ -16,4 +16,6 @@ abstract class PersistentData {
   static const String updateForumListTime = 'updateForumListTime';
 
   static const String controllerStackListIndex = 'controllerStackListIndex';
+
+  static const String imageHashSalt = 'imageHashSalt';
 }

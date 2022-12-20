@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../../utils/crypto.dart';
 import '../../utils/padding.dart';
 import '../../widgets/dialog.dart';
 import '../models/hive.dart';
@@ -80,6 +81,11 @@ class PersistentDataService extends GetxService {
   set controllerStackListIndex(int index) =>
       _dataBox.put(PersistentData.controllerStackListIndex, index);
 
+  String get imageHashSalt => _dataBox.get(PersistentData.imageHashSalt);
+
+  set imageHashSalt(String salt) =>
+      _dataBox.put(PersistentData.imageHashSalt, salt);
+
   late final ValueListenable<Box> noticeDateListenable;
 
   StreamSubscription<bool>? _keyboardSubscription;
@@ -141,6 +147,10 @@ class PersistentDataService extends GetxService {
     super.onInit();
 
     _dataBox = await Hive.openBox(HiveBoxName.data);
+
+    if (!_dataBox.containsKey(PersistentData.imageHashSalt)) {
+      imageHashSalt = randomString(20);
+    }
 
     noticeDateListenable =
         _dataBox.listenable(keys: [PersistentData.noticeDate]);

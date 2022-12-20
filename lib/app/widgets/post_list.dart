@@ -44,15 +44,15 @@ class _PostListScrollPosition extends ScrollPositionWithSingleContext {
     PostListController.scrollDirection = value;
   }
 
+  // TODO: 物理效果
   @override
   double applyBoundaryConditions(double value) {
     final overscroll = super.applyBoundaryConditions(value);
     final offset = value - overscroll;
 
-    // 阻止向上滑动露出多余空间
-    if (controller.scrollState.isInAppBarRange && offset < 0.0) {
+    if (controller.scrollState.isInAppBarRange) {
+      // 阻止进一步的滑动
       controller.setAppBarHeight(PostListController.appBarHeight - offset);
-      correctPixels(pixels - offset);
 
       return value;
     }

@@ -31,6 +31,8 @@ abstract class Regex {
 
   static const String _escape = r'[/\-\\^$*+?.()|[\]{}]';
 
+  static const String _imageHash = r'(?<=\/)(?:.+(?=\.)|.+)';
+
   static final RegExp _textRegex =
       RegExp('$_postReference1|$_postReference2|$_postReference3|$_link');
 
@@ -46,6 +48,8 @@ abstract class Regex {
   static final RegExp _xdnmbHtmlRegex = RegExp(_xdnmbHtml);
 
   static final RegExp _escapeRegex = RegExp(_escape);
+
+  static final RegExp _imageHashRegex = RegExp(_imageHash);
 
   static String? replaceHiddenTag(String text) {
     if (text.contains(_hasHiddenTagRegex)) {
@@ -123,6 +127,23 @@ abstract class Regex {
 
     if (isReplaced) {
       return text;
+    }
+
+    return null;
+  }
+
+  static String? replaceImageHash(
+      {required String imageName, required String hash}) {
+    bool isReplaced = false;
+
+    imageName = imageName.replaceFirstMapped(_imageHashRegex, (match) {
+      isReplaced = true;
+
+      return hash;
+    });
+
+    if (isReplaced) {
+      return imageName;
     }
 
     return null;

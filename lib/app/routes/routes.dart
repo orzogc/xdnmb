@@ -270,7 +270,7 @@ abstract class PathNames {
 }
 
 class AppSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
-  bool _maintainState = false;
+  bool _maintainState;
 
   double _backGestureDetectionWidth = Get.mediaQuery.size.width *
       SettingsService.to.swipeablePageDragWidthRatio;
@@ -289,8 +289,11 @@ class AppSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
       };
 
   AppSwipeablePageRoute(
-      {RouteSettings? settings, required WidgetBuilder builder})
-      : super(
+      {RouteSettings? settings,
+      bool maintainState = true,
+      required WidgetBuilder builder})
+      : _maintainState = maintainState,
+        super(
             settings: settings,
             canSwipe: SettingsService.isSwipeablePage,
             canOnlySwipeFromEdge: true,

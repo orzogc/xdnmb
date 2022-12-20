@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -11,11 +12,15 @@ import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/image.dart';
+import '../data/services/persistent.dart';
+import 'crypto.dart';
 import 'extensions.dart';
 import 'http_client.dart';
 import 'theme.dart';
 import 'time.dart';
 import 'toast.dart';
+
+final HashMap<String, String> _imageHashMap = HashMap();
 
 class XdnmbImageCacheManager extends CacheManager with ImageCacheManager {
   static const String _key = 'xdnmbImageCache';
@@ -47,6 +52,22 @@ String _imageFilename(Uint8List imageData) {
       : '$time.${extensionFromMime(mimeType)}';
 }
 
+String hashImage(String imageName, [int? length]) {
+  assert(length == null || (length > 0 && length <= 64));
+
+  final hash = _imageHashMap[imageName];
+
+  if (hash == null) {
+    final digest =
+        sha512256Hash(imageName, salt: PersistentDataService.to.imageHashSalt);
+    _imageHashMap[imageName] = digest;
+
+    return digest.substring(0, length);
+  } else {
+    return hash.substring(0, length);
+  }
+}
+
 Image? getImage(Uint8List imageData) {
   final time = imageFilenameTime();
   final mimeType = lookupMimeType(time, headerBytes: imageData);
@@ -74,21 +95,25 @@ Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
           final file = File(path);
           await file.writeAsBytes(imageData);
 
-          final result =
-              await ImageGallerySaver.saveFile(file.path, name: filename);
-          await file.delete();
-          if (result['isSuccess']) {
-            showToast('图片保存到相册成功');
-            return true;
-          } else {
-            showToast('图片保存到相册失败：${result['errorMessage']}');
+          try {
+            final result =
+                await ImageGallerySaver.saveFile(file.path, name: filename);
+            if (result['isSuccess']) {
+              showToast('图片保存到相册成功');
+              return true;
+            } else {
+              showToast('图片保存到相册失败：${result['errorMessage']}');
+              return false;
+            }
+          } catch (e) {
+            showToast('保存图片失败：$e');
             return false;
+          } finally {
+            await file.delete();
           }
         } else {
-          final result = await ImageGallerySaver.saveImage(
-              imageData,
-              quality: 100,
-              name: filename);
+          final result = await ImageGallerySaver.saveImage(imageData,
+              quality: 100, name: filename);
           if (result['isSuccess']) {
             showToast('图片保存到相册成功');
             return true;

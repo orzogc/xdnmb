@@ -26,7 +26,7 @@ class UserService extends GetxService {
 
   bool canGetCookie = false;
 
-  int currentCookiesNum = 0;
+  final RxInt currentCookiesNum = 0.obs;
 
   int totalCookiesNum = 0;
 
@@ -123,6 +123,8 @@ class UserService extends GetxService {
   }
 
   Future<void> updateCookies() async {
+    debugPrint('开始更新饼干');
+
     final client = XdnmbClientService.to.client;
     if (!isUserCookieValid) {
       debugPrint('没有登陆或者登陆过期无法获取饼干');
@@ -135,7 +137,7 @@ class UserService extends GetxService {
 
     final list = await client.getCookiesList();
     canGetCookie = list.canGetCookie;
-    currentCookiesNum = list.currentCookiesNum;
+    currentCookiesNum.value = list.currentCookiesNum;
     totalCookiesNum = list.totalCookiesNum;
 
     final normal = <CookieData>[];
@@ -261,8 +263,7 @@ class UserService extends GetxService {
       updatePostCookie();
     });
 
-    userCookieListenable =
-        _userBox.listenable(keys: [User.userCookie, User.userCookieExpireDate]);
+    userCookieListenable = _userBox.listenable(keys: [User.userCookie]);
     browseCookieListenable = _userBox.listenable(keys: [User.browseCookie]);
     postCookieListenable = _userBox.listenable(keys: [User.postCookie]);
     cookiesListenable = _cookiesBox.listenable();

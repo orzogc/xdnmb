@@ -11,42 +11,62 @@ import '../data/services/user.dart';
 import '../data/services/xdnmb_client.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
+import '../utils/notify.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import '../widgets/dialog.dart';
-import '../widgets/reload.dart';
 import '../widgets/safe_area.dart';
 
-class _VerifyImage extends StatelessWidget {
+class _VerifyImage extends StatefulWidget {
   // ignore: unused_element
   const _VerifyImage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final client = XdnmbClientService.to.client;
+  State<_VerifyImage> createState() => _VerifyImageState();
+}
 
-    return TapToReload(
-      builder: (context, child) => FutureBuilder<Uint8List>(
-        future: client.getVerifyImage(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done &&
-              snapshot.hasData) {
-            return Image.memory(snapshot.data!);
-          }
+class _VerifyImageState extends State<_VerifyImage> {
+  late Future<Uint8List> _getVerifyImage;
 
-          if (snapshot.connectionState == ConnectionState.done &&
-              snapshot.hasError) {
-            showToast('加载验证码失败：${exceptionMessage(snapshot.error!)}');
+  Future<Uint8List> _toGetVerifyImage() =>
+      XdnmbClientService.to.client.getVerifyImage();
 
-            return const Text('点击重新加载验证码', style: AppTheme.boldRed);
-          }
+  @override
+  void initState() {
+    super.initState();
 
-          return const CircularProgressIndicator();
-        },
-      ),
-    );
+    _getVerifyImage = _toGetVerifyImage();
   }
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: () {
+          if (mounted) {
+            setState(() {
+              _getVerifyImage = _toGetVerifyImage();
+            });
+          }
+        },
+        child: FutureBuilder<Uint8List>(
+          future: _getVerifyImage,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done &&
+                snapshot.hasData) {
+              return Image.memory(snapshot.data!);
+            }
+
+            if (snapshot.connectionState == ConnectionState.done &&
+                snapshot.hasError) {
+              showToast('加载验证码失败：${exceptionMessage(snapshot.error!)}');
+
+              return const Text('点击重新加载验证码', style: AppTheme.boldRed);
+            }
+
+            return const CircularProgressIndicator();
+          },
+        ),
+      );
 }
 
 class _LoginForm extends StatelessWidget {
@@ -359,8 +379,8 @@ class _Cookie extends StatelessWidget {
                   await client.deleteCookie(
                       cookieId: cookie.id!, verify: verify);
                   await cookie.delete();
-                  if (user.currentCookiesNum > 0) {
-                    user.currentCookiesNum -= 1;
+                  if (user.currentCookiesNum.value > 0) {
+                    user.currentCookiesNum.value -= 1;
                   }
 
                   showToast('删除饼干成功');
@@ -472,8 +492,32 @@ class _Cookie extends StatelessWidget {
   }
 }
 
-class CookieView extends StatelessWidget {
+class CookieView extends StatefulWidget {
   const CookieView({super.key});
+
+  @override
+  State<CookieView> createState() => _CookieViewState();
+}
+
+class _CookieViewState extends State<CookieView> {
+  late Future<void> _updateCookies;
+
+  void _setUpdateCookies() => _updateCookies = UserService.to.updateCookies();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _setUpdateCookies();
+    UserService.to.userCookieListenable.addListener(_setUpdateCookies);
+  }
+
+  @override
+  void dispose() {
+    UserService.to.userCookieListenable.removeListener(_setUpdateCookies);
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -497,100 +541,96 @@ class CookieView extends StatelessWidget {
                 onTap: () => Get.dialog(_AddCookieForm()),
                 title: const Text('添加自定义饼干'),
               ),
-              FutureBuilder<bool>(
-                future: Future(() async {
-                  await user.updateCookies();
-                  return true;
-                }),
+              FutureBuilder<void>(
+                future: _updateCookies,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.done &&
                       snapshot.hasError) {
                     showToast('更新饼干列表出错: ${exceptionMessage(snapshot.error!)}');
                   }
 
-                  return ValueListenableBuilder<Box<CookieData>>(
-                    valueListenable: user.cookiesListenable,
-                    builder: (context, box, child) =>
-                        ValueListenableBuilder<Box>(
-                      valueListenable: user.browseCookieListenable,
-                      builder: (context, value, child) => Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ListTile(
-                            title: const Text('饼干列表'),
-                            trailing: (user.isUserCookieValid &&
-                                    snapshot.connectionState ==
-                                        ConnectionState.done &&
-                                    snapshot.hasData)
-                                ? Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      user.canGetCookie
-                                          ? const Text('可领取饼干',
-                                              style: TextStyle(
-                                                color: Colors.blue,
-                                                fontWeight: FontWeight.bold,
-                                              ))
-                                          : const Text('不可领取饼干',
-                                              style: AppTheme.boldRed),
-                                      const SizedBox(width: 10.0),
-                                      Text(
-                                        '${user.currentCookiesNum}/${user.totalCookiesNum}',
+                  return NotifyBuilder(
+                    animation: Listenable.merge(
+                        [user.cookiesListenable, user.browseCookieListenable]),
+                    builder: (context, child) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          title: const Text('饼干列表'),
+                          trailing: (user.isUserCookieValid &&
+                                  snapshot.connectionState ==
+                                      ConnectionState.done &&
+                                  !snapshot.hasError)
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    user.canGetCookie
+                                        ? const Text('可领取饼干',
+                                            style: TextStyle(
+                                              color: Colors.blue,
+                                              fontWeight: FontWeight.bold,
+                                            ))
+                                        : const Text('不可领取饼干',
+                                            style: AppTheme.boldRed),
+                                    const SizedBox(width: 10.0),
+                                    Obx(
+                                      () => Text(
+                                        '${user.currentCookiesNum.value}/${user.totalCookiesNum}',
                                         style: const TextStyle(
-                                            color: Colors.blue,
-                                            fontWeight: FontWeight.bold),
+                                          color: Colors.blue,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ],
-                                  )
-                                : null,
-                          ),
-                          if (snapshot.connectionState ==
-                                  ConnectionState.done &&
-                              snapshot.hasError)
-                            const Text('更新饼干列表出错', style: AppTheme.boldRed),
-                          if (snapshot.connectionState != ConnectionState.done)
-                            const CircularProgressIndicator(),
-                          ...[
-                            for (final cookie in user.xdnmbCookies)
-                              _Cookie(
-                                  key: ValueKey<CookieData>(cookie),
-                                  cookie: cookie)
-                          ],
-                          if (!user.hasXdnmbCookie)
-                            const Text('没有饼干', style: AppTheme.boldRed),
-                          if (user.isUserCookieValid &&
-                              user.canGetCookie &&
-                              user.currentCookiesNum < user.totalCookiesNum)
-                            ElevatedButton(
-                              onPressed: () => Get.dialog(
-                                _Verify(
-                                  buttonText: '领取',
-                                  onPressed: (context, verify) async {
-                                    final overlay = context.loaderOverlay;
-                                    try {
-                                      overlay.show();
-                                      await user.addNewCookie(verify);
-
-                                      showToast('领取新饼干成功');
-                                      Get.back();
-                                    } catch (e) {
-                                      showToast(
-                                          '领取新饼干失败：${exceptionMessage(e)}');
-                                    } finally {
-                                      if (overlay.visible) {
-                                        overlay.hide();
-                                      }
-                                    }
-                                  },
-                                ),
-                              ),
-                              child: const Text(
-                                '领取新饼干',
-                              ),
-                            ),
+                                    ),
+                                  ],
+                                )
+                              : null,
+                        ),
+                        if (snapshot.connectionState == ConnectionState.done &&
+                            snapshot.hasError)
+                          const Text('更新饼干列表出错', style: AppTheme.boldRed),
+                        if (snapshot.connectionState != ConnectionState.done)
+                          const CircularProgressIndicator(),
+                        ...[
+                          for (final cookie in user.xdnmbCookies)
+                            _Cookie(
+                                key: ValueKey<CookieData>(cookie),
+                                cookie: cookie)
                         ],
-                      ),
+                        if (!user.hasXdnmbCookie)
+                          const Text('没有饼干', style: AppTheme.boldRed),
+                        Obx(() => (user.currentCookiesNum.value <
+                                    user.totalCookiesNum &&
+                                user.isUserCookieValid &&
+                                user.canGetCookie)
+                            ? ElevatedButton(
+                                onPressed: () => Get.dialog(
+                                  _Verify(
+                                    buttonText: '领取',
+                                    onPressed: (context, verify) async {
+                                      final overlay = context.loaderOverlay;
+                                      try {
+                                        overlay.show();
+                                        await user.addNewCookie(verify);
+
+                                        showToast('领取新饼干成功');
+                                        Get.back();
+                                      } catch (e) {
+                                        showToast(
+                                            '领取新饼干失败：${exceptionMessage(e)}');
+                                      } finally {
+                                        if (overlay.visible) {
+                                          overlay.hide();
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                                child: const Text('领取新饼干'),
+                              )
+                            : const SizedBox.shrink()),
+                      ],
                     ),
                   );
                 },

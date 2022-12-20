@@ -10,8 +10,11 @@ import '../widgets/dialog.dart';
 import '../widgets/safe_area.dart';
 
 class _SaveImagePath extends StatelessWidget {
+  final Future<AndroidDeviceInfo>? _androidInfo =
+      GetPlatform.isAndroid ? DeviceInfoPlugin().androidInfo : null;
+
   // ignore: unused_element
-  const _SaveImagePath({super.key});
+  _SaveImagePath({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -46,9 +49,9 @@ class _SaveImagePath extends StatelessWidget {
       ),
     );
 
-    return GetPlatform.isAndroid
+    return (GetPlatform.isAndroid && _androidInfo != null)
         ? FutureBuilder<AndroidDeviceInfo>(
-            future: DeviceInfoPlugin().androidInfo,
+            future: _androidInfo!,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.done &&
                   snapshot.hasError) {
@@ -269,7 +272,7 @@ class AdvancedSettingsView extends StatelessWidget {
           ),
           body: ListView(
             children: [
-              if (!GetPlatform.isIOS) const _SaveImagePath(),
+              if (!GetPlatform.isIOS) _SaveImagePath(),
               const _AddBlueIslandEmoticons(),
               const _RestoreForumPage(),
               const _ImageDisposeDistance(),
