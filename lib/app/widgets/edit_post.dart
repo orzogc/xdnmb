@@ -453,7 +453,7 @@ class _ShowEmoticon extends StatelessWidget {
 
     return IconButton(
       onPressed: () {
-        if (data.isKeyboardVisible.value) {
+        if (data.isKeyboardVisible) {
           FocusManager.instance.primaryFocus?.unfocus();
           showEmoticon.trigger(true);
         } else {
@@ -1310,7 +1310,7 @@ class _EmoticonState extends State<_Emoticon> {
                   : _defaultHeight - value,
               0.0);
 
-          return !data.isKeyboardVisible.value
+          return !data.isKeyboardVisible
               ? SizedBox(
                   height: height,
                   child: Padding(
@@ -1893,7 +1893,7 @@ class _EditPostState extends State<EditPost> {
                 final dynamicHeight = fullHeight - value;
                 final lessHeight = fullHeight - (data.keyboardHeight ?? value);
 
-                return (data.isKeyboardVisible.value || _showEmoticon.value)
+                return (data.isKeyboardVisible || _showEmoticon.value)
                     ? _inputArea(context, max(lessHeight, 0.0))
                     : _inputArea(context, max(dynamicHeight, 0.0));
               },

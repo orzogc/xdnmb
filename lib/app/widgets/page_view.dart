@@ -129,7 +129,7 @@ class SwipeablePageView extends StatelessWidget {
     final media = MediaQuery.of(context);
     final settings = SettingsService.to;
 
-    return (SettingsService.isSwipeablePage && GetPlatform.isMobile)
+    return Obx(() => (settings.isSwipeablePage && GetPlatform.isMobile)
         ? Listener(
             onPointerDown: (event) {
               final route = ModalRoute.of(context);
@@ -161,6 +161,6 @@ class SwipeablePageView extends StatelessWidget {
             controller: controller,
             itemCount: itemCount,
             itemBuilder: itemBuilder,
-          );
+          ));
   }
 }

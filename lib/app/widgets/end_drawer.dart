@@ -119,7 +119,7 @@ class AppEndDrawer extends StatelessWidget {
     final Widget settingsButton =
         SettingsButton(showLabel: true, onTapPrelude: Get.back);
 
-    return SettingsService.isBackdropUI
+    return Obx(() => settings.isBackdropUI
         ? Drawer(
             width: 150.0,
             child: Column(
@@ -158,6 +158,6 @@ class AppEndDrawer extends StatelessWidget {
                 Expanded(child: ForumList(onTapEnd: Get.back)),
               ],
             ),
-          );
+          ));
   }
 }

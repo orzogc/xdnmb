@@ -42,7 +42,7 @@ Future<T?> postListDialog<T>(Widget widget, {int? index}) {
         ? Container(
             margin: EdgeInsets.only(
               top: (isAutoHideAppBar ? PostListController.appBarHeight : 0.0),
-              bottom: (!data.isKeyboardVisible.value && isShowBottomBar)
+              bottom: (!data.isKeyboardVisible && isShowBottomBar)
                   ? PostListBottomBar.height
                   : 0.0,
             ),

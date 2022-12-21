@@ -24,13 +24,15 @@ class PersistentDataService extends GetxService {
 
   late final Box _dataBox;
 
-  final RxBool isKeyboardVisible = false.obs;
+  final RxBool _isKeyboardVisible = false.obs;
 
   final ValueNotifier<double> bottomHeight = ValueNotifier(0.0);
 
   double _maxBottomHeight = 0.0;
 
   final RxBool isReady = false.obs;
+
+  bool get isKeyboardVisible => _isKeyboardVisible.value;
 
   bool get firstLaunched =>
       _dataBox.get(PersistentData.firstLaunched, defaultValue: true);
@@ -160,7 +162,7 @@ class PersistentDataService extends GetxService {
 
       _keyboardSubscription = KeyboardVisibilityController()
           .onChange
-          .listen((visible) => isKeyboardVisible.value = visible);
+          .listen((visible) => _isKeyboardVisible.value = visible);
     }
 
     isReady.value = true;

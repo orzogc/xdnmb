@@ -19,7 +19,6 @@ class _ShowBottomBar extends StatelessWidget {
       listenable: settings.showBottomBarListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('显示底边栏以取代侧边栏'),
-        subtitle: const Text('更改后需要重启应用'),
         value: settings.showBottomBar,
         onChanged: (value) => settings.showBottomBar = value,
       ),
@@ -69,7 +68,6 @@ class _BackdropUI extends StatelessWidget {
       listenable: settings.backdropUIListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('启用幕布界面'),
-        subtitle: const Text('更改后需要重启应用'),
         value: settings.backdropUI,
         onChanged: (value) => settings.backdropUI = value,
       ),

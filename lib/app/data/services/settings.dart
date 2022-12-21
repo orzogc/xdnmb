@@ -61,17 +61,15 @@ class SettingsService extends GetxService {
 
   static late final bool isShowGuide;
 
-  static late final bool isShowBottomBar;
-
-  static late final bool isBackdropUI;
-
-  static bool get isSwipeablePage => isShowBottomBar || isBackdropUI;
-
   late final Box _settingsBox;
 
   final RxBool hasBeenDarkMode = false.obs;
 
+  late final RxBool _isShowBottomBar;
+
   late final RxBool _isAutoHideBottomBar;
+
+  late final RxBool _isBackdropUI;
 
   late final RxBool _isAutoHideAppBar;
 
@@ -187,8 +185,7 @@ class SettingsService extends GetxService {
       _settingsBox.put(Settings.fixMissingFont, fixMissingFont);
 
   bool get showGuide =>
-      !SettingsService.isBackdropUI &&
-      _settingsBox.get(Settings.showGuide, defaultValue: true);
+      !isBackdropUI && _settingsBox.get(Settings.showGuide, defaultValue: true);
 
   bool get rawShowGuide =>
       _settingsBox.get(Settings.showGuide, defaultValue: true);
@@ -197,7 +194,7 @@ class SettingsService extends GetxService {
       _settingsBox.put(Settings.showGuide, showGuide);
 
   bool get showBackdropGuide =>
-      SettingsService.isBackdropUI &&
+      isBackdropUI &&
       _settingsBox.get(Settings.showBackdropGuide, defaultValue: true);
 
   bool get rawShowBackdropGuide =>
@@ -211,8 +208,12 @@ class SettingsService extends GetxService {
   bool get showBottomBar =>
       _settingsBox.get(Settings.showBottomBar, defaultValue: GetPlatform.isIOS);
 
-  set showBottomBar(bool showBottomBar) =>
-      _settingsBox.put(Settings.showBottomBar, showBottomBar);
+  set showBottomBar(bool showBottomBar) {
+    _settingsBox.put(Settings.showBottomBar, showBottomBar);
+    _isShowBottomBar.value = showBottomBar;
+  }
+
+  bool get isShowBottomBar => _isShowBottomBar.value;
 
   bool get autoHideBottomBar =>
       _settingsBox.get(Settings.autoHideBottomBar, defaultValue: true);
@@ -227,8 +228,14 @@ class SettingsService extends GetxService {
   bool get backdropUI =>
       _settingsBox.get(Settings.backdropUI, defaultValue: false);
 
-  set backdropUI(bool backdropUi) =>
-      _settingsBox.put(Settings.backdropUI, backdropUi);
+  set backdropUI(bool backdropUI) {
+    _settingsBox.put(Settings.backdropUI, backdropUI);
+    _isBackdropUI.value = backdropUI;
+  }
+
+  bool get isBackdropUI => _isBackdropUI.value;
+
+  bool get isSwipeablePage => isShowBottomBar || isBackdropUI;
 
   double get frontLayerDragHeightRatio =>
       (_settingsBox.get(Settings.frontLayerDragHeightRatio, defaultValue: 0.20)
@@ -446,9 +453,6 @@ class SettingsService extends GetxService {
         box.get(Settings.fixMissingFont, defaultValue: GetPlatform.isIOS);
     isRestoreForumPage =
         box.get(Settings.restoreForumPage, defaultValue: false);
-    isShowBottomBar =
-        box.get(Settings.showBottomBar, defaultValue: GetPlatform.isIOS);
-    isBackdropUI = box.get(Settings.backdropUI, defaultValue: false);
   }
 
   void updateSaveImagePath() {
@@ -486,7 +490,6 @@ class SettingsService extends GetxService {
     super.onInit();
 
     _settingsBox = await Hive.openBox(HiveBoxName.settings);
-    isShowGuide = shouldShowGuide;
 
     Get.changeThemeMode(isDarkMode ? ThemeMode.dark : ThemeMode.light);
     _darkModeSubscription =
@@ -561,10 +564,13 @@ class SettingsService extends GetxService {
     compactTabAndForumListListenable =
         _settingsBox.listenable(keys: [Settings.compactTabAndForumList]);
 
+    _isShowBottomBar = showBottomBar.obs;
     _isAutoHideBottomBar = autoHideBottomBar.obs;
+    _isBackdropUI = backdropUI.obs;
     _isAutoHideAppBar = autoHideAppBar.obs;
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
     _isCompactTabAndForumList = compactTabAndForumList.obs;
+    isShowGuide = shouldShowGuide;
 
     isReady.value = true;
     await checkDarkMode();

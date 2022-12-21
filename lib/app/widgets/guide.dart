@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 import '../data/services/settings.dart';
@@ -26,7 +27,7 @@ abstract class Guide {
     if (AppBarPopupMenuGuide._key.currentState?.mounted ?? false)
       AppBarPopupMenuGuide._key,
     if (ThreadGuide._key.currentState?.mounted ?? false) ThreadGuide._key,
-    if (!SettingsService.isShowBottomBar &&
+    if (!SettingsService.to.isShowBottomBar &&
         !SettingsService.to.hideFloatingButton &&
         (EditPostGuide._key.currentState?.mounted ?? false))
       EditPostGuide._key,
@@ -50,15 +51,15 @@ abstract class Guide {
   static final List<GlobalKey> bottomBarGuides = [
     if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
     if (SettingsGuide._key.currentState?.mounted ?? false) SettingsGuide._key,
-    if (!SettingsService.isBackdropUI &&
+    if (!SettingsService.to.isBackdropUI &&
         SettingsService.to.compactTabAndForumList &&
         (CompactListButtonGuide._key.currentState?.mounted ?? false))
       CompactListButtonGuide._key,
-    if (!SettingsService.isBackdropUI &&
+    if (!SettingsService.to.isBackdropUI &&
         !SettingsService.to.compactTabAndForumList &&
         (TabListButtonGuide._key.currentState?.mounted ?? false))
       TabListButtonGuide._key,
-    if (!SettingsService.isBackdropUI &&
+    if (!SettingsService.to.isBackdropUI &&
         !SettingsService.to.compactTabAndForumList &&
         (ForumListButtonGuide._key.currentState?.mounted ?? false))
       ForumListButtonGuide._key,
@@ -95,15 +96,17 @@ class AppBarMenuGuide extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return Showcase(
-      key: _key,
-      title: (settings.showGuide && !SettingsService.isShowBottomBar)
-          ? '标签页菜单'
-          : '标签页和版块列表菜单',
-      description: (settings.showGuide && !SettingsService.isShowBottomBar)
-          ? '点击打开标签页'
-          : '点击打开标签页和版块列表',
-      child: child,
+    return Obx(
+      () => Showcase(
+        key: _key,
+        title: (settings.showGuide && !settings.isShowBottomBar)
+            ? '标签页菜单'
+            : '标签页和版块列表菜单',
+        description: (settings.showGuide && !settings.isShowBottomBar)
+            ? '点击打开标签页'
+            : '点击打开标签页和版块列表',
+        child: child,
+      ),
     );
   }
 }

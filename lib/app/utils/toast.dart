@@ -7,7 +7,7 @@ Future<void> showToast(String message) {
   debugPrint(message);
 
   return EasyLoading.showToast(message,
-      toastPosition: PersistentDataService.to.isKeyboardVisible.value
+      toastPosition: PersistentDataService.to.isKeyboardVisible
           ? EasyLoadingToastPosition.top
           : EasyLoadingToastPosition.bottom);
 }

@@ -280,6 +280,9 @@ class AppSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
   bool get maintainState => _maintainState;
 
   @override
+  bool get canSwipe => SettingsService.to.isSwipeablePage;
+
+  @override
   double get backGestureDetectionWidth => _backGestureDetectionWidth;
 
   @override
@@ -295,10 +298,7 @@ class AppSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
       required WidgetBuilder builder})
       : _maintainState = maintainState,
         super(
-            settings: settings,
-            canSwipe: SettingsService.isSwipeablePage,
-            canOnlySwipeFromEdge: true,
-            builder: builder) {
+            settings: settings, canOnlySwipeFromEdge: true, builder: builder) {
     SettingsService.to.swipeablePageDragWidthRatioListenable
         .addListener(_dragWidth);
   }
@@ -325,6 +325,25 @@ class AppSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
 
     super.dispose();
   }
+
+  @override
+  Widget buildTransitions(BuildContext context, Animation<double> animation,
+      Animation<double> secondaryAnimation, Widget child) {
+    final settings = SettingsService.to;
+
+    return SwipeablePageRoute.buildPageTransitions(
+      this,
+      context,
+      animation,
+      secondaryAnimation,
+      child,
+      canSwipe: () => settings.isSwipeablePage,
+      canOnlySwipeFromEdge: canOnlySwipeFromEdge,
+      backGestureDetectionWidth: backGestureDetectionWidth,
+      backGestureDetectionStartOffset: backGestureDetectionStartOffset,
+      transitionBuilder: transitionBuilder,
+    );
+  }
 }
 
 class AppPageTransitionsBuilder extends SwipeablePageTransitionsBuilder {
@@ -347,7 +366,7 @@ class AppPageTransitionsBuilder extends SwipeablePageTransitionsBuilder {
         animation,
         secondaryAnimation,
         child,
-        canSwipe: () => SettingsService.isSwipeablePage,
+        canSwipe: () => settings.isSwipeablePage,
         canOnlySwipeFromEdge: true,
         backGestureDetectionWidth:
             Get.mediaQuery.size.width * settings.swipeablePageDragWidthRatio,
