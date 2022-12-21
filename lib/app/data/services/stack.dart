@@ -5,8 +5,8 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
 import '../../modules/post_list.dart';
-import '../../utils/notify.dart';
 import '../../widgets/forum.dart';
+import '../../widgets/listenable.dart';
 import '../models/controller.dart';
 import '../models/hive.dart';
 import 'persistent.dart';

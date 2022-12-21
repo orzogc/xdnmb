@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 
 import '../data/services/settings.dart';
-import '../utils/notify.dart';
 import '../utils/theme.dart';
 import '../widgets/dialog.dart';
+import '../widgets/listenable.dart';
 import '../widgets/safe_area.dart';
 
 class _ShowBottomBar extends StatelessWidget {
@@ -16,9 +15,9 @@ class _ShowBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.showBottomBarListenable,
-      builder: (context, value, child) => SwitchListTile(
+    return ListenableBuilder(
+      listenable: settings.showBottomBarListenable,
+      builder: (context, child) => SwitchListTile(
         title: const Text('显示底边栏以取代侧边栏'),
         subtitle: const Text('更改后需要重启应用'),
         value: settings.showBottomBar,
@@ -36,8 +35,8 @@ class _AutoHideBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return NotifyBuilder(
-      animation: Listenable.merge([
+    return ListenableBuilder(
+      listenable: Listenable.merge([
         settings.showBottomBarListenable,
         settings.autoHideBottomBarListenable,
       ]),
@@ -66,9 +65,9 @@ class _BackdropUI extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.backdropUIListenable,
-      builder: (context, value, child) => SwitchListTile(
+    return ListenableBuilder(
+      listenable: settings.backdropUIListenable,
+      builder: (context, child) => SwitchListTile(
         title: const Text('启用幕布界面'),
         subtitle: const Text('更改后需要重启应用'),
         value: settings.backdropUI,
@@ -86,8 +85,8 @@ class _FrontLayerDragHeightRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return NotifyBuilder(
-      animation: Listenable.merge([
+    return ListenableBuilder(
+      listenable: Listenable.merge([
         settings.backdropUIListenable,
         settings.frontLayerDragHeightRatioListenable
       ]),
@@ -126,8 +125,8 @@ class _BackLayerDragHeightRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return NotifyBuilder(
-      animation: Listenable.merge([
+    return ListenableBuilder(
+      listenable: Listenable.merge([
         settings.backdropUIListenable,
         settings.backLayerDragHeightRatioListenable
       ]),
@@ -166,9 +165,9 @@ class _AutoHideAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder(
-      valueListenable: settings.autoHideAppBarListenable,
-      builder: (context, value, child) => SwitchListTile(
+    return ListenableBuilder(
+      listenable: settings.autoHideAppBarListenable,
+      builder: (context, child) => SwitchListTile(
         title: const Text('向下滑动时自动隐藏标题栏'),
         value: settings.autoHideAppBar,
         onChanged: (value) => settings.autoHideAppBar = value,
@@ -185,8 +184,8 @@ class _HideFloatingButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return NotifyBuilder(
-      animation: Listenable.merge([
+    return ListenableBuilder(
+      listenable: Listenable.merge([
         settings.showBottomBarListenable,
         settings.hideFloatingButtonListenable,
       ]),
@@ -215,8 +214,8 @@ class _AutoHideFloatingButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return NotifyBuilder(
-      animation: Listenable.merge([
+    return ListenableBuilder(
+      listenable: Listenable.merge([
         settings.showBottomBarListenable,
         settings.hideFloatingButtonListenable,
         settings.autoHideFloatingButtonListenable,
@@ -247,9 +246,9 @@ class _DrawerDragRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.drawerEdgeDragWidthRatioListenable,
-      builder: (context, value, child) {
+    return ListenableBuilder(
+      listenable: settings.drawerEdgeDragWidthRatioListenable,
+      builder: (context, child) {
         final textStyle = TextStyle(
             color:
                 settings.showBottomBar ? AppTheme.inactiveSettingColor : null);
@@ -285,9 +284,9 @@ class _PageDragWidthRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.swipeablePageDragWidthRatioListenable,
-      builder: (context, value, child) {
+    return ListenableBuilder(
+      listenable: settings.swipeablePageDragWidthRatioListenable,
+      builder: (context, child) {
         final textStyle = TextStyle(
             color: !(settings.showBottomBar || settings.backdropUI)
                 ? AppTheme.inactiveSettingColor
@@ -324,8 +323,8 @@ class _CompactTabAndForumList extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return NotifyBuilder(
-      animation: Listenable.merge([
+    return ListenableBuilder(
+      listenable: Listenable.merge([
         settings.showBottomBarListenable,
         settings.backdropUIListenable,
         settings.compactTabAndForumListListenable,

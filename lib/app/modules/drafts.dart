@@ -10,6 +10,7 @@ import '../data/services/draft.dart';
 import '../utils/toast.dart';
 import '../utils/theme.dart';
 import '../widgets/dialog.dart';
+import '../widgets/listenable.dart';
 import '../widgets/post.dart';
 import '../widgets/safe_area.dart';
 
@@ -83,9 +84,9 @@ class _DraftList extends StatelessWidget {
   Widget build(BuildContext context) {
     final drafts = PostDraftListService.to;
 
-    return ValueListenableBuilder(
-      valueListenable: drafts.draftListListenable,
-      builder: (context, value, child) => drafts.length > 0
+    return ListenableBuilder(
+      listenable: drafts.draftListListenable,
+      builder: (context, child) => drafts.length > 0
           ? LoaderOverlay(
               child: ListView.separated(
                 itemCount: drafts.length,

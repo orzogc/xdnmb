@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 import '../data/services/settings.dart';
@@ -13,6 +12,7 @@ import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
+import 'listenable.dart';
 import 'loading.dart';
 
 class _MinHeightIndicator extends StatelessWidget {
@@ -349,9 +349,9 @@ class _BiListViewState<T> extends State<BiListView<T>>
         }
       },
       child: _MinHeightIndicator(
-        child: ValueListenableBuilder<Box>(
-          valueListenable: user.browseCookieListenable,
-          builder: (context, value, child) {
+        child: ListenableBuilder(
+          listenable: user.browseCookieListenable,
+          builder: (context, child) {
             final Widget text =
                 (!user.hasBrowseCookie && message.contains('饼干'))
                     ? Text('没有饼干，点击管理饼干',

@@ -5,10 +5,10 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../../utils/toast.dart';
+import '../../widgets/listenable.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
-import '../../utils/notify.dart';
-import '../../utils/toast.dart';
 import 'xdnmb_client.dart';
 
 class _ForumKey {

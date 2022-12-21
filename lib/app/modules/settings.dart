@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../data/services/settings.dart';
@@ -9,6 +8,7 @@ import '../routes/routes.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import '../widgets/dialog.dart';
+import '../widgets/listenable.dart';
 import '../widgets/safe_area.dart';
 
 class _DarkMode extends StatelessWidget {
@@ -19,9 +19,9 @@ class _DarkMode extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.isDarkModeListenable,
-      builder: (context, value, child) => SwitchListTile(
+    return ListenableBuilder(
+      listenable: settings.isDarkModeListenable,
+      builder: (context, child) => SwitchListTile(
         title: const Text('黑夜模式'),
         subtitle: settings.isDarkMode ? const Text('光来！') : const Text('暗来！'),
         value: settings.isDarkMode,

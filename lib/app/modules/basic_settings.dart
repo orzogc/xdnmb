@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/services/settings.dart';
 import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
+import '../widgets/listenable.dart';
 import '../widgets/safe_area.dart';
 
 class _RestoreTabs extends StatelessWidget {
@@ -17,9 +17,9 @@ class _RestoreTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.isRestoreTabsListenable,
-      builder: (context, value, child) => SwitchListTile(
+    return ListenableBuilder(
+      listenable: settings.isRestoreTabsListenable,
+      builder: (context, child) => SwitchListTile(
         title: const Text('应用启动后恢复标签页'),
         value: settings.isRestoreTabs,
         onChanged: (value) => settings.isRestoreTabs = value,
@@ -36,9 +36,9 @@ class _InitialForum extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.initialForumListenable,
-      builder: (context, value, child) => ListTile(
+    return ListenableBuilder(
+      listenable: settings.initialForumListenable,
+      builder: (context, child) => ListTile(
         title: Text(
           '应用启动后显示的版块',
           style: TextStyle(
@@ -83,9 +83,9 @@ class _ShowImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.showImageListenable,
-      builder: (context, value, child) => SwitchListTile(
+    return ListenableBuilder(
+      listenable: settings.showImageListenable,
+      builder: (context, child) => SwitchListTile(
         title: const Text('显示图片'),
         value: settings.showImage,
         onChanged: (value) => settings.showImage = value,
@@ -102,9 +102,9 @@ class _Watermark extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.isWatermarkListenable,
-      builder: (context, value, child) => SwitchListTile(
+    return ListenableBuilder(
+      listenable: settings.isWatermarkListenable,
+      builder: (context, child) => SwitchListTile(
         title: const Text('发送图片默认附带水印'),
         value: settings.isWatermark,
         onChanged: (value) => settings.isWatermark = value,
@@ -121,9 +121,9 @@ class _AutoJumpPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.isJumpToLastBrowsePageListenable,
-      builder: (context, value, child) => SwitchListTile(
+    return ListenableBuilder(
+      listenable: settings.isJumpToLastBrowsePageListenable,
+      builder: (context, child) => SwitchListTile(
         title: const Text('自动跳转页数'),
         subtitle: const Text('打开串时自动跳转到最近浏览的页数'),
         value: settings.isJumpToLastBrowsePage,
@@ -141,9 +141,9 @@ class _AutoJumpPosition extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.isJumpToLastBrowsePositionListenable,
-      builder: (context, value, child) {
+    return ListenableBuilder(
+      listenable: settings.isJumpToLastBrowsePositionListenable,
+      builder: (context, child) {
         final textStyle = TextStyle(
           color: !settings.isJumpToLastBrowsePage
               ? AppTheme.inactiveSettingColor
@@ -171,9 +171,9 @@ class _AfterPostRefresh extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.isAfterPostRefreshListenable,
-      builder: (context, value, child) => SwitchListTile(
+    return ListenableBuilder(
+      listenable: settings.isAfterPostRefreshListenable,
+      builder: (context, child) => SwitchListTile(
         title: const Text('发表新串后自动刷新页面'),
         value: settings.isAfterPostRefresh,
         onChanged: (value) => settings.isAfterPostRefresh = value,
@@ -190,9 +190,9 @@ class _DismissibleTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.dismissibleTabListenable,
-      builder: (context, value, child) => SwitchListTile(
+    return ListenableBuilder(
+      listenable: settings.dismissibleTabListenable,
+      builder: (context, child) => SwitchListTile(
         title: const Text('在标签页列表中滑动标签可以关闭标签页'),
         value: settings.dismissibleTab,
         onChanged: ((value) => settings.dismissibleTab = value),
@@ -257,9 +257,9 @@ class _FeedId extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.feedIdListenable,
-      builder: (context, value, child) => ListTile(
+    return ListenableBuilder(
+      listenable: settings.feedIdListenable,
+      builder: (context, child) => ListTile(
         title: const Text('订阅ID'),
         subtitle: Text(settings.feedId),
         trailing: child,

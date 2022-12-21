@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
@@ -11,11 +10,11 @@ import '../data/services/user.dart';
 import '../data/services/xdnmb_client.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/notify.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import '../widgets/dialog.dart';
+import '../widgets/listenable.dart';
 import '../widgets/safe_area.dart';
 
 class _VerifyImage extends StatefulWidget {
@@ -528,9 +527,9 @@ class _CookieViewState extends State<CookieView> {
         appBar: AppBar(
           title: const Text('饼干'),
         ),
-        body: ValueListenableBuilder<Box>(
-          valueListenable: user.userCookieListenable,
-          builder: (context, box, child) => ListView(
+        body: ListenableBuilder(
+          listenable: user.userCookieListenable,
+          builder: (context, child) => ListView(
             children: [
               _Login(
                 key: ValueKey<int>(user.isLogin
@@ -549,8 +548,8 @@ class _CookieViewState extends State<CookieView> {
                     showToast('更新饼干列表出错: ${exceptionMessage(snapshot.error!)}');
                   }
 
-                  return NotifyBuilder(
-                    animation: Listenable.merge(
+                  return ListenableBuilder(
+                    listenable: Listenable.merge(
                         [user.cookiesListenable, user.browseCookieListenable]),
                     builder: (context, child) => Column(
                       mainAxisSize: MainAxisSize.min,

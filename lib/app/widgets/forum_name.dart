@@ -5,10 +5,10 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/forum.dart';
 import '../data/services/forum.dart';
-import '../utils/notify.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import 'dialog.dart';
+import 'listenable.dart';
 
 class ForumNameText extends StatelessWidget {
   final String forumName;
@@ -90,8 +90,8 @@ class ForumName extends StatelessWidget {
   Widget build(BuildContext context) {
     final forums = ForumListService.to;
 
-    return NotifyBuilder(
-      animation: forums.updateForumNameNotifier,
+    return ListenableBuilder(
+      listenable: forums.updateForumNameNotifier,
       builder: (context, child) {
         final name = forums.forumName(forumId,
             isTimeline: isTimeline, isDisplay: isDisplay);

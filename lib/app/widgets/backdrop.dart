@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 
 import '../data/services/settings.dart';
 import '../utils/padding.dart';
 import '../utils/theme.dart';
+import 'listenable.dart';
 
 typedef OnShowBackLayerCallback = void Function(bool isShowed);
 
@@ -201,10 +201,9 @@ class _BackdropState extends State<Backdrop>
                   onVerticalDragStart: _onVerticalDragStart,
                   onVerticalDragUpdate: _onVerticalDragUpdate,
                   onVerticalDragEnd: _onVerticalDragEnd,
-                  child: ValueListenableBuilder<Box>(
-                    valueListenable:
-                        settings.backLayerDragHeightRatioListenable,
-                    builder: (context, value, child) => SizedBox(
+                  child: ListenableBuilder(
+                    listenable: settings.backLayerDragHeightRatioListenable,
+                    builder: (context, child) => SizedBox(
                       width: double.infinity,
                       height: (widget.height - widget.appBarHeight) *
                           settings.backLayerDragHeightRatio,
@@ -225,9 +224,9 @@ class _BackdropState extends State<Backdrop>
                 onVerticalDragStart: _onVerticalDragStart,
                 onVerticalDragUpdate: _onVerticalDragUpdate,
                 onVerticalDragEnd: _onVerticalDragEnd,
-                child: ValueListenableBuilder<Box>(
-                  valueListenable: settings.frontLayerDragHeightRatioListenable,
-                  builder: (context, value, child) => SizedBox(
+                child: ListenableBuilder(
+                  listenable: settings.frontLayerDragHeightRatioListenable,
+                  builder: (context, child) => SizedBox(
                     width: double.infinity,
                     height: widget.topPadding +
                         widget.appBarHeight +

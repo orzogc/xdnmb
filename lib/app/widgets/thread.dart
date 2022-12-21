@@ -19,7 +19,6 @@ import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/post_list.dart';
 import '../utils/navigation.dart';
-import '../utils/notify.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
@@ -27,6 +26,7 @@ import 'bilistview.dart';
 import 'dialog.dart';
 import 'edit_post.dart';
 import 'forum_name.dart';
+import 'listenable.dart';
 import 'loading.dart';
 import 'post.dart';
 import 'post_list.dart';
@@ -482,8 +482,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     }
   }
 
-  Future<void> _saveHistoryAndJumpToIndex(
-      Thread thread, int firstPage, int page) async {
+  void _saveHistoryAndJumpToIndex(Thread thread, int firstPage, int page) {
     if (page == firstPage) {
       final history = PostHistoryService.to;
       final jumpToId = controller.jumpToId;
@@ -504,17 +503,13 @@ class _ThreadBodyState extends State<ThreadBody> {
           }
         }
 
-        if (_history == null) {
-          _history = BrowseHistory.fromPost(
-              mainPost: thread.mainPost,
-              browsePage: page,
-              browsePostId: firstPost.id,
-              isOnlyPo: isOnlyPoThread);
-          await history.saveBrowseHistory(_history!);
-          //_isToJump.value = false;
-        }
+        _history ??= BrowseHistory.fromPost(
+            mainPost: thread.mainPost,
+            browsePage: page,
+            browsePostId: firstPost.id,
+            isOnlyPo: isOnlyPoThread);
 
-        if (_history != null && _isToJump.value) {
+        if (_isToJump.value) {
           final index = jumpToId?.postIdToPostIndex(page) ??
               _history!.toIndex(isOnlyPo: isOnlyPoThread);
           if (index != null) {
@@ -531,24 +526,24 @@ class _ThreadBodyState extends State<ThreadBody> {
                       await _anchorController.scrollToIndex(
                           index: index, scrollSpeed: 10.0);
 
-                      if (mounted) {
-                        if (firstPost.id != id) {
-                          while (mounted &&
-                              _isToJump.value &&
-                              id != controller.browsePostId &&
-                              !_isNoMoreItems) {
-                            await Future.delayed(
-                                const Duration(milliseconds: 50), () async {
-                              if (mounted && _isToJump.value) {
-                                await _anchorController.scrollToIndex(
-                                    index: index, scrollSpeed: 10.0);
-                              }
-                            });
-                          }
-                        } else {
-                          updateHistory();
+                      if (firstPost.id != id) {
+                        while (mounted &&
+                            _isToJump.value &&
+                            id != controller.browsePostId &&
+                            !_isNoMoreItems) {
+                          await Future.delayed(const Duration(milliseconds: 50),
+                              () async {
+                            if (mounted && _isToJump.value) {
+                              await _anchorController.scrollToIndex(
+                                  index: index, scrollSpeed: 10.0);
+                            }
+                          });
                         }
+                      } else {
+                        updateHistory();
                       }
+                    } else {
+                      updateHistory();
                     }
                   } catch (e) {
                     showToast('跳转到串号 $id 失败：$e');
@@ -609,7 +604,7 @@ class _ThreadBodyState extends State<ThreadBody> {
       return [];
     }
 
-    await _saveHistoryAndJumpToIndex(thread, firstPage, page);
+    _saveHistoryAndJumpToIndex(thread, firstPage, page);
 
     final List<PostWithPage> posts = [];
     if (page == 1) {
@@ -670,8 +665,8 @@ class _ThreadBodyState extends State<ThreadBody> {
     );
 
     return post is! Tip
-        ? NotifyBuilder(
-            animation: BlacklistService.to.postAndUserBlacklistNotifier,
+        ? ListenableBuilder(
+            listenable: BlacklistService.to.postAndUserBlacklistNotifier,
             builder: (context, child) => !post.isBlocked()
                 ? _itemWithDivider(
                     AnchorItemWrapper(
@@ -784,12 +779,13 @@ class _ThreadBodyState extends State<ThreadBody> {
   void initState() {
     super.initState();
 
-    final autoHideAppBar = SettingsService.to.autoHideAppBar;
+    final settings = SettingsService.to;
 
     _anchorController = AnchorScrollController(
       initialScrollOffset:
-          autoHideAppBar ? -PostListController.appBarHeight : 0.0,
-      getAnchorOffset: autoHideAppBar ? () => controller.headerHeight : null,
+          settings.autoHideAppBar ? -PostListController.appBarHeight : 0.0,
+      getAnchorOffset: () =>
+          settings.autoHideAppBar ? controller.headerHeight : 0.0,
       onIndexChanged: (index, userScroll) {
         controller.page = index.getPageFromPostIndex();
         controller.browsePostId = index.getPostIdFromPostIndex();

@@ -19,7 +19,6 @@ import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/post_list.dart';
 import '../utils/navigation.dart';
-import '../utils/notify.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -29,6 +28,7 @@ import 'bilistview.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
 import 'guide.dart';
+import 'listenable.dart';
 import 'post.dart';
 import 'post_list.dart';
 import 'reference.dart';
@@ -341,8 +341,8 @@ class _ForumBodyState extends State<ForumBody> {
         itemBuilder: (context, thread, index) {
           final mainPost = thread.thread.mainPost;
 
-          final Widget item = NotifyBuilder(
-            animation: Listenable.merge([
+          final Widget item = ListenableBuilder(
+            listenable: Listenable.merge([
               if (controller.isTimeline) blacklist.forumBlacklistNotifier,
               blacklist.postAndUserBlacklistNotifier,
             ]),

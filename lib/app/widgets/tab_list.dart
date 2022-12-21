@@ -6,11 +6,11 @@ import '../data/services/settings.dart';
 import '../data/services/stack.dart';
 import '../modules/post_list.dart';
 import '../utils/extensions.dart';
-import '../utils/notify.dart';
 import '../utils/theme.dart';
 import 'content.dart';
 import 'forum_name.dart';
 import 'guide.dart';
+import 'listenable.dart';
 import 'thread.dart';
 
 class _TabTitle extends StatelessWidget {
@@ -97,8 +97,8 @@ class TabList extends StatelessWidget {
           shrinkWrap: true,
           padding: EdgeInsets.zero,
           itemCount: stacks.length,
-          itemBuilder: (context, index) => NotifyBuilder(
-            animation: Listenable.merge(
+          itemBuilder: (context, index) => ListenableBuilder(
+            listenable: Listenable.merge(
                 [stacks.notifier, settings.dismissibleTabListenable]),
             builder: (context, child) {
               final controller = PostListController.get(index);

@@ -11,6 +11,7 @@ import '../data/models/history.dart';
 import '../data/models/post.dart';
 import '../data/models/reply.dart';
 import '../data/services/history.dart';
+import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
@@ -18,7 +19,6 @@ import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/post_list.dart';
 import '../utils/navigation.dart';
-import '../utils/notify.dart';
 import '../utils/regex.dart';
 import '../utils/theme.dart';
 import '../utils/time.dart';
@@ -26,6 +26,7 @@ import '../utils/toast.dart';
 import 'bilistview.dart';
 import 'checkbox.dart';
 import 'dialog.dart';
+import 'listenable.dart';
 import 'page_view.dart';
 import 'post.dart';
 import 'post_list.dart';
@@ -1149,7 +1150,26 @@ class _HistoryBodyState extends State<HistoryBody> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = SettingsService.to;
     final theme = Theme.of(context);
+
+    final Widget tabBar = Material(
+      elevation: theme.appBarTheme.elevation ?? PostListAppBar.defaultElevation,
+      color: theme.primaryColor,
+      child: PageViewTabBar(
+        pageController: widget.controller._pageController,
+        initialIndex: _initialIndex,
+        onIndex: (index) {
+          if (widget.controller.pageIndex != index) {
+            popAllPopup();
+            widget.controller._pageController.animateToPage(index,
+                duration: PageViewTabBar.animationDuration,
+                curve: Curves.easeIn);
+          }
+        },
+        tabs: const [Tab(text: '浏览'), Tab(text: '主题'), Tab(text: '回复')],
+      ),
+    );
 
     return Stack(
       children: [
@@ -1242,29 +1262,14 @@ class _HistoryBodyState extends State<HistoryBody> {
           ),
         ),
         Obx(
-          () => Positioned(
-            left: 0.0,
-            top: PostListController.appBarHeight,
-            right: 0.0,
-            child: Material(
-              elevation: theme.appBarTheme.elevation ??
-                  PostListAppBar.defaultElevation,
-              color: theme.primaryColor,
-              child: PageViewTabBar(
-                pageController: widget.controller._pageController,
-                initialIndex: _initialIndex,
-                onIndex: (index) {
-                  if (widget.controller.pageIndex != index) {
-                    popAllPopup();
-                    widget.controller._pageController.animateToPage(index,
-                        duration: PageViewTabBar.animationDuration,
-                        curve: Curves.easeIn);
-                  }
-                },
-                tabs: const [Tab(text: '浏览'), Tab(text: '主题'), Tab(text: '回复')],
-              ),
-            ),
-          ),
+          () => settings.isAutoHideAppBar
+              ? Positioned(
+                  left: 0.0,
+                  top: PostListController.appBarHeight,
+                  right: 0.0,
+                  child: tabBar,
+                )
+              : tabBar,
         ),
       ],
     );

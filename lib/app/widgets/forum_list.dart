@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -11,12 +9,12 @@ import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/navigation.dart';
-import '../utils/notify.dart';
 import '../utils/text.dart';
 import '../utils/toast.dart';
 import 'forum.dart';
 import 'forum_name.dart';
 import 'guide.dart';
+import 'listenable.dart';
 
 class _Dialog extends StatelessWidget {
   final ForumData forum;
@@ -123,16 +121,16 @@ class ForumList extends StatelessWidget {
     final forums = ForumListService.to;
     final theme = Theme.of(context);
 
-    return NotifyBuilder(
-      animation: ControllerStacksService.to.notifier,
+    return ListenableBuilder(
+      listenable: ControllerStacksService.to.notifier,
       builder: (context, child) {
         final controller = PostListController.get();
         final forumId = controller.forumOrTimelineId;
         final isTimeline = controller.isTimeline;
 
-        return ValueListenableBuilder<HashMap<int, int>>(
-          valueListenable: forums.displayedForumIndexNotifier,
-          builder: (context, box, child) => ListView.builder(
+        return ListenableBuilder(
+          listenable: forums.displayedForumIndexNotifier,
+          builder: (context, child) => ListView.builder(
             key: const PageStorageKey<String>('forumList'),
             padding: EdgeInsets.zero,
             itemCount: forums.displayedForumsCount,

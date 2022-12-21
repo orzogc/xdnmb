@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 import '../data/models/controller.dart';
@@ -27,7 +26,6 @@ import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/image.dart';
 import '../utils/navigation.dart';
-import '../utils/notify.dart';
 import '../utils/padding.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -41,6 +39,7 @@ import '../widgets/forum.dart';
 import '../widgets/forum_list.dart';
 import '../widgets/guide.dart';
 import '../widgets/history.dart';
+import '../widgets/listenable.dart';
 import '../widgets/page.dart';
 import '../widgets/safe_area.dart';
 import '../widgets/scroll.dart';
@@ -286,8 +285,8 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
     final stacks = ControllerStacksService.to;
     final settings = SettingsService.to;
 
-    return NotifyBuilder(
-      animation: stacks.notifier,
+    return ListenableBuilder(
+      listenable: stacks.notifier,
       builder: (context, child) {
         final controller = PostListController.get();
 
@@ -373,8 +372,8 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                                 PageButton(controller: controller))
                             : PageButton(controller: controller),
                       if (controller.isThreadType)
-                        NotifyBuilder(
-                            animation: controller,
+                        ListenableBuilder(
+                            listenable: controller,
                             builder: (context, child) =>
                                 settings.shouldShowGuide
                                     ? AppBarPopupMenuGuide(
@@ -722,8 +721,8 @@ class PostListPageState extends State<PostListPage> {
 
     final stacks = ControllerStacksService.to;
 
-    return NotifyBuilder(
-      animation: stacks.getStackNotifier(index),
+    return ListenableBuilder(
+      listenable: stacks.getStackNotifier(index),
       builder: (context, child) => Navigator(
         key: Get.nestedKey(stacks.getKeyId(index)),
         pages: [
@@ -1062,8 +1061,8 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return NotifyBuilder(
-      animation: Listenable.merge([
+    return ListenableBuilder(
+      listenable: Listenable.merge([
         ControllerStacksService.to.notifier,
         settings.hideFloatingButtonListenable,
         settings.autoHideFloatingButtonListenable,
@@ -1613,8 +1612,8 @@ class PostListBottomBar extends StatelessWidget {
     );
 
     return settings.autoHideBottomBar
-        ? NotifyBuilder(
-            animation: ControllerStacksService.to.notifier,
+        ? ListenableBuilder(
+            listenable: ControllerStacksService.to.notifier,
             builder: (context, child) => bottomBar,
           )
         : bottomBar;
@@ -1923,10 +1922,9 @@ class _PostListViewState extends State<PostListView>
               }
 
               final Widget? bottomBar = SettingsService.isShowBottomBar
-                  ? ValueListenableBuilder<Box>(
-                      valueListenable:
-                          settings.compactTabAndForumListListenable,
-                      builder: (context, value, child) => PostListBottomBar(
+                  ? ListenableBuilder(
+                      listenable: settings.compactTabAndForumListListenable,
+                      builder: (context, child) => PostListBottomBar(
                         key: ValueKey<bool>(settings.compactTabAndForumList),
                       ),
                     )

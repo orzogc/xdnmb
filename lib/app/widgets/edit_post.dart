@@ -6,7 +6,6 @@ import 'package:align_positioned/align_positioned.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' as xdnmb_api;
@@ -35,7 +34,6 @@ import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/image.dart';
 import '../utils/icons.dart';
-import '../utils/notify.dart';
 import '../utils/padding.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
@@ -44,6 +42,7 @@ import 'checkbox.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
 import 'image.dart';
+import 'listenable.dart';
 import 'scroll.dart';
 import 'size.dart';
 import 'thread.dart';
@@ -67,8 +66,8 @@ class _ForumName extends StatelessWidget {
   Widget build(BuildContext context) {
     final forums = ForumListService.to;
 
-    return NotifyBuilder(
-      animation: forums.updateForumNameNotifier,
+    return ListenableBuilder(
+      listenable: forums.updateForumNameNotifier,
       builder: (context, child) {
         String? forumName;
         if (forumId != null) {
@@ -697,9 +696,9 @@ class _Cookie extends StatelessWidget {
         getTextSize(context, '啊啊啊啊啊啊啊', Theme.of(context).textTheme.bodyMedium);
 
     return user.hasPostCookie
-        ? ValueListenableBuilder<Box>(
-            valueListenable: user.postCookieListenable,
-            builder: (context, value, child) => TextButton(
+        ? ListenableBuilder(
+            listenable: user.postCookieListenable,
+            builder: (context, child) => TextButton(
               onPressed: () => Get.dialog(
                 SimpleDialog(
                   children: [
@@ -1320,10 +1319,10 @@ class _EmoticonState extends State<_Emoticon> {
                     child: Scrollbar(
                       controller: _controller,
                       thumbVisibility: true,
-                      child: ValueListenableBuilder(
-                        valueListenable: emoticons.emoticonsListenable,
+                      child: ListenableBuilder(
+                        listenable: emoticons.emoticonsListenable,
                         // 这里可能有性能问题
-                        builder: (context, value, child) => ResponsiveGridList(
+                        builder: (context, child) => ResponsiveGridList(
                           key: const PageStorageKey<String>('emoticons'),
                           minItemWidth: 80.0,
                           horizontalGridSpacing: 10.0,

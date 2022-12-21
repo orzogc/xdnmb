@@ -2,14 +2,14 @@ import 'dart:collection';
 
 import 'package:float_column/float_column.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:html_to_text/html_to_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/services/settings.dart';
 import '../utils/regex.dart';
 import '../utils/text.dart';
-import '../widgets/image.dart';
+import 'image.dart';
+import 'listenable.dart';
 
 Map<String, OnTagCallback> onHiddenTag(OnTagCallback onHiddenText) =>
     HashMap.fromEntries([MapEntry('h', onHiddenText)]);
@@ -243,9 +243,9 @@ class _ContentState extends State<Content> {
       strutStyle: strutStyleFromHeight(widget.textStyle),
     );
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.showImageListenable,
-      builder: (context, value, child) =>
+    return ListenableBuilder(
+      listenable: settings.showImageListenable,
+      builder: (context, child) =>
           (settings.showImage && widget.displayImage && widget.post.hasImage())
               ? FloatColumn(
                   children: [

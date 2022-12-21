@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/controller.dart';
@@ -19,6 +18,7 @@ import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
+import 'listenable.dart';
 import 'post.dart';
 import 'post_list.dart';
 
@@ -139,9 +139,9 @@ class _FeedBodyState extends State<FeedBody> {
     final client = XdnmbClientService.to.client;
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder<Box>(
-      valueListenable: settings.feedIdListenable,
-      builder: (context, value, child) => PostListScrollView(
+    return ListenableBuilder(
+      listenable: settings.feedIdListenable,
+      builder: (context, child) => PostListScrollView(
         controller: widget.controller,
         useAnchorScrollController: true,
         builder: (context, scrollController, refresh) =>

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
-import '../../utils/notify.dart';
+import '../../widgets/listenable.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
 

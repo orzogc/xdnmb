@@ -24,6 +24,7 @@ import '../modules/ui_settings.dart';
 import '../widgets/feed.dart';
 import '../widgets/forum.dart';
 import '../widgets/history.dart';
+import '../widgets/listenable.dart';
 import '../widgets/thread.dart';
 
 abstract class AppRoutes {
@@ -338,10 +339,9 @@ class AppPageTransitionsBuilder extends SwipeablePageTransitionsBuilder {
       Widget child) {
     final settings = SettingsService.to;
 
-    return ValueListenableBuilder(
-      valueListenable: settings.swipeablePageDragWidthRatioListenable,
-      builder: (context, value, child_) =>
-          SwipeablePageRoute.buildPageTransitions<T>(
+    return ListenableBuilder(
+      listenable: settings.swipeablePageDragWidthRatioListenable,
+      builder: (context, child_) => SwipeablePageRoute.buildPageTransitions<T>(
         route,
         context,
         animation,

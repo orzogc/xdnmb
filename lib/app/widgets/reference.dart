@@ -7,11 +7,11 @@ import '../data/services/xdnmb_client.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/notify.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'dialog.dart';
+import 'listenable.dart';
 import 'post.dart';
 
 class _Dialog extends StatelessWidget {
@@ -99,8 +99,9 @@ class _ReferenceCardState extends State<ReferenceCard> {
                   final post = snapshot.data!;
                   final mainPostId = post.mainPostId;
 
-                  return NotifyBuilder(
-                    animation: BlacklistService.to.postAndUserBlacklistNotifier,
+                  return ListenableBuilder(
+                    listenable:
+                        BlacklistService.to.postAndUserBlacklistNotifier,
                     builder: (context, child) {
                       final isVisible = (!post.isBlocked()).obs;
 

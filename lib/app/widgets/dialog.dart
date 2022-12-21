@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/models/controller.dart';
@@ -27,6 +26,7 @@ import 'checkbox.dart';
 import 'content.dart';
 import 'edit_post.dart';
 import 'forum_name.dart';
+import 'listenable.dart';
 import 'scroll.dart';
 import 'thread.dart';
 
@@ -168,9 +168,9 @@ class NoticeDialog extends StatelessWidget {
       actionsAlignment:
           showCheckbox ? MainAxisAlignment.spaceBetween : MainAxisAlignment.end,
       contentPadding: const EdgeInsets.fromLTRB(24.0, 10.0, 24.0, 5.0),
-      title: ValueListenableBuilder<Box>(
-          valueListenable: data.noticeDateListenable,
-          builder: (context, value, child) => data.noticeDate != null
+      title: ListenableBuilder(
+          listenable: data.noticeDateListenable,
+          builder: (context, child) => data.noticeDate != null
               ? Text('公告 ${formatDay(data.noticeDate!)}')
               : const Text('公告')),
       content: SingleChildScrollViewWithScrollbar(

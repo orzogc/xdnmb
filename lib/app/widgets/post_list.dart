@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../data/services/settings.dart';
 import '../modules/post_list.dart';
 import '../utils/extensions.dart';
-import '../utils/notify.dart';
+import 'listenable.dart';
 
 typedef PostListScrollViewBuilder = Widget Function(
     BuildContext context, AnchorScrollController scrollController, int refresh);
@@ -44,14 +44,14 @@ class _PostListScrollViewState extends State<PostListScrollView> {
   }
 
   void _setScrollController() {
-    final autoHideAppBar = SettingsService.to.autoHideAppBar;
+    final settings = SettingsService.to;
 
     _scrollController = widget.scrollController ??
         AnchorScrollController(
           initialScrollOffset:
-              autoHideAppBar ? -PostListController.appBarHeight : 0.0,
-          getAnchorOffset:
-              autoHideAppBar ? () => widget.controller.headerHeight : null,
+              settings.autoHideAppBar ? -PostListController.appBarHeight : 0.0,
+          getAnchorOffset: () =>
+              settings.autoHideAppBar ? widget.controller.headerHeight : 0.0,
           onIndexChanged: (index, userScroll) =>
               widget.controller.page = index.getPageFromPostIndex(),
         );
@@ -107,8 +107,8 @@ class _PostListScrollViewState extends State<PostListScrollView> {
   }
 
   @override
-  Widget build(BuildContext context) => NotifyBuilder(
-      animation: widget.controller,
+  Widget build(BuildContext context) => ListenableBuilder(
+      listenable: widget.controller,
       builder: (context, child) =>
           widget.builder(context, _scrollController, _refresh));
 }
