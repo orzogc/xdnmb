@@ -8,6 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../../utils/crypto.dart';
+import '../../utils/image.dart';
 import '../../utils/padding.dart';
 import '../../widgets/dialog.dart';
 import '../models/hive.dart';
@@ -21,6 +22,8 @@ class PersistentDataService extends GetxService {
   static const Duration updateForumListInterval = Duration(hours: 6);
 
   static late final bool isFirstLaunched;
+
+  static late final bool clearImageCache;
 
   late final Box _dataBox;
 
@@ -96,6 +99,17 @@ class PersistentDataService extends GetxService {
     final box = await Hive.openBox(HiveBoxName.data);
 
     isFirstLaunched = box.get(PersistentData.firstLaunched, defaultValue: true);
+    clearImageCache =
+        box.get(PersistentData.clearImageCache, defaultValue: true);
+  }
+
+  /// 清除全部图片缓存，只运行一次
+  static Future<void> clearCacheImage() async {
+    if (clearImageCache) {
+      await XdnmbImageCacheManager().emptyCache();
+      final box = await Hive.openBox(HiveBoxName.data);
+      await box.put(PersistentData.clearImageCache, false);
+    }
   }
 
   static double get _bottomHeight => getViewInsets().bottom;

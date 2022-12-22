@@ -94,7 +94,7 @@ abstract class PostListController extends ChangeNotifier {
 
   static final RxBool _scrollingDown = false.obs;
 
-  static final RxDouble _appBarHeight = PostListAppBar.height.obs;
+  static double _appBarLatestHeight = PostListAppBar.height;
 
   static VoidCallback? _showAppBar;
 
@@ -114,8 +114,6 @@ abstract class PostListController extends ChangeNotifier {
 
   static bool get isScrollingDown => _scrollingDown.value;
 
-  static double get appBarHeight => _appBarHeight.value;
-
   static void showAppBar() {
     if (_showAppBar != null) {
       _showAppBar!();
@@ -130,7 +128,7 @@ abstract class PostListController extends ChangeNotifier {
 
   final Rxn<ScrollController> _scrollController = Rxn(null);
 
-  double _headerHeight = appBarHeight;
+  final RxDouble _appBarHeight = _appBarLatestHeight.obs;
 
   PostListType get postListType;
 
@@ -145,12 +143,13 @@ abstract class PostListController extends ChangeNotifier {
   set scrollController(ScrollController? controller) =>
       _scrollController.value = controller;
 
-  double get headerHeight => _headerHeight.clamp(0.0, PostListAppBar.height);
+  double get appBarHeight =>
+      _appBarHeight.value.clamp(0.0, PostListAppBar.height);
 
-  set headerHeight(double height) {
+  set appBarHeight(double height) {
     final height_ = height.clamp(0.0, PostListAppBar.height);
-    _headerHeight = height_;
     _appBarHeight.value = height_;
+    _appBarLatestHeight = height_;
   }
 
   bool get isThread => postListType.isThread;
@@ -494,7 +493,9 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
             _height = max(oldHeight, PostListAppBar.height - offset);
           }
         }
-      } else {}
+      }
+
+      _setHeight();
     });
   }
 
@@ -544,7 +545,7 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
     }
   }
 
-  void _setHeight() => widget.controller.headerHeight = _height;
+  void _setHeight() => widget.controller.appBarHeight = _height;
 
   double _elevation(double? elevation) => !widget.controller.isHistory
       ? ((_animationController.upperBound - _animationController.value) *
@@ -594,14 +595,13 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
     }
 
     if (widget.controller != oldWidget.controller) {
-      _updateController(oldWidget.controller.headerHeight);
+      _updateController(oldWidget.controller.appBarHeight);
     }
   }
 
   @override
   void dispose() {
     _backdropSubscription.cancel();
-    PostListController._appBarHeight.value = PostListAppBar.height;
     PostListController._showAppBar = null;
     _scrollControllerSubscription.cancel();
     _scrollController?.removeListener(_updateHeight);
@@ -1162,6 +1162,7 @@ class _CompactTabAndForumList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
+    final controller = PostListController.get();
 
     final Widget column = LayoutBuilder(
       builder: (context, constraints) => Obx(
@@ -1169,9 +1170,7 @@ class _CompactTabAndForumList extends StatelessWidget {
           height: (settings.isAutoHideAppBar &&
                   !settings.isBackdropUI &&
                   topPadding != null)
-              ? (constraints.maxHeight -
-                  topPadding! -
-                  PostListController.appBarHeight)
+              ? (constraints.maxHeight - topPadding! - controller.appBarHeight)
               : constraints.maxHeight,
           child: Column(
             children: [
@@ -1280,6 +1279,7 @@ class _TabAndForumListState extends State<_TabAndForumList>
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
     final textTheme = Theme.of(context).textTheme;
+    final controller = PostListController.get();
 
     final Widget column = LayoutBuilder(
       builder: (context, constraints) => Obx(
@@ -1289,7 +1289,7 @@ class _TabAndForumListState extends State<_TabAndForumList>
                   widget.topPadding != null)
               ? (constraints.maxHeight -
                   widget.topPadding! -
-                  PostListController.appBarHeight)
+                  controller.appBarHeight)
               : constraints.maxHeight,
           child: Column(
             children: [

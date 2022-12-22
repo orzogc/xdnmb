@@ -1,5 +1,5 @@
 import 'dart:collection';
-import 'dart:io';
+import 'dart:io' as io;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart' hide Image;
@@ -13,6 +13,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/image.dart';
 import '../data/services/persistent.dart';
+import '../data/services/settings.dart';
 import 'crypto.dart';
 import 'extensions.dart';
 import 'http_client.dart';
@@ -20,10 +21,35 @@ import 'theme.dart';
 import 'time.dart';
 import 'toast.dart';
 
+// ignore: implementation_imports
+import 'package:flutter_cache_manager/src/cache_store.dart';
+// ignore: implementation_imports
+import 'package:flutter_cache_manager/src/storage/cache_object.dart';
+
 final HashMap<String, String> _imageHashMap = HashMap();
+
+class _XdnmbCacheStore extends CacheStore {
+  _XdnmbCacheStore(super.config);
+
+  @override
+  Future<void> putFile(CacheObject cacheObject) {
+    assert(cacheObject.url != cacheObject.key);
+
+    // 不保存图片URL
+    final newCacheObject = cacheObject.copyWith(url: cacheObject.key);
+
+    return super.putFile(newCacheObject);
+  }
+}
 
 class XdnmbImageCacheManager extends CacheManager with ImageCacheManager {
   static const String _key = 'xdnmbImageCache';
+
+  static final Config _config = Config(
+    _key,
+    maxNrOfCacheObjects: SettingsService.to.cacheImageCount,
+    fileService: HttpFileService(httpClient: XdnmbHttpClient()),
+  );
 
   static final XdnmbImageCacheManager _manager =
       XdnmbImageCacheManager._internal();
@@ -31,12 +57,8 @@ class XdnmbImageCacheManager extends CacheManager with ImageCacheManager {
   factory XdnmbImageCacheManager() => _manager;
 
   XdnmbImageCacheManager._internal()
-      : super(
-          Config(
-            _key,
-            fileService: HttpFileService(httpClient: XdnmbHttpClient()),
-          ),
-        );
+      // ignore: invalid_use_of_visible_for_testing_member
+      : super.custom(_config, cacheStore: _XdnmbCacheStore(_config));
 }
 
 String _imageFilename(Uint8List imageData) {
@@ -92,7 +114,7 @@ Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
       if (ImageService.to.hasPhotoLibraryPermission) {
         if (savePath != null) {
           final path = join(savePath, filename);
-          final file = File(path);
+          final file = io.File(path);
           await file.writeAsBytes(imageData);
 
           try {
@@ -128,7 +150,7 @@ Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
       }
     } else if (savePath != null) {
       final path = join(savePath, filename);
-      final file = File(path);
+      final file = io.File(path);
       await file.writeAsBytes(imageData);
       if (GetPlatform.isAndroid) {
         await MediaScanner.loadMedia(path: path);

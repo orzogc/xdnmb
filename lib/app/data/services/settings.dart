@@ -7,11 +7,12 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../utils/extensions.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
 import '../models/settings.dart';
-import '../../utils/extensions.dart';
 import 'image.dart';
+import 'persistent.dart';
 
 final ForumData defaultForum = ForumData(
     id: 1,
@@ -151,6 +152,12 @@ class SettingsService extends GetxService {
     _settingsBox.put(Settings.saveImagePath, directory);
     ImageService.savePath = directory;
   }
+
+  int get cacheImageCount =>
+      _settingsBox.get(Settings.cacheImageCount, defaultValue: 200);
+
+  set cacheImageCount(int count) =>
+      _settingsBox.put(Settings.cacheImageCount, count);
 
   bool get addBlueIslandEmoticons =>
       _settingsBox.get(Settings.addBlueIslandEmoticons, defaultValue: true);
@@ -408,6 +415,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> saveImagePathListenable;
 
+  late final ValueListenable<Box> cacheImageCountListenable;
+
   late final ValueListenable<Box> addBlueIslandEmoticonsListenable;
 
   late final ValueListenable<Box> restoreForumPageListenable;
@@ -524,6 +533,8 @@ class SettingsService extends GetxService {
     feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
     saveImagePathListenable =
         _settingsBox.listenable(keys: [Settings.saveImagePath]);
+    cacheImageCountListenable =
+        _settingsBox.listenable(keys: [Settings.cacheImageCount]);
     addBlueIslandEmoticonsListenable =
         _settingsBox.listenable(keys: [Settings.addBlueIslandEmoticons]);
     restoreForumPageListenable =
@@ -571,6 +582,8 @@ class SettingsService extends GetxService {
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
     _isCompactTabAndForumList = compactTabAndForumList.obs;
     isShowGuide = shouldShowGuide;
+
+    await PersistentDataService.clearCacheImage();
 
     isReady.value = true;
     await checkDarkMode();

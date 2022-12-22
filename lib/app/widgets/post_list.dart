@@ -6,15 +6,30 @@ import '../modules/post_list.dart';
 import '../utils/extensions.dart';
 import 'listenable.dart';
 
-typedef PostListScrollViewBuilder = Widget Function(
-    BuildContext context, AnchorScrollController scrollController, int refresh);
+typedef GetOffset = double Function();
+
+class PostListScrollController extends AnchorScrollController {
+  final GetOffset? getInitialScrollOffset;
+
+  @override
+  double get initialScrollOffset => getInitialScrollOffset != null
+      ? getInitialScrollOffset!()
+      : super.initialScrollOffset;
+
+  PostListScrollController(
+      {this.getInitialScrollOffset,
+      super.initialScrollOffset,
+      super.getAnchorOffset,
+      super.onIndexChanged});
+}
+
+typedef PostListScrollViewBuilder = Widget Function(BuildContext context,
+    PostListScrollController scrollController, int refresh);
 
 class PostListScrollView extends StatefulWidget {
   final PostListController controller;
 
-  final AnchorScrollController? scrollController;
-
-  final bool useAnchorScrollController;
+  final PostListScrollController? scrollController;
 
   final PostListScrollViewBuilder builder;
 
@@ -22,7 +37,6 @@ class PostListScrollView extends StatefulWidget {
       {super.key,
       required this.controller,
       this.scrollController,
-      this.useAnchorScrollController = false,
       required this.builder});
 
   @override
@@ -30,7 +44,7 @@ class PostListScrollView extends StatefulWidget {
 }
 
 class _PostListScrollViewState extends State<PostListScrollView> {
-  late AnchorScrollController _scrollController;
+  late PostListScrollController _scrollController;
 
   int _refresh = 0;
 
@@ -47,11 +61,11 @@ class _PostListScrollViewState extends State<PostListScrollView> {
     final settings = SettingsService.to;
 
     _scrollController = widget.scrollController ??
-        AnchorScrollController(
-          initialScrollOffset:
-              settings.autoHideAppBar ? -PostListController.appBarHeight : 0.0,
+        PostListScrollController(
+          getInitialScrollOffset: () =>
+              settings.autoHideAppBar ? -widget.controller.appBarHeight : 0.0,
           getAnchorOffset: () =>
-              settings.autoHideAppBar ? widget.controller.headerHeight : 0.0,
+              settings.autoHideAppBar ? widget.controller.appBarHeight : 0.0,
           onIndexChanged: (index, userScroll) =>
               widget.controller.page = index.getPageFromPostIndex(),
         );

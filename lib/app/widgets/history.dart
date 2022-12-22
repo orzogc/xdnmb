@@ -30,6 +30,7 @@ import 'listenable.dart';
 import 'page_view.dart';
 import 'post.dart';
 import 'post_list.dart';
+import 'size.dart';
 
 const int _historyEachPage = 20;
 
@@ -83,6 +84,8 @@ class HistoryController extends PostListController {
   ];
 
   final PageController _pageController;
+
+  final RxDouble _height = 0.0.obs;
 
   @override
   PostListType get postListType => PostListType.history;
@@ -454,6 +457,104 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
       );
 }
 
+class _HeaderKey {
+  final DateTimeRange? range;
+
+  final Search? search;
+
+  const _HeaderKey({this.range, this.search});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is _HeaderKey && range == other.range && search == other.search);
+
+  @override
+  int get hashCode => Object.hash(range, search);
+}
+
+class _HistoryHeader extends StatelessWidget {
+  final HistoryController controller;
+
+  // ignore: unused_element
+  const _HistoryHeader({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) => Obx(() {
+        final range = controller._getDateRange();
+        final search = controller._getSearch();
+
+        return ChildSizeNotifier(
+          key: ValueKey<_HeaderKey>(_HeaderKey(range: range, search: search)),
+          builder: (context, size, child) {
+            WidgetsBinding.instance.addPostFrameCallback(
+                (timeStamp) => controller._height.value = size.height);
+
+            return child!;
+          },
+          child: (range != null || search != null)
+              ? Material(
+                  elevation: 2.0,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (range != null)
+                        ListTile(
+                          title: Center(
+                            child: range.start != range.end
+                                ? Text(
+                                    '${formatDay(range.start)} - ${formatDay(range.end)}',
+                                  )
+                                : Text(formatDay(range.start)),
+                          ),
+                          trailing: IconButton(
+                            onPressed: () => controller._setDateRange(null),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ),
+                      if (range != null && search != null)
+                        const Divider(height: 10.0, thickness: 1.0),
+                      if (search != null)
+                        ListTile(
+                          title: Center(
+                            child: Text.rich(
+                              TextSpan(
+                                text: '搜索内容：',
+                                children: [
+                                  TextSpan(
+                                    text: search.text,
+                                    style: AppTheme.boldRed,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          subtitle: (search.caseSensitive || search.useWildcard)
+                              ? OverflowBar(
+                                  alignment: MainAxisAlignment.spaceAround,
+                                  overflowSpacing: 5.0,
+                                  overflowAlignment:
+                                      OverflowBarAlignment.center,
+                                  children: [
+                                    if (search.caseSensitive)
+                                      const Text('英文字母区分大小写'),
+                                    if (search.useWildcard) const Text('使用通配符'),
+                                  ],
+                                )
+                              : null,
+                          trailing: IconButton(
+                            onPressed: () => controller._setSearch(null),
+                            icon: const Icon(Icons.close),
+                          ),
+                        )
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        );
+      });
+}
+
 class _HistoryDialog extends StatelessWidget {
   final PostBase mainPost;
 
@@ -666,6 +767,7 @@ class _BrowseHistoryBody extends StatelessWidget {
             key: ValueKey<_HistoryKey>(
                 _HistoryKey(range, search, refresh, value)),
             scrollController: scrollController,
+            postListController: controller,
             initialPage: controller.page,
             canLoadMoreAtBottom: false,
             fetch: (page) async {
@@ -818,6 +920,7 @@ class _PostHistoryBody extends StatelessWidget {
             key: ValueKey<_HistoryKey>(
                 _HistoryKey(range, search, refresh, value)),
             scrollController: scrollController,
+            postListController: controller,
             initialPage: controller.page,
             canLoadMoreAtBottom: false,
             fetch: (page) async {
@@ -1012,6 +1115,7 @@ class _ReplyHistoryBody extends StatelessWidget {
             key: ValueKey<_HistoryKey>(
                 _HistoryKey(range, search, refresh, value)),
             scrollController: scrollController,
+            postListController: controller,
             initialPage: controller.page,
             canLoadMoreAtBottom: false,
             fetch: (page) async {
@@ -1173,99 +1277,57 @@ class _HistoryBodyState extends State<HistoryBody> {
 
     return Stack(
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: PageViewTabBar.height),
-          child: SwipeablePageView(
-            controller: widget.controller._pageController,
-            itemCount: 3,
-            itemBuilder: (context, index) {
-              late final Widget body;
-              switch (index) {
-                case _BrowseHistoryBody._index:
-                  body = _BrowseHistoryBody(
-                      controller: widget.controller, getImage: _getImage);
-                  break;
-                case _PostHistoryBody._index:
-                  body = _PostHistoryBody(
-                      controller: widget.controller, getImage: _getImage);
-                  break;
-                case _ReplyHistoryBody._index:
-                  body = _ReplyHistoryBody(
-                      controller: widget.controller, getImage: _getImage);
-                  break;
-                default:
-                  body = const Center(
-                    child: Text('未知记录', style: AppTheme.boldRed),
-                  );
-              }
+        Obx(
+          () => Padding(
+            padding: EdgeInsets.only(
+                top: PageViewTabBar.height + widget.controller._height.value),
+            child: SwipeablePageView(
+              controller: widget.controller._pageController,
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                late final Widget body;
+                switch (index) {
+                  case _BrowseHistoryBody._index:
+                    body = _BrowseHistoryBody(
+                        controller: widget.controller, getImage: _getImage);
+                    break;
+                  case _PostHistoryBody._index:
+                    body = _PostHistoryBody(
+                        controller: widget.controller, getImage: _getImage);
+                    break;
+                  case _ReplyHistoryBody._index:
+                    body = _ReplyHistoryBody(
+                        controller: widget.controller, getImage: _getImage);
+                    break;
+                  default:
+                    body = const Center(
+                      child: Text('未知记录', style: AppTheme.boldRed),
+                    );
+                }
 
-              return Obx(() {
-                final range = widget.controller._getDateRange();
-                final search = widget.controller._getSearch();
-
-                return Column(
-                  children: [
-                    if (range != null)
-                      ListTile(
-                        title: Center(
-                          child: range.start != range.end
-                              ? Text(
-                                  '${formatDay(range.start)} - ${formatDay(range.end)}',
-                                )
-                              : Text(formatDay(range.start)),
-                        ),
-                        trailing: IconButton(
-                          onPressed: () =>
-                              widget.controller._setDateRange(null),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ),
-                    if (range != null && search != null)
-                      const Divider(height: 10.0, thickness: 1.0),
-                    if (search != null)
-                      ListTile(
-                        title: Center(
-                          child: Text.rich(
-                            TextSpan(
-                              text: '搜索内容：',
-                              children: [
-                                TextSpan(
-                                  text: search.text,
-                                  style: AppTheme.boldRed,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        subtitle: (search.caseSensitive || search.useWildcard)
-                            ? OverflowBar(
-                                alignment: MainAxisAlignment.spaceAround,
-                                overflowSpacing: 5.0,
-                                overflowAlignment: OverflowBarAlignment.center,
-                                children: [
-                                  if (search.caseSensitive)
-                                    const Text('英文字母区分大小写'),
-                                  if (search.useWildcard) const Text('使用通配符'),
-                                ],
-                              )
-                            : null,
-                        trailing: IconButton(
-                          onPressed: () => widget.controller._setSearch(null),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ),
-                    Expanded(child: body),
-                  ],
-                );
-              });
-            },
+                return body;
+              },
+            ),
           ),
         ),
+        Obx(() => settings.isAutoHideAppBar
+            ? Positioned(
+                left: 0.0,
+                top: widget.controller.appBarHeight + PageViewTabBar.height,
+                right: 0.0,
+                child: _HistoryHeader(controller: widget.controller),
+              )
+            : Positioned(
+                left: 0.0,
+                top: PageViewTabBar.height,
+                right: 0.0,
+                child: _HistoryHeader(controller: widget.controller),
+              )),
         Obx(
           () => settings.isAutoHideAppBar
               ? Positioned(
                   left: 0.0,
-                  top: PostListController.appBarHeight,
+                  top: widget.controller.appBarHeight,
                   right: 0.0,
                   child: tabBar,
                 )

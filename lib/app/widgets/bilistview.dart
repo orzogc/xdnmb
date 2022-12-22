@@ -31,7 +31,10 @@ class _MinHeightIndicator extends StatelessWidget {
 }
 
 class _BiListViewRefreshHeader extends MaterialHeader {
-  const _BiListViewRefreshHeader({super.clamping});
+  final PostListController postListController;
+
+  const _BiListViewRefreshHeader(
+      {required this.postListController, super.clamping});
 
   @override
   Widget build(BuildContext context, IndicatorState state) {
@@ -39,7 +42,7 @@ class _BiListViewRefreshHeader extends MaterialHeader {
 
     return Obx(() => settings.isAutoHideAppBar
         ? Padding(
-            padding: EdgeInsets.only(top: PostListController.appBarHeight),
+            padding: EdgeInsets.only(top: postListController.appBarHeight),
             child: super.build(context, state),
           )
         : super.build(context, state));
@@ -94,6 +97,8 @@ class BiListView<T> extends StatefulWidget {
 
   final ScrollController? scrollController;
 
+  final PostListController postListController;
+
   final int initialPage;
 
   final int firstPage;
@@ -122,6 +127,7 @@ class BiListView<T> extends StatefulWidget {
       {super.key,
       this.controller,
       this.scrollController,
+      required this.postListController,
       required this.initialPage,
       this.firstPage = 1,
       this.lastPage,
@@ -530,7 +536,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
       padding: const EdgeInsets.symmetric(horizontal: 5.0),
       child: EasyRefresh.builder(
         controller: _refreshController,
-        header: const _BiListViewRefreshHeader(clamping: false),
+        header: _BiListViewRefreshHeader(
+            postListController: widget.postListController, clamping: false),
         footer: widget.lastPage == null
             ? const MaterialFooter(clamping: false)
             : null,

@@ -33,6 +33,7 @@ import 'thread.dart';
 Future<T?> postListDialog<T>(Widget widget, {int? index}) {
   final settings = SettingsService.to;
   final data = PersistentDataService.to;
+  final controller = PostListController.get();
 
   return Get.dialog<T>(Obx(() {
     final isAutoHideAppBar = settings.isAutoHideAppBar;
@@ -41,7 +42,7 @@ Future<T?> postListDialog<T>(Widget widget, {int? index}) {
     return (isAutoHideAppBar || isShowBottomBar)
         ? Container(
             margin: EdgeInsets.only(
-              top: (isAutoHideAppBar ? PostListController.appBarHeight : 0.0),
+              top: isAutoHideAppBar ? controller.appBarHeight : 0.0,
               bottom: (!data.isKeyboardVisible && isShowBottomBar)
                   ? PostListBottomBar.height
                   : 0.0,
@@ -594,50 +595,67 @@ class ApplyImageDialog extends StatelessWidget {
       );
 }
 
-class DoubleRangeDialog extends StatelessWidget {
+class NumRangeDialog<T extends num> extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final String text;
 
-  final double initialValue;
+  final T initialValue;
 
-  final double min;
+  final T min;
 
-  final double max;
+  final T? max;
 
-  DoubleRangeDialog(
+  NumRangeDialog(
       {super.key,
       required this.text,
       required this.initialValue,
       required this.min,
-      required this.max});
+      this.max});
 
   @override
   Widget build(BuildContext context) {
-    String? ratio;
+    String? number;
 
     return InputDialog(
       content: Form(
         key: _formKey,
         child: TextFormField(
-          decoration: InputDecoration(labelText: '$text（$min - $max）'),
+          decoration: InputDecoration(
+              labelText:
+                  max != null ? '$text（ $min - $max ）' : '$text（ >= $min ）'),
           autofocus: true,
           initialValue: '$initialValue',
-          onSaved: (newValue) => ratio = newValue,
+          onSaved: (newValue) => number = newValue,
           validator: (value) {
             if (value != null && value.isNotEmpty) {
-              final ratio = double.tryParse(value);
-              if (ratio != null) {
-                if (ratio >= min && ratio <= max) {
-                  return null;
+              try {
+                final num? n = T == double
+                    ? double.tryParse(value)
+                    : (T == int ? int.tryParse(value) : num.tryParse(value));
+
+                if (n != null) {
+                  if (max != null) {
+                    if (n >= min && n <= max!) {
+                      return null;
+                    } else {
+                      return '$text必须在$min与$max之间';
+                    }
+                  } else {
+                    if (n >= min) {
+                      return null;
+                    } else {
+                      return '$text必须大于等于$min';
+                    }
+                  }
                 } else {
-                  return '$text必须在$min与$max之间';
+                  return '请输入$text数字';
                 }
-              } else {
+              } catch (e) {
                 return '请输入$text数字';
               }
             } else {
-              return '请输入$text';
+              return '请输入$text数字';
             }
           },
         ),
@@ -648,7 +666,12 @@ class DoubleRangeDialog extends StatelessWidget {
             if (_formKey.currentState!.validate()) {
               _formKey.currentState!.save();
 
-              Get.back<double>(result: double.parse(ratio!));
+              Get.back<T>(
+                  result: (T == double
+                      ? double.parse(number!)
+                      : (T == int
+                          ? int.parse(number!)
+                          : num.parse(number!))) as T);
             }
           },
           child: const Text('确定'),

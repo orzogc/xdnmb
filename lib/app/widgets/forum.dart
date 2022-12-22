@@ -316,11 +316,11 @@ class _ForumBodyState extends State<ForumBody> {
 
     return PostListScrollView(
       controller: controller,
-      useAnchorScrollController: true,
       builder: (context, scrollController, refresh) =>
           BiListView<ThreadWithPage>(
         key: ValueKey<int>(refresh),
         scrollController: scrollController,
+        postListController: controller,
         initialPage: controller.page,
         // 版块的最大页固定为100
         lastPage:

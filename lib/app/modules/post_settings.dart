@@ -179,7 +179,7 @@ class _DoubleRange extends StatelessWidget {
           title: Text(text),
           trailing: Text('${rxValue.value}'),
           onTap: () async {
-            final ratio = await Get.dialog<double>(DoubleRangeDialog(
+            final ratio = await Get.dialog<double>(NumRangeDialog<double>(
                 text: dialogText,
                 initialValue: rxValue.value,
                 min: min,

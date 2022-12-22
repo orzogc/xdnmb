@@ -442,7 +442,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   BrowseHistory? _history;
 
-  late final AnchorScrollController _anchorController;
+  late final PostListScrollController _anchorController;
 
   /// 第一次加载是否要跳转
   final RxBool _isToJump = false.obs;
@@ -718,6 +718,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                         key: ValueKey<int>(refresh),
                         controller: biListViewController,
                         scrollController: scrollController,
+                        postListController: controller,
                         initialPage: firstPage,
                         fetch: (page) async {
                           try {
@@ -781,11 +782,11 @@ class _ThreadBodyState extends State<ThreadBody> {
 
     final settings = SettingsService.to;
 
-    _anchorController = AnchorScrollController(
-      initialScrollOffset:
-          settings.autoHideAppBar ? -PostListController.appBarHeight : 0.0,
+    _anchorController = PostListScrollController(
+      getInitialScrollOffset: () =>
+          settings.autoHideAppBar ? -controller.appBarHeight : 0.0,
       getAnchorOffset: () =>
-          settings.autoHideAppBar ? controller.headerHeight : 0.0,
+          settings.autoHideAppBar ? controller.appBarHeight : 0.0,
       onIndexChanged: (index, userScroll) {
         controller.page = index.getPageFromPostIndex();
         controller.browsePostId = index.getPostIdFromPostIndex();

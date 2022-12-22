@@ -98,7 +98,7 @@ class _FrontLayerDragHeightRatio extends StatelessWidget {
               Text('${settings.frontLayerDragHeightRatio}', style: textStyle),
           onTap: settings.backdropUI
               ? () async {
-                  final ratio = await Get.dialog<double>(DoubleRangeDialog(
+                  final ratio = await Get.dialog<double>(NumRangeDialog<double>(
                       text: '比例',
                       initialValue: settings.frontLayerDragHeightRatio,
                       min: 0.0,
@@ -138,7 +138,7 @@ class _BackLayerDragHeightRatio extends StatelessWidget {
               Text('${settings.backLayerDragHeightRatio}', style: textStyle),
           onTap: settings.backdropUI
               ? () async {
-                  final ratio = await Get.dialog<double>(DoubleRangeDialog(
+                  final ratio = await Get.dialog<double>(NumRangeDialog<double>(
                       text: '比例',
                       initialValue: settings.backLayerDragHeightRatio,
                       min: 0.0,
@@ -257,7 +257,7 @@ class _DrawerDragRatio extends StatelessWidget {
               Text('${settings.drawerEdgeDragWidthRatio}', style: textStyle),
           onTap: !settings.showBottomBar
               ? () async {
-                  final ratio = await Get.dialog<double>(DoubleRangeDialog(
+                  final ratio = await Get.dialog<double>(NumRangeDialog<double>(
                       text: '比例',
                       initialValue: settings.drawerEdgeDragWidthRatio,
                       min: SettingsService.minDrawerEdgeDragWidthRatio,
@@ -296,7 +296,7 @@ class _PageDragWidthRatio extends StatelessWidget {
               Text('${settings.swipeablePageDragWidthRatio}', style: textStyle),
           onTap: (settings.showBottomBar || settings.backdropUI)
               ? () async {
-                  final ratio = await Get.dialog<double>(DoubleRangeDialog(
+                  final ratio = await Get.dialog<double>(NumRangeDialog<double>(
                       text: '比例',
                       initialValue: settings.swipeablePageDragWidthRatio,
                       min: 0.0,

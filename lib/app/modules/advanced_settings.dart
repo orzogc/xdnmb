@@ -72,6 +72,36 @@ class _SaveImagePath extends StatelessWidget {
   }
 }
 
+class _CacheImageCount extends StatelessWidget {
+  // ignore: unused_element
+  const _CacheImageCount({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.cacheImageCountListenable,
+      builder: (context, child) => ListTile(
+        title: const Text('缓存图片数量'),
+        subtitle: const Text('更改后需要重启应用'),
+        trailing: Text('${settings.cacheImageCount}'),
+        onTap: () async {
+          final n = await Get.dialog<int>(NumRangeDialog<int>(
+            text: '缓存',
+            initialValue: settings.cacheImageCount,
+            min: 0,
+          ));
+
+          if (n != null) {
+            settings.cacheImageCount = n;
+          }
+        },
+      ),
+    );
+  }
+}
+
 class _AddBlueIslandEmoticons extends StatelessWidget {
   // ignore: unused_element
   const _AddBlueIslandEmoticons({super.key});
@@ -110,61 +140,6 @@ class _RestoreForumPage extends StatelessWidget {
   }
 }
 
-class _ImageDisposeDistanceDialog extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  // ignore: unused_element
-  _ImageDisposeDistanceDialog({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-    String? distance;
-
-    return InputDialog(
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          decoration: const InputDecoration(labelText: '距离'),
-          autofocus: true,
-          initialValue: '${settings.imageDisposeDistance}',
-          onSaved: (newValue) => distance = newValue,
-          validator: (value) {
-            if (value != null && value.isNotEmpty) {
-              final distance = int.tryParse(value);
-              if (distance != null) {
-                if (distance >= 0) {
-                  return null;
-                } else {
-                  return '距离必须大于等于0';
-                }
-              } else {
-                return '请输入距离数字（整数）';
-              }
-            } else {
-              return '请输入距离';
-            }
-          },
-        ),
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-
-              settings.imageDisposeDistance = int.parse(distance!);
-
-              Get.back();
-            }
-          },
-          child: const Text('确定'),
-        ),
-      ],
-    );
-  }
-}
-
 class _ImageDisposeDistance extends StatelessWidget {
   // ignore: unused_element
   const _ImageDisposeDistance({super.key});
@@ -178,7 +153,17 @@ class _ImageDisposeDistance extends StatelessWidget {
       builder: (context, child) => ListTile(
         title: const Text('非适应模式下移动未放大的图片导致返回的最小距离'),
         trailing: Text('${settings.imageDisposeDistance}'),
-        onTap: () => Get.dialog(_ImageDisposeDistanceDialog()),
+        onTap: () async {
+          final n = await Get.dialog<int>(NumRangeDialog<int>(
+            text: '距离',
+            initialValue: settings.imageDisposeDistance,
+            min: 0,
+          ));
+
+          if (n != null) {
+            settings.imageDisposeDistance = n;
+          }
+        },
       ),
     );
   }
@@ -198,7 +183,7 @@ class _FixedImageDisposeRatio extends StatelessWidget {
         title: const Text('适应模式下移动未缩放的大图导致返回的最小距离占屏幕高度/宽度的比例'),
         trailing: Text('${settings.fixedImageDisposeRatio}'),
         onTap: () async {
-          final ratio = await Get.dialog<double>(DoubleRangeDialog(
+          final ratio = await Get.dialog<double>(NumRangeDialog<double>(
               text: '比例',
               initialValue: settings.fixedImageDisposeRatio,
               min: 0.0,
@@ -273,6 +258,7 @@ class AdvancedSettingsView extends StatelessWidget {
           body: ListView(
             children: [
               if (!GetPlatform.isIOS) _SaveImagePath(),
+              const _CacheImageCount(),
               const _AddBlueIslandEmoticons(),
               const _RestoreForumPage(),
               const _ImageDisposeDistance(),

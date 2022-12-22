@@ -143,11 +143,11 @@ class _FeedBodyState extends State<FeedBody> {
       listenable: settings.feedIdListenable,
       builder: (context, child) => PostListScrollView(
         controller: widget.controller,
-        useAnchorScrollController: true,
         builder: (context, scrollController, refresh) =>
             BiListView<Visible<PostWithPage>>(
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
           scrollController: scrollController,
+          postListController: widget.controller,
           initialPage: widget.controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async =>
