@@ -14,7 +14,6 @@ class _DrawerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = SettingsService.to;
     final theme = Theme.of(context);
     final color = theme.colorScheme.onPrimary;
 
@@ -42,11 +41,13 @@ class _DrawerHeader extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            settings.shouldShowGuide
+            SettingsService.shouldShowGuide
                 ? const DarkModeGuide(DarkModeButton())
                 : const DarkModeButton(),
-            settings.shouldShowGuide ? SearchGuide(searchButton) : searchButton,
-            settings.shouldShowGuide
+            SettingsService.shouldShowGuide
+                ? SearchGuide(searchButton)
+                : searchButton,
+            SettingsService.shouldShowGuide
                 ? SettingsGuide(settingsButton)
                 : settingsButton,
           ],
@@ -62,8 +63,6 @@ class _DrawerBottom extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
     final Widget historyButton = HistoryButton(onTapEnd: Get.back);
     final Widget feedButton = FeedButton(onTapEnd: Get.back);
 
@@ -73,10 +72,10 @@ class _DrawerBottom extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           const SponsorButton(),
-          settings.shouldShowGuide
+          SettingsService.shouldShowGuide
               ? HistoryGuide(historyButton)
               : historyButton,
-          settings.shouldShowGuide ? FeedGuide(feedButton) : feedButton,
+          SettingsService.shouldShowGuide ? FeedGuide(feedButton) : feedButton,
         ],
       ),
     );

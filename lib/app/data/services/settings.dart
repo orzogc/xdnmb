@@ -60,6 +60,8 @@ class SettingsService extends GetxService {
 
   static late final bool isFixMissingFont;
 
+  static bool shouldShowGuide = false;
+
   static late final bool isShowGuide;
 
   late final Box _settingsBox;
@@ -191,29 +193,56 @@ class SettingsService extends GetxService {
   set fixMissingFont(bool fixMissingFont) =>
       _settingsBox.put(Settings.fixMissingFont, fixMissingFont);
 
-  bool get showGuide =>
-      !isBackdropUI && _settingsBox.get(Settings.showGuide, defaultValue: true);
-
   bool get rawShowGuide =>
       _settingsBox.get(Settings.showGuide, defaultValue: true);
+
+  bool get showGuide =>
+      !backdropUI &&
+      (rawShowGuide || showBottomBarGuide || showGuideWithoutBottomBar);
+
+  bool get showGuideWithoutBottomBar =>
+      !backdropUI &&
+      !showBottomBar &&
+      _settingsBox.get(Settings.showGuideWithoutBottomBar, defaultValue: true);
+
+  set showGuideWithoutBottomBar(bool showGuideWithoutBottomBar) => _settingsBox
+      .put(Settings.showGuideWithoutBottomBar, showGuideWithoutBottomBar);
 
   set showGuide(bool showGuide) =>
       _settingsBox.put(Settings.showGuide, showGuide);
 
-  bool get showBackdropGuide =>
-      isBackdropUI &&
-      _settingsBox.get(Settings.showBackdropGuide, defaultValue: true);
-
   bool get rawShowBackdropGuide =>
       _settingsBox.get(Settings.showBackdropGuide, defaultValue: true);
+
+  bool get showBackdropGuide =>
+      backdropUI &&
+      (rawShowBackdropGuide ||
+          showBottomBarGuide ||
+          showBackdropGuideWithoutBottomBar);
+
+  bool get showBackdropGuideWithoutBottomBar =>
+      backdropUI &&
+      !showBottomBar &&
+      _settingsBox.get(Settings.showBackdropGuideWithoutBottomBar,
+          defaultValue: true);
+
+  set showBackdropGuideWithoutBottomBar(
+          bool showBackdropGuideWithoutBottomBar) =>
+      _settingsBox.put(Settings.showBackdropGuideWithoutBottomBar,
+          showBackdropGuideWithoutBottomBar);
 
   set showBackdropGuide(bool showBackdropGuide) =>
       _settingsBox.put(Settings.showBackdropGuide, showBackdropGuide);
 
-  bool get shouldShowGuide => showBackdropGuide || showGuide;
+  bool get showBottomBarGuide =>
+      showBottomBar &&
+      _settingsBox.get(Settings.showBottomBarGuide, defaultValue: true);
+
+  set showBottomBarGuide(bool showBottomBarGuide) =>
+      _settingsBox.put(Settings.showBottomBarGuide, showBottomBarGuide);
 
   bool get showBottomBar =>
-      _settingsBox.get(Settings.showBottomBar, defaultValue: GetPlatform.isIOS);
+      _settingsBox.get(Settings.showBottomBar, defaultValue: true);
 
   set showBottomBar(bool showBottomBar) {
     _settingsBox.put(Settings.showBottomBar, showBottomBar);
@@ -581,6 +610,7 @@ class SettingsService extends GetxService {
     _isAutoHideAppBar = autoHideAppBar.obs;
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
     _isCompactTabAndForumList = compactTabAndForumList.obs;
+    shouldShowGuide = showGuide || showBackdropGuide;
     isShowGuide = shouldShowGuide;
 
     await PersistentDataService.clearCacheImage();

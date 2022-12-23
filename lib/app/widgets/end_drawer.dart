@@ -129,19 +129,19 @@ class AppEndDrawer extends StatelessWidget {
                   shrinkWrap: true,
                   padding: EdgeInsets.zero,
                   children: [
-                    settings.shouldShowGuide
+                    SettingsService.shouldShowGuide
                         ? const DarkModeGuide(DarkModeButton(showLabel: true))
                         : const DarkModeButton(showLabel: true),
-                    settings.shouldShowGuide
+                    SettingsService.shouldShowGuide
                         ? SearchGuide(searchButton)
                         : searchButton,
-                    settings.shouldShowGuide
+                    SettingsService.shouldShowGuide
                         ? HistoryGuide(historyButton)
                         : historyButton,
-                    settings.shouldShowGuide
+                    SettingsService.shouldShowGuide
                         ? FeedGuide(feedButton)
                         : feedButton,
-                    settings.shouldShowGuide
+                    SettingsService.shouldShowGuide
                         ? SettingsGuide(settingsButton)
                         : settingsButton,
                     const SponsorButton(onlyText: false, showLabel: true),

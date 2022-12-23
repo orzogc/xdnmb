@@ -27,7 +27,7 @@ abstract class Guide {
     if (AppBarPopupMenuGuide._key.currentState?.mounted ?? false)
       AppBarPopupMenuGuide._key,
     if (ThreadGuide._key.currentState?.mounted ?? false) ThreadGuide._key,
-    if (!SettingsService.to.isShowBottomBar &&
+    if (!SettingsService.to.showBottomBar &&
         !SettingsService.to.hideFloatingButton &&
         (EditPostGuide._key.currentState?.mounted ?? false))
       EditPostGuide._key,
@@ -51,15 +51,15 @@ abstract class Guide {
   static final List<GlobalKey> bottomBarGuides = [
     if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
     if (SettingsGuide._key.currentState?.mounted ?? false) SettingsGuide._key,
-    if (!SettingsService.to.isBackdropUI &&
+    if (!SettingsService.to.backdropUI &&
         SettingsService.to.compactTabAndForumList &&
         (CompactListButtonGuide._key.currentState?.mounted ?? false))
       CompactListButtonGuide._key,
-    if (!SettingsService.to.isBackdropUI &&
+    if (!SettingsService.to.backdropUI &&
         !SettingsService.to.compactTabAndForumList &&
         (TabListButtonGuide._key.currentState?.mounted ?? false))
       TabListButtonGuide._key,
-    if (!SettingsService.to.isBackdropUI &&
+    if (!SettingsService.to.backdropUI &&
         !SettingsService.to.compactTabAndForumList &&
         (ForumListButtonGuide._key.currentState?.mounted ?? false))
       ForumListButtonGuide._key,
@@ -99,10 +99,10 @@ class AppBarMenuGuide extends StatelessWidget {
     return Obx(
       () => Showcase(
         key: _key,
-        title: (settings.showGuide && !settings.isShowBottomBar)
+        title: (!settings.isShowBottomBar && settings.showGuide)
             ? '标签页菜单'
             : '标签页和版块列表菜单',
-        description: (settings.showGuide && !settings.isShowBottomBar)
+        description: (!settings.isShowBottomBar && settings.showGuide)
             ? '点击打开标签页'
             : '点击打开标签页和版块列表',
         child: child,

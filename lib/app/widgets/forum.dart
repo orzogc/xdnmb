@@ -259,8 +259,7 @@ class _ForumBodyState extends State<ForumBody> {
   late StreamSubscription<int> _pageSubscription;
 
   void _showGuide() {
-    final settings = SettingsService.to;
-    if (mounted && settings.shouldShowGuide) {
+    if (mounted && SettingsService.shouldShowGuide) {
       final scaffold = Scaffold.of(context);
       final showCase = ShowCaseWidget.of(context);
 
@@ -310,7 +309,6 @@ class _ForumBodyState extends State<ForumBody> {
     final client = XdnmbClientService.to.client;
     final forums = ForumListService.to;
     final blacklist = BlacklistService.to;
-    final settings = SettingsService.to;
     final controller = widget.controller;
     final id = controller.id;
 
@@ -374,7 +372,7 @@ class _ForumBodyState extends State<ForumBody> {
                 : const SizedBox.shrink(),
           );
 
-          return (settings.shouldShowGuide &&
+          return (SettingsService.shouldShowGuide &&
                   index == 0 &&
                   !ThreadGuide.exist())
               ? ThreadGuide(item)

@@ -39,6 +39,13 @@ abstract class Settings {
 
   static const String showBackdropGuide = 'showBackdropGuide';
 
+  static const String showGuideWithoutBottomBar = 'showGuideWithoutBottomBar';
+
+  static const String showBackdropGuideWithoutBottomBar =
+      'showBackdropGuideWithoutBottomBar';
+
+  static const String showBottomBarGuide = 'showBottomBarGuide';
+
   static const String showBottomBar = 'showBottomBar';
 
   static const String autoHideBottomBar = 'autoHideBottomBar';

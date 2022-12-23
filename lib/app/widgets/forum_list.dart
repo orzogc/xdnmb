@@ -117,7 +117,6 @@ class ForumList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = SettingsService.to;
     final forums = ForumListService.to;
     final theme = Theme.of(context);
 
@@ -170,7 +169,7 @@ class ForumList extends StatelessWidget {
                   ),
                 );
 
-                return (index == 0 && settings.shouldShowGuide)
+                return (index == 0 && SettingsService.shouldShowGuide)
                     ? ForumListGuide(forumWidget)
                     : forumWidget;
               } else {

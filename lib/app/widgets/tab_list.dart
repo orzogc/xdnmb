@@ -178,7 +178,7 @@ class TabList extends StatelessWidget {
                 );
               }
 
-              return (settings.shouldShowGuide && index == 0)
+              return (SettingsService.shouldShowGuide && index == 0)
                   ? TabListGuide(tab)
                   : tab;
             },

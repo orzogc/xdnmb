@@ -197,6 +197,14 @@ class ControllerStacksService extends GetxService {
     return list;
   }
 
+  void resetAppBarHeight() {
+    for (final stack in _stacks) {
+      for (final controller in stack.controllers) {
+        controller.controller.appBarHeight = PostListAppBar.height;
+      }
+    }
+  }
+
   Future<void> _buildStacks() async {
     final settings = SettingsService.to;
 

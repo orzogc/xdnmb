@@ -94,7 +94,7 @@ abstract class PostListController extends ChangeNotifier {
 
   static final RxBool _scrollingDown = false.obs;
 
-  static double _appBarLatestHeight = PostListAppBar.height;
+  static double _latestAppBarHeight = PostListAppBar.height;
 
   static VoidCallback? _showAppBar;
 
@@ -128,7 +128,7 @@ abstract class PostListController extends ChangeNotifier {
 
   final Rxn<ScrollController> _scrollController = Rxn(null);
 
-  final RxDouble _appBarHeight = _appBarLatestHeight.obs;
+  final RxDouble _appBarHeight = _latestAppBarHeight.obs;
 
   PostListType get postListType;
 
@@ -149,7 +149,7 @@ abstract class PostListController extends ChangeNotifier {
   set appBarHeight(double height) {
     final height_ = height.clamp(0.0, PostListAppBar.height);
     _appBarHeight.value = height_;
-    _appBarLatestHeight = height_;
+    _latestAppBarHeight = height_;
   }
 
   bool get isThread => postListType.isThread;
@@ -293,9 +293,9 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
             tooltip: '菜单',
             icon: const Icon(Icons.menu),
             onPressed: () {
-              if (settings.isBackdropUI) {
+              if (settings.backdropUI) {
                 _backdropController.showBackLayer();
-              } else if (settings.isShowBottomBar &&
+              } else if (settings.showBottomBar &&
                   !_tabAndForumListController.isShowed) {
                 _tabAndForumListController.show();
               } else {
@@ -331,8 +331,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
         return Obx(() {
           final Widget appBar = GestureDetector(
             onTap: () {
-              if (settings.isBackdropUI &&
-                  _backdropController.isShowBackLayer) {
+              if (settings.backdropUI && _backdropController.isShowBackLayer) {
                 _backdropController.hideBackLayer();
               } else if (!_tabAndForumListController.isShowed) {
                 if (controller.isThreadType) {
@@ -343,9 +342,9 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
               }
             },
             onDoubleTap: () {
-              if (settings.isBackdropUI) {
+              if (settings.backdropUI) {
                 _backdropController.toggleFrontLayer();
-              } else if (settings.isShowBottomBar) {
+              } else if (settings.showBottomBar) {
                 _tabAndForumListController.toggle();
               }
             },
@@ -359,7 +358,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                       _tabAndForumListController.isShowed)
                   ? (stacks.controllersCount() > 1
                       ? const BackButton(onPressed: postListPop)
-                      : (settings.shouldShowGuide
+                      : (SettingsService.shouldShowGuide
                           ? AppBarMenuGuide(button)
                           : button))
                   : IconButton(
@@ -367,12 +366,14 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                       onPressed: _tabAndForumListController.isShowed
                           ? _tabAndForumListController.close
                           : _backdropController.hideBackLayer),
-              title: settings.shouldShowGuide ? AppBarTitleGuide(title) : title,
+              title: SettingsService.shouldShowGuide
+                  ? AppBarTitleGuide(title)
+                  : title,
               actions: !(_backdropController.isShowBackLayer ||
                       _tabAndForumListController.isShowed)
                   ? [
                       if (controller.isXdnmbApi)
-                        settings.shouldShowGuide
+                        SettingsService.shouldShowGuide
                             ? AppBarPageButtonGuide(
                                 PageButton(controller: controller))
                             : PageButton(controller: controller),
@@ -380,14 +381,14 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                         ListenableBuilder(
                             listenable: controller,
                             builder: (context, child) =>
-                                settings.shouldShowGuide
+                                SettingsService.shouldShowGuide
                                     ? AppBarPopupMenuGuide(
                                         ThreadAppBarPopupMenuButton(
                                             controller as ThreadTypeController))
                                     : ThreadAppBarPopupMenuButton(
                                         controller as ThreadTypeController)),
                       if (controller.isForumType)
-                        settings.shouldShowGuide
+                        SettingsService.shouldShowGuide
                             ? AppBarPopupMenuGuide(ForumAppBarPopupMenuButton(
                                 controller as ForumTypeController))
                             : ForumAppBarPopupMenuButton(
@@ -395,7 +396,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                       if (controller.isHistory)
                         HistoryDateRangePicker(controller as HistoryController),
                       if (controller.isHistory)
-                        settings.shouldShowGuide
+                        SettingsService.shouldShowGuide
                             ? AppBarPopupMenuGuide(HistoryAppBarPopupMenuButton(
                                 controller as HistoryController))
                             : HistoryAppBarPopupMenuButton(
@@ -608,6 +609,9 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
     _scrollController = null;
     _animationController.removeListener(_setHeight);
     _animationController.dispose();
+    PostListController._latestAppBarHeight = PostListAppBar.height;
+    WidgetsBinding.instance.addPostFrameCallback(
+        (timeStamp) => ControllerStacksService.to.resetAppBarHeight());
 
     super.dispose();
   }
@@ -722,10 +726,16 @@ class PostListPageState extends State<PostListPage> {
 
   void jumpToLast() => jumpToPage(ControllerStacksService.to.length - 1);
 
-  Widget _buildNavigator(BuildContext context, int index) {
+  Widget _buildNavigator(int index) {
     debugPrint('build navigator: $index');
 
     final stacks = ControllerStacksService.to;
+
+    // 需要Navigator显示公告
+    if (!PersistentDataService.isNavigatorReady) {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (timeStamp) => PersistentDataService.isNavigatorReady = true);
+    }
 
     return ListenableBuilder(
       listenable: stacks.getStackNotifier(index),
@@ -775,7 +785,7 @@ class PostListPageState extends State<PostListPage> {
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: stacks.length,
-        itemBuilder: (context, index) => _buildNavigator(context, index),
+        itemBuilder: (context, index) => _buildNavigator(index),
       ),
     );
 
@@ -783,7 +793,7 @@ class PostListPageState extends State<PostListPage> {
         ? SwipeDetector(
             onSwipeLeft: (offset) => scaffold.openEndDrawer(),
             onSwipeRight: (offset) {
-              if (!settings.isBackdropUI) {
+              if (!settings.backdropUI) {
                 scaffold.openDrawer();
               }
             },
@@ -979,6 +989,11 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
 
   static EditPostCallback? get _editPost => EditPostCallback.bottomSheet;
 
+  final Listenable _listenable = Listenable.merge([
+    SettingsService.to.showBottomBarListenable,
+    SettingsService.to.backdropUIListenable,
+  ]);
+
   void _toggleEditPostBottomSheet([EditPostController? controller]) {
     if (mounted) {
       if (!_hasBottomSheet) {
@@ -1038,6 +1053,16 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
   void _showTabAndForumList() => _TabAndForumListButton._showTabAndForumList(
       topPadding: widget.topPadding);
 
+  void _setTabAndForumListController() {
+    final settings = SettingsService.to;
+
+    if (settings.showBottomBar && !settings.backdropUI) {
+      _tabAndForumListController._show = _showTabAndForumList;
+    } else {
+      _tabAndForumListController._show = null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1045,11 +1070,8 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
     _editPostController._show = _toggleEditPostBottomSheet;
     _editPostController._showEditPost = _toggleEditPostBottomSheet;
 
-    final settings = SettingsService.to;
-
-    if (settings.isShowBottomBar && !settings.isBackdropUI) {
-      _tabAndForumListController._show = _showTabAndForumList;
-    }
+    _setTabAndForumListController();
+    _listenable.addListener(_setTabAndForumListController);
 
     ControllerStacksService.to.notifier.addListener(_refreshBottomSheet);
   }
@@ -1059,11 +1081,8 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
     _editPostController._show = null;
     _editPostController._showEditPost = null;
 
-    final settings = SettingsService.to;
-
-    if (settings.isShowBottomBar && !settings.isBackdropUI) {
-      _tabAndForumListController._show = null;
-    }
+    _listenable.removeListener(_setTabAndForumListController);
+    _tabAndForumListController._show = null;
 
     ControllerStacksService.to.notifier.removeListener(_refreshBottomSheet);
 
@@ -1549,12 +1568,12 @@ class PostListBottomBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Flexible(
-                child: settings.shouldShowGuide
+                child: SettingsService.shouldShowGuide
                     ? SearchGuide(searchButton)
                     : searchButton,
               ),
               Flexible(
-                child: settings.shouldShowGuide
+                child: SettingsService.shouldShowGuide
                     ? SettingsGuide(settingsButton)
                     : settingsButton,
               ),
@@ -1562,7 +1581,7 @@ class PostListBottomBar extends StatelessWidget {
                   settings.isCompactTabAndForumList &&
                   compactListButton != null)
                 Flexible(
-                  child: settings.shouldShowGuide
+                  child: SettingsService.shouldShowGuide
                       ? CompactListButtonGuide(compactListButton)
                       : compactListButton,
                 ),
@@ -1570,7 +1589,7 @@ class PostListBottomBar extends StatelessWidget {
                       settings.isCompactTabAndForumList) &&
                   tabListButton != null)
                 Flexible(
-                  child: settings.shouldShowGuide
+                  child: SettingsService.shouldShowGuide
                       ? TabListButtonGuide(tabListButton)
                       : tabListButton,
                 ),
@@ -1578,22 +1597,22 @@ class PostListBottomBar extends StatelessWidget {
                       settings.isCompactTabAndForumList) &&
                   forumListButton != null)
                 Flexible(
-                  child: settings.shouldShowGuide
+                  child: SettingsService.shouldShowGuide
                       ? ForumListButtonGuide(forumListButton)
                       : forumListButton,
                 ),
               Flexible(
-                child: settings.shouldShowGuide
+                child: SettingsService.shouldShowGuide
                     ? FeedGuide(feedButton)
                     : feedButton,
               ),
               Flexible(
-                child: settings.shouldShowGuide
+                child: SettingsService.shouldShowGuide
                     ? HistoryGuide(historyButton)
                     : historyButton,
               ),
               Flexible(
-                child: settings.shouldShowGuide
+                child: SettingsService.shouldShowGuide
                     ? EditPostGuide(editPostButton)
                     : editPostButton,
               ),
@@ -1723,14 +1742,23 @@ class _PostListViewState extends State<PostListView>
       });
 
   void _showCase() {
-    if (SettingsService.to.isShowBottomBar) {
+    final settings = SettingsService.to;
+
+    if (settings.showBottomBar) {
       if (Guide.isShowForumGuides) {
         Guide.isShowForumGuides = false;
         Guide.isShowBottomBarGuides = true;
         _startBottomBarGuide();
       } else if (Guide.isShowBottomBarGuides) {
         Guide.isShowBottomBarGuides = false;
-        SettingsService.to.showGuide = false;
+        settings.showGuide = false;
+        if (settings.showBottomBarGuide) {
+          settings.showBottomBarGuide = false;
+        }
+        if (settings.showGuideWithoutBottomBar) {
+          settings.showGuideWithoutBottomBar = false;
+        }
+        SettingsService.shouldShowGuide = false;
         CheckAppVersionService.to.checkAppVersion();
         PersistentDataService.to.showNotice();
       }
@@ -1749,7 +1777,14 @@ class _PostListViewState extends State<PostListView>
       } else if (Guide.isShowEndDrawerGuides) {
         Guide.isShowEndDrawerGuides = false;
         PostListPage.pageKey.currentState!._closeEndDrawer();
-        SettingsService.to.showGuide = false;
+        settings.showGuide = false;
+        if (settings.showBottomBarGuide) {
+          settings.showBottomBarGuide = false;
+        }
+        if (settings.showGuideWithoutBottomBar) {
+          settings.showGuideWithoutBottomBar = false;
+        }
+        SettingsService.shouldShowGuide = false;
         CheckAppVersionService.to.checkAppVersion();
         PersistentDataService.to.showNotice();
       }
@@ -1791,9 +1826,11 @@ class _PostListViewState extends State<PostListView>
       });
 
   void _backdropShowCase() {
+    final settings = SettingsService.to;
+
     if (Guide.isShowForumGuides) {
       Guide.isShowForumGuides = false;
-      if (SettingsService.to.isShowBottomBar) {
+      if (settings.showBottomBar) {
         Guide.isShowBottomBarGuides = true;
         _startBottomBarGuide();
       } else {
@@ -1819,7 +1856,14 @@ class _PostListViewState extends State<PostListView>
     } else if (Guide.isShowBackLayerForumListGuides) {
       Guide.isShowBackLayerForumListGuides = false;
       _backdropController.hideBackLayer();
-      SettingsService.to.showBackdropGuide = false;
+      settings.showBackdropGuide = false;
+      if (settings.showBottomBarGuide) {
+        settings.showBottomBarGuide = false;
+      }
+      if (settings.showBackdropGuideWithoutBottomBar) {
+        settings.showBackdropGuideWithoutBottomBar = false;
+      }
+      SettingsService.shouldShowGuide = false;
       CheckAppVersionService.to.checkAppVersion();
       PersistentDataService.to.showNotice();
     }
@@ -1879,7 +1923,7 @@ class _PostListViewState extends State<PostListView>
                     client.isReady.value)) {
               if (_isInitial) {
                 // 出现用户指导时更新和公告延后显示
-                if (!settings.shouldShowGuide) {
+                if (!SettingsService.shouldShowGuide) {
                   WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                     if (mounted) {
                       CheckAppVersionService.to.checkAppVersion();

@@ -25,6 +25,8 @@ class PersistentDataService extends GetxService {
 
   static late final bool clearImageCache;
 
+  static bool isNavigatorReady = false;
+
   late final Box _dataBox;
 
   final RxBool _isKeyboardVisible = false.obs;
@@ -137,6 +139,11 @@ class PersistentDataService extends GetxService {
       }
 
       if (notice?.isNotEmpty ?? false) {
+        // 需要Navigator显示公告
+        while (!isNavigatorReady) {
+          debugPrint('正在等待Navigator');
+          await Future.delayed(const Duration(milliseconds: 500));
+        }
         await showNoticeDialog(showCheckbox: true);
       }
     }
