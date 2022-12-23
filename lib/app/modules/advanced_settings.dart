@@ -83,7 +83,7 @@ class _CacheImageCount extends StatelessWidget {
     return ListenableBuilder(
       listenable: settings.cacheImageCountListenable,
       builder: (context, child) => ListTile(
-        title: const Text('缓存图片数量'),
+        title: const Text('缓存图片存储数量'),
         subtitle: const Text('更改后需要重启应用'),
         trailing: Text('${settings.cacheImageCount}'),
         onTap: () async {
