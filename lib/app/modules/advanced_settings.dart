@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../data/services/image.dart';
 import '../data/services/settings.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
@@ -257,7 +258,8 @@ class AdvancedSettingsView extends StatelessWidget {
           ),
           body: ListView(
             children: [
-              if (!GetPlatform.isIOS) _SaveImagePath(),
+              if (!GetPlatform.isIOS && ImageService.to.hasStoragePermission)
+                _SaveImagePath(),
               const _CacheImageCount(),
               const _AddBlueIslandEmoticons(),
               const _RestoreForumPage(),

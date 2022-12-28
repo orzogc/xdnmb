@@ -978,11 +978,12 @@ class ImageView extends StatelessWidget {
 
   Future<void> _saveImage() async {
     if (_imageKey.currentState != null) {
-      final savePath = ImageService.savePath;
       final post = _controller.post.value;
 
       try {
         if (post != null) {
+          final image = ImageService.to;
+          final savePath = ImageService.savePath;
           final fileName = post.imageHashFileName()!;
           final manager = XdnmbImageCacheManager();
 
@@ -990,7 +991,7 @@ class ImageView extends StatelessWidget {
           if (info != null) {
             debugPrint('缓存图片路径：${info.file.path}');
             if (GetPlatform.isIOS) {
-              if (ImageService.to.hasPhotoLibraryPermission) {
+              if (image.hasPhotoLibraryPermission) {
                 final result = await ImageGallerySaver.saveFile(info.file.path,
                     name: fileName);
                 if (result['isSuccess']) {
@@ -1001,7 +1002,7 @@ class ImageView extends StatelessWidget {
               } else {
                 showToast('没有图库权限无法保存图片');
               }
-            } else if (savePath != null) {
+            } else if (image.hasStoragePermission && savePath != null) {
               final path = join(savePath, fileName);
               final file = File(path);
               if (await file.exists() &&

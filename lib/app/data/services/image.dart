@@ -1,3 +1,4 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -17,11 +18,10 @@ class ImageService extends GetxService {
 
   final RxBool isReady = false.obs;
 
-  @override
-  void onReady() async {
-    super.onReady();
-
-    if (GetPlatform.isMobile) {
+  Future<void> _getPermission() async {
+    // Android SDK版本大于等于33不需要存储权限，但是需要图库权限
+    if (GetPlatform.isAndroid &&
+        (await DeviceInfoPlugin().androidInfo).version.sdkInt < 33) {
       PermissionStatus status = await Permission.storage.status;
       if (status.isDenied) {
         status = await Permission.storage.request();
@@ -35,7 +35,9 @@ class ImageService extends GetxService {
       hasStoragePermission = true;
     }
 
-    if (GetPlatform.isIOS) {
+    if ((GetPlatform.isAndroid &&
+            (await DeviceInfoPlugin().androidInfo).version.sdkInt >= 33) ||
+        GetPlatform.isIOS) {
       PermissionStatus status = await Permission.photos.status;
       if (status.isDenied) {
         status = await Permission.photos.request();
@@ -43,11 +45,22 @@ class ImageService extends GetxService {
       if (status.isGranted) {
         hasPhotoLibraryPermission = true;
       } else {
-        showToast('读写图库图片需要图库权限');
+        if (GetPlatform.isIOS) {
+          showToast('读写图库图片需要图库权限');
+        } else if (GetPlatform.isAndroid) {
+          showToast('读取图片需要相应权限');
+        }
       }
     } else {
       hasPhotoLibraryPermission = true;
     }
+  }
+
+  @override
+  void onReady() async {
+    super.onReady();
+
+    await _getPermission();
 
     if (hasStoragePermission) {
       try {

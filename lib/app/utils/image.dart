@@ -105,13 +105,14 @@ Image? getImage(Uint8List imageData) {
 
 // 保存成功返回`true`，失败返回`false`
 Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
+  final image = ImageService.to;
   final savePath = ImageService.savePath;
 
   try {
     final filename = imageName ?? _imageFilename(imageData);
 
     if (GetPlatform.isIOS) {
-      if (ImageService.to.hasPhotoLibraryPermission) {
+      if (image.hasPhotoLibraryPermission) {
         if (savePath != null) {
           final path = join(savePath, filename);
           final file = io.File(path);
@@ -148,7 +149,7 @@ Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
         showToast('没有图库权限无法保存图片');
         return false;
       }
-    } else if (savePath != null) {
+    } else if (image.hasStoragePermission && savePath != null) {
       final path = join(savePath, filename);
       final file = io.File(path);
       await file.writeAsBytes(imageData);
