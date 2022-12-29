@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:align_positioned/align_positioned.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
@@ -1233,6 +1233,14 @@ class _EmoticonDialog extends StatelessWidget {
           },
           child: Text('删除 ${emoticon.name}', style: textStyle),
         ),
+        SimpleDialogOption(
+          onPressed: () async {
+            await Clipboard.setData(ClipboardData(text: emoticon.text));
+            showToast('已复制 ${emoticon.name}');
+            Get.back();
+          },
+          child: Text('复制 ${emoticon.name}', style: textStyle),
+        ),
       ],
     );
   }
@@ -1340,6 +1348,11 @@ class _EmoticonState extends State<_Emoticon> {
                                 style: buttonStyle,
                                 onPressed: () => widget.onTap(
                                     emoticon.text, emoticon.offset),
+                                onLongPress: () async {
+                                  await Clipboard.setData(
+                                      ClipboardData(text: emoticon.text));
+                                  showToast('已复制 ${emoticon.name}');
+                                },
                                 child: Text(emoticon.name, style: textStyle),
                               ),
                             for (final emoticon in emoticons.emoticons)
