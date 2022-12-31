@@ -1,15 +1,18 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/models/controller.dart';
+import '../data/models/cookie.dart';
 import '../data/models/forum.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
+import '../data/services/user.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
@@ -703,5 +706,137 @@ class RewardQRCode extends StatelessWidget {
             child: const Text('保存'),
           ),
         ],
+      );
+}
+
+class EditCookieDialog extends StatelessWidget {
+  final CookieData cookie;
+
+  final bool setColor;
+
+  const EditCookieDialog(
+      {super.key, required this.cookie, this.setColor = false});
+
+  @override
+  Widget build(BuildContext context) {
+    String? note;
+    final Rx<Color> color = Rx(cookie.color);
+
+    return InputDialog(
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormField(
+            decoration: const InputDecoration(labelText: '备注'),
+            autofocus: true,
+            initialValue: cookie.note,
+            onChanged: (value) => note = value,
+          ),
+          if (setColor) const SizedBox(height: 15.0),
+          if (setColor)
+            GestureDetector(
+              onTap: () {
+                Color? color_;
+                Get.dialog(
+                  ConfirmCancelDialog(
+                    contentWidget: MaterialPicker(
+                      pickerColor: cookie.color,
+                      onColorChanged: (value) => color_ = value,
+                      enableLabel: true,
+                      portraitOnly: true,
+                    ),
+                    onConfirm: () {
+                      if (color_ != null) {
+                        color.value = color_!;
+                      }
+                      Get.back();
+                    },
+                    onCancel: Get.back,
+                  ),
+                );
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('颜色'),
+                  Obx(
+                    () => ColorIndicator(
+                      key: ValueKey<Color>(color.value),
+                      HSVColor.fromColor(color.value),
+                      width: 25.0,
+                      height: 25.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () async {
+            await cookie.editNote((note?.isNotEmpty ?? false) ? note : null);
+            if (setColor) {
+              await UserService.to.setCookieColor(cookie, color.value);
+            }
+
+            Get.back(result: true);
+          },
+          child: const Text('确定'),
+        ),
+      ],
+    );
+  }
+}
+
+class EditCookieNote extends StatelessWidget {
+  final CookieData cookie;
+
+  const EditCookieNote(this.cookie, {super.key});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          if (await Get.dialog<bool>(EditCookieDialog(cookie: cookie)) ??
+              false) {
+            Get.back();
+          }
+        },
+        child: Text('编辑饼干备注', style: Theme.of(context).textTheme.titleMedium),
+      );
+}
+
+class SetCookieColor extends StatelessWidget {
+  final CookieData cookie;
+
+  const SetCookieColor(this.cookie, {super.key});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          Color? color;
+          final result = await Get.dialog<bool>(ConfirmCancelDialog(
+            contentWidget: MaterialPicker(
+              pickerColor: cookie.color,
+              onColorChanged: (value) => color = value,
+              enableLabel: true,
+              portraitOnly: true,
+            ),
+            onConfirm: () {
+              if (color != null) {
+                UserService.to.setCookieColor(cookie, color!);
+                Get.back(result: true);
+              } else {
+                Get.back(result: false);
+              }
+            },
+            onCancel: () => Get.back(result: false),
+          ));
+
+          if (result ?? false) {
+            Get.back();
+          }
+        },
+        child: Text('设置饼干颜色', style: Theme.of(context).textTheme.titleMedium),
       );
 }

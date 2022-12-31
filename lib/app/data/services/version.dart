@@ -98,7 +98,8 @@ class CheckAppVersionService extends GetxService {
                 break;
               default:
                 debugPrint(
-                    '不支持下载更新的Android CPU架构：${SysInfo.kernelArchitecture}');
+                    '可能不支持下载更新的Android CPU架构：${SysInfo.kernelArchitecture}');
+                _showUpdateDialog(Urls.appFullApk);
             }
           } else {
             debugPrint('不支持下载更新的平台：${Platform.operatingSystem}');

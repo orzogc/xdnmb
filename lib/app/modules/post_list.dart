@@ -75,18 +75,6 @@ class PostList {
   int get hashCode => Object.hash(postListType, id);
 }
 
-enum PostListScrollState {
-  outOfMinScrollExtent,
-  inAppBarRange,
-  outOfAppBarRange;
-
-  bool get isOutOfMinScrollExtent => this == outOfMinScrollExtent;
-
-  bool get isInAppBarRange => this == inAppBarRange;
-
-  bool get isOutOfAppBarRange => this == outOfAppBarRange;
-}
-
 typedef OnPageCallback = void Function(int page);
 
 abstract class PostListController extends ChangeNotifier {
@@ -896,6 +884,9 @@ class _EditPostBottomSheet extends StatelessWidget {
           postList: PostList.fromController(controller),
           height: height,
           forumId: controller.forumId,
+          poUserHash: controller is ThreadTypeController
+              ? controller.post?.userHash
+              : null,
         ),
       );
     }
@@ -1043,7 +1034,11 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
       final controller = PostListController.get();
       if (controller.canPost && _editPost != null) {
         _editPost!.setPostList(
-            PostList.fromController(controller), controller.forumId);
+            PostList.fromController(controller),
+            controller.forumId,
+            controller is ThreadTypeController
+                ? controller.post?.userHash
+                : null);
       } else {
         _editPostController.close();
       }

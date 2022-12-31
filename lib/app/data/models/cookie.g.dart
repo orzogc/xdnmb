@@ -22,13 +22,15 @@ class CookieDataAdapter extends TypeAdapter<CookieData> {
       id: fields[2] as int?,
       isDeprecated: fields[3] == null ? false : fields[3] as bool,
       note: fields[4] as String?,
+      lastPostTime: fields[5] as DateTime?,
+      colorValue: fields[6] == null ? 4280391411 : fields[6] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, CookieData obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -38,7 +40,11 @@ class CookieDataAdapter extends TypeAdapter<CookieData> {
       ..writeByte(3)
       ..write(obj.isDeprecated)
       ..writeByte(4)
-      ..write(obj.note);
+      ..write(obj.note)
+      ..writeByte(5)
+      ..write(obj.lastPostTime)
+      ..writeByte(6)
+      ..write(obj.colorValue);
   }
 
   @override

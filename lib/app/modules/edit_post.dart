@@ -15,6 +15,8 @@ class EditPostController extends GetxController {
 
   final int? forumId;
 
+  final String? poUserHash;
+
   final String? title;
 
   final String? name;
@@ -35,6 +37,7 @@ class EditPostController extends GetxController {
       {required this.postListType,
       required this.id,
       this.forumId,
+      this.poUserHash,
       this.title,
       this.name,
       this.content,
@@ -65,6 +68,7 @@ class EditPostBinding implements Bindings {
       postListType: PostListType.values[index],
       id: Get.parameters['id'].tryParseInt() ?? 0,
       forumId: Get.parameters['forumId'].tryParseInt(),
+      poUserHash: Get.parameters['poUserHash'],
       title: Get.parameters['title'],
       name: Get.parameters['name'],
       content: Get.parameters['content'],

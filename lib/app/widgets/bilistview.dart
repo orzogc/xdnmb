@@ -469,7 +469,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
     _scrollController.addListener(_checkBoundary);
 
     if (widget.controller != null) {
-      widget.controller!._loadMore = _loadMore;
+      WidgetsBinding.instance.addPostFrameCallback(
+          (timeStamp) => widget.controller!._loadMore = _loadMore);
       _isLoadingMoreSubscription = _isLoadingMore
           .listen((value) => widget.controller!._isLoadingMore = value);
     }
@@ -496,7 +497,8 @@ class _BiListViewState<T> extends State<BiListView<T>>
       oldWidget.controller?._loadMore = null;
 
       if (widget.controller != null) {
-        widget.controller!._loadMore = _loadMore;
+        WidgetsBinding.instance.addPostFrameCallback(
+            (timeStamp) => widget.controller!._loadMore = _loadMore);
         _isLoadingMoreSubscription = _isLoadingMore
             .listen((value) => widget.controller!._isLoadingMore = value);
       }

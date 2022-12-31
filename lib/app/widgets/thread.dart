@@ -115,7 +115,7 @@ class ThreadController extends ThreadTypeController {
   @override
   final int? jumpToId;
 
-  VoidCallback? loadMore;
+  VoidCallback? _loadMore;
 
   @override
   PostListType get postListType => PostListType.thread;
@@ -131,6 +131,12 @@ class ThreadController extends ThreadTypeController {
   @override
   ThreadTypeController copyPage([int? jumpToId]) =>
       ThreadController(id: id, page: page, post: post, jumpToId: jumpToId);
+
+  void loadMore() {
+    if (_loadMore != null) {
+      _loadMore!();
+    }
+  }
 }
 
 class OnlyPoThreadController extends ThreadTypeController {
@@ -803,7 +809,8 @@ class _ThreadBodyState extends State<ThreadBody> {
     }
 
     if (controller.isThread) {
-      (controller as ThreadController).loadMore = biListViewController.loadMore;
+      (controller as ThreadController)._loadMore =
+          biListViewController.loadMore;
     }
 
     _getHistory = Future(() async {
@@ -838,14 +845,14 @@ class _ThreadBodyState extends State<ThreadBody> {
 
     if (controller != oldWidget.controller) {
       if (oldWidget.controller.isThread) {
-        (oldWidget.controller as ThreadController).loadMore = null;
+        (oldWidget.controller as ThreadController)._loadMore = null;
       }
       oldWidget.controller.removeListener(_cancelJump);
 
       _pageSubscription.cancel();
       _pageSubscription = controller.listenPage(_trySave);
       if (controller.isThread) {
-        (controller as ThreadController).loadMore =
+        (controller as ThreadController)._loadMore =
             biListViewController.loadMore;
       }
     }
@@ -854,7 +861,7 @@ class _ThreadBodyState extends State<ThreadBody> {
   @override
   void dispose() {
     if (controller.isThread) {
-      (controller as ThreadController).loadMore = null;
+      (controller as ThreadController)._loadMore = null;
     }
 
     _isToJump.value = false;
@@ -903,6 +910,7 @@ void _replyPost(ThreadTypeController controller, int postId) {
         postListType: controller.postListType,
         id: controller.id,
         forumId: controller.forumId,
+        poUserHash: controller.post?.userHash,
         content: text));
   }
 }
@@ -919,6 +927,7 @@ void _replyWithImage(ThreadTypeController controller, Uint8List imageData) {
         postListType: controller.postListType,
         id: controller.id,
         forumId: controller.forumId,
+        poUserHash: controller.post?.userHash,
         imageData: imageData));
   }
 }

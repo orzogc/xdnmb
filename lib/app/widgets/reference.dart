@@ -72,6 +72,8 @@ class ReferenceCard extends StatefulWidget {
 class _ReferenceCardState extends State<ReferenceCard> {
   late Future<HtmlReference> _getReference;
 
+  String? errorMessage;
+
   Future<HtmlReference> _toGetReference() {
     debugPrint('获取串 ${widget.postId.toPostNumber()} 的引用');
 
@@ -162,12 +164,17 @@ class _ReferenceCardState extends State<ReferenceCard> {
                 if (snapshot.connectionState == ConnectionState.done &&
                     snapshot.hasError) {
                   final error = exceptionMessage(snapshot.error!);
-                  showToast(error);
+                  // 防止重复出现错误
+                  if (error != errorMessage) {
+                    showToast(error);
+                    errorMessage = error;
+                  }
 
                   return GestureDetector(
                     onTap: () {
                       if (mounted) {
                         setState(() {
+                          errorMessage = null;
                           _getReference = _toGetReference();
                         });
                       }

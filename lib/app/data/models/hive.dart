@@ -11,6 +11,8 @@ abstract class HiveBoxName {
 
   static const String cookies = 'cookies';
 
+  static const String deletedCookies = 'deletedCookies';
+
   static const String data = 'data';
 
   static const String draft = 'draft';

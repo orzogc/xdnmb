@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../../widgets/listenable.dart';
 import '../models/cookie.dart';
 import '../models/hive.dart';
 import '../models/user.dart';
@@ -22,13 +25,19 @@ class UserService extends GetxService {
 
   late final Box<CookieData> _cookiesBox;
 
+  late final Box<CookieData> _deletedCookiesBox;
+
   final RxBool isReady = false.obs;
 
   bool canGetCookie = false;
 
   final RxInt currentCookiesNum = 0.obs;
 
-  int totalCookiesNum = 0;
+  final RxInt totalCookiesNum = 0.obs;
+
+  late HashMap<String, int> _cookieColorMap;
+
+  final Notifier cookieColorNotifier = Notifier();
 
   /// 用户帐号cookie
   String? get userCookie => _userBox.get(User.userCookie);
@@ -84,7 +93,7 @@ class UserService extends GetxService {
 
   late final StreamSubscription<BoxEvent> _cookiesBoxSubscription;
 
-  void updateClient() {
+  void _updateClient() {
     final client = XdnmbClientService.to.client;
 
     if (isLogin) {
@@ -94,6 +103,36 @@ class UserService extends GetxService {
       client.xdnmbCookie = XdnmbCookie(browseCookie!.userHash,
           name: browseCookie!.name, id: browseCookie?.id);
     }
+  }
+
+  void _updateBrowseCookie() {
+    if (hasXdnmbCookie) {
+      if (!xdnmbCookies
+          .any((cookie) => cookie.userHash == browseCookie?.userHash)) {
+        browseCookie = _cookiesBox.getAt(0)!.copy();
+      }
+    } else {
+      browseCookie = null;
+    }
+  }
+
+  void _updatePostCookie() {
+    if (hasXdnmbCookie) {
+      if (!xdnmbCookies
+          .any((cookie) => cookie.userHash == postCookie?.userHash)) {
+        postCookie = _cookiesBox.getAt(0)!.copy();
+      }
+    } else {
+      postCookie = null;
+    }
+  }
+
+  void _updateCookieColorMap() {
+    _cookieColorMap = HashMap.fromEntries(_deletedCookiesBox.values
+        .followedBy(xdnmbCookies)
+        .map((cookie) => MapEntry(cookie.name, cookie.colorValue)));
+
+    cookieColorNotifier.notify();
   }
 
   Future<void> login(
@@ -132,13 +171,13 @@ class UserService extends GetxService {
     }
     if (isLogin && !client.isLogin) {
       debugPrint('XdnmbClient没有设置userCookie');
-      updateClient();
+      _updateClient();
     }
 
     final list = await client.getCookiesList();
     canGetCookie = list.canGetCookie;
     currentCookiesNum.value = list.currentCookiesNum;
-    totalCookiesNum = list.totalCookiesNum;
+    totalCookiesNum.value = list.totalCookiesNum;
 
     final normal = <CookieData>[];
     for (final cookieId in list.cookiesIdList) {
@@ -163,17 +202,22 @@ class UserService extends GetxService {
 
     await _cookiesBox.clear();
     await _cookiesBox.addAll(normal.followedBy(deprecated));
+
+    _updateCookieColorMap();
   }
 
   /// 返回`true`说明添加成功，返回`false`说明已存在该饼干
   Future<bool> addCookie(
       {required String name, required String userHash, String? note}) async {
-    if (xdnmbCookies.any((cookie) => cookie.userHash == userHash)) {
+    if (xdnmbCookies
+        .any((cookie) => cookie.name == name || cookie.userHash == userHash)) {
       return false;
     }
 
     await _cookiesBox
         .add(CookieData(name: name, userHash: userHash, note: note));
+    _updateCookieColorMap();
+
     return true;
   }
 
@@ -182,26 +226,28 @@ class UserService extends GetxService {
     await updateCookies();
   }
 
-  void updateBrowseCookie() {
-    if (hasXdnmbCookie) {
-      if (!xdnmbCookies
-          .any((cookie) => cookie.userHash == browseCookie?.userHash)) {
-        browseCookie = _cookiesBox.getAt(0)!.copy();
+  Future<void> deleteCookie(CookieData cookie) async {
+    await cookie.delete();
+    await _deletedCookiesBox.add(cookie.copy());
+  }
+
+  Future<void> updateLastPostTime() async {
+    for (final cookie in xdnmbCookies) {
+      if (cookie.userHash == postCookie?.userHash) {
+        await cookie.setLastPostTime(DateTime.now());
       }
-    } else {
-      browseCookie = null;
     }
   }
 
-  void updatePostCookie() {
-    if (hasXdnmbCookie) {
-      if (!xdnmbCookies
-          .any((cookie) => cookie.userHash == postCookie?.userHash)) {
-        postCookie = _cookiesBox.getAt(0)!.copy();
-      }
-    } else {
-      postCookie = null;
-    }
+  Color? getCookieColor(String name) {
+    final color = _cookieColorMap[name];
+
+    return color != null ? Color(color) : null;
+  }
+
+  Future<void> setCookieColor(CookieData cookie, Color color) async {
+    await cookie.setColor(color);
+    _updateCookieColorMap();
   }
 
   @override
@@ -227,8 +273,12 @@ class UserService extends GetxService {
         encryptionCipher: HiveAesCipher(key));
     _cookiesBox = await Hive.openBox<CookieData>(HiveBoxName.cookies,
         encryptionCipher: HiveAesCipher(key));
+    _deletedCookiesBox = await Hive.openBox<CookieData>(
+        HiveBoxName.deletedCookies,
+        encryptionCipher: HiveAesCipher(key));
 
-    updateClient();
+    _updateClient();
+    _updateCookieColorMap();
 
     _userCookieSubscription =
         _userBox.watch(key: User.userCookie).listen((event) {
@@ -255,12 +305,12 @@ class UserService extends GetxService {
       }
     });
 
-    updateBrowseCookie();
-    updatePostCookie();
+    _updateBrowseCookie();
+    _updatePostCookie();
     _cookiesBoxSubscription = _cookiesBox.watch().listen((event) {
       debugPrint('_cookiesBox change');
-      updateBrowseCookie();
-      updatePostCookie();
+      _updateBrowseCookie();
+      _updatePostCookie();
     });
 
     userCookieListenable = _userBox.listenable(keys: [User.userCookie]);

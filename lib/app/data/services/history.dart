@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
@@ -332,6 +334,13 @@ class PostHistoryService extends GetxService {
 
     return (query as QueryBuilder<ReplyData, ReplyData, QQueryOperations>)
         .findAll();
+  }
+
+  Future<HashSet<String>> getReplyUserHash(int mainPostId) async {
+    final list =
+        await _replyData.filter().mainPostIdEqualTo(mainPostId).findAll();
+
+    return HashSet.of(list.map((reply) => reply.userHash));
   }
 
   @override

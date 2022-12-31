@@ -38,6 +38,9 @@ abstract class Urls {
   static const String appX64Apk =
       'https://nmb.ovear.info/orzogc/xdnmb-latest-x86_64.apk';
 
+  static const String appFullApk =
+      'https://nmb.ovear.info/orzogc/xdnmb-latest-full.apk';
+
   static String? forumUrl(
       {required int forumId, bool isTimeline = false, int? page}) {
     if (isTimeline) {

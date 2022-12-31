@@ -6,6 +6,7 @@ import 'package:html_to_text/html_to_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/settings.dart';
+import '../data/services/user.dart';
 import '../utils/extensions.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
@@ -13,6 +14,7 @@ import '../utils/time.dart';
 import 'content.dart';
 import 'forum_name.dart';
 import 'image.dart';
+import 'listenable.dart';
 import 'scroll.dart';
 import 'tooltip.dart';
 
@@ -37,21 +39,32 @@ class _PostUser extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    TextStyle style = (textStyle ?? AppTheme.postHeaderTextStyle).merge(
-      TextStyle(
-          color: isAdmin ? Colors.red : (isPo ? Colors.cyan.shade700 : null)),
-    );
-    final fontWeight = style.fontWeight;
-    if ((isAdmin || isPo) &&
-        (fontWeight == null || fontWeight.toInt() < FontWeight.bold.toInt())) {
-      style = style.merge(const TextStyle(fontWeight: FontWeight.bold));
-    }
+    final user = UserService.to;
 
-    return htmlToRichText(
-      context,
-      userHash,
-      textStyle: style,
-      strutStyle: strutStyleFromHeight(style),
+    return ListenableBuilder(
+      listenable: user.cookieColorNotifier,
+      builder: (context, child) {
+        TextStyle style = (textStyle ?? AppTheme.postHeaderTextStyle).merge(
+          TextStyle(
+              color: isAdmin
+                  ? Colors.red
+                  : (user.getCookieColor(userHash) ??
+                      (isPo ? Colors.cyan.shade700 : null))),
+        );
+        final fontWeight = style.fontWeight;
+        if ((isAdmin || isPo) &&
+            (fontWeight == null ||
+                fontWeight.toInt() < FontWeight.bold.toInt())) {
+          style = style.merge(const TextStyle(fontWeight: FontWeight.bold));
+        }
+
+        return htmlToRichText(
+          context,
+          userHash,
+          textStyle: style,
+          strutStyle: strutStyleFromHeight(style),
+        );
+      },
     );
   }
 }

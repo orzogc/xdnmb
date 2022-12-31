@@ -85,7 +85,7 @@ abstract class AppRoutes {
 
   static const String reorderForums = '/${PathNames.reorderForums}';
 
-  /// 参数：postListType id title name content forumId imagePath isWatermark
+  /// 参数：postListType id title name content forumId poUserHash imagePath isWatermark
   /// reportReason isAttachDeviceInfo
   static const String editPost = '/${PathNames.editPost}';
 
@@ -193,6 +193,7 @@ abstract class AppRoutes {
           {required PostListType postListType,
           required int id,
           int? forumId,
+          String? poUserHash,
           String? title,
           String? name,
           String? content,
@@ -206,10 +207,11 @@ abstract class AppRoutes {
         parameters: {
           'postListType': '${postListType.index}',
           'id': '$id',
+          if (forumId != null) 'forumId': '$forumId',
+          if (poUserHash != null) 'poUserHash': poUserHash,
           if (title != null && title.isNotEmpty) 'title': title,
           if (name != null && name.isNotEmpty) 'name': name,
           if (content != null && content.isNotEmpty) 'content': content,
-          if (forumId != null) 'forumId': '$forumId',
           if (imagePath != null) 'imagePath': imagePath,
           if (isWatermark != null) 'isWatermark': '$isWatermark',
           if (reportReason != null && reportReason.isNotEmpty)

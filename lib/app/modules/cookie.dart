@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
@@ -263,36 +264,6 @@ class _AddCookieForm extends StatelessWidget {
   }
 }
 
-class _EditCookieNote extends StatelessWidget {
-  final CookieData cookie;
-
-  // ignore: unused_element
-  const _EditCookieNote(this.cookie, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    String? note;
-
-    return InputDialog(
-      content: TextFormField(
-        decoration: const InputDecoration(labelText: '备注'),
-        autofocus: true,
-        initialValue: cookie.note,
-        onChanged: (value) => note = value,
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () async {
-            await cookie.editNote((note?.isNotEmpty ?? false) ? note : null);
-            Get.back(result: true);
-          },
-          child: const Text('确定'),
-        ),
-      ],
-    );
-  }
-}
-
 typedef _VerifyCallback = Future<void> Function(
     BuildContext context, String verify);
 
@@ -350,8 +321,6 @@ class _Cookie extends StatelessWidget {
 
   const _Cookie({super.key, required this.cookie});
 
-  Future<bool?> _editNote() => Get.dialog<bool>(_EditCookieNote(cookie));
-
   Future<bool?> _deleteCookie() {
     final client = XdnmbClientService.to.client;
     final user = UserService.to;
@@ -361,7 +330,7 @@ class _Cookie extends StatelessWidget {
             ConfirmCancelDialog(
               content: '确定删除该饼干？',
               onConfirm: () async {
-                await cookie.delete();
+                await user.deleteCookie(cookie);
                 showToast('删除饼干成功');
                 Get.back(result: true);
               },
@@ -377,7 +346,7 @@ class _Cookie extends StatelessWidget {
                   overlay.show();
                   await client.deleteCookie(
                       cookieId: cookie.id!, verify: verify);
-                  await cookie.delete();
+                  await user.deleteCookie(cookie);
                   if (user.currentCookiesNum.value > 0) {
                     user.currentCookiesNum.value -= 1;
                   }
@@ -404,6 +373,7 @@ class _Cookie extends StatelessWidget {
     return ListTile(
       onLongPress: () {
         final textStyle = theme.textTheme.titleMedium;
+
         Get.dialog(
           SimpleDialog(
             children: [
@@ -415,14 +385,8 @@ class _Cookie extends StatelessWidget {
                   },
                   child: Text('设为浏览用的饼干', style: textStyle),
                 ),
-              SimpleDialogOption(
-                onPressed: () async {
-                  if (await _editNote() ?? false) {
-                    Get.back();
-                  }
-                },
-                child: Text('编辑饼干备注', style: textStyle),
-              ),
+              EditCookieNote(cookie),
+              SetCookieColor(cookie),
               SimpleDialogOption(
                 onPressed: () async {
                   if (await _deleteCookie() ?? false) {
@@ -439,7 +403,10 @@ class _Cookie extends StatelessWidget {
         cookie.name,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: theme.textTheme.bodyMedium?.fontSize),
+        style: TextStyle(
+          color: cookie.color,
+          fontSize: theme.textTheme.bodyMedium?.fontSize,
+        ),
       ),
       subtitle: (cookie.note?.isNotEmpty ?? false)
           ? Text(cookie.note!, maxLines: 1, overflow: TextOverflow.ellipsis)
@@ -478,7 +445,8 @@ class _Cookie extends StatelessWidget {
           if (cookie.userHash == user.browseCookie?.userHash)
             const SizedBox(width: 10.0),
           IconButton(
-            onPressed: _editNote,
+            onPressed: () =>
+                Get.dialog(EditCookieDialog(cookie: cookie, setColor: true)),
             icon: const Icon(Icons.edit),
           ),
           IconButton(
@@ -575,7 +543,7 @@ class _CookieViewState extends State<CookieView> {
                                     const SizedBox(width: 10.0),
                                     Obx(
                                       () => Text(
-                                        '${user.currentCookiesNum.value}/${user.totalCookiesNum}',
+                                        '${user.currentCookiesNum.value}/${user.totalCookiesNum.value}',
                                         style: const TextStyle(
                                           color: Colors.blue,
                                           fontWeight: FontWeight.bold,
@@ -600,7 +568,7 @@ class _CookieViewState extends State<CookieView> {
                         if (!user.hasXdnmbCookie)
                           const Text('没有饼干', style: AppTheme.boldRed),
                         Obx(() => (user.currentCookiesNum.value <
-                                    user.totalCookiesNum &&
+                                    user.totalCookiesNum.value &&
                                 user.isUserCookieValid &&
                                 user.canGetCookie)
                             ? ElevatedButton(

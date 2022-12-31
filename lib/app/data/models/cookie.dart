@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
@@ -26,26 +27,60 @@ class CookieData extends HiveObject {
   @HiveField(4, defaultValue: null)
   String? note;
 
+  /// 最后发串时间
+  @HiveField(5, defaultValue: null)
+  DateTime? lastPostTime;
+
+  /// 饼干颜色
+  @HiveField(6, defaultValue: 0xff2196f3)
+  int colorValue;
+
+  Color get color => Color(colorValue);
+
   CookieData(
       {required this.name,
       required this.userHash,
       this.id,
       this.isDeprecated = false,
-      this.note});
+      this.note,
+      this.lastPostTime,
+      this.colorValue = 0xff2196f3});
 
   CookieData.fromXdnmbCookie(
-      {required XdnmbCookie cookie, this.isDeprecated = false, this.note})
+      {required XdnmbCookie cookie,
+      this.isDeprecated = false,
+      this.note,
+      this.lastPostTime,
+      this.colorValue = 0xff2196f3})
       : name = cookie.name!,
         userHash = cookie.userHash,
         id = cookie.id;
 
   /// 返回废弃饼干
   CookieData deprecate() => CookieData(
-      name: name, userHash: userHash, id: id, isDeprecated: true, note: note);
+      name: name,
+      userHash: userHash,
+      id: id,
+      isDeprecated: true,
+      note: note,
+      lastPostTime: lastPostTime,
+      colorValue: colorValue);
 
   /// 修改备注
   Future<void> editNote(String? note) async {
     this.note = note;
+    await save();
+  }
+
+  /// 设置最后发串时间
+  Future<void> setLastPostTime(DateTime time) async {
+    lastPostTime = time;
+    await save();
+  }
+
+  /// 设置饼干颜色
+  Future<void> setColor(Color color) async {
+    colorValue = color.value;
     await save();
   }
 
@@ -55,7 +90,9 @@ class CookieData extends HiveObject {
       userHash: userHash,
       id: id,
       isDeprecated: isDeprecated,
-      note: note);
+      note: note,
+      lastPostTime: lastPostTime,
+      colorValue: colorValue);
 
   /// 返回饼干的cookie
   String cookie() => 'userhash=$userHash';
@@ -68,8 +105,11 @@ class CookieData extends HiveObject {
           userHash == other.userHash &&
           id == other.id &&
           isDeprecated == other.isDeprecated &&
-          note == other.note);
+          note == other.note &&
+          lastPostTime == other.lastPostTime &&
+          colorValue == other.colorValue);
 
   @override
-  int get hashCode => Object.hash(name, userHash, id, isDeprecated, note);
+  int get hashCode => Object.hash(
+      name, userHash, id, isDeprecated, note, lastPostTime, colorValue);
 }

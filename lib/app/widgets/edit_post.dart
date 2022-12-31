@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
@@ -685,43 +686,146 @@ class _SaveDraft extends StatelessWidget {
       );
 }
 
-class _Cookie extends StatelessWidget {
+class _CookieTag extends StatelessWidget {
+  final String text;
+
   // ignore: unused_element
-  const _Cookie({super.key});
+  const _CookieTag({super.key, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.primaryColor,
+        borderRadius: BorderRadius.circular(3.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 5.0),
+        child: Text(
+          text,
+          style: theme.textTheme.bodySmall
+              ?.apply(color: theme.colorScheme.onPrimary),
+        ),
+      ),
+    );
+  }
+}
+
+class _CookieList extends StatefulWidget {
+  final int? mainPostId;
+
+  final String? poUserHash;
+
+  // ignore: unused_element
+  const _CookieList({super.key, this.mainPostId, this.poUserHash});
+
+  @override
+  State<_CookieList> createState() => _CookieListState();
+}
+
+class _CookieListState extends State<_CookieList> {
+  static const Duration _recent = Duration(days: 3);
+
+  late final Future<HashSet<String>>? _getReplyUserHash;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _getReplyUserHash = widget.mainPostId != null
+        ? PostHistoryService.to.getReplyUserHash(widget.mainPostId!)
+        : null;
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = UserService.to;
-    final size =
-        getTextSize(context, '啊啊啊啊啊啊啊', Theme.of(context).textTheme.bodyMedium);
+    final theme = Theme.of(context);
+
+    return FutureBuilder<HashSet<String>>(
+      future: _getReplyUserHash,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasError) {
+          showToast('获取历史回串记录出现错误：${snapshot.error}');
+        }
+
+        return ListenableBuilder(
+          listenable: user.cookiesListenable,
+          builder: (context, child) => SimpleDialog(
+            children: [
+              for (final cookie in user.xdnmbCookies)
+                ListTile(
+                  onTap: () {
+                    user.postCookie = cookie.copy();
+                    Get.back();
+                  },
+                  tileColor: cookie.userHash == user.postCookie?.userHash
+                      ? theme.focusColor
+                      : null,
+                  title: OverflowBar(
+                    spacing: 10.0,
+                    children: [
+                      Text(cookie.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: cookie.color)),
+                      if (cookie.name == widget.poUserHash)
+                        const _CookieTag(text: 'Po'),
+                      if (cookie.name != widget.poUserHash &&
+                          snapshot.connectionState == ConnectionState.done &&
+                          snapshot.hasData &&
+                          snapshot.data!.contains(cookie.name))
+                        const _CookieTag(text: '有回串'),
+                      if (cookie.lastPostTime != null &&
+                          DateTime.now().difference(cookie.lastPostTime!) <
+                              _recent)
+                        const _CookieTag(text: '最近使用'),
+                      if (user.isUserCookieValid && cookie.isDeprecated)
+                        const _CookieTag(text: '非登陆帐号饼干'),
+                    ],
+                  ),
+                  subtitle: (cookie.note?.isNotEmpty ?? false)
+                      ? Text(cookie.note!,
+                          maxLines: 1, overflow: TextOverflow.ellipsis)
+                      : null,
+                  onLongPress: () => Get.dialog(SimpleDialog(
+                    children: [
+                      EditCookieNote(cookie),
+                      SetCookieColor(cookie),
+                    ],
+                  )),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Cookie extends StatelessWidget {
+  final int? mainPostId;
+
+  final String? poUserHash;
+
+  // ignore: unused_element
+  const _Cookie({super.key, this.mainPostId, this.poUserHash});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = UserService.to;
+    final theme = Theme.of(context);
+    final size = getTextSize(context, '啊啊啊啊啊啊啊', theme.textTheme.bodyMedium);
 
     return user.hasPostCookie
         ? ListenableBuilder(
             listenable: user.postCookieListenable,
             builder: (context, child) => TextButton(
               onPressed: () => Get.dialog(
-                SimpleDialog(
-                  children: [
-                    for (final cookie in user.xdnmbCookies)
-                      ListTile(
-                        onTap: () {
-                          user.postCookie = cookie.copy();
-                          Get.back();
-                        },
-                        title: Text(cookie.name,
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
-                        subtitle: (cookie.note?.isNotEmpty ?? false)
-                            ? Text(cookie.note!,
-                                maxLines: 1, overflow: TextOverflow.ellipsis)
-                            : null,
-                        trailing:
-                            (user.isUserCookieValid && cookie.isDeprecated)
-                                ? const Text('非登陆帐号饼干', style: AppTheme.boldRed)
-                                : null,
-                      ),
-                  ],
-                ),
-              ),
+                  _CookieList(mainPostId: mainPostId, poUserHash: poUserHash)),
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: size.width),
                 child: Text(
@@ -958,6 +1062,8 @@ class _Post extends StatelessWidget {
                       postContent = '举报理由：$reportReason\n$postContent';
                     }
 
+                    await user.updateLastPostTime();
+
                     await client.postNewThread(
                       forumId: forumId!,
                       content: postContent,
@@ -981,6 +1087,8 @@ class _Post extends StatelessWidget {
 
                       postContent = '$postContent\n\n${buffer.toString()}';
                     }
+
+                    await user.updateLastPostTime();
 
                     await client.replyThread(
                       mainPostId: postList.id!,
@@ -1029,10 +1137,7 @@ class _Post extends StatelessWidget {
                             SettingsService.to.isAfterPostRefresh) {
                           controller.refreshPage();
                         } else if (controller.isThread) {
-                          final controller_ = controller as ThreadController;
-                          if (controller_.loadMore != null) {
-                            controller_.loadMore!();
-                          }
+                          (controller as ThreadController).loadMore();
                         }
                       } catch (e) {
                         debugPrint('发串后刷新数据出现错误：$e');
@@ -1236,10 +1341,10 @@ class _EmoticonDialog extends StatelessWidget {
         SimpleDialogOption(
           onPressed: () async {
             await Clipboard.setData(ClipboardData(text: emoticon.text));
-            showToast('已复制 ${emoticon.name}');
+            showToast('已复制 ${emoticon.name} 的内容');
             Get.back();
           },
-          child: Text('复制 ${emoticon.name}', style: textStyle),
+          child: Text('复制 ${emoticon.name} 的内容', style: textStyle),
         ),
       ],
     );
@@ -1391,7 +1496,8 @@ typedef InsertTextCallback = void Function(String text, [int? offset]);
 
 typedef InsertImageCallback = void Function(Uint8List imageData);
 
-typedef SetPostListCallback = void Function(PostList postList, int? forumId);
+typedef SetPostListCallback = void Function(
+    PostList postList, int? forumId, String? poUserHash);
 
 class EditPostCallback {
   static EditPostCallback? bottomSheet;
@@ -1428,8 +1534,8 @@ class EditPostCallback {
 
   void insertImage(Uint8List imageData) => _insertImage(imageData);
 
-  void setPostList(PostList postList, int? forumId) =>
-      _setPostList(postList, forumId);
+  void setPostList(PostList postList, int? forumId, String? poUserHash) =>
+      _setPostList(postList, forumId, poUserHash);
 }
 
 class EditPost extends StatefulWidget {
@@ -1440,6 +1546,8 @@ class EditPost extends StatefulWidget {
   final double? height;
 
   final int? forumId;
+
+  final String? poUserHash;
 
   final String? title;
 
@@ -1462,6 +1570,7 @@ class EditPost extends StatefulWidget {
       required this.postList,
       this.height,
       this.forumId,
+      this.poUserHash,
       this.title,
       this.name,
       this.content,
@@ -1479,6 +1588,7 @@ class EditPost extends StatefulWidget {
                 postListType: controller.postListType, id: controller.id),
             height: height,
             forumId: controller.forumId,
+            poUserHash: controller.poUserHash,
             title: controller.title,
             name: controller.name,
             content: controller.content,
@@ -1496,6 +1606,8 @@ class _EditPostState extends State<EditPost> {
   late final Rx<PostList> _postList;
 
   late final RxnInt _forumId;
+
+  late final RxnString _poUserHash;
 
   late final TextEditingController _titleController;
 
@@ -1532,6 +1644,7 @@ class _EditPostState extends State<EditPost> {
       postListType: _postList.value.postListType,
       id: _postList.value.id!,
       forumId: _forumId.value,
+      poUserHash: _poUserHash.value,
       title: _titleController.text,
       name: _nameController.text,
       content: _contentController.text,
@@ -1549,10 +1662,11 @@ class _EditPostState extends State<EditPost> {
     _imageData.value = imageData;
   }
 
-  void _setPostList(PostList postList, int? forumId) {
+  void _setPostList(PostList postList, int? forumId, String? poUserHash) {
     _postList.value = postList;
     _forumId.value =
         forumId ?? (postList.postListType.isForum ? postList.id : null);
+    _poUserHash.value = poUserHash;
   }
 
   Widget _inputArea(BuildContext context, double height) {
@@ -1622,6 +1736,7 @@ class _EditPostState extends State<EditPost> {
                               postListType: _postList.value.postListType,
                               id: _postList.value.id!,
                               forumId: _forumId.value,
+                              poUserHash: _poUserHash.value,
                               title: _titleController.text,
                               name: _nameController.text,
                               content: _contentController.text,
@@ -1633,6 +1748,7 @@ class _EditPostState extends State<EditPost> {
 
                           if (result is EditPostController && mounted) {
                             _forumId.value = result.forumId;
+                            _poUserHash.value = result.poUserHash;
                             _titleController.text = result.title ?? '';
                             _nameController.text = result.name ?? '';
                             _contentController.text = result.content ?? '';
@@ -1792,7 +1908,11 @@ class _EditPostState extends State<EditPost> {
                   ),
                 ),
                 const Spacer(),
-                const _Cookie(),
+                Obx(() => _Cookie(
+                    mainPostId: _postList.value.postListType.isThreadType
+                        ? _postList.value.id
+                        : null,
+                    poUserHash: _poUserHash.value)),
                 Flexible(
                   child: Obx(
                     () => _Post(
@@ -1830,6 +1950,7 @@ class _EditPostState extends State<EditPost> {
     _postList = Rx(widget.postList);
     _forumId = RxnInt(widget.forumId ??
         (widget.postList.postListType.isForum ? widget.postList.id : null));
+    _poUserHash = RxnString(widget.poUserHash);
 
     _titleController = _initController(widget.title);
     _nameController = _initController(widget.name);
