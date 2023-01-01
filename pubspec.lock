@@ -254,7 +254,7 @@ packages:
       name: easy_refresh
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.1.0"
+    version: "3.2.0"
   expandable_text:
     dependency: "direct main"
     description:
@@ -591,7 +591,7 @@ packages:
       name: image
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.2.2"
+    version: "3.3.0"
   image_gallery_saver:
     dependency: "direct main"
     description:
