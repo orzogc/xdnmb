@@ -760,7 +760,7 @@ class _CookieListState extends State<_CookieList> {
                 ListTile(
                   onTap: () {
                     user.postCookie = cookie.copy();
-                    Get.back();
+                    Get.back<bool>(result: true);
                   },
                   tileColor: cookie.userHash == user.postCookie?.userHash
                       ? theme.focusColor
@@ -792,10 +792,7 @@ class _CookieListState extends State<_CookieList> {
                           maxLines: 1, overflow: TextOverflow.ellipsis)
                       : null,
                   onLongPress: () => Get.dialog(SimpleDialog(
-                    children: [
-                      EditCookieNote(cookie),
-                      SetCookieColor(cookie),
-                    ],
+                    children: [EditCookieNote(cookie), SetCookieColor(cookie)],
                   )),
                 ),
             ],
@@ -855,6 +852,8 @@ class _Post extends StatelessWidget {
 
   final int? forumId;
 
+  final String? poUserHash;
+
   final bool isWatermark;
 
   final Uint8List? imageData;
@@ -878,6 +877,7 @@ class _Post extends StatelessWidget {
       {super.key,
       required this.postList,
       this.forumId,
+      this.poUserHash,
       this.isWatermark = false,
       this.imageData,
       this.reportReason,
@@ -1022,8 +1022,9 @@ class _Post extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IconButton(
-        onPressed: () {
+        onPressed: () async {
           final user = UserService.to;
+
           final controller = PostListController.get();
 
           if (user.hasPostCookie) {
@@ -1040,7 +1041,20 @@ class _Post extends StatelessWidget {
               final content = getContent();
 
               if (content.isNotEmpty || imageData != null) {
+                final settings = SettingsService.to;
                 final client = XdnmbClientService.to.client;
+
+                if (settings.selectCookieBeforePost) {
+                  final result = await Get.dialog<bool>(_CookieList(
+                      mainPostId:
+                          postListType.isThreadType ? postList.id : null,
+                      poUserHash: poUserHash));
+
+                  if (!(result ?? false)) {
+                    debugPrint('用户没有选择发串用的饼干');
+                    return;
+                  }
+                }
 
                 final title = getTitle();
                 final name = getName();
@@ -1056,13 +1070,18 @@ class _Post extends StatelessWidget {
                     }
                   }
 
+                  if (!(postListType.isForumType ||
+                      postListType.isThreadType)) {
+                    throw '该页面无法发串';
+                  }
+
+                  await user.updateLastPostTime();
+
                   if (postListType.isForumType) {
                     if (postListType.isForum &&
                         forumId == EditPost.dutyRoomId) {
                       postContent = '举报理由：$reportReason\n$postContent';
                     }
-
-                    await user.updateLastPostTime();
 
                     await client.postNewThread(
                       forumId: forumId!,
@@ -1088,8 +1107,6 @@ class _Post extends StatelessWidget {
                       postContent = '$postContent\n\n${buffer.toString()}';
                     }
 
-                    await user.updateLastPostTime();
-
                     await client.replyThread(
                       mainPostId: postList.id!,
                       content: postContent,
@@ -1099,8 +1116,6 @@ class _Post extends StatelessWidget {
                       image: image,
                       cookie: cookie.cookie(),
                     );
-                  } else {
-                    showToast('该页面无法发串');
                   }
                 }).then(
                   (value) {
@@ -1114,7 +1129,7 @@ class _Post extends StatelessWidget {
                           title: title,
                           content: postContent);
                       _savePost(post, cookie.cookie());
-                    } else {
+                    } else if (postListType.isThreadType) {
                       showToast('回串成功');
                       final reply = ReplyData(
                           mainPostId: postList.id!,
@@ -1134,7 +1149,7 @@ class _Post extends StatelessWidget {
                                 controller.id == postList.id))) {
                       try {
                         if (controller.isForumType &&
-                            SettingsService.to.isAfterPostRefresh) {
+                            settings.isAfterPostRefresh) {
                           controller.refreshPage();
                         } else if (controller.isThread) {
                           (controller as ThreadController).loadMore();
@@ -1918,6 +1933,7 @@ class _EditPostState extends State<EditPost> {
                     () => _Post(
                       postList: _postList.value,
                       forumId: _forumId.value,
+                      poUserHash: _poUserHash.value,
                       isWatermark: _isWatermark.value,
                       imageData: _imageData.value,
                       isPainted:

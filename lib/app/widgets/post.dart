@@ -40,16 +40,20 @@ class _PostUser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = UserService.to;
+    final settings = SettingsService.to;
 
     return ListenableBuilder(
-      listenable: user.cookieColorNotifier,
+      listenable: Listenable.merge([
+        if (!isAdmin) user.cookieColorNotifier,
+        if (!isAdmin && isPo) settings.poCookieColorListenable,
+      ]),
       builder: (context, child) {
         TextStyle style = (textStyle ?? AppTheme.postHeaderTextStyle).merge(
           TextStyle(
               color: isAdmin
                   ? Colors.red
                   : (user.getCookieColor(userHash) ??
-                      (isPo ? Colors.cyan.shade700 : null))),
+                      (isPo ? settings.poCookieColor : null))),
         );
         final fontWeight = style.fontWeight;
         if ((isAdmin || isPo) &&

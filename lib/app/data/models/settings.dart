@@ -19,6 +19,8 @@ abstract class Settings {
 
   static const String dismissibleTab = 'dismissibleTab';
 
+  static const String selectCookieBeforePost = 'selectCookieBeforePost';
+
   static const String feedId = 'feedId';
 
   static const String saveImagePath = 'saveImagePath';
@@ -26,6 +28,8 @@ abstract class Settings {
   static const String cacheImageCount = 'cacheImageCount';
 
   static const String addBlueIslandEmoticons = 'addBlueIslandEmoticons';
+
+  static const String poCookieColor = 'poCookieColor';
 
   static const String restoreForumPage = 'restoreForumPage';
 

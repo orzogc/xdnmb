@@ -382,8 +382,6 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                             : ForumAppBarPopupMenuButton(
                                 controller as ForumTypeController),
                       if (controller.isHistory)
-                        HistoryDateRangePicker(controller as HistoryController),
-                      if (controller.isHistory)
                         SettingsService.shouldShowGuide
                             ? AppBarPopupMenuGuide(HistoryAppBarPopupMenuButton(
                                 controller as HistoryController))

@@ -143,6 +143,12 @@ class SettingsService extends GetxService {
   set dismissibleTab(bool dismissibleTab) =>
       _settingsBox.put(Settings.dismissibleTab, dismissibleTab);
 
+  bool get selectCookieBeforePost =>
+      _settingsBox.get(Settings.selectCookieBeforePost, defaultValue: false);
+
+  set selectCookieBeforePost(bool selectCookieBeforePost) =>
+      _settingsBox.put(Settings.selectCookieBeforePost, selectCookieBeforePost);
+
   String get feedId => _settingsBox.get(Settings.feedId);
 
   set feedId(String feedId) => _settingsBox.put(Settings.feedId, feedId);
@@ -166,6 +172,12 @@ class SettingsService extends GetxService {
 
   set addBlueIslandEmoticons(bool addBlueIslandEmoticons) =>
       _settingsBox.put(Settings.addBlueIslandEmoticons, addBlueIslandEmoticons);
+
+  Color get poCookieColor =>
+      Color(_settingsBox.get(Settings.poCookieColor, defaultValue: 0xff0097a7));
+
+  set poCookieColor(Color color) =>
+      _settingsBox.put(Settings.poCookieColor, color.value);
 
   bool get restoreForumPage =>
       _settingsBox.get(Settings.restoreForumPage, defaultValue: false);
@@ -440,6 +452,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> dismissibleTabListenable;
 
+  late final ValueListenable<Box> selectCookieBeforePostListenable;
+
   late final ValueListenable<Box> feedIdListenable;
 
   late final ValueListenable<Box> saveImagePathListenable;
@@ -447,6 +461,8 @@ class SettingsService extends GetxService {
   late final ValueListenable<Box> cacheImageCountListenable;
 
   late final ValueListenable<Box> addBlueIslandEmoticonsListenable;
+
+  late final ValueListenable<Box> poCookieColorListenable;
 
   late final ValueListenable<Box> restoreForumPageListenable;
 
@@ -559,6 +575,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.isAfterPostRefresh]);
     dismissibleTabListenable =
         _settingsBox.listenable(keys: [Settings.dismissibleTab]);
+    selectCookieBeforePostListenable =
+        _settingsBox.listenable(keys: [Settings.selectCookieBeforePost]);
     feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
     saveImagePathListenable =
         _settingsBox.listenable(keys: [Settings.saveImagePath]);
@@ -566,6 +584,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.cacheImageCount]);
     addBlueIslandEmoticonsListenable =
         _settingsBox.listenable(keys: [Settings.addBlueIslandEmoticons]);
+    poCookieColorListenable =
+        _settingsBox.listenable(keys: [Settings.poCookieColor]);
     restoreForumPageListenable =
         _settingsBox.listenable(keys: [Settings.restoreForumPage]);
     imageDisposeDistanceListenable =

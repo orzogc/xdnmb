@@ -761,8 +761,8 @@ class EditCookieDialog extends StatelessWidget {
                   const Text('颜色'),
                   Obx(
                     () => ColorIndicator(
-                      key: ValueKey<Color>(color.value),
                       HSVColor.fromColor(color.value),
+                      key: ValueKey<Color>(color.value),
                       width: 25.0,
                       height: 25.0,
                     ),

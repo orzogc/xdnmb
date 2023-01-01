@@ -195,7 +195,26 @@ class _DismissibleTab extends StatelessWidget {
       builder: (context, child) => SwitchListTile(
         title: const Text('在标签页列表中滑动标签可以关闭标签页'),
         value: settings.dismissibleTab,
-        onChanged: ((value) => settings.dismissibleTab = value),
+        onChanged: (value) => settings.dismissibleTab = value,
+      ),
+    );
+  }
+}
+
+class _SelectCookieBeforePost extends StatelessWidget {
+  // ignore: unused_element
+  const _SelectCookieBeforePost({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.selectCookieBeforePostListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('发串时选择饼干'),
+        value: settings.selectCookieBeforePost,
+        onChanged: (value) => settings.selectCookieBeforePost = value,
       ),
     );
   }
@@ -290,6 +309,7 @@ class BasicSettingsView extends StatelessWidget {
               _AutoJumpPosition(),
               _AfterPostRefresh(),
               _DismissibleTab(),
+              _SelectCookieBeforePost(),
               _FeedId(),
             ],
           ),

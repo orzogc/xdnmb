@@ -264,33 +264,6 @@ class HistoryAppBarTitle extends StatelessWidget {
       });
 }
 
-class HistoryDateRangePicker extends StatelessWidget {
-  static final DateTime _firstDate = DateTime(2022, 6, 19);
-
-  final HistoryController controller;
-
-  const HistoryDateRangePicker(this.controller, {super.key});
-
-  @override
-  Widget build(BuildContext context) => IconButton(
-        onPressed: () async {
-          final range = await showDateRangePicker(
-              context: context,
-              initialDateRange: controller._getDateRange(),
-              firstDate: _firstDate,
-              lastDate: DateTime.now(),
-              initialEntryMode: DatePickerEntryMode.calendarOnly,
-              locale: WidgetsBinding.instance.platformDispatcher.locale);
-
-          if (range != null) {
-            controller._setDateRange(range);
-            //controller.refreshPage();
-          }
-        },
-        icon: const Icon(Icons.calendar_month),
-      );
-}
-
 class _SearchDialog extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -434,6 +407,8 @@ class _ClearDialog extends StatelessWidget {
 }
 
 class HistoryAppBarPopupMenuButton extends StatelessWidget {
+  static final DateTime _firstDate = DateTime(2022, 6, 19);
+
   final HistoryController controller;
 
   const HistoryAppBarPopupMenuButton(this.controller, {super.key});
@@ -441,6 +416,24 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PopupMenuButton(
         itemBuilder: (context) => [
+          PopupMenuItem(
+            onTap: () => WidgetsBinding.instance.addPostFrameCallback(
+              (timeStamp) async {
+                final range = await showDateRangePicker(
+                    context: context,
+                    initialDateRange: controller._getDateRange(),
+                    firstDate: _firstDate,
+                    lastDate: DateTime.now(),
+                    initialEntryMode: DatePickerEntryMode.calendarOnly,
+                    locale: WidgetsBinding.instance.platformDispatcher.locale);
+
+                if (range != null) {
+                  controller._setDateRange(range);
+                }
+              },
+            ),
+            child: const Text('日期'),
+          ),
           PopupMenuItem(
             onTap: () => postListDialog(_SearchDialog(controller)),
             child: const Text('搜索'),

@@ -1,6 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 
 import '../data/services/image.dart';
@@ -117,6 +118,48 @@ class _AddBlueIslandEmoticons extends StatelessWidget {
         title: const Text('添加蓝岛颜文字'),
         value: settings.addBlueIslandEmoticons,
         onChanged: (value) => settings.addBlueIslandEmoticons = value,
+      ),
+    );
+  }
+}
+
+class _PoCookieColor extends StatelessWidget {
+  // ignore: unused_element
+  const _PoCookieColor({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.poCookieColorListenable,
+      builder: (context, child) => ListTile(
+        title: const Text('Po饼干颜色'),
+        trailing: ColorIndicator(
+          HSVColor.fromColor(settings.poCookieColor),
+          key: ValueKey<Color>(settings.poCookieColor),
+          width: 25.0,
+          height: 25.0,
+        ),
+        onTap: () {
+          Color? color;
+          Get.dialog(ConfirmCancelDialog(
+            contentWidget: MaterialPicker(
+              pickerColor: settings.poCookieColor,
+              onColorChanged: (value) => color = value,
+              enableLabel: true,
+              portraitOnly: true,
+            ),
+            onConfirm: () {
+              if (color != null) {
+                settings.poCookieColor = color!;
+              }
+
+              Get.back();
+            },
+            onCancel: Get.back,
+          ));
+        },
       ),
     );
   }
@@ -262,6 +305,7 @@ class AdvancedSettingsView extends StatelessWidget {
                 _SaveImagePath(),
               const _CacheImageCount(),
               const _AddBlueIslandEmoticons(),
+              const _PoCookieColor(),
               const _RestoreForumPage(),
               const _ImageDisposeDistance(),
               const _FixedImageDisposeRatio(),
