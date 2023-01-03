@@ -183,7 +183,7 @@ class UserService extends GetxService {
     for (final cookieId in list.cookiesIdList) {
       if (!xdnmbCookies.any((cookie) {
         if (cookie.id == cookieId) {
-          normal.add(cookie);
+          normal.add(cookie.copy());
           return true;
         }
         return false;
@@ -195,7 +195,15 @@ class UserService extends GetxService {
 
     final deprecated = <CookieData>[];
     for (final cookie in xdnmbCookies) {
-      if (!list.cookiesIdList.any((cookieId) => cookieId == cookie.id)) {
+      if (normal.any((cookie_) => cookie_.userHash == cookie.userHash)) {
+        if (cookie.id == null) {
+          final cookie_ = normal
+              .firstWhere((cookie_) => cookie_.userHash == cookie.userHash);
+          cookie_.note = cookie.note;
+          cookie_.lastPostTime = cookie.lastPostTime;
+          cookie_.colorValue = cookie.colorValue;
+        }
+      } else {
         deprecated.add(cookie.deprecate());
       }
     }
@@ -228,7 +236,7 @@ class UserService extends GetxService {
 
   Future<void> deleteCookie(CookieData cookie) async {
     await cookie.delete();
-    await _deletedCookiesBox.add(cookie.copy());
+    await _deletedCookiesBox.put(cookie.name, cookie.deleted());
   }
 
   Future<void> updateLastPostTime() async {

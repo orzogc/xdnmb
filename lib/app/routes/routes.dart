@@ -20,6 +20,7 @@ import '../modules/paint.dart';
 import '../modules/post_settings.dart';
 import '../modules/reorder_forums.dart';
 import '../modules/settings.dart';
+import '../modules/scanner.dart';
 import '../modules/ui_settings.dart';
 import '../widgets/feed.dart';
 import '../widgets/forum.dart';
@@ -58,6 +59,10 @@ abstract class AppRoutes {
   static const String user = '/${PathNames.user}';
 
   static const String userPath = '$settings$user';
+
+  static const String qrCodeScanner = '/${PathNames.qrCodeScanner}';
+
+  static const String qrCodeScannerPath = '$userPath$qrCodeScanner';
 
   static const String blacklist = '/${PathNames.blacklist}';
 
@@ -172,6 +177,8 @@ abstract class AppRoutes {
 
   static Future<T?>? toUser<T>() => Get.toNamed<T>(userPath);
 
+  static Future<T?>? toQRCodeScanner<T>() => Get.toNamed<T>(qrCodeScannerPath);
+
   static Future<T?>? toBlacklist<T>() => Get.toNamed<T>(blacklistPath);
 
   static Future<T?>? toBasicSettings<T>() => Get.toNamed<T>(basicSettingsPath);
@@ -250,6 +257,8 @@ abstract class PathNames {
   static const String settings = 'settings';
 
   static const String user = 'user';
+
+  static const String qrCodeScanner = 'qrCodeScanner';
 
   static const String blacklist = 'blacklist';
 
@@ -398,6 +407,9 @@ Route? backdropOnGenerateRoute(RouteSettings settings) {
       case AppRoutes.userPath:
         return AppSwipeablePageRoute(
             settings: settings, builder: (context) => const CookieView());
+      case AppRoutes.qrCodeScannerPath:
+        return AppSwipeablePageRoute(
+            settings: settings, builder: (context) => QRCodeScannerView());
       case AppRoutes.blacklistPath:
         return AppSwipeablePageRoute(
             settings: settings, builder: (context) => const BlacklistView());

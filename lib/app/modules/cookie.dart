@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:xdnmb/app/routes/routes.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/models/cookie.dart';
@@ -503,6 +504,11 @@ class _CookieViewState extends State<CookieView> {
                     ? ((user.isUserCookieExpired ?? true) ? 0 : 1)
                     : 2),
               ),
+              if (GetPlatform.isMobile)
+                ListTile(
+                  onTap: () => AppRoutes.toQRCodeScanner(),
+                  title: const Text('扫描饼干二维码'),
+                ),
               ListTile(
                 onTap: () => Get.dialog(_AddCookieForm()),
                 title: const Text('添加自定义饼干'),

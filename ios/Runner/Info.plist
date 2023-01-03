@@ -48,7 +48,9 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>To get and save images in the photo library</string>
+	<string>Get and save images in the photo library</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Use the camera to scan the cookie QR code</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>http</string>

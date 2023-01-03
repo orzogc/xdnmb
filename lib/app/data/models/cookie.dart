@@ -84,6 +84,16 @@ class CookieData extends HiveObject {
     await save();
   }
 
+  /// 返回删除的饼干，去掉敏感数据
+  CookieData deleted() => CookieData(
+      name: name,
+      userHash: '',
+      id: null,
+      isDeprecated: isDeprecated,
+      note: note,
+      lastPostTime: lastPostTime,
+      colorValue: colorValue);
+
   /// 复制饼干
   CookieData copy() => CookieData(
       name: name,
