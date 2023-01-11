@@ -12,8 +12,8 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/post_list.dart';
 import '../utils/navigation.dart';
+import '../utils/post_list.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'bilistview.dart';
@@ -155,7 +155,7 @@ class _FeedBodyState extends State<FeedBody> {
                   .map((feed) => Visible(PostWithPage(feed, page)))
                   .toList(),
           itemBuilder: (context, feed, index) => Obx(
-            () => feed.isVisible.value
+            () => feed.isVisible
                 ? AnchorItemWrapper(
                     key: feed.item.toValueKey(),
                     controller: scrollController,
@@ -173,7 +173,7 @@ class _FeedBodyState extends State<FeedBody> {
                         onLongPress: (post) => postListDialog(
                           _FeedDialog(
                             post: post,
-                            onDelete: () => feed.isVisible.value = false,
+                            onDelete: () => feed.isVisible = false,
                           ),
                         ),
                       ),

@@ -163,7 +163,7 @@ packages:
       name: checked_yaml
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.1"
+    version: "2.0.2"
   cli_util:
     dependency: transitive
     description:
@@ -254,7 +254,7 @@ packages:
       name: easy_refresh
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.2.0"
+    version: "3.2.2+1"
   expandable_text:
     dependency: "direct main"
     description:
@@ -296,7 +296,7 @@ packages:
       name: file_picker
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "5.2.4"
+    version: "5.2.5"
   file_utils:
     dependency: transitive
     description:
@@ -1221,7 +1221,7 @@ packages:
       name: xdg_directories
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.0+2"
+    version: "0.2.0+3"
   xdnmb_api:
     dependency: "direct main"
     description:

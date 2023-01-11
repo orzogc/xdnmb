@@ -135,6 +135,12 @@ class UserService extends GetxService {
     cookieColorNotifier.notify();
   }
 
+  void _setCookieColorInMap(String name, int color) {
+    _cookieColorMap[name] = color;
+
+    cookieColorNotifier.notify();
+  }
+
   Future<void> login(
       {required String email,
       required String password,
@@ -224,7 +230,7 @@ class UserService extends GetxService {
 
     await _cookiesBox
         .add(CookieData(name: name, userHash: userHash, note: note));
-    _updateCookieColorMap();
+    _setCookieColorInMap(name, CookieData.defaultColor);
 
     return true;
   }
@@ -255,7 +261,7 @@ class UserService extends GetxService {
 
   Future<void> setCookieColor(CookieData cookie, Color color) async {
     await cookie.setColor(color);
-    _updateCookieColorMap();
+    _setCookieColorInMap(cookie.name, color.value);
   }
 
   @override

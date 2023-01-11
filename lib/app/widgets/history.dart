@@ -17,8 +17,9 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/post_list.dart';
+import '../utils/hash.dart';
 import '../utils/navigation.dart';
+import '../utils/post_list.dart';
 import '../utils/regex.dart';
 import '../utils/theme.dart';
 import '../utils/time.dart';
@@ -34,9 +35,35 @@ import 'size.dart';
 
 const int _historyEachPage = 20;
 
-typedef _GetImageCallback = Future<_Image?> Function(int postId);
-
 class _Image {
+  static final HashMap<int, _Image?> _images = intHashMap<_Image?>();
+
+  static Future<_Image?> _getImage(int postId) async {
+    if (!_images.containsKey(postId)) {
+      debugPrint('历史记录里的串 ${postId.toPostNumber()} 有图片，开始获取其引用');
+
+      try {
+        final reference =
+            await XdnmbClientService.to.client.getReference(postId);
+        if (reference.hasImage()) {
+          _images[postId] = _Image(
+              image: reference.image, imageExtension: reference.imageExtension);
+        } else {
+          _images[postId] = null;
+        }
+      } catch (e) {
+        final message = exceptionMessage(e);
+        if (message.contains('该串不存在')) {
+          _images[postId] = null;
+        }
+
+        rethrow;
+      }
+    }
+
+    return _images[postId];
+  }
+
   final String image;
 
   final String imageExtension;
@@ -621,21 +648,15 @@ class _HistoryDialog extends StatelessWidget {
 class _BrowseHistoryItem extends StatelessWidget {
   final Visible<BrowseHistory> browse;
 
-  final _GetImageCallback getImage;
-
   final Search? search;
 
   final Future<void> _getBrowseHistory;
 
-  _BrowseHistoryItem(
-      // ignore: unused_element
-      {super.key,
-      required this.browse,
-      required this.getImage,
-      this.search})
+  // ignore: unused_element
+  _BrowseHistoryItem({super.key, required this.browse, this.search})
       : _getBrowseHistory = Future(() async {
           if (browse.item.hasImage) {
-            final image = await getImage(browse.item.id);
+            final image = await _Image._getImage(browse.item.id);
             if (image != null) {
               browse.item.image = image.image;
               browse.item.imageExtension = image.imageExtension;
@@ -664,7 +685,7 @@ class _BrowseHistoryItem extends StatelessWidget {
           }
 
           return Obx(
-            () => browse.isVisible.value
+            () => browse.isVisible
                 ? PostCard(
                     key: ValueKey<int>(browse.item.id),
                     child: InkWell(
@@ -677,7 +698,7 @@ class _BrowseHistoryItem extends StatelessWidget {
                           await PostHistoryService.to
                               .deleteBrowseHistory(browse.item.id);
                           showToast('删除 ${browse.item.toPostNumber()} 的浏览记录');
-                          browse.isVisible.value = false;
+                          browse.isVisible = false;
                         },
                       )),
                       child: Column(
@@ -735,13 +756,8 @@ class _BrowseHistoryBody extends StatelessWidget {
 
   final HistoryController controller;
 
-  final _GetImageCallback getImage;
-
-  const _BrowseHistoryBody(
-      // ignore: unused_element
-      {super.key,
-      required this.controller,
-      required this.getImage});
+  // ignore: unused_element
+  const _BrowseHistoryBody({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -791,8 +807,8 @@ class _BrowseHistoryBody extends StatelessWidget {
 
               return data;
             },
-            itemBuilder: (context, browse, index) => _BrowseHistoryItem(
-                browse: browse, getImage: getImage, search: search),
+            itemBuilder: (context, browse, index) =>
+                _BrowseHistoryItem(browse: browse, search: search),
             noItemsFoundBuilder: (context) => Center(
               child: Text(
                 '没有浏览记录',
@@ -810,21 +826,15 @@ class _BrowseHistoryBody extends StatelessWidget {
 class _PostHistoryItem extends StatelessWidget {
   final Visible<PostData> mainPost;
 
-  final _GetImageCallback getImage;
-
   final Search? search;
 
   final Future<void> _getPostHistory;
 
-  _PostHistoryItem(
-      // ignore: unused_element
-      {super.key,
-      required this.mainPost,
-      required this.getImage,
-      this.search})
+  // ignore: unused_element
+  _PostHistoryItem({super.key, required this.mainPost, this.search})
       : _getPostHistory = Future(() async {
           if (mainPost.item.postId != null && mainPost.item.hasImage) {
-            final image = await getImage(mainPost.item.postId!);
+            final image = await _Image._getImage(mainPost.item.postId!);
             if (image != null) {
               mainPost.item.image = image.image;
               mainPost.item.imageExtension = image.imageExtension;
@@ -844,7 +854,7 @@ class _PostHistoryItem extends StatelessWidget {
         }
 
         return Obx(
-          () => mainPost.isVisible.value
+          () => mainPost.isVisible
               ? PostCard(
                   key: ValueKey<int>(mainPost.item.id),
                   child: PostInkWell(
@@ -871,7 +881,7 @@ class _PostHistoryItem extends StatelessWidget {
                             ? showToast(
                                 '删除主题 ${mainPost.item.postId?.toPostNumber()} 的记录')
                             : showToast('删除主题记录');
-                        mainPost.isVisible.value = false;
+                        mainPost.isVisible = false;
                       },
                     )),
                   ),
@@ -888,13 +898,8 @@ class _PostHistoryBody extends StatelessWidget {
 
   final HistoryController controller;
 
-  final _GetImageCallback getImage;
-
-  const _PostHistoryBody(
-      // ignore: unused_element
-      {super.key,
-      required this.controller,
-      required this.getImage});
+  // ignore: unused_element
+  const _PostHistoryBody({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -944,8 +949,8 @@ class _PostHistoryBody extends StatelessWidget {
 
               return data;
             },
-            itemBuilder: (context, mainPost, index) => _PostHistoryItem(
-                mainPost: mainPost, getImage: getImage, search: search),
+            itemBuilder: (context, mainPost, index) =>
+                _PostHistoryItem(mainPost: mainPost, search: search),
             noItemsFoundBuilder: (context) => Center(
               child: Text(
                 '没有主题记录',
@@ -963,21 +968,15 @@ class _PostHistoryBody extends StatelessWidget {
 class _ReplyHistoryItem extends StatelessWidget {
   final Visible<ReplyData> reply;
 
-  final _GetImageCallback getImage;
-
   final Search? search;
 
   final Future<void> _getReplyHistory;
 
-  _ReplyHistoryItem(
-      // ignore: unused_element
-      {super.key,
-      required this.reply,
-      required this.getImage,
-      this.search})
+  // ignore: unused_element
+  _ReplyHistoryItem({super.key, required this.reply, this.search})
       : _getReplyHistory = Future(() async {
           if (reply.item.postId != null && reply.item.hasImage) {
-            final image = await getImage(reply.item.postId!);
+            final image = await _Image._getImage(reply.item.postId!);
             if (image != null) {
               reply.item.image = image.image;
               reply.item.imageExtension = image.imageExtension;
@@ -1000,7 +999,7 @@ class _ReplyHistoryItem extends StatelessWidget {
           () {
             final post = reply.item.toPost();
 
-            return reply.isVisible.value
+            return reply.isVisible
                 ? PostCard(
                     key: ValueKey<int>(reply.item.id),
                     child: InkWell(
@@ -1021,7 +1020,7 @@ class _ReplyHistoryItem extends StatelessWidget {
                               ? showToast(
                                   '删除回复 ${reply.item.postId?.toPostNumber()} 的记录')
                               : showToast('删除回复记录');
-                          reply.isVisible.value = false;
+                          reply.isVisible = false;
                         },
                         page: reply.item.page,
                       )),
@@ -1083,13 +1082,8 @@ class _ReplyHistoryBody extends StatelessWidget {
 
   final HistoryController controller;
 
-  final _GetImageCallback getImage;
-
-  const _ReplyHistoryBody(
-      // ignore: unused_element
-      {super.key,
-      required this.controller,
-      required this.getImage});
+  // ignore: unused_element
+  const _ReplyHistoryBody({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -1139,8 +1133,8 @@ class _ReplyHistoryBody extends StatelessWidget {
 
               return data;
             },
-            itemBuilder: (context, reply, index) => _ReplyHistoryItem(
-                reply: reply, getImage: getImage, search: search),
+            itemBuilder: (context, reply, index) =>
+                _ReplyHistoryItem(reply: reply, search: search),
             noItemsFoundBuilder: (context) => Center(
               child: Text(
                 '没有回复记录',
@@ -1170,35 +1164,7 @@ class _HistoryBodyState extends State<HistoryBody> {
 
   late StreamSubscription<List<DateTimeRange?>> _dateRangeSubscription;
 
-  final HashMap<int, _Image?> _images = HashMap();
-
   late final int _initialIndex;
-
-  Future<_Image?> _getImage(int postId) async {
-    if (!_images.containsKey(postId)) {
-      debugPrint('历史记录里的串 ${postId.toPostNumber()} 有图片，开始获取其引用');
-
-      try {
-        final reference =
-            await XdnmbClientService.to.client.getReference(postId);
-        if (reference.hasImage()) {
-          _images[postId] = _Image(
-              image: reference.image, imageExtension: reference.imageExtension);
-        } else {
-          _images[postId] = null;
-        }
-      } catch (e) {
-        final message = exceptionMessage(e);
-        if (message.contains('该串不存在')) {
-          _images[postId] = null;
-        }
-
-        rethrow;
-      }
-    }
-
-    return _images[postId];
-  }
 
   void _updateIndex() {
     final page = widget.controller._pageController.page;
@@ -1281,16 +1247,13 @@ class _HistoryBodyState extends State<HistoryBody> {
                 late final Widget body;
                 switch (index) {
                   case _BrowseHistoryBody._index:
-                    body = _BrowseHistoryBody(
-                        controller: widget.controller, getImage: _getImage);
+                    body = _BrowseHistoryBody(controller: widget.controller);
                     break;
                   case _PostHistoryBody._index:
-                    body = _PostHistoryBody(
-                        controller: widget.controller, getImage: _getImage);
+                    body = _PostHistoryBody(controller: widget.controller);
                     break;
                   case _ReplyHistoryBody._index:
-                    body = _ReplyHistoryBody(
-                        controller: widget.controller, getImage: _getImage);
+                    body = _ReplyHistoryBody(controller: widget.controller);
                     break;
                   default:
                     body = const Center(

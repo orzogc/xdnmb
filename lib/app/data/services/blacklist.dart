@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
+import '../../utils/hash.dart';
 import '../../widgets/listenable.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
@@ -18,11 +19,11 @@ class BlacklistService extends GetxService {
 
   late final Box<String> _userBlacklistBox;
 
-  late final HashSet<BlockForumData> forumBlacklist;
+  late final HashSet<BlockForumData> _forumBlacklist;
 
-  late final HashSet<int> postBlacklist;
+  late final HashSet<int> _postBlacklist;
 
-  late final HashSet<String> userBlacklist;
+  late final HashSet<String> _userBlacklist;
 
   final Notifier forumBlacklistNotifier = Notifier();
 
@@ -33,12 +34,12 @@ class BlacklistService extends GetxService {
   int get forumBlacklistLength => _forumBlacklistBox.length;
 
   bool hasForum({required int forumId, required int timelineId}) =>
-      forumBlacklist
+      _forumBlacklist
           .contains(BlockForumData(forumId: forumId, timelineId: timelineId));
 
   Future<void> clearForumBlacklist() async {
     await _forumBlacklistBox.clear();
-    forumBlacklist.clear();
+    _forumBlacklist.clear();
     forumBlacklistNotifier.notify();
   }
 
@@ -48,23 +49,23 @@ class BlacklistService extends GetxService {
       {required int forumId, required int timelineId}) async {
     final forum = BlockForumData(forumId: forumId, timelineId: timelineId);
     await _forumBlacklistBox.add(forum);
-    forumBlacklist.add(forum);
+    _forumBlacklist.add(forum);
     forumBlacklistNotifier.notify();
   }
 
   Future<void> unblockForum(BlockForumData forum) async {
     await forum.delete();
-    forumBlacklist.remove(forum);
+    _forumBlacklist.remove(forum);
     forumBlacklistNotifier.notify();
   }
 
   int get postBlacklistLength => _postBlacklistBox.length;
 
-  bool hasPost(int postId) => postBlacklist.contains(postId);
+  bool hasPost(int postId) => _postBlacklist.contains(postId);
 
   Future<void> clearPostBlacklist() async {
     await _postBlacklistBox.clear();
-    postBlacklist.clear();
+    _postBlacklist.clear();
     postAndUserBlacklistNotifier.notify();
   }
 
@@ -72,23 +73,23 @@ class BlacklistService extends GetxService {
 
   Future<void> blockPost(int postId) async {
     await _postBlacklistBox.put(postId, postId);
-    postBlacklist.add(postId);
+    _postBlacklist.add(postId);
     postAndUserBlacklistNotifier.notify();
   }
 
   Future<void> unblockPost(int postId) async {
     await _postBlacklistBox.delete(postId);
-    postBlacklist.remove(postId);
+    _postBlacklist.remove(postId);
     postAndUserBlacklistNotifier.notify();
   }
 
   int get userBlacklistLength => _userBlacklistBox.length;
 
-  bool hasUser(String userHash) => userBlacklist.contains(userHash);
+  bool hasUser(String userHash) => _userBlacklist.contains(userHash);
 
   Future<void> clearUserBlacklist() async {
     await _userBlacklistBox.clear();
-    userBlacklist.clear();
+    _userBlacklist.clear();
     postAndUserBlacklistNotifier.notify();
   }
 
@@ -96,13 +97,13 @@ class BlacklistService extends GetxService {
 
   Future<void> blockUser(String userHash) async {
     await _userBlacklistBox.put(userHash, userHash);
-    userBlacklist.add(userHash);
+    _userBlacklist.add(userHash);
     postAndUserBlacklistNotifier.notify();
   }
 
   Future<void> unblockUser(String userHash) async {
     await _userBlacklistBox.delete(userHash);
-    userBlacklist.remove(userHash);
+    _userBlacklist.remove(userHash);
     postAndUserBlacklistNotifier.notify();
   }
 
@@ -115,9 +116,9 @@ class BlacklistService extends GetxService {
     _postBlacklistBox = await Hive.openBox<int>(HiveBoxName.postBlacklist);
     _userBlacklistBox = await Hive.openBox<String>(HiveBoxName.userBlacklist);
 
-    forumBlacklist = HashSet.of(_forumBlacklistBox.values);
-    postBlacklist = HashSet.of(_postBlacklistBox.values);
-    userBlacklist = HashSet.of(_userBlacklistBox.values);
+    _forumBlacklist = HashSet.of(_forumBlacklistBox.values);
+    _postBlacklist = intHashSetOf(_postBlacklistBox.values);
+    _userBlacklist = HashSet.of(_userBlacklistBox.values);
 
     isReady.value = true;
     debugPrint('读取黑名单列表成功');

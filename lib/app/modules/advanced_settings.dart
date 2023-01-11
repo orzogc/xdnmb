@@ -148,7 +148,6 @@ class _PoCookieColor extends StatelessWidget {
               pickerColor: settings.poCookieColor,
               onColorChanged: (value) => color = value,
               enableLabel: true,
-              portraitOnly: true,
             ),
             onConfirm: () {
               if (color != null) {

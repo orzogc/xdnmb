@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../../utils/hash.dart';
 import '../../utils/toast.dart';
 import '../../widgets/listenable.dart';
 import '../models/forum.dart';
@@ -77,12 +78,12 @@ class ForumListService extends GetxService {
 
   /// key为顺序，value为[_forumBox]里的index
   final ValueNotifier<HashMap<int, int>> displayedForumIndexNotifier =
-      ValueNotifier(HashMap());
+      ValueNotifier(intHashMap<int>());
 
   late HashMap<_ForumKey, _ForumValue> _forumMap;
 
   /// 应用本次运行期间新增加的废弃版块ID，防止短时间内多次重复请求[_getHtmlForum]
-  final HashSet<int> _deprecatedForumId = HashSet();
+  final HashSet<int> _deprecatedForumId = intHashSet();
 
   int get displayedForumsCount => displayedForumIndexNotifier.value.length;
 
@@ -95,8 +96,8 @@ class ForumListService extends GetxService {
       forums.where((forum) => forum.isHidden);
 
   void _updateDisplayedForumIndexNotifier() =>
-      displayedForumIndexNotifier.value = HashMap.of(
-          (HashMap.of(forums.toList().asMap())
+      displayedForumIndexNotifier.value = intHashMapOf<int>(
+          (intHashMapOf<ForumData>(forums.toList().asMap())
                 ..removeWhere((key, forum) => forum.isHidden))
               .keys
               .toList()

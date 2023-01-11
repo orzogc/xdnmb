@@ -7,6 +7,8 @@ part 'cookie.g.dart';
 /// 饼干数据
 @HiveType(typeId: 2)
 class CookieData extends HiveObject {
+  static const int defaultColor = 0xff2196f3;
+
   /// 饼干显示的名字
   @HiveField(0)
   final String name;
@@ -32,7 +34,7 @@ class CookieData extends HiveObject {
   DateTime? lastPostTime;
 
   /// 饼干颜色
-  @HiveField(6, defaultValue: 0xff2196f3)
+  @HiveField(6, defaultValue: defaultColor)
   int colorValue;
 
   Color get color => Color(colorValue);
@@ -44,14 +46,14 @@ class CookieData extends HiveObject {
       this.isDeprecated = false,
       this.note,
       this.lastPostTime,
-      this.colorValue = 0xff2196f3});
+      this.colorValue = defaultColor});
 
   CookieData.fromXdnmbCookie(
       {required XdnmbCookie cookie,
       this.isDeprecated = false,
       this.note,
       this.lastPostTime,
-      this.colorValue = 0xff2196f3})
+      this.colorValue = defaultColor})
       : name = cookie.name!,
         userHash = cookie.userHash,
         id = cookie.id;

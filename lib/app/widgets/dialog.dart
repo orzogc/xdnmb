@@ -743,7 +743,6 @@ class EditCookieDialog extends StatelessWidget {
                       pickerColor: cookie.color,
                       onColorChanged: (value) => color_ = value,
                       enableLabel: true,
-                      portraitOnly: true,
                     ),
                     onConfirm: () {
                       if (color_ != null) {
@@ -820,7 +819,6 @@ class SetCookieColor extends StatelessWidget {
               pickerColor: cookie.color,
               onColorChanged: (value) => color = value,
               enableLabel: true,
-              portraitOnly: true,
             ),
             onConfirm: () {
               if (color != null) {

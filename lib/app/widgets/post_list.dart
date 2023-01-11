@@ -31,12 +31,15 @@ class PostListScrollView extends StatefulWidget {
 
   final PostListScrollController? scrollController;
 
+  final VoidCallback? refresh;
+
   final PostListScrollViewBuilder builder;
 
   const PostListScrollView(
       {super.key,
       required this.controller,
       this.scrollController,
+      this.refresh,
       required this.builder});
 
   @override
@@ -48,7 +51,13 @@ class _PostListScrollViewState extends State<PostListScrollView> {
 
   int _refresh = 0;
 
-  void _addRefresh() => _refresh++;
+  void _addRefresh() {
+    if (widget.refresh != null) {
+      widget.refresh!();
+    }
+
+    _refresh++;
+  }
 
   void _setScrollDirection() {
     if (_scrollController.hasClients) {

@@ -149,6 +149,12 @@ class SettingsService extends GetxService {
   set selectCookieBeforePost(bool selectCookieBeforePost) =>
       _settingsBox.put(Settings.selectCookieBeforePost, selectCookieBeforePost);
 
+  bool get forbidDuplicatedPosts =>
+      _settingsBox.get(Settings.forbidDuplicatedPosts, defaultValue: true);
+
+  set forbidDuplicatedPosts(bool forbidDuplicatedPosts) =>
+      _settingsBox.put(Settings.forbidDuplicatedPosts, forbidDuplicatedPosts);
+
   String get feedId => _settingsBox.get(Settings.feedId);
 
   set feedId(String feedId) => _settingsBox.put(Settings.feedId, feedId);
@@ -454,6 +460,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> selectCookieBeforePostListenable;
 
+  late final ValueListenable<Box> forbidDuplicatedPostsListenable;
+
   late final ValueListenable<Box> feedIdListenable;
 
   late final ValueListenable<Box> saveImagePathListenable;
@@ -577,6 +585,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.dismissibleTab]);
     selectCookieBeforePostListenable =
         _settingsBox.listenable(keys: [Settings.selectCookieBeforePost]);
+    forbidDuplicatedPostsListenable =
+        _settingsBox.listenable(keys: [Settings.forbidDuplicatedPosts]);
     feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
     saveImagePathListenable =
         _settingsBox.listenable(keys: [Settings.saveImagePath]);

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
@@ -17,8 +18,9 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/post_list.dart';
+import '../utils/hash.dart';
 import '../utils/navigation.dart';
+import '../utils/post_list.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -258,6 +260,8 @@ class ForumBody extends StatefulWidget {
 class _ForumBodyState extends State<ForumBody> {
   late StreamSubscription<int> _pageSubscription;
 
+  final HashSet<int> _postIds = intHashSet();
+
   void _showGuide() {
     if (mounted && SettingsService.shouldShowGuide) {
       final scaffold = Scaffold.of(context);
@@ -307,6 +311,7 @@ class _ForumBodyState extends State<ForumBody> {
   @override
   Widget build(BuildContext context) {
     final client = XdnmbClientService.to.client;
+    final settings = SettingsService.to;
     final forums = ForumListService.to;
     final blacklist = BlacklistService.to;
     final controller = widget.controller;
@@ -314,6 +319,7 @@ class _ForumBodyState extends State<ForumBody> {
 
     return PostListScrollView(
       controller: controller,
+      refresh: () => _postIds.clear(),
       builder: (context, scrollController, refresh) =>
           BiListView<ThreadWithPage>(
         key: ValueKey<int>(refresh),
@@ -324,13 +330,12 @@ class _ForumBodyState extends State<ForumBody> {
         lastPage:
             controller.isTimeline ? forums.maxPage(id, isTimeline: true) : 100,
         fetch: (page) async {
-          final threads = controller.isTimeline
-              ? (await client.getTimeline(id, page: page))
-                  .map((thread) => ThreadWithPage(thread, page))
-                  .toList()
-              : (await client.getForum(id, page: page))
-                  .map((thread) => ThreadWithPage(thread, page))
-                  .toList();
+          final threads = (controller.isTimeline
+                  ? await client.getTimeline(id, page: page)
+                  : await client.getForum(id, page: page))
+              .map((thread) => ThreadWithPage(
+                  thread, page, !_postIds.add(thread.mainPost.id)))
+              .toList();
 
           _showGuide();
 
@@ -339,16 +344,21 @@ class _ForumBodyState extends State<ForumBody> {
         itemBuilder: (context, thread, index) {
           final mainPost = thread.thread.mainPost;
 
+          bool isShowed() =>
+              !((settings.forbidDuplicatedPosts && thread.isDuplicated) ||
+                  (controller.isTimeline &&
+                      !mainPost.isAdmin &&
+                      blacklist.hasForum(
+                          forumId: mainPost.forumId, timelineId: id)) ||
+                  mainPost.isBlocked());
+
           final Widget item = ListenableBuilder(
             listenable: Listenable.merge([
+              settings.forbidDuplicatedPostsListenable,
               if (controller.isTimeline) blacklist.forumBlacklistNotifier,
               blacklist.postAndUserBlacklistNotifier,
             ]),
-            builder: (context, child) => !((controller.isTimeline &&
-                        !mainPost.isAdmin &&
-                        blacklist.hasForum(
-                            forumId: mainPost.forumId, timelineId: id)) ||
-                    mainPost.isBlocked())
+            builder: (context, child) => isShowed()
                 ? AnchorItemWrapper(
                     key: thread.toValueKey(),
                     controller: scrollController,
@@ -374,7 +384,7 @@ class _ForumBodyState extends State<ForumBody> {
 
           return (SettingsService.shouldShowGuide &&
                   index == 0 &&
-                  !ThreadGuide.exist())
+                  !ThreadGuide.exist)
               ? ThreadGuide(item)
               : item;
         },

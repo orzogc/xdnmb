@@ -21,6 +21,8 @@ abstract class Settings {
 
   static const String selectCookieBeforePost = 'selectCookieBeforePost';
 
+  static const String forbidDuplicatedPosts = 'forbidDuplicatedPosts';
+
   static const String feedId = 'feedId';
 
   static const String saveImagePath = 'saveImagePath';

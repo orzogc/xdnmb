@@ -220,6 +220,25 @@ class _SelectCookieBeforePost extends StatelessWidget {
   }
 }
 
+class _ForbidDuplicatedPosts extends StatelessWidget {
+  // ignore: unused_element
+  const _ForbidDuplicatedPosts({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.forbidDuplicatedPostsListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('时间线/版块不显示重复的串'),
+        value: settings.forbidDuplicatedPosts,
+        onChanged: (value) => settings.forbidDuplicatedPosts = value,
+      ),
+    );
+  }
+}
+
 class _EditFeedId extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -242,8 +261,7 @@ class _EditFeedId extends StatelessWidget {
             autofocus: true,
             initialValue: feedId.value,
             onSaved: (newValue) => id = newValue,
-            validator: (value) =>
-                (value == null || value.isEmpty) ? '请输入订阅ID' : null,
+            validator: (value) => value == null ? '请输入订阅ID' : null,
           ),
         ),
       ),
@@ -310,6 +328,7 @@ class BasicSettingsView extends StatelessWidget {
               _AfterPostRefresh(),
               _DismissibleTab(),
               _SelectCookieBeforePost(),
+              _ForbidDuplicatedPosts(),
               _FeedId(),
             ],
           ),

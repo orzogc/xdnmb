@@ -163,7 +163,7 @@ class AppBarPopupMenuGuide extends StatelessWidget {
 class ThreadGuide extends StatelessWidget {
   static final GlobalKey _key = GlobalKey();
 
-  static bool exist() => _key.currentState?.mounted ?? false;
+  static bool get exist => _key.currentState?.mounted ?? false;
 
   final Widget child;
 

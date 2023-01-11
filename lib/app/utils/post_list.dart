@@ -21,7 +21,9 @@ class ThreadWithPage {
 
   final int page;
 
-  const ThreadWithPage(this.thread, this.page);
+  final bool isDuplicated;
+
+  const ThreadWithPage(this.thread, this.page, this.isDuplicated);
 
   int toIndex() => thread.mainPost.toIndex(page);
 
@@ -31,7 +33,11 @@ class ThreadWithPage {
 class Visible<T> {
   final T item;
 
-  final RxBool isVisible;
+  final RxBool _isVisible;
 
-  Visible(this.item, [bool isVisible = true]) : isVisible = isVisible.obs;
+  bool get isVisible => _isVisible.value;
+
+  set isVisible(bool isVisible) => _isVisible.value = isVisible;
+
+  Visible(this.item, [bool isVisible = true]) : _isVisible = isVisible.obs;
 }
