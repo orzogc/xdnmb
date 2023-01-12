@@ -29,6 +29,8 @@ abstract class Settings {
 
   static const String cacheImageCount = 'cacheImageCount';
 
+  static const String followPlatformBrightness = 'followPlatformBrightness';
+
   static const String addBlueIslandEmoticons = 'addBlueIslandEmoticons';
 
   static const String showPoCookieTag = 'showPoCookieTag';

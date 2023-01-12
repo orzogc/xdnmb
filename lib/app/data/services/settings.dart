@@ -173,35 +173,17 @@ class SettingsService extends GetxService {
   set cacheImageCount(int count) =>
       _settingsBox.put(Settings.cacheImageCount, count);
 
+  bool get followPlatformBrightness =>
+      _settingsBox.get(Settings.followPlatformBrightness, defaultValue: false);
+
+  set followPlatformBrightness(bool followPlatformBrightness) => _settingsBox
+      .put(Settings.followPlatformBrightness, followPlatformBrightness);
+
   bool get addBlueIslandEmoticons =>
       _settingsBox.get(Settings.addBlueIslandEmoticons, defaultValue: true);
 
   set addBlueIslandEmoticons(bool addBlueIslandEmoticons) =>
       _settingsBox.put(Settings.addBlueIslandEmoticons, addBlueIslandEmoticons);
-
-  bool get showPoCookieTag =>
-      _settingsBox.get(Settings.showPoCookieTag, defaultValue: false);
-
-  set showPoCookieTag(bool showPoCookieTag) =>
-      _settingsBox.put(Settings.showPoCookieTag, showPoCookieTag);
-
-  Color get poCookieColor =>
-      Color(_settingsBox.get(Settings.poCookieColor, defaultValue: 0xff0097a7));
-
-  set poCookieColor(Color color) =>
-      _settingsBox.put(Settings.poCookieColor, color.value);
-
-  bool get showUserCookieNote =>
-      _settingsBox.get(Settings.showUserCookieNote, defaultValue: false);
-
-  set showUserCookieNote(bool showUserCookieNote) =>
-      _settingsBox.put(Settings.showUserCookieNote, showUserCookieNote);
-
-  bool get showUserCookieColor =>
-      _settingsBox.get(Settings.showUserCookieColor, defaultValue: true);
-
-  set showUserCookieColor(bool showUserCookieColor) =>
-      _settingsBox.put(Settings.showUserCookieColor, showUserCookieColor);
 
   bool get restoreForumPage =>
       _settingsBox.get(Settings.restoreForumPage, defaultValue: false);
@@ -379,6 +361,30 @@ class SettingsService extends GetxService {
 
   bool get isCompactTabAndForumList => _isCompactTabAndForumList.value;
 
+  bool get showPoCookieTag =>
+      _settingsBox.get(Settings.showPoCookieTag, defaultValue: false);
+
+  set showPoCookieTag(bool showPoCookieTag) =>
+      _settingsBox.put(Settings.showPoCookieTag, showPoCookieTag);
+
+  Color get poCookieColor =>
+      Color(_settingsBox.get(Settings.poCookieColor, defaultValue: 0xff0097a7));
+
+  set poCookieColor(Color color) =>
+      _settingsBox.put(Settings.poCookieColor, color.value);
+
+  bool get showUserCookieNote =>
+      _settingsBox.get(Settings.showUserCookieNote, defaultValue: false);
+
+  set showUserCookieNote(bool showUserCookieNote) =>
+      _settingsBox.put(Settings.showUserCookieNote, showUserCookieNote);
+
+  bool get showUserCookieColor =>
+      _settingsBox.get(Settings.showUserCookieColor, defaultValue: true);
+
+  set showUserCookieColor(bool showUserCookieColor) =>
+      _settingsBox.put(Settings.showUserCookieColor, showUserCookieColor);
+
   double get postHeaderFontSize =>
       (_settingsBox.get(Settings.postHeaderFontSize,
               defaultValue: defaultPostHeaderFontSize) as double)
@@ -486,15 +492,9 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> cacheImageCountListenable;
 
+  late final ValueListenable<Box> followPlatformBrightnessListenable;
+
   late final ValueListenable<Box> addBlueIslandEmoticonsListenable;
-
-  late final ValueListenable<Box> showPoCookieTagListenable;
-
-  late final ValueListenable<Box> poCookieColorListenable;
-
-  late final ValueListenable<Box> showUserCookieNoteListenable;
-
-  late final ValueListenable<Box> showUserCookieColorListenable;
 
   late final ValueListenable<Box> restoreForumPageListenable;
 
@@ -528,6 +528,14 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> compactTabAndForumListListenable;
 
+  late final ValueListenable<Box> showPoCookieTagListenable;
+
+  late final ValueListenable<Box> poCookieColorListenable;
+
+  late final ValueListenable<Box> showUserCookieNoteListenable;
+
+  late final ValueListenable<Box> showUserCookieColorListenable;
+
   late final StreamSubscription<BoxEvent> _darkModeSubscription;
 
   static Future<void> getSettings() async {
@@ -540,6 +548,10 @@ class SettingsService extends GetxService {
     isRestoreForumPage =
         box.get(Settings.restoreForumPage, defaultValue: false);
   }
+
+  void _setDarkModeWithPlatformBrightness() => isDarkMode =
+      WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+          Brightness.dark;
 
   void updateSaveImagePath() {
     if (saveImagePath != ImageService.savePath) {
@@ -577,6 +589,14 @@ class SettingsService extends GetxService {
 
     _settingsBox = await Hive.openBox(HiveBoxName.settings);
 
+    if (followPlatformBrightness) {
+      _setDarkModeWithPlatformBrightness();
+      WidgetsBinding.instance.platformDispatcher.onPlatformBrightnessChanged =
+          () {
+        WidgetsBinding.instance.handlePlatformBrightnessChanged();
+        _setDarkModeWithPlatformBrightness();
+      };
+    }
     Get.changeThemeMode(isDarkMode ? ThemeMode.dark : ThemeMode.light);
     _darkModeSubscription =
         _settingsBox.watch(key: Settings.isDarkMode).listen((event) async {
@@ -616,16 +636,10 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.saveImagePath]);
     cacheImageCountListenable =
         _settingsBox.listenable(keys: [Settings.cacheImageCount]);
+    followPlatformBrightnessListenable =
+        _settingsBox.listenable(keys: [Settings.followPlatformBrightness]);
     addBlueIslandEmoticonsListenable =
         _settingsBox.listenable(keys: [Settings.addBlueIslandEmoticons]);
-    showPoCookieTagListenable =
-        _settingsBox.listenable(keys: [Settings.showPoCookieTag]);
-    poCookieColorListenable =
-        _settingsBox.listenable(keys: [Settings.poCookieColor]);
-    showUserCookieNoteListenable =
-        _settingsBox.listenable(keys: [Settings.showUserCookieNote]);
-    showUserCookieColorListenable =
-        _settingsBox.listenable(keys: [Settings.showUserCookieColor]);
     restoreForumPageListenable =
         _settingsBox.listenable(keys: [Settings.restoreForumPage]);
     imageDisposeDistanceListenable =
@@ -663,6 +677,14 @@ class SettingsService extends GetxService {
     ]);
     compactTabAndForumListListenable =
         _settingsBox.listenable(keys: [Settings.compactTabAndForumList]);
+    showPoCookieTagListenable =
+        _settingsBox.listenable(keys: [Settings.showPoCookieTag]);
+    poCookieColorListenable =
+        _settingsBox.listenable(keys: [Settings.poCookieColor]);
+    showUserCookieNoteListenable =
+        _settingsBox.listenable(keys: [Settings.showUserCookieNote]);
+    showUserCookieColorListenable =
+        _settingsBox.listenable(keys: [Settings.showUserCookieColor]);
 
     _isShowBottomBar = showBottomBar.obs;
     _isAutoHideBottomBar = autoHideBottomBar.obs;

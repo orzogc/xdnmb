@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
@@ -345,6 +346,104 @@ class _CompactTabAndForumList extends StatelessWidget {
   }
 }
 
+class _ShowPoCookieTag extends StatelessWidget {
+  // ignore: unused_element
+  const _ShowPoCookieTag({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.showPoCookieTagListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('串内Po饼干左边显示Po标签'),
+        value: settings.showPoCookieTag,
+        onChanged: (value) => settings.showPoCookieTag = value,
+      ),
+    );
+  }
+}
+
+class _PoCookieColor extends StatelessWidget {
+  // ignore: unused_element
+  const _PoCookieColor({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.poCookieColorListenable,
+      builder: (context, child) => ListTile(
+        title: const Text('Po饼干颜色'),
+        trailing: ColorIndicator(
+          HSVColor.fromColor(settings.poCookieColor),
+          key: ValueKey<Color>(settings.poCookieColor),
+          width: 25.0,
+          height: 25.0,
+        ),
+        onTap: () {
+          Color? color;
+          Get.dialog(ConfirmCancelDialog(
+            contentWidget: MaterialPicker(
+              pickerColor: settings.poCookieColor,
+              onColorChanged: (value) => color = value,
+              enableLabel: true,
+            ),
+            onConfirm: () {
+              if (color != null) {
+                settings.poCookieColor = color!;
+              }
+
+              Get.back();
+            },
+            onCancel: Get.back,
+          ));
+        },
+      ),
+    );
+  }
+}
+
+class _ShowUserCookieNote extends StatelessWidget {
+  // ignore: unused_element
+  const _ShowUserCookieNote({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.showUserCookieNoteListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('串饼干下方显示用户饼干的备注'),
+        value: settings.showUserCookieNote,
+        onChanged: (value) => settings.showUserCookieNote = value,
+      ),
+    );
+  }
+}
+
+class _ShowUserCookieColor extends StatelessWidget {
+  // ignore: unused_element
+  const _ShowUserCookieColor({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.showUserCookieColorListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('串饼干使用用户饼干的自定义颜色显示'),
+        value: settings.showUserCookieColor,
+        onChanged: (value) => settings.showUserCookieColor = value,
+      ),
+    );
+  }
+}
+
 class BasicUISettingsView extends StatelessWidget {
   const BasicUISettingsView({super.key});
 
@@ -367,6 +466,11 @@ class BasicUISettingsView extends StatelessWidget {
               if (GetPlatform.isMobile) const _DrawerDragRatio(),
               const _PageDragWidthRatio(),
               const _CompactTabAndForumList(),
+              const Divider(height: 10.0, thickness: 1.0),
+              const _ShowPoCookieTag(),
+              const _PoCookieColor(),
+              const _ShowUserCookieNote(),
+              const _ShowUserCookieColor(),
             ],
           ),
         ),

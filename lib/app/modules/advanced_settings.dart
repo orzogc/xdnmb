@@ -1,7 +1,6 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 
 import '../data/services/image.dart';
@@ -104,6 +103,26 @@ class _CacheImageCount extends StatelessWidget {
   }
 }
 
+class _FollowPlatformBrightness extends StatelessWidget {
+  // ignore: unused_element
+  const _FollowPlatformBrightness({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.followPlatformBrightnessListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('白天/黑夜模式跟随系统'),
+        subtitle: const Text('更改后需要重启应用'),
+        value: settings.followPlatformBrightness,
+        onChanged: (value) => settings.followPlatformBrightness = value,
+      ),
+    );
+  }
+}
+
 class _AddBlueIslandEmoticons extends StatelessWidget {
   // ignore: unused_element
   const _AddBlueIslandEmoticons({super.key});
@@ -118,104 +137,6 @@ class _AddBlueIslandEmoticons extends StatelessWidget {
         title: const Text('添加蓝岛颜文字'),
         value: settings.addBlueIslandEmoticons,
         onChanged: (value) => settings.addBlueIslandEmoticons = value,
-      ),
-    );
-  }
-}
-
-class _ShowPoCookieTag extends StatelessWidget {
-  // ignore: unused_element
-  const _ShowPoCookieTag({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return ListenableBuilder(
-      listenable: settings.showPoCookieTagListenable,
-      builder: (context, child) => SwitchListTile(
-        title: const Text('串内Po饼干左边显示Po标签'),
-        value: settings.showPoCookieTag,
-        onChanged: (value) => settings.showPoCookieTag = value,
-      ),
-    );
-  }
-}
-
-class _PoCookieColor extends StatelessWidget {
-  // ignore: unused_element
-  const _PoCookieColor({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return ListenableBuilder(
-      listenable: settings.poCookieColorListenable,
-      builder: (context, child) => ListTile(
-        title: const Text('Po饼干颜色'),
-        trailing: ColorIndicator(
-          HSVColor.fromColor(settings.poCookieColor),
-          key: ValueKey<Color>(settings.poCookieColor),
-          width: 25.0,
-          height: 25.0,
-        ),
-        onTap: () {
-          Color? color;
-          Get.dialog(ConfirmCancelDialog(
-            contentWidget: MaterialPicker(
-              pickerColor: settings.poCookieColor,
-              onColorChanged: (value) => color = value,
-              enableLabel: true,
-            ),
-            onConfirm: () {
-              if (color != null) {
-                settings.poCookieColor = color!;
-              }
-
-              Get.back();
-            },
-            onCancel: Get.back,
-          ));
-        },
-      ),
-    );
-  }
-}
-
-class _ShowUserCookieNote extends StatelessWidget {
-  // ignore: unused_element
-  const _ShowUserCookieNote({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return ListenableBuilder(
-      listenable: settings.showUserCookieNoteListenable,
-      builder: (context, child) => SwitchListTile(
-        title: const Text('串饼干下方显示用户饼干的备注'),
-        value: settings.showUserCookieNote,
-        onChanged: (value) => settings.showUserCookieNote = value,
-      ),
-    );
-  }
-}
-
-class _ShowUserCookieColor extends StatelessWidget {
-  // ignore: unused_element
-  const _ShowUserCookieColor({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return ListenableBuilder(
-      listenable: settings.showUserCookieColorListenable,
-      builder: (context, child) => SwitchListTile(
-        title: const Text('串饼干使用用户饼干的自定义颜色显示'),
-        value: settings.showUserCookieColor,
-        onChanged: (value) => settings.showUserCookieColor = value,
       ),
     );
   }
@@ -360,11 +281,9 @@ class AdvancedSettingsView extends StatelessWidget {
               if (!GetPlatform.isIOS && ImageService.to.hasStoragePermission)
                 _SaveImagePath(),
               const _CacheImageCount(),
+              if (GetPlatform.isMobile || GetPlatform.isMacOS)
+                const _FollowPlatformBrightness(),
               const _AddBlueIslandEmoticons(),
-              const _ShowPoCookieTag(),
-              const _PoCookieColor(),
-              const _ShowUserCookieNote(),
-              const _ShowUserCookieColor(),
               const _RestoreForumPage(),
               const _ImageDisposeDistance(),
               const _FixedImageDisposeRatio(),
