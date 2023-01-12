@@ -719,6 +719,7 @@ class EditCookieDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = UserService.to;
     String? note;
     final Rx<Color> color = Rx(cookie.color);
 
@@ -774,9 +775,10 @@ class EditCookieDialog extends StatelessWidget {
       actions: [
         ElevatedButton(
           onPressed: () async {
-            await cookie.editNote((note?.isNotEmpty ?? false) ? note : null);
+            await user.setCookieNote(
+                cookie, (note?.isNotEmpty ?? false) ? note : null);
             if (setColor) {
-              await UserService.to.setCookieColor(cookie, color.value);
+              await user.setCookieColor(cookie, color.value);
             }
 
             Get.back(result: true);

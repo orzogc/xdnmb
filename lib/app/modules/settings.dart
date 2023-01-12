@@ -37,7 +37,7 @@ class _Feedback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-        title: const Text('反馈问题与建议'),
+        title: const Text('反馈客户端问题与建议'),
         onTap: () {
           Get.back();
           AppRoutes.toFeedback();
@@ -65,6 +65,18 @@ class _AuthorUrlSponsor extends StatelessWidget {
         title: const Text('赞助客户端作者（爱发电）'),
         subtitle: const Text(Urls.authorSponsor),
         onTap: () => launchURL(Urls.authorSponsor),
+      );
+}
+
+class _XdnmbUrlSponsor extends StatelessWidget {
+  // ignore: unused_element
+  const _XdnmbUrlSponsor({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        title: const Text('赞助X岛匿名版官方'),
+        subtitle: const Text(Urls.xdnmbSponsor),
+        onTap: () => launchURL(Urls.xdnmbSponsor),
       );
 }
 
@@ -149,6 +161,7 @@ class SettingsView extends StatelessWidget {
               const ListTile(title: Text('客户端作者'), subtitle: Text('Orzogc')),
               const _AuthorQRCodeSponsor(),
               const _AuthorUrlSponsor(),
+              const _XdnmbUrlSponsor(),
               const _AppSource(),
               const _AppLicense(),
               _AppVersion(),

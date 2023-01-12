@@ -31,7 +31,13 @@ abstract class Settings {
 
   static const String addBlueIslandEmoticons = 'addBlueIslandEmoticons';
 
+  static const String showPoCookieTag = 'showPoCookieTag';
+
   static const String poCookieColor = 'poCookieColor';
+
+  static const String showUserCookieNote = 'showUserCookieNote';
+
+  static const String showUserCookieColor = 'showUserCookieColor';
 
   static const String restoreForumPage = 'restoreForumPage';
 

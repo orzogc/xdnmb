@@ -46,6 +46,7 @@ import 'image.dart';
 import 'listenable.dart';
 import 'scroll.dart';
 import 'size.dart';
+import 'tag.dart';
 import 'thread.dart';
 import 'tooltip.dart';
 
@@ -686,33 +687,6 @@ class _SaveDraft extends StatelessWidget {
       );
 }
 
-class _CookieTag extends StatelessWidget {
-  final String text;
-
-  // ignore: unused_element
-  const _CookieTag({super.key, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.primaryColor,
-        borderRadius: BorderRadius.circular(3.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5.0),
-        child: Text(
-          text,
-          style: theme.textTheme.bodySmall
-              ?.apply(color: theme.colorScheme.onPrimary),
-        ),
-      ),
-    );
-  }
-}
-
 class _CookieList extends StatefulWidget {
   final int? mainPostId;
 
@@ -773,18 +747,21 @@ class _CookieListState extends State<_CookieList> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(color: cookie.color)),
                       if (cookie.name == widget.poUserHash)
-                        const _CookieTag(text: 'Po'),
+                        Tag(text: 'Po', textStyle: theme.textTheme.bodySmall),
                       if (cookie.name != widget.poUserHash &&
                           snapshot.connectionState == ConnectionState.done &&
                           snapshot.hasData &&
                           snapshot.data!.contains(cookie.name))
-                        const _CookieTag(text: '有回串'),
+                        Tag(text: '有回串', textStyle: theme.textTheme.bodySmall),
                       if (cookie.lastPostTime != null &&
                           DateTime.now().difference(cookie.lastPostTime!) <
                               _recent)
-                        const _CookieTag(text: '最近使用'),
+                        Tag(text: '最近使用', textStyle: theme.textTheme.bodySmall),
                       if (user.isUserCookieValid && cookie.isDeprecated)
-                        const _CookieTag(text: '非登陆帐号饼干'),
+                        Tag(
+                          text: '非登陆帐号饼干',
+                          textStyle: theme.textTheme.bodySmall,
+                        ),
                     ],
                   ),
                   subtitle: (cookie.note?.isNotEmpty ?? false)

@@ -72,6 +72,7 @@ class _TopOverlay extends StatelessWidget {
                 hiddenTextColor: AppTheme.colorDark,
                 showForumName: false,
                 showReplyCount: false,
+                showPoTag: true,
               ),
             ),
           ),

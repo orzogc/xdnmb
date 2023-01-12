@@ -16,6 +16,7 @@ import 'forum_name.dart';
 import 'image.dart';
 import 'listenable.dart';
 import 'scroll.dart';
+import 'tag.dart';
 import 'tooltip.dart';
 
 typedef PostGestureCallback = void Function(PostBase post);
@@ -27,6 +28,8 @@ class _PostUser extends StatelessWidget {
 
   final bool isPo;
 
+  final bool showPoTag;
+
   final TextStyle? textStyle;
 
   const _PostUser(
@@ -35,6 +38,7 @@ class _PostUser extends StatelessWidget {
       required this.userHash,
       this.isAdmin = false,
       this.isPo = false,
+      this.showPoTag = false,
       this.textStyle});
 
   @override
@@ -44,16 +48,22 @@ class _PostUser extends StatelessWidget {
 
     return ListenableBuilder(
       listenable: Listenable.merge([
-        if (!isAdmin) user.cookieColorNotifier,
+        if (showPoTag && isPo) settings.showPoCookieTagListenable,
         if (!isAdmin && isPo) settings.poCookieColorListenable,
+        settings.showUserCookieNoteListenable,
+        if (!isAdmin) settings.showUserCookieColorListenable,
+        user.cookieNotifier,
       ]),
       builder: (context, child) {
         TextStyle style = (textStyle ?? AppTheme.postHeaderTextStyle).merge(
           TextStyle(
-              color: isAdmin
-                  ? Colors.red
-                  : (user.getCookieColor(userHash) ??
-                      (isPo ? settings.poCookieColor : null))),
+            color: isAdmin
+                ? Colors.red
+                : ((settings.showUserCookieColor
+                        ? user.getCookieColor(userHash)
+                        : null) ??
+                    (isPo ? settings.poCookieColor : null)),
+          ),
         );
         final fontWeight = style.fontWeight;
         if ((isAdmin || isPo) &&
@@ -62,12 +72,49 @@ class _PostUser extends StatelessWidget {
           style = style.merge(const TextStyle(fontWeight: FontWeight.bold));
         }
 
-        return htmlToRichText(
+        Widget cookie = htmlToRichText(
           context,
           userHash,
           textStyle: style,
           strutStyle: strutStyleFromHeight(style),
         );
+
+        if (showPoTag && isPo && settings.showPoCookieTag) {
+          final tagStyle =
+              style.merge(const TextStyle(fontWeight: FontWeight.normal));
+
+          cookie = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Tag(
+                text: 'Po',
+                textStyle: tagStyle,
+                strutStyle: strutStyleFromHeight(tagStyle),
+              ),
+              const SizedBox(width: 3.0),
+              cookie,
+            ],
+          );
+        }
+
+        final String? note =
+            settings.showUserCookieNote ? user.getCookieNote(userHash) : null;
+
+        return note != null
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  cookie,
+                  Text(
+                    note,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: style,
+                    strutStyle: strutStyleFromHeight(style),
+                  ),
+                ],
+              )
+            : cookie;
       },
     );
   }
@@ -357,6 +404,8 @@ class PostContent extends StatelessWidget {
 
   final bool showReplyCount;
 
+  final bool showPoTag;
+
   final double? headerHeight;
 
   final double? contentMaxHeight;
@@ -388,6 +437,7 @@ class PostContent extends StatelessWidget {
       this.showPostId = true,
       this.showForumName = true,
       this.showReplyCount = true,
+      this.showPoTag = false,
       this.headerHeight,
       this.contentMaxHeight,
       this.onPostIdTap,
@@ -448,6 +498,7 @@ class PostContent extends StatelessWidget {
                     userHash: post.userHash,
                     isAdmin: post.isAdmin,
                     isPo: post.userHash == poUserHash,
+                    showPoTag: showPoTag,
                     textStyle: headerTextStyle,
                   ),
                 ),
@@ -529,6 +580,7 @@ class PostInkWell extends StatelessWidget {
       bool showPostId = true,
       bool showForumName = true,
       bool showReplyCount = true,
+      bool showPoTag = false,
       double? headerHeight,
       double? contentMaxHeight,
       OnPostIdCallback? onPostIdTap,
@@ -553,6 +605,7 @@ class PostInkWell extends StatelessWidget {
             showPostId: showPostId,
             showForumName: showForumName,
             showReplyCount: showReplyCount,
+            showPoTag: showPoTag,
             headerHeight: headerHeight,
             contentMaxHeight: contentMaxHeight,
             onPostIdTap: onPostIdTap,

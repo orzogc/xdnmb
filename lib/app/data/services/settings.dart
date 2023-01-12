@@ -179,11 +179,29 @@ class SettingsService extends GetxService {
   set addBlueIslandEmoticons(bool addBlueIslandEmoticons) =>
       _settingsBox.put(Settings.addBlueIslandEmoticons, addBlueIslandEmoticons);
 
+  bool get showPoCookieTag =>
+      _settingsBox.get(Settings.showPoCookieTag, defaultValue: false);
+
+  set showPoCookieTag(bool showPoCookieTag) =>
+      _settingsBox.put(Settings.showPoCookieTag, showPoCookieTag);
+
   Color get poCookieColor =>
       Color(_settingsBox.get(Settings.poCookieColor, defaultValue: 0xff0097a7));
 
   set poCookieColor(Color color) =>
       _settingsBox.put(Settings.poCookieColor, color.value);
+
+  bool get showUserCookieNote =>
+      _settingsBox.get(Settings.showUserCookieNote, defaultValue: false);
+
+  set showUserCookieNote(bool showUserCookieNote) =>
+      _settingsBox.put(Settings.showUserCookieNote, showUserCookieNote);
+
+  bool get showUserCookieColor =>
+      _settingsBox.get(Settings.showUserCookieColor, defaultValue: true);
+
+  set showUserCookieColor(bool showUserCookieColor) =>
+      _settingsBox.put(Settings.showUserCookieColor, showUserCookieColor);
 
   bool get restoreForumPage =>
       _settingsBox.get(Settings.restoreForumPage, defaultValue: false);
@@ -470,7 +488,13 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> addBlueIslandEmoticonsListenable;
 
+  late final ValueListenable<Box> showPoCookieTagListenable;
+
   late final ValueListenable<Box> poCookieColorListenable;
+
+  late final ValueListenable<Box> showUserCookieNoteListenable;
+
+  late final ValueListenable<Box> showUserCookieColorListenable;
 
   late final ValueListenable<Box> restoreForumPageListenable;
 
@@ -594,8 +618,14 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.cacheImageCount]);
     addBlueIslandEmoticonsListenable =
         _settingsBox.listenable(keys: [Settings.addBlueIslandEmoticons]);
+    showPoCookieTagListenable =
+        _settingsBox.listenable(keys: [Settings.showPoCookieTag]);
     poCookieColorListenable =
         _settingsBox.listenable(keys: [Settings.poCookieColor]);
+    showUserCookieNoteListenable =
+        _settingsBox.listenable(keys: [Settings.showUserCookieNote]);
+    showUserCookieColorListenable =
+        _settingsBox.listenable(keys: [Settings.showUserCookieColor]);
     restoreForumPageListenable =
         _settingsBox.listenable(keys: [Settings.restoreForumPage]);
     imageDisposeDistanceListenable =

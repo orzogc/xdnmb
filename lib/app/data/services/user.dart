@@ -16,6 +16,16 @@ import '../models/hive.dart';
 import '../models/user.dart';
 import '../services/xdnmb_client.dart';
 
+class _CookieData {
+  String? note;
+
+  Color color;
+
+  _CookieData.fromCookieData(CookieData cookie)
+      : note = cookie.note,
+        color = cookie.color;
+}
+
 class UserService extends GetxService {
   static const String _secureKey = 'xdnmbUserData';
 
@@ -35,9 +45,9 @@ class UserService extends GetxService {
 
   final RxInt totalCookiesNum = 0.obs;
 
-  late HashMap<String, int> _cookieColorMap;
+  late HashMap<String, _CookieData> _cookieMap;
 
-  final Notifier cookieColorNotifier = Notifier();
+  final Notifier cookieNotifier = Notifier();
 
   /// 用户帐号cookie
   String? get userCookie => _userBox.get(User.userCookie);
@@ -127,18 +137,31 @@ class UserService extends GetxService {
     }
   }
 
-  void _updateCookieColorMap() {
-    _cookieColorMap = HashMap.fromEntries(_deletedCookiesBox.values
+  void _updateCookieMap() {
+    _cookieMap = HashMap.fromEntries(_deletedCookiesBox.values
         .followedBy(xdnmbCookies)
-        .map((cookie) => MapEntry(cookie.name, cookie.colorValue)));
+        .map((cookie) =>
+            MapEntry(cookie.name, _CookieData.fromCookieData(cookie))));
 
-    cookieColorNotifier.notify();
+    cookieNotifier.notify();
   }
 
-  void _setCookieColorInMap(String name, int color) {
-    _cookieColorMap[name] = color;
+  void _addCookieInMap(CookieData cookie) {
+    _cookieMap[cookie.name] = _CookieData.fromCookieData(cookie);
 
-    cookieColorNotifier.notify();
+    cookieNotifier.notify();
+  }
+
+  void _setCookieNoteInMap(String name, String? note) {
+    _cookieMap.update(name, (cookie) => cookie..note = note);
+
+    cookieNotifier.notify();
+  }
+
+  void _setCookieColorInMap(String name, Color color) {
+    _cookieMap.update(name, (cookie) => cookie..color = color);
+
+    cookieNotifier.notify();
   }
 
   Future<void> login(
@@ -217,7 +240,7 @@ class UserService extends GetxService {
     await _cookiesBox.clear();
     await _cookiesBox.addAll(normal.followedBy(deprecated));
 
-    _updateCookieColorMap();
+    _updateCookieMap();
   }
 
   /// 返回`true`说明添加成功，返回`false`说明已存在该饼干
@@ -228,9 +251,9 @@ class UserService extends GetxService {
       return false;
     }
 
-    await _cookiesBox
-        .add(CookieData(name: name, userHash: userHash, note: note));
-    _setCookieColorInMap(name, CookieData.defaultColor);
+    final cookie = CookieData(name: name, userHash: userHash, note: note);
+    await _cookiesBox.add(cookie);
+    _addCookieInMap(cookie);
 
     return true;
   }
@@ -253,15 +276,18 @@ class UserService extends GetxService {
     }
   }
 
-  Color? getCookieColor(String name) {
-    final color = _cookieColorMap[name];
+  Color? getCookieColor(String name) => _cookieMap[name]?.color;
 
-    return color != null ? Color(color) : null;
+  String? getCookieNote(String name) => _cookieMap[name]?.note;
+
+  Future<void> setCookieNote(CookieData cookie, String? note) async {
+    await cookie.editNote(note);
+    _setCookieNoteInMap(cookie.name, note);
   }
 
   Future<void> setCookieColor(CookieData cookie, Color color) async {
     await cookie.setColor(color);
-    _setCookieColorInMap(cookie.name, color.value);
+    _setCookieColorInMap(cookie.name, color);
   }
 
   @override
@@ -292,7 +318,7 @@ class UserService extends GetxService {
         encryptionCipher: HiveAesCipher(key));
 
     _updateClient();
-    _updateCookieColorMap();
+    _updateCookieMap();
 
     _userCookieSubscription =
         _userBox.watch(key: User.userCookie).listen((event) {

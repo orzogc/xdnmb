@@ -123,6 +123,25 @@ class _AddBlueIslandEmoticons extends StatelessWidget {
   }
 }
 
+class _ShowPoCookieTag extends StatelessWidget {
+  // ignore: unused_element
+  const _ShowPoCookieTag({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.showPoCookieTagListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('串内Po饼干左边显示Po标签'),
+        value: settings.showPoCookieTag,
+        onChanged: (value) => settings.showPoCookieTag = value,
+      ),
+    );
+  }
+}
+
 class _PoCookieColor extends StatelessWidget {
   // ignore: unused_element
   const _PoCookieColor({super.key});
@@ -159,6 +178,44 @@ class _PoCookieColor extends StatelessWidget {
             onCancel: Get.back,
           ));
         },
+      ),
+    );
+  }
+}
+
+class _ShowUserCookieNote extends StatelessWidget {
+  // ignore: unused_element
+  const _ShowUserCookieNote({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.showUserCookieNoteListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('串饼干下方显示用户饼干的备注'),
+        value: settings.showUserCookieNote,
+        onChanged: (value) => settings.showUserCookieNote = value,
+      ),
+    );
+  }
+}
+
+class _ShowUserCookieColor extends StatelessWidget {
+  // ignore: unused_element
+  const _ShowUserCookieColor({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.showUserCookieColorListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('串饼干使用用户饼干的自定义颜色显示'),
+        value: settings.showUserCookieColor,
+        onChanged: (value) => settings.showUserCookieColor = value,
       ),
     );
   }
@@ -304,7 +361,10 @@ class AdvancedSettingsView extends StatelessWidget {
                 _SaveImagePath(),
               const _CacheImageCount(),
               const _AddBlueIslandEmoticons(),
+              const _ShowPoCookieTag(),
               const _PoCookieColor(),
+              const _ShowUserCookieNote(),
+              const _ShowUserCookieColor(),
               const _RestoreForumPage(),
               const _ImageDisposeDistance(),
               const _FixedImageDisposeRatio(),

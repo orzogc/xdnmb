@@ -657,6 +657,7 @@ class _ThreadBodyState extends State<ThreadBody> {
       canTapHiddenText: true,
       showForumName: false,
       showReplyCount: false,
+      showPoTag: true,
       onPostIdTap:
           post is! Tip ? (postId) => _replyPost(controller, postId) : null,
       onTap: (post) {},

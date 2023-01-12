@@ -1,5 +1,5 @@
 # 霞岛
-用[Flutter](https://flutter.dev/)实现的X岛匿名版客户端
+用[Flutter](https://flutter.dev/)实现的[X岛匿名版](https://www.nmbxd.com/)客户端
 
 # TODO
 [TODO.md](TODO.md)

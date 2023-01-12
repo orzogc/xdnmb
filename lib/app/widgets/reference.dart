@@ -124,6 +124,7 @@ class _ReferenceCardState extends State<ReferenceCard> {
                                     canTapHiddenText: true,
                                     showForumName: false,
                                     showReplyCount: false,
+                                    showPoTag: true,
                                     contentMaxHeight:
                                         constraints.maxHeight * 0.5,
                                     onTap: (post) {},
