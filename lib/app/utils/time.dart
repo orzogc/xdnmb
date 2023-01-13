@@ -28,7 +28,7 @@ const List<String> _sameDayFormat = [H, ':', nn];
 
 const List<String> _imageFilenameFormat = [yyyy, mm, dd, HH, nn, ss];
 
-const List<String> _dateRangeFormat = [yyyy, '/', mm, '/', dd];
+const List<String> _onlyDayFormat = [yyyy, '/', mm, '/', dd];
 
 String fullFormatTime(DateTime time) {
   final now = TimeService.to.now;
@@ -58,4 +58,4 @@ String formatTime(DateTime time) {
 
 String imageFilenameTime() => formatDate(DateTime.now(), _imageFilenameFormat);
 
-String formatDay(DateTime time) => formatDate(time, _dateRangeFormat);
+String formatDay(DateTime time) => formatDate(time, _onlyDayFormat);

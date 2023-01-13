@@ -325,11 +325,8 @@ class UserService extends GetxService {
       debugPrint('userCookie change');
       final cookie = event.value as String?;
       final client = XdnmbClientService.to.client;
-      if (cookie != null) {
-        client.xdnmbUserCookie = Cookie.fromSetCookieValue(cookie);
-      } else {
-        client.xdnmbUserCookie = null;
-      }
+      client.xdnmbUserCookie =
+          cookie != null ? Cookie.fromSetCookieValue(cookie) : null;
     });
 
     _browseCookieSubscription =
@@ -337,12 +334,9 @@ class UserService extends GetxService {
       debugPrint('browseCookie change');
       final cookie = event.value as CookieData?;
       final client = XdnmbClientService.to.client;
-      if (cookie != null) {
-        client.xdnmbCookie =
-            XdnmbCookie(cookie.userHash, name: cookie.name, id: cookie.id);
-      } else {
-        client.xdnmbCookie = null;
-      }
+      client.xdnmbCookie = cookie != null
+          ? XdnmbCookie(cookie.userHash, name: cookie.name, id: cookie.id)
+          : null;
     });
 
     _updateBrowseCookie();

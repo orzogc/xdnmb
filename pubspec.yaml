@@ -46,7 +46,7 @@ dependencies:
   isar_flutter_libs: ^3.0.5
   loader_overlay: ^2.1.0
   media_scanner: ^2.1.0
-  mime: ^1.0.3
+  mime: ^1.0.4
   mobile_scanner: ^2.1.0
   package_info_plus: ^3.0.2
   path: ^1.8.2
@@ -57,6 +57,7 @@ dependencies:
   showcaseview: ^2.0.0+1
   swipeable_page_route: ^0.2.6
   system_info2: ^2.0.4
+  timeago_flutter: ^1.2.0
   url_launcher: ^6.1.7
   uuid: ^3.0.7
   version: ^3.0.2

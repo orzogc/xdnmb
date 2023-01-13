@@ -1095,13 +1095,11 @@ class ImageView extends StatelessWidget {
             return Obx(() {
               _controller._isShowOverlay = false;
 
-              if (_controller.post.value != null) {
-                _controller._topOverlay = _TopOverlay(
-                    post: _controller.post.value!,
-                    poUserHash: _controller.poUserHash);
-              } else {
-                _controller._topOverlay = null;
-              }
+              _controller._topOverlay = _controller.post.value != null
+                  ? _TopOverlay(
+                      post: _controller.post.value!,
+                      poUserHash: _controller.poUserHash)
+                  : null;
 
               _controller._bottomOverlay = _BottomOverlay(
                   imageKey: _imageKey,

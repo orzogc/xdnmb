@@ -186,7 +186,7 @@ class _ReportReason extends StatelessWidget {
               value: _value.value,
               style: Theme.of(context).textTheme.bodyMedium,
               onChanged: (value) {
-                if (value != null && value.isNotEmpty) {
+                if (value?.isNotEmpty ?? false) {
                   _value.value = value;
                   onReportReason(value);
                 }
@@ -204,7 +204,7 @@ class _ReportReason extends StatelessWidget {
                         .addPostFrameCallback((timeStamp) async {
                       final reason = await Get.dialog<String>(
                           _ReportReasonDialog(text: _userDefined.value));
-                      if (reason != null && reason.isNotEmpty) {
+                      if (reason?.isNotEmpty ?? false) {
                         _value.value = reason;
                         _userDefined.value = reason;
                         onReportReason(reason);
@@ -726,6 +726,8 @@ class _CookieListState extends State<_CookieList> {
           showToast('获取历史回串记录出现错误：${snapshot.error}');
         }
 
+        final now = DateTime.now();
+
         return ListenableBuilder(
           listenable: user.cookiesListenable,
           builder: (context, child) => SimpleDialog(
@@ -754,8 +756,7 @@ class _CookieListState extends State<_CookieList> {
                           snapshot.data!.contains(cookie.name))
                         Tag(text: '有回串', textStyle: theme.textTheme.bodySmall),
                       if (cookie.lastPostTime != null &&
-                          DateTime.now().difference(cookie.lastPostTime!) <
-                              _recent)
+                          now.difference(cookie.lastPostTime!) < _recent)
                         Tag(text: '最近使用', textStyle: theme.textTheme.bodySmall),
                       if (user.isUserCookieValid && cookie.isDeprecated)
                         Tag(
@@ -882,10 +883,8 @@ class _Post extends StatelessWidget {
       final id = await history.savePostData(post);
 
       final lastPost = await _getLastPost(cookie);
-      if (lastPost != null &&
-          lastPost.mainPostId == null &&
-          lastPost.userHash == post.userHash) {
-        await history.updatePostData(id, lastPost);
+      if (lastPost?.mainPostId == null && lastPost?.userHash == post.userHash) {
+        await history.updatePostData(id, lastPost!);
       } else {
         final forum = await XdnmbClientService.to.client
             .getForum(post.forumId, cookie: cookie);
@@ -1801,7 +1800,7 @@ class _EditPostState extends State<EditPost> {
                               _ReportReason(
                                 reportReason: reportReason,
                                 onReportReason: (text) {
-                                  if (text != null && text.isNotEmpty) {
+                                  if (text?.isNotEmpty ?? false) {
                                     _reportReason.value = text;
                                   }
                                 },
@@ -1962,7 +1961,7 @@ class _EditPostState extends State<EditPost> {
     _reportReason = RxnString(widget.reportReason);
     _isAttachDeviceInfo = (widget.isAttachDeviceInfo ?? true).obs;
 
-    if (widget.height != null) {
+    if (_isAtBottom) {
       EditPostCallback.bottomSheet = EditPostCallback._internal(
           isPosted: () => _isPosted,
           toController: _toController,
@@ -1981,7 +1980,7 @@ class _EditPostState extends State<EditPost> {
 
   @override
   void dispose() {
-    if (widget.height != null) {
+    if (_isAtBottom) {
       EditPostCallback.bottomSheet = null;
     } else {
       EditPostCallback.page = null;

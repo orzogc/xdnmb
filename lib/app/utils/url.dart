@@ -150,7 +150,7 @@ void parseUrl(
           default:
             final newUrl = 'http://$url';
             uri = Uri.tryParse(newUrl);
-            if (uri != null && uri.host.isNotEmpty) {
+            if (uri?.host.isNotEmpty ?? false) {
               parseUrl(
                   url: newUrl,
                   uri: uri,

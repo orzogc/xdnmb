@@ -30,17 +30,13 @@ class PostHistoryService extends GetxService {
   Future<BrowseHistory?> getBrowseHistory(int postId) =>
       _browseHistory.get(postId);
 
-  Future<int> browseHistoryCount([DateTimeRange? range]) {
-    if (range != null) {
-      return _browseHistory
+  Future<int> browseHistoryCount([DateTimeRange? range]) => range != null
+      ? _browseHistory
           .where()
           .browseTimeBetween(range.start, range.end.addOneDay(),
               includeUpper: false)
-          .count();
-    } else {
-      return _browseHistory.count();
-    }
-  }
+          .count()
+      : _browseHistory.count();
 
   Future<int> saveBrowseHistory(BrowseHistory history) =>
       _isar.writeTxn(() => _browseHistory.put(history));
@@ -128,17 +124,13 @@ class PostHistoryService extends GetxService {
 
   Future<PostData?> _getPostData(int id) => _postData.get(id);
 
-  Future<int> postDataCount([DateTimeRange? range]) {
-    if (range != null) {
-      return _postData
+  Future<int> postDataCount([DateTimeRange? range]) => range != null
+      ? _postData
           .where()
           .postTimeBetween(range.start, range.end.addOneDay(),
               includeUpper: false)
-          .count();
-    } else {
-      return _postData.count();
-    }
-  }
+          .count()
+      : _postData.count();
 
   Future<int> savePostData(PostData post) =>
       _isar.writeTxn(() => _postData.put(post));
@@ -228,17 +220,13 @@ class PostHistoryService extends GetxService {
 
   Future<ReplyData?> _getReplyData(int id) => _replyData.get(id);
 
-  Future<int> replyDataCount([DateTimeRange? range]) {
-    if (range != null) {
-      return _replyData
+  Future<int> replyDataCount([DateTimeRange? range]) => range != null
+      ? _replyData
           .where()
           .postTimeBetween(range.start, range.end.addOneDay(),
               includeUpper: false)
-          .count();
-    } else {
-      return _replyData.count();
-    }
-  }
+          .count()
+      : _replyData.count();
 
   Future<int> saveReplyData(ReplyData reply) =>
       _isar.writeTxn(() => _replyData.put(reply));

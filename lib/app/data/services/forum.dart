@@ -149,26 +149,22 @@ class ForumListService extends GetxService {
       for (final entry in forums.toList().asMap().entries) {
         if (entry.value.isTimeline) {
           final timeline = timelineMap[entry.value.id];
-          if (timeline != null) {
-            await _forumBox.putAt(
-                entry.key,
-                ForumData.fromTimeline(timeline,
-                    userDefinedName: entry.value.userDefinedName,
-                    isHidden: entry.value.isHidden));
-          } else {
-            await _forumBox.putAt(entry.key, entry.value.deprecate());
-          }
+          await _forumBox.putAt(
+              entry.key,
+              timeline != null
+                  ? ForumData.fromTimeline(timeline,
+                      userDefinedName: entry.value.userDefinedName,
+                      isHidden: entry.value.isHidden)
+                  : entry.value.deprecate());
         } else {
           final forum = forumMap[entry.value.id];
-          if (forum != null) {
-            await _forumBox.putAt(
-                entry.key,
-                ForumData.fromForum(forum,
-                    userDefinedName: entry.value.userDefinedName,
-                    isHidden: entry.value.isHidden));
-          } else {
-            await _forumBox.putAt(entry.key, entry.value.deprecate());
-          }
+          await _forumBox.putAt(
+              entry.key,
+              forum != null
+                  ? ForumData.fromForum(forum,
+                      userDefinedName: entry.value.userDefinedName,
+                      isHidden: entry.value.isHidden)
+                  : entry.value.deprecate());
         }
       }
 

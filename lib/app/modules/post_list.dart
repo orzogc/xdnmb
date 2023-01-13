@@ -18,6 +18,7 @@ import '../data/services/persistent.dart';
 import '../data/services/history.dart';
 import '../data/services/settings.dart';
 import '../data/services/stack.dart';
+import '../data/services/time.dart';
 import '../data/services/user.dart';
 import '../data/services/version.dart';
 import '../data/services/xdnmb_client.dart';
@@ -102,11 +103,7 @@ abstract class PostListController extends ChangeNotifier {
 
   static bool get isScrollingDown => _scrollingDown.value;
 
-  static void showAppBar() {
-    if (_showAppBar != null) {
-      _showAppBar!();
-    }
-  }
+  static void showAppBar() => _showAppBar?.call();
 
   final RxInt _page;
 
@@ -187,11 +184,7 @@ abstract class PostListController extends ChangeNotifier {
     refresh();
   }
 
-  void trySave() {
-    if (save != null) {
-      save!();
-    }
-  }
+  void trySave() => save?.call();
 
   StreamSubscription<int> listenPage(OnPageCallback onPage) =>
       _page.listen(onPage);
@@ -297,7 +290,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
           case PostListType.onlyPoThread:
             final mainPost = (controller as ThreadTypeController).post;
             // 检查主串或饼干有没有被屏蔽
-            if (mainPost != null && mainPost.isBlocked()) {
+            if (mainPost?.isBlocked() ?? false) {
               WidgetsBinding.instance
                   .addPostFrameCallback((timeStamp) => controller.refresh());
             }
@@ -471,7 +464,7 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
 
   void _updateController([double? oldHeight]) {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      if (_scrollController != null && _scrollController!.hasClients) {
+      if (_scrollController?.hasClients ?? false) {
         final position = _scrollController!.position;
         final offset = position.pixels - position.minScrollExtent;
 
@@ -487,10 +480,9 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
   }
 
   void _updateHeight() {
-    final scrollController = _scrollController;
-    if (scrollController != null && scrollController.hasClients) {
+    if (_scrollController?.hasClients ?? false) {
       final height = _height;
-      final position = scrollController.position;
+      final position = _scrollController!.position;
       final offset = position.pixels - position.minScrollExtent;
 
       if (offset >= 0.0 && offset <= PostListAppBar.height) {
@@ -942,11 +934,8 @@ class EditPostBottomSheetController<T> extends BottomSheetController<T> {
 
   EditPostBottomSheetController();
 
-  void showEditPost([EditPostController? controller]) {
-    if (_showEditPost != null) {
-      _showEditPost!(controller);
-    }
-  }
+  void showEditPost([EditPostController? controller]) =>
+      _showEditPost?.call(controller);
 }
 
 class _PostListFloatingButton extends StatefulWidget {
@@ -1890,6 +1879,7 @@ class _PostListViewState extends State<PostListView>
     final history = PostHistoryService.to;
     final settings = SettingsService.to;
     final stacks = ControllerStacksService.to;
+    final time = TimeService.to;
     final user = UserService.to;
 
     return WillPopScope(
@@ -1911,6 +1901,7 @@ class _PostListViewState extends State<PostListView>
                 history.isReady.value &&
                 settings.isReady.value &&
                 stacks.isReady.value &&
+                time.isReady.value &&
                 user.isReady.value &&
                 (!PersistentDataService.isFirstLaunched ||
                     client.isReady.value)) {

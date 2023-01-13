@@ -114,7 +114,7 @@ class ForumName extends StatelessWidget {
                         : TextOverflow.clip)
                 : const SizedBox.shrink());
 
-        if (isDeprecated != null && isDeprecated!) {
+        if (isDeprecated ?? false) {
           final style = textStyle?.merge(AppTheme.boldRed);
 
           return Row(

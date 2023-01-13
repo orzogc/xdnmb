@@ -85,11 +85,7 @@ class BiListViewController {
 
   BiListViewController();
 
-  void loadMore() {
-    if (_loadMore != null) {
-      _loadMore!();
-    }
-  }
+  void loadMore() => _loadMore?.call();
 }
 
 class BiListView<T> extends StatefulWidget {
@@ -288,9 +284,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
       _isRefreshing = true;
 
       try {
-        if (widget.onRefreshAndLoadMore != null) {
-          widget.onRefreshAndLoadMore!();
-        }
+        widget.onRefreshAndLoadMore?.call();
 
         if (_initialPage == widget.firstPage) {
           _pagingUpController?.refresh();
@@ -315,9 +309,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
       _isLoadingMore.value = true;
 
       try {
-        if (widget.onRefreshAndLoadMore != null) {
-          widget.onRefreshAndLoadMore!();
-        }
+        widget.onRefreshAndLoadMore?.call();
 
         await _fetchDownPage(_lastPage, true);
       } catch (e) {
@@ -388,9 +380,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
     final textStyle = AppTheme.postContentTextStyle.merge(TextStyle(
         color: AppTheme.specialTextColor, fontWeight: FontWeight.bold));
 
-    if (widget.onNoMoreItems != null) {
-      widget.onNoMoreItems!();
-    }
+    widget.onNoMoreItems?.call();
 
     return widget.lastPage == null
         ? (widget.canLoadMoreAtBottom

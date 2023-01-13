@@ -385,6 +385,12 @@ class SettingsService extends GetxService {
   set showUserCookieColor(bool showUserCookieColor) =>
       _settingsBox.put(Settings.showUserCookieColor, showUserCookieColor);
 
+  bool get showRelativeTime =>
+      _settingsBox.get(Settings.showRelativeTime, defaultValue: false);
+
+  set showRelativeTime(bool showRelativeTime) =>
+      _settingsBox.put(Settings.showRelativeTime, showRelativeTime);
+
   double get postHeaderFontSize =>
       (_settingsBox.get(Settings.postHeaderFontSize,
               defaultValue: defaultPostHeaderFontSize) as double)
@@ -536,6 +542,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> showUserCookieColorListenable;
 
+  late final ValueListenable<Box> showRelativeTimeListenable;
+
   late final StreamSubscription<BoxEvent> _darkModeSubscription;
 
   static Future<void> getSettings() async {
@@ -685,6 +693,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.showUserCookieNote]);
     showUserCookieColorListenable =
         _settingsBox.listenable(keys: [Settings.showUserCookieColor]);
+    showRelativeTimeListenable =
+        _settingsBox.listenable(keys: [Settings.showRelativeTime]);
 
     _isShowBottomBar = showBottomBar.obs;
     _isAutoHideBottomBar = autoHideBottomBar.obs;

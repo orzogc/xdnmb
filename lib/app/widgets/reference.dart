@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/blacklist.dart';
+import '../data/services/time.dart';
 import '../data/services/xdnmb_client.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
@@ -30,7 +31,7 @@ class _Dialog extends StatelessWidget {
                 id: mainPostId!,
                 forumId: 4,
                 replyCount: 0,
-                postTime: DateTime.now(),
+                postTime: TimeService.to.now,
                 userHash: '',
                 content: post.content)
             : post)

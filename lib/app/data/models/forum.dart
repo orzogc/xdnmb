@@ -48,14 +48,10 @@ class ForumData extends HiveObject implements ForumBase {
   bool get isNonDeprecated => !isDeprecated;
 
   String get forumName =>
-      (userDefinedName != null && userDefinedName!.isNotEmpty)
-          ? userDefinedName!
-          : name;
+      (userDefinedName?.isNotEmpty ?? false) ? userDefinedName! : name;
 
   String get forumDisplayName =>
-      (userDefinedName != null && userDefinedName!.isNotEmpty)
-          ? userDefinedName!
-          : showName;
+      (userDefinedName?.isNotEmpty ?? false) ? userDefinedName! : showName;
 
   ForumData(
       {required this.id,

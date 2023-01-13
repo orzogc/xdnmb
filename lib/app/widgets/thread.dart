@@ -11,6 +11,7 @@ import '../data/models/history.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/history.dart';
 import '../data/services/settings.dart';
+import '../data/services/time.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/edit_post.dart';
 import '../modules/post_list.dart';
@@ -48,7 +49,7 @@ class _DumbPost implements PostBase {
   String get imageExtension => '';
 
   @override
-  DateTime get postTime => DateTime.now();
+  DateTime get postTime => TimeService.to.now;
 
   @override
   String get userHash => '';
@@ -132,11 +133,7 @@ class ThreadController extends ThreadTypeController {
   ThreadTypeController copyPage([int? jumpToId]) =>
       ThreadController(id: id, page: page, post: post, jumpToId: jumpToId);
 
-  void loadMore() {
-    if (_loadMore != null) {
-      _loadMore!();
-    }
-  }
+  void loadMore() => _loadMore?.call();
 }
 
 class OnlyPoThreadController extends ThreadTypeController {
@@ -902,10 +899,7 @@ void _replyPost(ThreadTypeController controller, int postId) {
 
   final editPostController = BottomSheetController.editPostController;
   if (editPostController.isShowed) {
-    final editPost = EditPostCallback.bottomSheet;
-    if (editPost != null) {
-      editPost.insertText(text);
-    }
+    EditPostCallback.bottomSheet?.insertText(text);
   } else {
     editPostController.showEditPost(EditPostController(
         postListType: controller.postListType,
@@ -919,10 +913,7 @@ void _replyPost(ThreadTypeController controller, int postId) {
 void _replyWithImage(ThreadTypeController controller, Uint8List imageData) {
   final editPostController = BottomSheetController.editPostController;
   if (editPostController.isShowed) {
-    final editPost = EditPostCallback.bottomSheet;
-    if (editPost != null) {
-      editPost.insertImage(imageData);
-    }
+    EditPostCallback.bottomSheet?.insertImage(imageData);
   } else {
     editPostController.showEditPost(EditPostController(
         postListType: controller.postListType,

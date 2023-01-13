@@ -12,9 +12,8 @@ class PostListScrollController extends AnchorScrollController {
   final GetOffset? getInitialScrollOffset;
 
   @override
-  double get initialScrollOffset => getInitialScrollOffset != null
-      ? getInitialScrollOffset!()
-      : super.initialScrollOffset;
+  double get initialScrollOffset =>
+      getInitialScrollOffset?.call() ?? super.initialScrollOffset;
 
   PostListScrollController(
       {this.getInitialScrollOffset,
@@ -52,9 +51,7 @@ class _PostListScrollViewState extends State<PostListScrollView> {
   int _refresh = 0;
 
   void _addRefresh() {
-    if (widget.refresh != null) {
-      widget.refresh!();
-    }
+    widget.refresh?.call();
 
     _refresh++;
   }

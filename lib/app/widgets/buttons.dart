@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
+import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/icons.dart';
 import '../utils/regex.dart';
@@ -134,9 +135,7 @@ class SearchButton extends StatelessWidget {
       this.afterSearch});
 
   Future<void> _onTap() async {
-    if (onTapPrelude != null) {
-      onTapPrelude!();
-    }
+    onTapPrelude?.call();
 
     final result = await Get.dialog<bool>(_SearchDialog());
     if ((result ?? false) && afterSearch != null) {
@@ -165,9 +164,7 @@ class SettingsButton extends StatelessWidget {
       {super.key, this.showLabel = false, this.iconColor, this.onTapPrelude});
 
   void _onTap() {
-    if (onTapPrelude != null) {
-      onTapPrelude!();
-    }
+    onTapPrelude?.call();
     AppRoutes.toSettings();
   }
 
@@ -198,15 +195,13 @@ class HistoryButton extends StatelessWidget {
       this.onTapEnd});
 
   void _onTap() {
-    if (onTapPrelude != null) {
-      onTapPrelude!();
+    onTapPrelude?.call();
+
+    if (!PostListController.get().isHistory) {
+      AppRoutes.toHistory();
     }
 
-    AppRoutes.toHistory();
-
-    if (onTapEnd != null) {
-      onTapEnd!();
-    }
+    onTapEnd?.call();
   }
 
   @override
@@ -236,15 +231,13 @@ class FeedButton extends StatelessWidget {
       this.onTapEnd});
 
   void _onTap() {
-    if (onTapPrelude != null) {
-      onTapPrelude!();
+    onTapPrelude?.call();
+
+    if (!PostListController.get().isFeed) {
+      AppRoutes.toFeed();
     }
 
-    AppRoutes.toFeed();
-
-    if (onTapEnd != null) {
-      onTapEnd!();
-    }
+    onTapEnd?.call();
   }
 
   @override
@@ -301,9 +294,7 @@ class SponsorButton extends StatelessWidget {
       this.onTapPrelude});
 
   void _onTap() {
-    if (onTapPrelude != null) {
-      onTapPrelude!();
-    }
+    onTapPrelude?.call();
 
     Get.dialog(const _SponsorDialog());
   }

@@ -47,14 +47,10 @@ class PostData {
       : image = null,
         imageExtension = null,
         postTime = postTime.toUtc(),
-        name = name != null
-            ? ((name.isNotEmpty && name != '无名氏') ? name : null)
-            : null,
-        title = title != null
-            ? ((title.isNotEmpty && title != '无标题') ? title : null)
-            : null,
+        name = ((name?.isNotEmpty ?? false) && name != '无名氏') ? name : null,
+        title = ((title?.isNotEmpty ?? false) && title != '无标题') ? title : null,
         content = content.isNotEmpty ? content : '分享图片',
-        hasImage = (image != null && image.isNotEmpty) || hasImage;
+        hasImage = (image?.isNotEmpty ?? false) || hasImage;
 
   PostData.fromPost(Post post)
       : this(

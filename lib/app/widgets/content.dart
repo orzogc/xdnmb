@@ -127,10 +127,7 @@ class _ContentState extends State<Content> {
   }
 
   String? _onText(BuildContext context, String text) {
-    String? text_;
-    if (widget.onText != null) {
-      text_ = widget.onText!(context, text);
-    }
+    final text_ = widget.onText?.call(context, text);
 
     return Regex.onText(text_ ?? text) ?? text_;
   }

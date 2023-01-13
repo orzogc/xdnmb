@@ -56,15 +56,19 @@ class XdnmbClientService extends GetxService {
     try {
       debugPrint('开始获取X岛公告');
 
-      late final Notice notice;
+      Notice? notice;
       if (PersistentDataService.isFirstLaunched) {
-        while (true) {
-          debugPrint('正在获取X岛公告');
+        // 首次启动应用尝试循环5次获取公告
+        for (var i = 0; i < 5; i++) {
+          debugPrint('正在循环获取X岛公告');
 
           try {
             notice = await client.getNotice();
             break;
           } catch (e) {
+            if (i == 4) {
+              rethrow;
+            }
             debugPrint('获取X岛公告失败：${exceptionMessage(e)}');
             await Future.delayed(const Duration(seconds: 5));
           }
@@ -79,7 +83,9 @@ class XdnmbClientService extends GetxService {
       }
 
       debugPrint('保存X岛公告');
-      data.saveNotice(notice);
+      if (notice != null) {
+        data.saveNotice(notice);
+      }
 
       debugPrint('获取X岛公告成功');
     } catch (e) {
@@ -94,12 +100,18 @@ class XdnmbClientService extends GetxService {
       debugPrint('更新X岛链接失败：$e');
     }
 
+    while (!data.isReady.value) {
+      debugPrint('正在等待读取数据');
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
     try {
       debugPrint('开始更新X岛版块列表');
 
       if (PersistentDataService.isFirstLaunched) {
+        // 首次启动应用必须获取到版块列表
         while (true) {
-          debugPrint('正在获取X岛版块列表');
+          debugPrint('正在循环获取X岛版块列表');
 
           try {
             await _updateForumList();

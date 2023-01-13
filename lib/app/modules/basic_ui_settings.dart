@@ -444,6 +444,26 @@ class _ShowUserCookieColor extends StatelessWidget {
   }
 }
 
+class _ShowRelativeTime extends StatelessWidget {
+  // ignore: unused_element
+  const _ShowRelativeTime({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenableBuilder(
+      listenable: settings.showRelativeTimeListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('串时间使用相对时间'),
+        subtitle: const Text('例如显示“几分钟前”而不是具体的时间'),
+        value: settings.showRelativeTime,
+        onChanged: (value) => settings.showRelativeTime = value,
+      ),
+    );
+  }
+}
+
 class BasicUISettingsView extends StatelessWidget {
   const BasicUISettingsView({super.key});
 
@@ -471,6 +491,8 @@ class BasicUISettingsView extends StatelessWidget {
               const _PoCookieColor(),
               const _ShowUserCookieNote(),
               const _ShowUserCookieColor(),
+              const Divider(height: 10.0, thickness: 1.0),
+              const _ShowRelativeTime(),
             ],
           ),
         ),

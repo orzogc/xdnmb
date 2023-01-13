@@ -33,14 +33,6 @@ abstract class Settings {
 
   static const String addBlueIslandEmoticons = 'addBlueIslandEmoticons';
 
-  static const String showPoCookieTag = 'showPoCookieTag';
-
-  static const String poCookieColor = 'poCookieColor';
-
-  static const String showUserCookieNote = 'showUserCookieNote';
-
-  static const String showUserCookieColor = 'showUserCookieColor';
-
   static const String restoreForumPage = 'restoreForumPage';
 
   static const String imageDisposeDistance = 'imageDisposeDistance';
@@ -82,6 +74,16 @@ abstract class Settings {
       'swipeablePageDragWidthRatio';
 
   static const String compactTabAndForumList = 'compactTabAndForumList';
+
+  static const String showPoCookieTag = 'showPoCookieTag';
+
+  static const String poCookieColor = 'poCookieColor';
+
+  static const String showUserCookieNote = 'showUserCookieNote';
+
+  static const String showUserCookieColor = 'showUserCookieColor';
+
+  static const String showRelativeTime = 'showRelativeTime';
 
   static const String postHeaderFontSize = 'postHeaderFontSize';
 

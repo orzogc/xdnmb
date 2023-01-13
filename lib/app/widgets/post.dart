@@ -6,6 +6,7 @@ import 'package:html_to_text/html_to_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/settings.dart';
+import '../data/services/time.dart';
 import '../data/services/user.dart';
 import '../utils/extensions.dart';
 import '../utils/text.dart';
@@ -17,6 +18,7 @@ import 'image.dart';
 import 'listenable.dart';
 import 'scroll.dart';
 import 'tag.dart';
+import 'time.dart';
 import 'tooltip.dart';
 
 typedef PostGestureCallback = void Function(PostBase post);
@@ -120,7 +122,7 @@ class _PostUser extends StatelessWidget {
   }
 }
 
-class _PostTime extends StatelessWidget {
+class _PostTime extends StatefulWidget {
   final DateTime postTime;
 
   final bool showFullTime;
@@ -135,13 +137,49 @@ class _PostTime extends StatelessWidget {
       this.textStyle});
 
   @override
-  Widget build(BuildContext context) => Text(
-        showFullTime ? fullFormatTime(postTime) : formatTime(postTime),
-        style: textStyle ?? AppTheme.postHeaderTextStyle,
-        strutStyle: textStyle != null
-            ? StrutStyle.fromTextStyle(textStyle!)
-            : AppTheme.postHeaderStrutStyle,
-      );
+  State<_PostTime> createState() => _PostTimeState();
+}
+
+class _PostTimeState extends State<_PostTime> {
+  @override
+  void initState() {
+    super.initState();
+
+    final time = TimeService.to;
+    if (SettingsService.to.showRelativeTime &&
+        widget.postTime.isAfter(time.now)) {
+      time.updateTime();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    final time = TimeService.to;
+    final textStyle = widget.textStyle ?? AppTheme.postHeaderTextStyle;
+    final strutStyle = widget.textStyle != null
+        ? StrutStyle.fromTextStyle(widget.textStyle!)
+        : AppTheme.postHeaderStrutStyle;
+
+    return ListenableBuilder(
+      listenable: settings.showRelativeTimeListenable,
+      builder: (context, child) => settings.showRelativeTime
+          ? TimerRefresher(
+              builder: (context) => Text(
+                time.relativeTime(widget.postTime),
+                style: textStyle,
+                strutStyle: strutStyle,
+              ),
+            )
+          : Text(
+              widget.showFullTime
+                  ? fullFormatTime(widget.postTime)
+                  : formatTime(widget.postTime),
+              style: textStyle,
+              strutStyle: strutStyle,
+            ),
+    );
+  }
 }
 
 typedef OnPostIdCallback = void Function(int postId);

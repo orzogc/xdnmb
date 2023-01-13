@@ -13,9 +13,8 @@ class Tag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = textStyle != null
-        ? textStyle!.apply(color: theme.colorScheme.onPrimary)
-        : TextStyle(color: theme.colorScheme.onPrimary);
+    final style = textStyle?.apply(color: theme.colorScheme.onPrimary) ??
+        TextStyle(color: theme.colorScheme.onPrimary);
     final strut = strutStyle ?? StrutStyle.fromTextStyle(style);
 
     return Container(

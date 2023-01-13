@@ -163,8 +163,7 @@ class _List<T> extends StatelessWidget {
                 ? ListTile(
                     key: ValueKey<T>(item),
                     title: titleBuilder(item),
-                    subtitle:
-                        subtitleBuilder != null ? subtitleBuilder!(item) : null,
+                    subtitle: subtitleBuilder?.call(item),
                     trailing: IconButton(
                       onPressed: () => Get.dialog(
                         ConfirmCancelDialog(

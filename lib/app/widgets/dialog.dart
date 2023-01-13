@@ -480,9 +480,7 @@ class BlockPost extends StatelessWidget {
 
           if (result ?? false) {
             await BlacklistService.to.blockPost(postId);
-            if (onBlock != null) {
-              onBlock!();
-            }
+            onBlock?.call();
 
             showToast('屏蔽串号 ${postId.toPostNumber()}');
             postListBack();
@@ -510,9 +508,7 @@ class BlockUser extends StatelessWidget {
 
           if (result ?? false) {
             await BlacklistService.to.blockUser(userHash);
-            if (onBlock != null) {
-              onBlock!();
-            }
+            onBlock?.call();
 
             showToast('屏蔽饼干 $userHash');
             postListBack();
