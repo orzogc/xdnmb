@@ -295,7 +295,7 @@ class _ImageDialog extends StatelessWidget {
 typedef _SetOpacityCallback = void Function(double opacity);
 
 class _Image<T extends Object> extends StatefulWidget {
-  final UniqueKey tag;
+  final UniqueKey heroTag;
 
   final ImageProvider<T> provider;
 
@@ -313,7 +313,7 @@ class _Image<T extends Object> extends StatefulWidget {
 
   const _Image(
       {super.key,
-      required this.tag,
+      required this.heroTag,
       required this.provider,
       required this.setOpacity,
       required this.hideOverlay,
@@ -851,6 +851,7 @@ class _ImageState extends State<_Image>
       _isConstrained = true;
     }
 
+    // TODO: 修复小图片返回时的放大现象
     return SizedBox.expand(
       child: GestureDetector(
         onDoubleTapDown: (details) =>
@@ -885,7 +886,8 @@ class _ImageState extends State<_Image>
           onInteractionEnd: (details) =>
               _onInteractionEnd(details, widget.size, imageSize),
           child: Hero(
-            tag: widget.tag,
+            tag: widget.heroTag,
+            transitionOnUserGestures: true,
             child: Image(
               image: widget.provider,
               fit: (imageSize != null) ? BoxFit.contain : BoxFit.scaleDown,
@@ -900,7 +902,7 @@ class _ImageState extends State<_Image>
 }
 
 class ImageController {
-  final UniqueKey tag;
+  final UniqueKey heroTag;
 
   final Rxn<PostBase> post;
 
@@ -919,7 +921,7 @@ class ImageController {
   bool _isShowOverlay = false;
 
   ImageController(
-      {required this.tag,
+      {required this.heroTag,
       PostBase? post,
       this.poUserHash,
       Uint8List? imageData,
@@ -1122,7 +1124,7 @@ class ImageView extends StatelessWidget {
                               showError: false),
                       imageBuilder: (context, imageProvider) =>
                           _Image<CachedNetworkImageProvider>(
-                        tag: _controller.tag,
+                        heroTag: _controller.heroTag,
                         provider: imageProvider as CachedNetworkImageProvider,
                         setOpacity: _setOpacity,
                         hideOverlay: _hideOverlay,
@@ -1190,7 +1192,7 @@ class ImageView extends StatelessWidget {
 
                                   return _Image<CachedNetworkImageProvider>(
                                     key: _imageKey,
-                                    tag: _controller.tag,
+                                    heroTag: _controller.heroTag,
                                     provider: imageProvider
                                         as CachedNetworkImageProvider,
                                     setOpacity: _setOpacity,
@@ -1205,7 +1207,7 @@ class ImageView extends StatelessWidget {
                             : (_controller.imageData.value != null
                                 ? _Image<MemoryImage>(
                                     key: _imageKey,
-                                    tag: _controller.tag,
+                                    heroTag: _controller.heroTag,
                                     provider: MemoryImage(
                                         _controller.imageData.value!),
                                     setOpacity: _setOpacity,

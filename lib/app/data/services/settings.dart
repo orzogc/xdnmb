@@ -259,12 +259,15 @@ class SettingsService extends GetxService {
   set showBottomBarGuide(bool showBottomBarGuide) =>
       _settingsBox.put(Settings.showBottomBarGuide, showBottomBarGuide);
 
-  bool get showBottomBar =>
-      _settingsBox.get(Settings.showBottomBar, defaultValue: true);
+  // iOS强制使用底边栏
+  bool get showBottomBar => GetPlatform.isIOS
+      ? true
+      : _settingsBox.get(Settings.showBottomBar, defaultValue: true);
 
   set showBottomBar(bool showBottomBar) {
-    _settingsBox.put(Settings.showBottomBar, showBottomBar);
-    _isShowBottomBar.value = showBottomBar;
+    final isShowed = GetPlatform.isIOS ? true : showBottomBar;
+    _settingsBox.put(Settings.showBottomBar, isShowed);
+    _isShowBottomBar.value = isShowed;
   }
 
   bool get isShowBottomBar => _isShowBottomBar.value;
@@ -627,10 +630,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.isWatermark]);
     isJumpToLastBrowsePageListenable =
         _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePage]);
-    isJumpToLastBrowsePositionListenable = _settingsBox.listenable(keys: [
-      Settings.isJumpToLastBrowsePage,
-      Settings.isJumpToLastBrowsePosition,
-    ]);
+    isJumpToLastBrowsePositionListenable =
+        _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePosition]);
     isAfterPostRefreshListenable =
         _settingsBox.listenable(keys: [Settings.isAfterPostRefresh]);
     dismissibleTabListenable =

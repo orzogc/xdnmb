@@ -153,7 +153,7 @@ class _RestoreForumPage extends StatelessWidget {
     return ListenableBuilder(
       listenable: settings.restoreForumPageListenable,
       builder: (context, child) => SwitchListTile(
-        title: const Text('恢复标签页时恢复时间线/版块的页数'),
+        title: const Text('恢复标签页时恢复时间线和版块的页数'),
         value: settings.restoreForumPage,
         onChanged: (value) => settings.restoreForumPage = value,
       ),
@@ -201,7 +201,7 @@ class _FixedImageDisposeRatio extends StatelessWidget {
     return ListenableBuilder(
       listenable: settings.fixedImageDisposeRatioListenable,
       builder: (context, child) => ListTile(
-        title: const Text('适应模式下移动未缩放的大图导致返回的最小距离占屏幕高度/宽度的比例'),
+        title: const Text('适应模式下移动未缩放的大图导致返回的最小距离占屏幕高度或宽度的比例'),
         trailing: Text('${settings.fixedImageDisposeRatio}'),
         onTap: () async {
           final ratio = await Get.dialog<double>(NumRangeDialog<double>(

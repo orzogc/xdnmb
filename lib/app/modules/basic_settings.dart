@@ -113,52 +113,61 @@ class _Watermark extends StatelessWidget {
   }
 }
 
-class _AutoJumpPage extends StatelessWidget {
+class _AutoJump extends StatelessWidget {
   // ignore: unused_element
-  const _AutoJumpPage({super.key});
+  const _AutoJump({super.key});
 
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
+    final textStyle = Theme.of(context).textTheme.bodyMedium;
 
-    return ListenableBuilder(
-      listenable: settings.isJumpToLastBrowsePageListenable,
-      builder: (context, child) => SwitchListTile(
-        title: const Text('自动跳转页数'),
-        subtitle: const Text('打开串时自动跳转到最近浏览的页数'),
-        value: settings.isJumpToLastBrowsePage,
-        onChanged: (value) => settings.isJumpToLastBrowsePage = value,
+    return ListTile(
+      title: const Text('打开串时自动跳转到最近浏览的页数和位置'),
+      trailing: ListenableBuilder(
+        listenable: Listenable.merge([
+          settings.isJumpToLastBrowsePageListenable,
+          settings.isJumpToLastBrowsePositionListenable,
+        ]),
+        builder: (context, child) {
+          final int n = settings.isJumpToLastBrowsePage
+              ? (settings.isJumpToLastBrowsePosition ? 0 : 1)
+              : 2;
+
+          return DropdownButton<int>(
+            value: n,
+            underline: const SizedBox.shrink(),
+            icon: const SizedBox.shrink(),
+            style: textStyle,
+            onChanged: (value) {
+              if (value != null) {
+                value = value.clamp(0, 2);
+                if (value != n) {
+                  switch (value) {
+                    case 0:
+                      settings.isJumpToLastBrowsePage = true;
+                      settings.isJumpToLastBrowsePosition = true;
+                      break;
+                    case 1:
+                      settings.isJumpToLastBrowsePage = true;
+                      settings.isJumpToLastBrowsePosition = false;
+                      break;
+                    case 2:
+                      settings.isJumpToLastBrowsePage = false;
+                      settings.isJumpToLastBrowsePosition = false;
+                      break;
+                  }
+                }
+              }
+            },
+            items: const [
+              DropdownMenuItem<int>(value: 0, child: Text('跳转位置')),
+              DropdownMenuItem<int>(value: 1, child: Text('只跳转页数')),
+              DropdownMenuItem<int>(value: 2, child: Text('不跳转')),
+            ],
+          );
+        },
       ),
-    );
-  }
-}
-
-class _AutoJumpPosition extends StatelessWidget {
-  // ignore: unused_element
-  const _AutoJumpPosition({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return ListenableBuilder(
-      listenable: settings.isJumpToLastBrowsePositionListenable,
-      builder: (context, child) {
-        final textStyle = TextStyle(
-          color: !settings.isJumpToLastBrowsePage
-              ? AppTheme.inactiveSettingColor
-              : null,
-        );
-
-        return SwitchListTile(
-          title: Text('自动跳转位置', style: textStyle),
-          subtitle: Text('自动跳转页数时跳转到最近浏览的位置', style: textStyle),
-          value: settings.isJumpToLastBrowsePosition,
-          onChanged: settings.isJumpToLastBrowsePage
-              ? (value) => settings.isJumpToLastBrowsePosition = value
-              : null,
-        );
-      },
     );
   }
 }
@@ -231,7 +240,7 @@ class _ForbidDuplicatedPosts extends StatelessWidget {
     return ListenableBuilder(
       listenable: settings.forbidDuplicatedPostsListenable,
       builder: (context, child) => SwitchListTile(
-        title: const Text('时间线/版块不显示重复的串'),
+        title: const Text('时间线和版块过滤重复的串'),
         value: settings.forbidDuplicatedPosts,
         onChanged: (value) => settings.forbidDuplicatedPosts = value,
       ),
@@ -323,8 +332,7 @@ class BasicSettingsView extends StatelessWidget {
               _InitialForum(),
               _ShowImage(),
               _Watermark(),
-              _AutoJumpPage(),
-              _AutoJumpPosition(),
+              _AutoJump(),
               _AfterPostRefresh(),
               _DismissibleTab(),
               _SelectCookieBeforePost(),

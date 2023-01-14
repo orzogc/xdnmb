@@ -53,6 +53,7 @@ class _JumpPageDialogState extends State<_JumpPageDialog> {
                 width: 80,
                 child: TextFormField(
                   controller: _controller,
+                  autofocus: true,
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
                   validator: (value) {

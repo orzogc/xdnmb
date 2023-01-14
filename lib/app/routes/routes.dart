@@ -90,8 +90,6 @@ abstract class AppRoutes {
 
   static const String reorderForums = '/${PathNames.reorderForums}';
 
-  /// 参数：postListType id title name content forumId poUserHash imagePath isWatermark
-  /// reportReason isAttachDeviceInfo
   static const String editPost = '/${PathNames.editPost}';
 
   static const String postDrafts = '/${PathNames.postDrafts}';
@@ -211,22 +209,19 @@ abstract class AppRoutes {
           bool? isAttachDeviceInfo}) =>
       Get.toNamed<T>(
         editPost,
-        parameters: {
-          'postListType': '${postListType.index}',
-          'id': '$id',
-          if (forumId != null) 'forumId': '$forumId',
-          if (poUserHash != null) 'poUserHash': poUserHash,
-          if (title != null && title.isNotEmpty) 'title': title,
-          if (name != null && name.isNotEmpty) 'name': name,
-          if (content != null && content.isNotEmpty) 'content': content,
-          if (imagePath != null) 'imagePath': imagePath,
-          if (isWatermark != null) 'isWatermark': '$isWatermark',
-          if (reportReason != null && reportReason.isNotEmpty)
-            'reportReason': reportReason,
-          if (isAttachDeviceInfo != null)
-            'isAttachDeviceInfo': '$isAttachDeviceInfo',
-        },
-        arguments: imageData,
+        arguments: EditPostController(
+            postListType: postListType,
+            id: id,
+            forumId: forumId,
+            poUserHash: poUserHash,
+            title: title,
+            name: name,
+            content: content,
+            imagePath: imagePath,
+            imageData: imageData,
+            isWatermark: isWatermark,
+            reportReason: reportReason,
+            isAttachDeviceInfo: isAttachDeviceInfo),
       );
 
   static Future<T?>? toPostDrafts<T>() => Get.toNamed<T>(postDrafts);

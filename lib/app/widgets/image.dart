@@ -34,7 +34,7 @@ class ThumbImage extends StatelessWidget {
 
   final bool canReturnImageData;
 
-  final UniqueKey _tag = UniqueKey();
+  final UniqueKey _heroTag = UniqueKey();
 
   final RxBool _hasError = false.obs;
 
@@ -52,7 +52,7 @@ class ThumbImage extends StatelessWidget {
           behavior: HitTestBehavior.translucent,
           onTap: () async {
             final result = await AppRoutes.toImage(ImageController(
-                tag: _tag,
+                heroTag: _heroTag,
                 post: post,
                 poUserHash: poUserHash,
                 canReturnImageData: canReturnImageData));
@@ -70,7 +70,8 @@ class ThumbImage extends StatelessWidget {
                 maxHeight: _maxHeight,
               ),
               child: Hero(
-                tag: _tag,
+                tag: _heroTag,
+                transitionOnUserGestures: true,
                 // 因为部分GIF略缩图显示会出错，所以小图加载错误就加载大图
                 child: Obx(
                   () => CachedNetworkImage(

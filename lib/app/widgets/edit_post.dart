@@ -197,7 +197,7 @@ class _ReportReason extends StatelessWidget {
                     value: reason.text,
                     child: Text(reason.reason),
                   ),
-                DropdownMenuItem(
+                DropdownMenuItem<String>(
                   value: _userDefined.value ?? '',
                   onTap: () {
                     WidgetsBinding.instance
@@ -308,6 +308,10 @@ class _WatermarkDialog extends StatelessWidget {
 }
 
 class _Image extends StatelessWidget {
+  static final UniqueKey _imageHeroTag = UniqueKey();
+
+  static final UniqueKey _buttonHeroTag = UniqueKey();
+
   final double maxWidth;
 
   final double maxHeight;
@@ -325,8 +329,6 @@ class _Image extends StatelessWidget {
   final ImageDataCallback onImageFileLoaded;
 
   final ImageDataCallback onImagePainted;
-
-  final UniqueKey _tag = UniqueKey();
 
   final Future<Uint8List>? _readImageFile;
 
@@ -382,7 +384,7 @@ class _Image extends StatelessWidget {
             onTap: imageData != null
                 ? () async {
                     final result = await AppRoutes.toImage(ImageController(
-                        tag: _tag,
+                        heroTag: _imageHeroTag,
                         imageData: imageData,
                         canReturnImageData: true));
                     if (result is Uint8List) {
@@ -393,19 +395,23 @@ class _Image extends StatelessWidget {
             onLongPress: () => Get.dialog(_WatermarkDialog(
                 isWatermark: isWatermark, onWatermark: onWatermark)),
             child: Hero(
-              tag: _tag,
+              tag: _imageHeroTag,
+              transitionOnUserGestures: true,
               child:
                   imageData != null ? _memoryImage(imageData!) : _fileImage(),
             ),
           ),
-          child: ElevatedButton(
-            onPressed: onCancel,
-            style: ElevatedButton.styleFrom(shape: const CircleBorder()),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Icon(Icons.close,
-                    size: min(constraints.maxHeight, 24.0));
-              },
+          child: Hero(
+            tag: _buttonHeroTag,
+            child: ElevatedButton(
+              onPressed: onCancel,
+              style: ElevatedButton.styleFrom(shape: const CircleBorder()),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Icon(Icons.close,
+                      size: min(constraints.maxHeight, 24.0));
+                },
+              ),
             ),
           ),
         ),

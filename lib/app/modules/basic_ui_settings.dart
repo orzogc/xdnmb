@@ -15,43 +15,62 @@ class _ShowBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
+    final textStyle = Theme.of(context).textTheme.bodyMedium;
 
-    return ListenableBuilder(
-      listenable: settings.showBottomBarListenable,
-      builder: (context, child) => SwitchListTile(
-        title: const Text('显示底边栏以取代侧边栏'),
-        value: settings.showBottomBar,
-        onChanged: (value) => settings.showBottomBar = value,
-      ),
-    );
-  }
-}
+    return ListTile(
+      title: const Text('底边栏'),
+      subtitle: !GetPlatform.isIOS
+          ? const Text('底边栏会取代侧边栏，如要使用侧边栏需要取消显示底边栏')
+          : const SizedBox.shrink(),
+      trailing: ListenableBuilder(
+        listenable: Listenable.merge([
+          settings.showBottomBarListenable,
+          settings.autoHideBottomBarListenable,
+        ]),
+        builder: (context, child) {
+          int n =
+              settings.showBottomBar ? (settings.autoHideBottomBar ? 0 : 1) : 2;
+          // iOS强制使用底边栏
+          if (GetPlatform.isIOS) {
+            n = n.clamp(0, 1);
+          }
 
-class _AutoHideBottomBar extends StatelessWidget {
-  // ignore: unused_element
-  const _AutoHideBottomBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        settings.showBottomBarListenable,
-        settings.autoHideBottomBarListenable,
-      ]),
-      builder: (context, child) => SwitchListTile(
-        title: Text(
-          '向下滑动时自动隐藏底边栏',
-          style: TextStyle(
-            color:
-                !settings.showBottomBar ? AppTheme.inactiveSettingColor : null,
-          ),
-        ),
-        value: settings.autoHideBottomBar,
-        onChanged: settings.showBottomBar
-            ? (value) => settings.autoHideBottomBar = value
-            : null,
+          return DropdownButton<int>(
+            value: n,
+            underline: const SizedBox.shrink(),
+            icon: const SizedBox.shrink(),
+            style: textStyle,
+            onChanged: (value) {
+              if (value != null) {
+                value = value.clamp(0, GetPlatform.isIOS ? 1 : 2);
+                if (value != n) {
+                  switch (value) {
+                    case 0:
+                      settings.showBottomBar = true;
+                      settings.autoHideBottomBar = true;
+                      break;
+                    case 1:
+                      settings.showBottomBar = true;
+                      settings.autoHideBottomBar = false;
+                      break;
+                    case 2:
+                      if (!GetPlatform.isIOS) {
+                        settings.showBottomBar = false;
+                        settings.autoHideBottomBar = false;
+                      }
+                      break;
+                  }
+                }
+              }
+            },
+            items: [
+              const DropdownMenuItem<int>(value: 0, child: Text('向下滑动时隐藏')),
+              const DropdownMenuItem<int>(value: 1, child: Text('始终显示')),
+              if (!GetPlatform.isIOS)
+                const DropdownMenuItem<int>(value: 2, child: Text('不显示')),
+            ],
+          );
+        },
       ),
     );
   }
@@ -175,43 +194,14 @@ class _AutoHideAppBar extends StatelessWidget {
   }
 }
 
-class _HideFloatingButton extends StatelessWidget {
+class _FloatingButton extends StatelessWidget {
   // ignore: unused_element
-  const _HideFloatingButton({super.key});
+  const _FloatingButton({super.key});
 
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
-
-    return ListenableBuilder(
-      listenable: Listenable.merge([
-        settings.showBottomBarListenable,
-        settings.hideFloatingButtonListenable,
-      ]),
-      builder: (context, child) => SwitchListTile(
-        title: Text(
-          '隐藏右下角的悬浮球',
-          style: TextStyle(
-            color:
-                settings.showBottomBar ? AppTheme.inactiveSettingColor : null,
-          ),
-        ),
-        value: settings.hideFloatingButton,
-        onChanged: !settings.showBottomBar
-            ? (value) => settings.hideFloatingButton = value
-            : null,
-      ),
-    );
-  }
-}
-
-class _AutoHideFloatingButton extends StatelessWidget {
-  // ignore: unused_element
-  const _AutoHideFloatingButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
+    final textStyle = Theme.of(context).textTheme.bodyMedium;
 
     return ListenableBuilder(
       listenable: Listenable.merge([
@@ -219,20 +209,55 @@ class _AutoHideFloatingButton extends StatelessWidget {
         settings.hideFloatingButtonListenable,
         settings.autoHideFloatingButtonListenable,
       ]),
-      builder: (context, child) => SwitchListTile(
-        title: Text(
-          '向下滑动时自动隐藏右下角的悬浮球',
-          style: TextStyle(
-            color: (settings.showBottomBar || settings.hideFloatingButton)
-                ? AppTheme.inactiveSettingColor
-                : null,
+      builder: (context, child) {
+        final int n = settings.hideFloatingButton
+            ? 1
+            : (settings.autoHideFloatingButton ? 2 : 0);
+
+        return ListTile(
+          title: Text(
+            '右下角的悬浮球',
+            style: TextStyle(
+              color:
+                  settings.showBottomBar ? AppTheme.inactiveSettingColor : null,
+            ),
           ),
-        ),
-        value: settings.autoHideFloatingButton,
-        onChanged: !(settings.showBottomBar || settings.hideFloatingButton)
-            ? (value) => settings.autoHideFloatingButton = value
-            : null,
-      ),
+          trailing: !settings.showBottomBar
+              ? DropdownButton<int>(
+                  value: n,
+                  underline: const SizedBox.shrink(),
+                  icon: const SizedBox.shrink(),
+                  style: textStyle,
+                  onChanged: (value) {
+                    if (value != null) {
+                      value = value.clamp(0, 2);
+                      if (value != n) {
+                        switch (value) {
+                          case 0:
+                            settings.hideFloatingButton = false;
+                            settings.autoHideFloatingButton = false;
+                            break;
+                          case 1:
+                            settings.hideFloatingButton = true;
+                            settings.autoHideFloatingButton = false;
+                            break;
+                          case 2:
+                            settings.hideFloatingButton = false;
+                            settings.autoHideFloatingButton = true;
+                            break;
+                        }
+                      }
+                    }
+                  },
+                  items: const [
+                    DropdownMenuItem<int>(value: 0, child: Text('始终显示')),
+                    DropdownMenuItem<int>(value: 1, child: Text('隐藏')),
+                    DropdownMenuItem<int>(value: 2, child: Text('向下滑动时隐藏')),
+                  ],
+                )
+              : const SizedBox.shrink(),
+        );
+      },
     );
   }
 }
@@ -473,16 +498,14 @@ class BasicUISettingsView extends StatelessWidget {
           appBar: AppBar(title: const Text('界面基本设置')),
           body: ListView(
             children: [
-              if (!GetPlatform.isIOS) const _ShowBottomBar(),
-              const _AutoHideBottomBar(),
+              const _ShowBottomBar(),
               const Divider(height: 10.0, thickness: 1.0),
               const _BackdropUI(),
               const _FrontLayerDragHeightRatio(),
               const _BackLayerDragHeightRatio(),
               const Divider(height: 10.0, thickness: 1.0),
               const _AutoHideAppBar(),
-              const _HideFloatingButton(),
-              const _AutoHideFloatingButton(),
+              const _FloatingButton(),
               if (GetPlatform.isMobile) const _DrawerDragRatio(),
               const _PageDragWidthRatio(),
               const _CompactTabAndForumList(),
