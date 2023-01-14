@@ -270,7 +270,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
       builder: (context, child) {
         final controller = PostListController.get();
 
-        final Widget button = IconButton(
+        final Widget menuButton = IconButton(
             tooltip: '菜单',
             icon: const Icon(Icons.menu),
             onPressed: () {
@@ -339,47 +339,36 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                       _tabAndForumListController.isShowed)
                   ? (stacks.controllersCount() > 1
                       ? const BackButton(onPressed: postListPop)
-                      : (SettingsService.shouldShowGuide
-                          ? AppBarMenuGuide(button)
-                          : button))
+                      : AppBarMenuGuide(menuButton))
                   : IconButton(
                       icon: const Icon(Icons.close),
                       onPressed: _tabAndForumListController.isShowed
                           ? _tabAndForumListController.close
                           : _backdropController.hideBackLayer),
-              title: SettingsService.shouldShowGuide
-                  ? AppBarTitleGuide(title)
-                  : title,
+              title: AppBarTitleGuide(title),
               actions: !(_backdropController.isShowBackLayer ||
                       _tabAndForumListController.isShowed)
                   ? [
                       if (controller.isXdnmbApi)
-                        SettingsService.shouldShowGuide
-                            ? AppBarPageButtonGuide(
-                                PageButton(controller: controller))
-                            : PageButton(controller: controller),
+                        AppBarPageButtonGuide(
+                            PageButton(controller: controller)),
                       if (controller.isThreadType)
                         ListenableBuilder(
-                            listenable: controller,
-                            builder: (context, child) =>
-                                SettingsService.shouldShowGuide
-                                    ? AppBarPopupMenuGuide(
-                                        ThreadAppBarPopupMenuButton(
-                                            controller as ThreadTypeController))
-                                    : ThreadAppBarPopupMenuButton(
-                                        controller as ThreadTypeController)),
+                          listenable: controller,
+                          builder: (context, child) => AppBarPopupMenuGuide(
+                            ThreadAppBarPopupMenuButton(
+                              controller as ThreadTypeController,
+                            ),
+                          ),
+                        ),
                       if (controller.isForumType)
-                        SettingsService.shouldShowGuide
-                            ? AppBarPopupMenuGuide(ForumAppBarPopupMenuButton(
-                                controller as ForumTypeController))
-                            : ForumAppBarPopupMenuButton(
-                                controller as ForumTypeController),
+                        AppBarPopupMenuGuide(ForumAppBarPopupMenuButton(
+                          controller as ForumTypeController,
+                        )),
                       if (controller.isHistory)
-                        SettingsService.shouldShowGuide
-                            ? AppBarPopupMenuGuide(HistoryAppBarPopupMenuButton(
-                                controller as HistoryController))
-                            : HistoryAppBarPopupMenuButton(
-                                controller as HistoryController),
+                        AppBarPopupMenuGuide(HistoryAppBarPopupMenuButton(
+                          controller as HistoryController,
+                        )),
                     ]
                   : const [SizedBox.shrink()],
             ),
@@ -1102,9 +1091,7 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
               ? Padding(
                   padding: EdgeInsets.only(
                       bottom: _hasBottomSheet ? _diameter : 0.0),
-                  child: SettingsService.isShowGuide
-                      ? EditPostGuide(floatingButton)
-                      : floatingButton,
+                  child: FloatingButtonGuide(floatingButton),
                 )
               : const SizedBox.shrink(),
         );
@@ -1549,55 +1536,23 @@ class PostListBottomBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Flexible(
-                child: SettingsService.shouldShowGuide
-                    ? SearchGuide(searchButton)
-                    : searchButton,
-              ),
-              Flexible(
-                child: SettingsService.shouldShowGuide
-                    ? SettingsGuide(settingsButton)
-                    : settingsButton,
-              ),
+              Flexible(child: SearchGuide(searchButton)),
+              Flexible(child: SettingsGuide(settingsButton)),
               if (!settings.isBackdropUI &&
                   settings.isCompactTabAndForumList &&
                   compactListButton != null)
-                Flexible(
-                  child: SettingsService.shouldShowGuide
-                      ? CompactListButtonGuide(compactListButton)
-                      : compactListButton,
-                ),
+                Flexible(child: CompactListButtonGuide(compactListButton)),
               if (!(settings.isBackdropUI ||
                       settings.isCompactTabAndForumList) &&
                   tabListButton != null)
-                Flexible(
-                  child: SettingsService.shouldShowGuide
-                      ? TabListButtonGuide(tabListButton)
-                      : tabListButton,
-                ),
+                Flexible(child: TabListButtonGuide(tabListButton)),
               if (!(settings.isBackdropUI ||
                       settings.isCompactTabAndForumList) &&
                   forumListButton != null)
-                Flexible(
-                  child: SettingsService.shouldShowGuide
-                      ? ForumListButtonGuide(forumListButton)
-                      : forumListButton,
-                ),
-              Flexible(
-                child: SettingsService.shouldShowGuide
-                    ? FeedGuide(feedButton)
-                    : feedButton,
-              ),
-              Flexible(
-                child: SettingsService.shouldShowGuide
-                    ? HistoryGuide(historyButton)
-                    : historyButton,
-              ),
-              Flexible(
-                child: SettingsService.shouldShowGuide
-                    ? EditPostGuide(editPostButton)
-                    : editPostButton,
-              ),
+                Flexible(child: ForumListButtonGuide(forumListButton)),
+              Flexible(child: FeedGuide(feedButton)),
+              Flexible(child: HistoryGuide(historyButton)),
+              Flexible(child: EditPostGuide(editPostButton)),
               Flexible(
                 child: SponsorButton(
                   onlyText: false,

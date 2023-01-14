@@ -742,7 +742,12 @@ class _ThreadBodyState extends State<ThreadBody> {
                           ),
                         ),
                         onNoMoreItems: () => _isNoMoreItems = true,
-                        onRefreshAndLoadMore: () {
+                        onRefresh: () {
+                          if (isBlocked()) {
+                            controller.refresh();
+                          }
+                        },
+                        onLoadMore: () {
                           if (isBlocked()) {
                             controller.refresh();
                           }

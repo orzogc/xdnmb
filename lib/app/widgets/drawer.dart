@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../data/services/settings.dart';
 import 'buttons.dart';
 import 'guide.dart';
 import 'tab_list.dart';
@@ -41,15 +40,9 @@ class _DrawerHeader extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            SettingsService.shouldShowGuide
-                ? const DarkModeGuide(DarkModeButton())
-                : const DarkModeButton(),
-            SettingsService.shouldShowGuide
-                ? SearchGuide(searchButton)
-                : searchButton,
-            SettingsService.shouldShowGuide
-                ? SettingsGuide(settingsButton)
-                : settingsButton,
+            const DarkModeGuide(DarkModeButton()),
+            SearchGuide(searchButton),
+            SettingsGuide(settingsButton),
           ],
         ),
       ),
@@ -72,10 +65,8 @@ class _DrawerBottom extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           const SponsorButton(),
-          SettingsService.shouldShowGuide
-              ? HistoryGuide(historyButton)
-              : historyButton,
-          SettingsService.shouldShowGuide ? FeedGuide(feedButton) : feedButton,
+          HistoryGuide(historyButton),
+          FeedGuide(feedButton),
         ],
       ),
     );

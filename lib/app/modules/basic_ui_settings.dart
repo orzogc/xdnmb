@@ -357,7 +357,7 @@ class _ShowPoCookieTag extends StatelessWidget {
     return ListenableBuilder(
       listenable: settings.showPoCookieTagListenable,
       builder: (context, child) => SwitchListTile(
-        title: const Text('串内Po饼干左边显示Po标签'),
+        title: const Text('串内Po饼干左边显示Po标识'),
         value: settings.showPoCookieTag,
         onChanged: (value) => settings.showPoCookieTag = value,
       ),

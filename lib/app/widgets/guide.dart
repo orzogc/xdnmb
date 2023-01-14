@@ -29,8 +29,8 @@ abstract class Guide {
     if (ThreadGuide._key.currentState?.mounted ?? false) ThreadGuide._key,
     if (!SettingsService.to.showBottomBar &&
         !SettingsService.to.hideFloatingButton &&
-        (EditPostGuide._key.currentState?.mounted ?? false))
-      EditPostGuide._key,
+        (FloatingButtonGuide._key.currentState?.mounted ?? false))
+      FloatingButtonGuide._key,
   ];
 
   static final List<GlobalKey> drawerGuides = [
@@ -96,18 +96,20 @@ class AppBarMenuGuide extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return Obx(
-      () => Showcase(
-        key: _key,
-        title: (!settings.isShowBottomBar && settings.showGuide)
-            ? '标签页菜单'
-            : '标签页和版块列表菜单',
-        description: (!settings.isShowBottomBar && settings.showGuide)
-            ? '点击打开标签页'
-            : '点击打开标签页和版块列表',
-        child: child,
-      ),
-    );
+    return SettingsService.shouldShowGuide
+        ? Obx(
+            () => Showcase(
+              key: _key,
+              title: (!settings.isShowBottomBar && settings.showGuide)
+                  ? '标签页菜单'
+                  : '标签页和版块列表菜单',
+              description: (!settings.isShowBottomBar && settings.showGuide)
+                  ? '点击打开标签页'
+                  : '点击打开标签页和版块列表',
+              child: child,
+            ),
+          )
+        : child;
   }
 }
 
@@ -119,13 +121,15 @@ class AppBarTitleGuide extends StatelessWidget {
   const AppBarTitleGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '标题栏',
-        description:
-            SettingsService.to.showGuide ? '点击刷新页面' : '点击刷新页面，双击或下拉显示标签页和版块列表',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(
+          key: _key,
+          title: '标题栏',
+          description: SettingsService.to.showGuide
+              ? '点击刷新页面'
+              : '点击刷新页面，双击或下拉显示标签页和版块列表',
+          child: child)
+      : child;
 }
 
 class AppBarPageButtonGuide extends StatelessWidget {
@@ -136,12 +140,9 @@ class AppBarPageButtonGuide extends StatelessWidget {
   const AppBarPageButtonGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '页数',
-        description: '点击可以跳转页数',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(key: _key, title: '页数', description: '点击可以跳转页数', child: child)
+      : child;
 }
 
 class AppBarPopupMenuGuide extends StatelessWidget {
@@ -152,12 +153,9 @@ class AppBarPopupMenuGuide extends StatelessWidget {
   const AppBarPopupMenuGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '菜单',
-        description: '点击打开功能菜单',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(key: _key, title: '菜单', description: '点击打开功能菜单', child: child)
+      : child;
 }
 
 class ThreadGuide extends StatelessWidget {
@@ -171,11 +169,20 @@ class ThreadGuide extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '主串',
-        description: '点击进入主串，长按打开功能菜单',
-        child: child,
-      );
+      key: _key, title: '主串', description: '点击进入主串，长按打开功能菜单', child: child);
+}
+
+class FloatingButtonGuide extends StatelessWidget {
+  static final GlobalKey _key = GlobalKey();
+
+  final Widget child;
+
+  const FloatingButtonGuide(this.child, {super.key});
+
+  @override
+  Widget build(BuildContext context) => SettingsService.isShowGuide
+      ? Showcase(key: _key, title: '发串', description: '点击发串或回串', child: child)
+      : child;
 }
 
 class EditPostGuide extends StatelessWidget {
@@ -186,12 +193,9 @@ class EditPostGuide extends StatelessWidget {
   const EditPostGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '发串',
-        description: '点击发串或回串',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(key: _key, title: '发串', description: '点击发串或回串', child: child)
+      : child;
 }
 
 class TabListGuide extends StatelessWidget {
@@ -219,12 +223,10 @@ class DarkModeGuide extends StatelessWidget {
   const DarkModeGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '黑夜模式',
-        description: '点击切换白天/黑夜模式',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(
+          key: _key, title: '黑夜模式', description: '点击切换白天/黑夜模式', child: child)
+      : child;
 }
 
 class SearchGuide extends StatelessWidget {
@@ -235,12 +237,10 @@ class SearchGuide extends StatelessWidget {
   const SearchGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '搜索',
-        description: '现在搜索坏了，只有查询串号的功能',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(
+          key: _key, title: '搜索', description: '现在搜索坏了，只有查询串号的功能', child: child)
+      : child;
 }
 
 class SettingsGuide extends StatelessWidget {
@@ -251,12 +251,13 @@ class SettingsGuide extends StatelessWidget {
   const SettingsGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '设置',
-        description: '点击打开设置页面，里面可以管理饼干',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(
+          key: _key,
+          title: '设置',
+          description: '点击打开设置页面，里面可以管理饼干',
+          child: child)
+      : child;
 }
 
 class HistoryGuide extends StatelessWidget {
@@ -267,12 +268,10 @@ class HistoryGuide extends StatelessWidget {
   const HistoryGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '历史记录',
-        description: '点击查看浏览、发串和回复记录',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(
+          key: _key, title: '历史记录', description: '点击查看浏览、发串和回复记录', child: child)
+      : child;
 }
 
 class FeedGuide extends StatelessWidget {
@@ -283,12 +282,9 @@ class FeedGuide extends StatelessWidget {
   const FeedGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '订阅',
-        description: '点击查看订阅',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(key: _key, title: '订阅', description: '点击查看订阅', child: child)
+      : child;
 }
 
 class CompactListButtonGuide extends StatelessWidget {
@@ -299,12 +295,13 @@ class CompactListButtonGuide extends StatelessWidget {
   const CompactListButtonGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '标签页和版块列表',
-        description: '点击打开标签页和版块列表',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(
+          key: _key,
+          title: '标签页和版块列表',
+          description: '点击打开标签页和版块列表',
+          child: child)
+      : child;
 }
 
 class TabListButtonGuide extends StatelessWidget {
@@ -315,12 +312,10 @@ class TabListButtonGuide extends StatelessWidget {
   const TabListButtonGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '标签页列表',
-        description: '点击打开标签页列表',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(
+          key: _key, title: '标签页列表', description: '点击打开标签页列表', child: child)
+      : child;
 }
 
 class ForumListButtonGuide extends StatelessWidget {
@@ -331,12 +326,10 @@ class ForumListButtonGuide extends StatelessWidget {
   const ForumListButtonGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '版块列表',
-        description: '点击打开版块列表',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(
+          key: _key, title: '版块列表', description: '点击打开版块列表', child: child)
+      : child;
 }
 
 class ForumListGuide extends StatelessWidget {
@@ -365,10 +358,11 @@ class ReorderForumsGuide extends StatelessWidget {
   const ReorderForumsGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
-        title: '版块排序',
-        description: '点击可以设置版块顺序和显示/隐藏版块',
-        child: child,
-      );
+  Widget build(BuildContext context) => SettingsService.shouldShowGuide
+      ? Showcase(
+          key: _key,
+          title: '版块排序',
+          description: '点击可以设置版块顺序和显示/隐藏版块',
+          child: child)
+      : child;
 }

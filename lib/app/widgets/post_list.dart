@@ -30,7 +30,7 @@ class PostListScrollView extends StatefulWidget {
 
   final PostListScrollController? scrollController;
 
-  final VoidCallback? refresh;
+  final VoidCallback? onRefresh;
 
   final PostListScrollViewBuilder builder;
 
@@ -38,7 +38,7 @@ class PostListScrollView extends StatefulWidget {
       {super.key,
       required this.controller,
       this.scrollController,
-      this.refresh,
+      this.onRefresh,
       required this.builder});
 
   @override
@@ -51,7 +51,7 @@ class _PostListScrollViewState extends State<PostListScrollView> {
   int _refresh = 0;
 
   void _addRefresh() {
-    widget.refresh?.call();
+    widget.onRefresh?.call();
 
     _refresh++;
   }

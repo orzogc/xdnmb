@@ -113,7 +113,9 @@ class BiListView<T> extends StatefulWidget {
 
   final VoidCallback? onNoMoreItems;
 
-  final VoidCallback? onRefreshAndLoadMore;
+  final VoidCallback? onRefresh;
+
+  final VoidCallback? onLoadMore;
 
   final FetchPage<T>? fetchFallback;
 
@@ -133,7 +135,8 @@ class BiListView<T> extends StatefulWidget {
       this.separator,
       this.noItemsFoundBuilder,
       this.onNoMoreItems,
-      this.onRefreshAndLoadMore,
+      this.onRefresh,
+      this.onLoadMore,
       this.fetchFallback,
       this.getMaxPage})
       : assert(
@@ -284,7 +287,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
       _isRefreshing = true;
 
       try {
-        widget.onRefreshAndLoadMore?.call();
+        widget.onRefresh?.call();
 
         if (_initialPage == widget.firstPage) {
           _pagingUpController?.refresh();
@@ -309,7 +312,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
       _isLoadingMore.value = true;
 
       try {
-        widget.onRefreshAndLoadMore?.call();
+        widget.onLoadMore?.call();
 
         await _fetchDownPage(_lastPage, true);
       } catch (e) {

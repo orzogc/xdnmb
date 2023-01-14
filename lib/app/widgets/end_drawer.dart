@@ -20,7 +20,6 @@ class _DrawerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final settings = SettingsService.to;
     final client = XdnmbClientService.to;
 
     final reorderForums = IconButton(
@@ -50,9 +49,7 @@ class _DrawerHeader extends StatelessWidget {
             const Spacer(),
             Obx(
               () => client.isReady.value
-                  ? settings.showGuide
-                      ? ReorderForumsGuide(reorderForums)
-                      : reorderForums
+                  ? ReorderForumsGuide(reorderForums)
                   : const SizedBox.shrink(),
             ),
           ],
@@ -129,21 +126,11 @@ class AppEndDrawer extends StatelessWidget {
                   shrinkWrap: true,
                   padding: EdgeInsets.zero,
                   children: [
-                    SettingsService.shouldShowGuide
-                        ? const DarkModeGuide(DarkModeButton(showLabel: true))
-                        : const DarkModeButton(showLabel: true),
-                    SettingsService.shouldShowGuide
-                        ? SearchGuide(searchButton)
-                        : searchButton,
-                    SettingsService.shouldShowGuide
-                        ? HistoryGuide(historyButton)
-                        : historyButton,
-                    SettingsService.shouldShowGuide
-                        ? FeedGuide(feedButton)
-                        : feedButton,
-                    SettingsService.shouldShowGuide
-                        ? SettingsGuide(settingsButton)
-                        : settingsButton,
+                    const DarkModeGuide(DarkModeButton(showLabel: true)),
+                    SearchGuide(searchButton),
+                    HistoryGuide(historyButton),
+                    FeedGuide(feedButton),
+                    SettingsGuide(settingsButton),
                     const SponsorButton(onlyText: false, showLabel: true),
                   ].withSpaceBetween(height: 10.0),
                 ),

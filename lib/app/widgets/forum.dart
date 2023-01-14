@@ -319,7 +319,7 @@ class _ForumBodyState extends State<ForumBody> {
 
     return PostListScrollView(
       controller: controller,
-      refresh: () => _postIds.clear(),
+      onRefresh: _postIds.clear,
       builder: (context, scrollController, refresh) =>
           BiListView<ThreadWithPage>(
         key: ValueKey<int>(refresh),
@@ -395,6 +395,7 @@ class _ForumBodyState extends State<ForumBody> {
             strutStyle: AppTheme.boldRedPostContentStrutStyle,
           ),
         ),
+        onRefresh: _postIds.clear,
       ),
     );
   }
