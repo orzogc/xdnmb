@@ -44,10 +44,10 @@ class ThumbImage extends StatelessWidget {
       this.poUserHash,
       this.onImagePainted,
       this.canReturnImageData = false})
-      : assert(post.hasImage());
+      : assert(post.hasImage);
 
   @override
-  Widget build(BuildContext context) => post.hasImage()
+  Widget build(BuildContext context) => post.hasImage
       ? GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: () async {
@@ -75,9 +75,8 @@ class ThumbImage extends StatelessWidget {
                 // 因为部分GIF略缩图显示会出错，所以小图加载错误就加载大图
                 child: Obx(
                   () => CachedNetworkImage(
-                    imageUrl: _hasError.value
-                        ? post.imageUrl()!
-                        : post.thumbImageUrl()!,
+                    imageUrl:
+                        _hasError.value ? post.imageUrl! : post.thumbImageUrl!,
                     cacheKey: _hasError.value
                         ? post.imageKey()!
                         : post.thumbImageKey()!,

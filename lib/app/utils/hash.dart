@@ -15,3 +15,6 @@ HashMap<int, V> intHashMap<V>() => HashMap<int, V>(
 
 HashMap<int, V> intHashMapOf<V>(Map<int, V> other) =>
     intHashMap<V>()..addAll(other);
+
+HashMap<int, V> intHashMapFromEntries<V>(Iterable<MapEntry<int, V>> entries) =>
+    intHashMap<V>()..addEntries(entries);

@@ -6,7 +6,9 @@ import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/controller.dart';
+import '../data/services/reference.dart';
 import '../data/services/settings.dart';
+import '../data/services/time.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
@@ -15,12 +17,14 @@ import '../utils/extensions.dart';
 import '../utils/navigation.dart';
 import '../utils/post_list.dart';
 import '../utils/theme.dart';
+import '../utils/time.dart';
 import '../utils/toast.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
 import 'listenable.dart';
 import 'post.dart';
 import 'post_list.dart';
+import 'time.dart';
 
 class _FeedKey {
   final int refresh;
@@ -96,6 +100,120 @@ class _FeedDialog extends StatelessWidget {
       );
 }
 
+class _FeedItem extends StatefulWidget {
+  final Visible<PostWithPage<Feed>> feed;
+
+  // ignore: unused_element
+  const _FeedItem(this.feed, {super.key});
+
+  @override
+  State<_FeedItem> createState() => _FeedItemState();
+}
+
+class _FeedItemState extends State<_FeedItem> {
+  late final Future<DateTime?>? _getLatestPostTime;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final settings = SettingsService.to;
+    final client = XdnmbClientService.to;
+    final references = ReferenceService.to;
+    final time = TimeService.to;
+
+    _getLatestPostTime = !settings.isNotShowedLatestPostTimeInFeed
+        ? Future(() async {
+            for (final postId in widget.feed.item.post.recentReplies.reversed) {
+              try {
+                DateTime? postTime =
+                    (await references.getReference(postId))?.postTime;
+
+                if (postTime == null) {
+                  debugPrint(
+                      '开始获取订阅 ${widget.feed.item.post.id} 最新回复引用 $postId');
+
+                  final reference = await client.getReference(postId,
+                      mainPostId: widget.feed.item.post.id);
+                  postTime = reference.postTime;
+                }
+
+                if (settings.isShowedLatestRelativePostTimeInFeed &&
+                    postTime.isAfter(time.now)) {
+                  time.updateTime();
+                }
+
+                return postTime;
+              } catch (e) {
+                debugPrint('获取订阅最新回复引用出错：${exceptionMessage(e)}');
+
+                await Future.delayed(const Duration(seconds: 1));
+              }
+            }
+
+            return null;
+          })
+        : null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    final time = TimeService.to;
+
+    return PostCard(
+      child: FutureBuilder<DateTime?>(
+        future: _getLatestPostTime,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasError) {
+            debugPrint('获取订阅最新回复引用出错：${exceptionMessage(snapshot.error!)}');
+          }
+
+          final replyTime = snapshot.data;
+
+          return PostInkWell(
+            post: widget.feed.item.post,
+            poUserHash: widget.feed.item.post.userHash,
+            contentMaxLines: 8,
+            showFullTime: false,
+            showPostId: false,
+            footer: (!settings.isNotShowedLatestPostTimeInFeed &&
+                    snapshot.connectionState == ConnectionState.done &&
+                    replyTime != null)
+                ? Align(
+                    alignment: Alignment.centerRight,
+                    child: (settings.isShowedLatestAbsolutePostTimeInFeed
+                        ? Text(
+                            '最新回复 ${formatTime(replyTime)}',
+                            style: AppTheme.postHeaderTextStyle,
+                            strutStyle: AppTheme.postHeaderStrutStyle,
+                          )
+                        : TimerRefresher(
+                            builder: (context) => Text(
+                              '最新回复 ${time.relativeTime(replyTime)}',
+                              style: AppTheme.postHeaderTextStyle,
+                              strutStyle: AppTheme.postHeaderStrutStyle,
+                            ),
+                          )),
+                  )
+                : null,
+            onTap: (post) => AppRoutes.toThread(
+                mainPostId: widget.feed.item.post.id,
+                mainPost: widget.feed.item.post),
+            onLongPress: (post) => postListDialog(
+              _FeedDialog(
+                post: post,
+                onDelete: () => widget.feed.isVisible = false,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class FeedBody extends StatefulWidget {
   final FeedController controller;
 
@@ -136,7 +254,7 @@ class _FeedBodyState extends State<FeedBody> {
 
   @override
   Widget build(BuildContext context) {
-    final client = XdnmbClientService.to.client;
+    final client = XdnmbClientService.to;
     final settings = SettingsService.to;
 
     return ListenableBuilder(
@@ -144,7 +262,7 @@ class _FeedBodyState extends State<FeedBody> {
       builder: (context, child) => PostListScrollView(
         controller: widget.controller,
         builder: (context, scrollController, refresh) =>
-            BiListView<Visible<PostWithPage>>(
+            BiListView<Visible<PostWithPage<Feed>>>(
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
           scrollController: scrollController,
           postListController: widget.controller,
@@ -152,7 +270,7 @@ class _FeedBodyState extends State<FeedBody> {
           canLoadMoreAtBottom: false,
           fetch: (page) async =>
               (await client.getFeed(settings.feedId, page: page))
-                  .map((feed) => Visible(PostWithPage(feed, page)))
+                  .map((feed) => Visible(PostWithPage<Feed>(feed, page)))
                   .toList(),
           itemBuilder: (context, feed, index) => Obx(
             () => feed.isVisible
@@ -160,23 +278,9 @@ class _FeedBodyState extends State<FeedBody> {
                     key: feed.item.toValueKey(),
                     controller: scrollController,
                     index: feed.item.toIndex(),
-                    child: PostCard(
-                      child: PostInkWell(
-                        post: feed.item.post,
-                        poUserHash: feed.item.post.userHash,
-                        contentMaxLines: 8,
-                        showFullTime: false,
-                        showPostId: false,
-                        onTap: (post) => AppRoutes.toThread(
-                            mainPostId: feed.item.post.id,
-                            mainPost: feed.item.post),
-                        onLongPress: (post) => postListDialog(
-                          _FeedDialog(
-                            post: post,
-                            onDelete: () => feed.isVisible = false,
-                          ),
-                        ),
-                      ),
+                    child: _FeedItem(
+                      feed,
+                      key: ValueKey<int>(settings.isShowLatestPostTimeInFeed),
                     ),
                   )
                 : const SizedBox.shrink(),

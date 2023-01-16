@@ -830,7 +830,7 @@ class _Cookie extends StatelessWidget {
 }
 
 class _Post extends StatelessWidget {
-  static const Duration _difference = Duration(seconds: 60);
+  static const Duration _difference = Duration(seconds: 120);
 
   final PostList postList;
 
@@ -874,7 +874,7 @@ class _Post extends StatelessWidget {
 
   Future<xdnmb_api.LastPost?> _getLastPost(String cookie) async {
     try {
-      return await XdnmbClientService.to.client.getLastPost(cookie: cookie);
+      return await XdnmbClientService.to.getLastPost(cookie: cookie);
     } catch (e) {
       debugPrint('获取发布的新串数据出错：$e');
       return null;
@@ -889,12 +889,15 @@ class _Post extends StatelessWidget {
       final id = await history.savePostData(post);
 
       final lastPost = await _getLastPost(cookie);
-      if (lastPost?.mainPostId == null && lastPost?.userHash == post.userHash) {
-        await history.updatePostData(id, lastPost!);
+
+      if (lastPost != null &&
+          lastPost.mainPostId == null &&
+          lastPost.userHash == post.userHash) {
+        await history.updatePostData(id, lastPost);
       } else {
-        final forum = await XdnmbClientService.to.client
-            .getForum(post.forumId, cookie: cookie);
-        final threads = forum.where((thread) =>
+        final forumThreads =
+            await XdnmbClientService.to.getForum(post.forumId, cookie: cookie);
+        final threads = forumThreads.where((thread) =>
             thread.mainPost.userHash == post.userHash &&
             thread.mainPost.postTime.difference(post.postTime).abs() <
                 _difference);
@@ -916,7 +919,7 @@ class _Post extends StatelessWidget {
       required ReplyData reply,
       required int page,
       required String cookie}) async {
-    final thread = await XdnmbClientService.to.client
+    final thread = await XdnmbClientService.to
         .getThread(reply.mainPostId, page: page, cookie: cookie);
     final posts = thread.replies.where((post) =>
         post.userHash == reply.userHash &&
@@ -934,7 +937,7 @@ class _Post extends StatelessWidget {
       required xdnmb_api.LastPost lastPost,
       required int page,
       required String cookie}) async {
-    final thread = await XdnmbClientService.to.client
+    final thread = await XdnmbClientService.to
         .getThread(lastPost.mainPostId!, page: page, cookie: cookie);
     final posts = thread.replies.where((post) => post.id == lastPost.id);
     if (posts.isNotEmpty) {
@@ -952,7 +955,7 @@ class _Post extends StatelessWidget {
   Future<void> _saveReply(ReplyData reply, String cookie) async {
     debugPrint('开始获取回串数据');
     final history = PostHistoryService.to;
-    final client = XdnmbClientService.to.client;
+    final client = XdnmbClientService.to;
 
     try {
       final id = await history.saveReplyData(reply);

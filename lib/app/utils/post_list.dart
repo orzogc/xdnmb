@@ -4,8 +4,8 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import 'extensions.dart';
 
-class PostWithPage {
-  final PostBase post;
+class PostWithPage<T extends PostBase> {
+  final T post;
 
   final int page;
 

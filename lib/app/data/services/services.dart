@@ -7,6 +7,7 @@ import 'forum.dart';
 import 'history.dart';
 import 'image.dart';
 import 'persistent.dart';
+import 'reference.dart';
 import 'settings.dart';
 import 'stack.dart';
 import 'time.dart';
@@ -25,6 +26,7 @@ Bindings servicesBindings() => BindingsBuilder(() {
       Get.put(ForumListService());
       Get.put(BlacklistService());
       Get.put(PostHistoryService());
+      Get.put(ReferenceService());
       Get.put(PostDraftListService());
       Get.put(EmoticonListService());
       Get.put(CheckAppVersionService());

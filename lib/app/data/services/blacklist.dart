@@ -126,6 +126,8 @@ class BlacklistService extends GetxService {
 
   @override
   void onClose() async {
+    forumBlacklistNotifier.dispose();
+    postAndUserBlacklistNotifier.dispose();
     await _forumBlacklistBox.close();
     await _postBlacklistBox.close();
     await _userBlacklistBox.close();

@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
 import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 import 'app/data/services/persistent.dart';
@@ -15,6 +14,7 @@ import 'app/modules/post_list.dart';
 import 'app/routes/routes.dart';
 import 'app/utils/directory.dart';
 import 'app/utils/hive.dart';
+import 'app/utils/isar.dart';
 import 'app/utils/theme.dart';
 
 void main() async {
@@ -25,16 +25,16 @@ void main() async {
   await getDatabasePath();
   try {
     await initHive();
+    await initIsar();
+    debugPrint('初始化数据库成功');
   } catch (e) {
-    debugPrint('初始化Hive失败：$e');
+    debugPrint('初始化数据库失败：$e');
     return;
   }
   await SettingsService.getSettings();
   await PersistentDataService.getData();
 
   runApp(const _XdnmbApp());
-
-  await Hive.close();
 }
 
 /// xdnmb应用

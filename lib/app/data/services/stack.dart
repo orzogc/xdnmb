@@ -276,8 +276,8 @@ class ControllerStacksService extends GetxService {
 
   @override
   void onClose() async {
-    await _controllerBox.close();
     notifier.dispose();
+    await _controllerBox.close();
     isReady.value = false;
 
     super.onClose();

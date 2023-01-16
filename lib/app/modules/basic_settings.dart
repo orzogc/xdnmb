@@ -136,34 +136,45 @@ class _AutoJump extends StatelessWidget {
 
           return DropdownButton<int>(
             value: n,
+            alignment: Alignment.centerRight,
             underline: const SizedBox.shrink(),
             icon: const SizedBox.shrink(),
             style: textStyle,
             onChanged: (value) {
               if (value != null) {
                 value = value.clamp(0, 2);
-                if (value != n) {
-                  switch (value) {
-                    case 0:
-                      settings.isJumpToLastBrowsePage = true;
-                      settings.isJumpToLastBrowsePosition = true;
-                      break;
-                    case 1:
-                      settings.isJumpToLastBrowsePage = true;
-                      settings.isJumpToLastBrowsePosition = false;
-                      break;
-                    case 2:
-                      settings.isJumpToLastBrowsePage = false;
-                      settings.isJumpToLastBrowsePosition = false;
-                      break;
-                  }
+                switch (value) {
+                  case 0:
+                    settings.isJumpToLastBrowsePage = true;
+                    settings.isJumpToLastBrowsePosition = true;
+                    break;
+                  case 1:
+                    settings.isJumpToLastBrowsePage = true;
+                    settings.isJumpToLastBrowsePosition = false;
+                    break;
+                  case 2:
+                    settings.isJumpToLastBrowsePage = false;
+                    settings.isJumpToLastBrowsePosition = false;
+                    break;
                 }
               }
             },
             items: const [
-              DropdownMenuItem<int>(value: 0, child: Text('跳转位置')),
-              DropdownMenuItem<int>(value: 1, child: Text('只跳转页数')),
-              DropdownMenuItem<int>(value: 2, child: Text('不跳转')),
+              DropdownMenuItem<int>(
+                value: 0,
+                alignment: Alignment.centerRight,
+                child: Text('跳转位置'),
+              ),
+              DropdownMenuItem<int>(
+                value: 1,
+                alignment: Alignment.centerRight,
+                child: Text('只跳转页数'),
+              ),
+              DropdownMenuItem<int>(
+                value: 2,
+                alignment: Alignment.centerRight,
+                child: Text('不跳转'),
+              ),
             ],
           );
         },

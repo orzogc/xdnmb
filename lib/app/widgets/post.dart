@@ -452,6 +452,8 @@ class PostContent extends StatelessWidget {
 
   late final TextStyle? headerTextStyle;
 
+  final Widget? footer;
+
   PostBase get post => content.post;
 
   String? get poUserHash => content.poUserHash;
@@ -479,7 +481,8 @@ class PostContent extends StatelessWidget {
       this.headerHeight,
       this.contentMaxHeight,
       this.onPostIdTap,
-      TextStyle? headerTextStyle}) {
+      TextStyle? headerTextStyle,
+      this.footer}) {
     final settings = SettingsService.to;
 
     this.headerTextStyle = headerTextStyle != null
@@ -582,6 +585,7 @@ class PostContent extends StatelessWidget {
             )
           else
             content,
+          if (footer != null) footer!,
         ].withSpaceBetween(height: 5.0),
       ),
     );
@@ -623,6 +627,7 @@ class PostInkWell extends StatelessWidget {
       double? contentMaxHeight,
       OnPostIdCallback? onPostIdTap,
       TextStyle? headerTextStyle,
+      Widget? footer,
       this.onTap,
       this.onLongPress,
       this.mouseCursor,
@@ -647,7 +652,8 @@ class PostInkWell extends StatelessWidget {
             headerHeight: headerHeight,
             contentMaxHeight: contentMaxHeight,
             onPostIdTap: onPostIdTap,
-            headerTextStyle: headerTextStyle);
+            headerTextStyle: headerTextStyle,
+            footer: footer);
 
   @override
   Widget build(BuildContext context) => InkWell(

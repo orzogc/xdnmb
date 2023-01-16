@@ -1,13 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-class Notifier extends ChangeNotifier {
-  Notifier();
-
+mixin _NotifierMixin on ChangeNotifier {
   void notify() => notifyListeners();
 }
 
+class Notifier extends ChangeNotifier with _NotifierMixin {
+  Notifier();
+}
+
 class ListenableNotifier extends ChangeNotifier
+    with _NotifierMixin
     implements ValueListenable<bool> {
   bool _value;
 
@@ -15,8 +18,6 @@ class ListenableNotifier extends ChangeNotifier
   bool get value => _value;
 
   ListenableNotifier([bool value = false]) : _value = value;
-
-  void notify() => notifyListeners();
 
   void trigger() {
     _value = !_value;

@@ -80,6 +80,8 @@ class SettingsService extends GetxService {
 
   late final RxBool _isCompactTabAndForumList;
 
+  late final RxInt _isShowLatestPostTimeInFeed;
+
   final RxBool isReady = false.obs;
 
   bool get isDarkMode =>
@@ -394,6 +396,27 @@ class SettingsService extends GetxService {
   set showRelativeTime(bool showRelativeTime) =>
       _settingsBox.put(Settings.showRelativeTime, showRelativeTime);
 
+  int get showLatestPostTimeInFeed =>
+      (_settingsBox.get(Settings.showLatestPostTimeInFeed, defaultValue: 0)
+              as int)
+          .clamp(0, 2);
+
+  set showLatestPostTimeInFeed(int mode) {
+    mode = mode.clamp(0, 2);
+    _settingsBox.put(Settings.showLatestPostTimeInFeed, mode);
+    _isShowLatestPostTimeInFeed.value = mode;
+  }
+
+  bool get isNotShowedLatestPostTimeInFeed => showLatestPostTimeInFeed == 0;
+
+  bool get isShowedLatestAbsolutePostTimeInFeed =>
+      showLatestPostTimeInFeed == 1;
+
+  bool get isShowedLatestRelativePostTimeInFeed =>
+      showLatestPostTimeInFeed == 2;
+
+  int get isShowLatestPostTimeInFeed => _isShowLatestPostTimeInFeed.value;
+
   double get postHeaderFontSize =>
       (_settingsBox.get(Settings.postHeaderFontSize,
               defaultValue: defaultPostHeaderFontSize) as double)
@@ -547,6 +570,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> showRelativeTimeListenable;
 
+  late final ValueListenable<Box> showLatestPostTimeInFeedListenable;
+
   late final StreamSubscription<BoxEvent> _darkModeSubscription;
 
   static Future<void> getSettings() async {
@@ -696,6 +721,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.showUserCookieColor]);
     showRelativeTimeListenable =
         _settingsBox.listenable(keys: [Settings.showRelativeTime]);
+    showLatestPostTimeInFeedListenable =
+        _settingsBox.listenable(keys: [Settings.showLatestPostTimeInFeed]);
 
     _isShowBottomBar = showBottomBar.obs;
     _isAutoHideBottomBar = autoHideBottomBar.obs;
@@ -703,6 +730,7 @@ class SettingsService extends GetxService {
     _isAutoHideAppBar = autoHideAppBar.obs;
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
     _isCompactTabAndForumList = compactTabAndForumList.obs;
+    _isShowLatestPostTimeInFeed = showLatestPostTimeInFeed.obs;
     shouldShowGuide = showGuide || showBackdropGuide;
     isShowGuide = shouldShowGuide;
 

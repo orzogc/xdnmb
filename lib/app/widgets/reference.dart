@@ -71,14 +71,14 @@ class ReferenceCard extends StatefulWidget {
 }
 
 class _ReferenceCardState extends State<ReferenceCard> {
-  late Future<HtmlReference> _getReference;
+  late Future<ReferenceWithData> _getReference;
 
   String? errorMessage;
 
-  Future<HtmlReference> _toGetReference() {
+  Future<ReferenceWithData> _toGetReference() async {
     debugPrint('获取串 ${widget.postId.toPostNumber()} 的引用');
 
-    return XdnmbClientService.to.client.getHtmlReference(widget.postId);
+    return XdnmbClientService.to.getHtmlReference(widget.postId);
   }
 
   @override
@@ -94,19 +94,21 @@ class _ReferenceCardState extends State<ReferenceCard> {
           margin: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Padding(
             padding: const EdgeInsets.all(5.0),
-            child: FutureBuilder<HtmlReference>(
+            child: FutureBuilder<ReferenceWithData>(
               future: _getReference,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.done &&
                     snapshot.hasData) {
-                  final post = snapshot.data!;
-                  final mainPostId = post.mainPostId;
+                  final referenceData = snapshot.data!;
+                  final reference = referenceData.reference;
+                  final data = referenceData.data;
+                  final mainPostId = data.mainPostId;
 
                   return ListenableBuilder(
                     listenable:
                         BlacklistService.to.postAndUserBlacklistNotifier,
                     builder: (context, child) {
-                      final isVisible = (!post.isBlocked()).obs;
+                      final isVisible = (!reference.isBlocked()).obs;
 
                       return Obx(
                         () => isVisible.value
@@ -115,7 +117,7 @@ class _ReferenceCardState extends State<ReferenceCard> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   PostInkWell(
-                                    post: post,
+                                    post: reference,
                                     poUserHash: widget.poUserHash,
                                     onLinkTap: (context, link, text) =>
                                         parseUrl(
@@ -142,10 +144,16 @@ class _ReferenceCardState extends State<ReferenceCard> {
                                       padding: const EdgeInsets.all(10.0),
                                       child: TextButton(
                                         onPressed: () => AppRoutes.toThread(
-                                            mainPostId: mainPostId,
-                                            mainPost: post.id == mainPostId
-                                                ? post
-                                                : null),
+                                          mainPostId: mainPostId,
+                                          page: data.page ?? 1,
+                                          jumpToId: (!data.isMainPost &&
+                                                  data.page != null)
+                                              ? reference.id
+                                              : null,
+                                          mainPost: reference.id == mainPostId
+                                              ? reference
+                                              : null,
+                                        ),
                                         child: const Text('跳转原串'),
                                       ),
                                     ),

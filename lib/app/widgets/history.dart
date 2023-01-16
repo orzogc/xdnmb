@@ -40,14 +40,14 @@ const int _historyEachPage = 20;
 class _Image {
   static final HashMap<int, _Image?> _images = intHashMap<_Image?>();
 
-  static Future<_Image?> _getImage(int postId) async {
+  static Future<_Image?> _getImage(int postId, int? mainPostId) async {
     if (!_images.containsKey(postId)) {
       debugPrint('历史记录里的串 ${postId.toPostNumber()} 有图片，开始获取其引用');
 
       try {
-        final reference =
-            await XdnmbClientService.to.client.getReference(postId);
-        if (reference.hasImage()) {
+        final reference = await XdnmbClientService.to
+            .getReference(postId, mainPostId: mainPostId);
+        if (reference.hasImage) {
           _images[postId] = _Image(
               image: reference.image, imageExtension: reference.imageExtension);
         } else {
@@ -668,7 +668,8 @@ class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
 
     _getBrowseHistory = Future(() async {
       if (widget.browse.item.hasImage) {
-        final image = await _Image._getImage(widget.browse.item.id);
+        final image = await _Image._getImage(
+            widget.browse.item.id, widget.browse.item.id);
         if (image != null) {
           widget.browse.item.image = image.image;
           widget.browse.item.imageExtension = image.imageExtension;
@@ -862,7 +863,8 @@ class _PostHistoryItem extends StatelessWidget {
   _PostHistoryItem({super.key, required this.mainPost, this.search})
       : _getPostHistory = Future(() async {
           if (mainPost.item.postId != null && mainPost.item.hasImage) {
-            final image = await _Image._getImage(mainPost.item.postId!);
+            final image = await _Image._getImage(
+                mainPost.item.postId!, mainPost.item.postId!);
             if (image != null) {
               mainPost.item.image = image.image;
               mainPost.item.imageExtension = image.imageExtension;
@@ -1003,7 +1005,8 @@ class _ReplyHistoryItem extends StatelessWidget {
   _ReplyHistoryItem({super.key, required this.reply, this.search})
       : _getReplyHistory = Future(() async {
           if (reply.item.postId != null && reply.item.hasImage) {
-            final image = await _Image._getImage(reply.item.postId!);
+            final image = await _Image._getImage(
+                reply.item.postId!, reply.item.mainPostId);
             if (image != null) {
               reply.item.image = image.image;
               reply.item.imageExtension = image.imageExtension;

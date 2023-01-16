@@ -5,8 +5,8 @@ import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
-import '../../utils/directory.dart';
 import '../../utils/extensions.dart';
+import '../../utils/isar.dart';
 import '../models/controller.dart';
 import '../models/history.dart';
 import '../models/post.dart';
@@ -15,17 +15,11 @@ import '../models/reply.dart';
 class PostHistoryService extends GetxService {
   static PostHistoryService get to => Get.find<PostHistoryService>();
 
-  static const String _databaseName = 'history';
+  IsarCollection<BrowseHistory> get _browseHistory => isar.browseHistorys;
 
-  late final Isar _isar;
+  IsarCollection<PostData> get _postData => isar.postDatas;
 
-  final RxBool isReady = false.obs;
-
-  IsarCollection<BrowseHistory> get _browseHistory => _isar.browseHistorys;
-
-  IsarCollection<PostData> get _postData => _isar.postDatas;
-
-  IsarCollection<ReplyData> get _replyData => _isar.replyDatas;
+  IsarCollection<ReplyData> get _replyData => isar.replyDatas;
 
   Future<BrowseHistory?> getBrowseHistory(int postId) =>
       _browseHistory.get(postId);
@@ -39,13 +33,13 @@ class PostHistoryService extends GetxService {
       : _browseHistory.count();
 
   Future<int> saveBrowseHistory(BrowseHistory history) =>
-      _isar.writeTxn(() => _browseHistory.put(history));
+      isar.writeTxn(() => _browseHistory.put(history));
 
   Future<bool> deleteBrowseHistory(int postId) =>
-      _isar.writeTxn(() => _browseHistory.delete(postId));
+      isar.writeTxn(() => _browseHistory.delete(postId));
 
   Future<void> clearBrowseHistory({DateTimeRange? range, Search? search}) =>
-      _isar.writeTxn(() async {
+      isar.writeTxn(() async {
         if (range != null || search != null) {
           QueryBuilder<BrowseHistory, BrowseHistory, dynamic> query =
               _browseHistory.where();
@@ -133,10 +127,10 @@ class PostHistoryService extends GetxService {
       : _postData.count();
 
   Future<int> savePostData(PostData post) =>
-      _isar.writeTxn(() => _postData.put(post));
+      isar.writeTxn(() => _postData.put(post));
 
   Future<bool> deletePostData(int id) =>
-      _isar.writeTxn(() => _postData.delete(id));
+      isar.writeTxn(() => _postData.delete(id));
 
   Future<void> updatePostData(int id, PostBase post) async {
     final postData = await _getPostData(id);
@@ -149,7 +143,7 @@ class PostHistoryService extends GetxService {
   }
 
   Future<void> clearPostData({DateTimeRange? range, Search? search}) =>
-      _isar.writeTxn(() async {
+      isar.writeTxn(() async {
         if (range != null || search != null) {
           QueryBuilder<PostData, PostData, dynamic> query = _postData.where();
 
@@ -229,10 +223,10 @@ class PostHistoryService extends GetxService {
       : _replyData.count();
 
   Future<int> saveReplyData(ReplyData reply) =>
-      _isar.writeTxn(() => _replyData.put(reply));
+      isar.writeTxn(() => _replyData.put(reply));
 
   Future<bool> deleteReplyData(int id) =>
-      _isar.writeTxn(() => _replyData.delete(id));
+      isar.writeTxn(() => _replyData.delete(id));
 
   Future<bool> updateReplyData(
       {required int id,
@@ -253,7 +247,7 @@ class PostHistoryService extends GetxService {
   }
 
   Future<void> clearReplyData({DateTimeRange? range, Search? search}) =>
-      _isar.writeTxn(() async {
+      isar.writeTxn(() async {
         if (range != null || search != null) {
           QueryBuilder<ReplyData, ReplyData, dynamic> query =
               _replyData.where();
@@ -329,25 +323,5 @@ class PostHistoryService extends GetxService {
         await _replyData.filter().mainPostIdEqualTo(mainPostId).findAll();
 
     return HashSet.of(list.map((reply) => reply.userHash));
-  }
-
-  @override
-  void onInit() async {
-    super.onInit();
-
-    _isar = await Isar.open(
-        [BrowseHistorySchema, PostDataSchema, ReplyDataSchema],
-        directory: databasePath, name: _databaseName, inspector: false);
-
-    isReady.value = true;
-    debugPrint('读取历史数据成功');
-  }
-
-  @override
-  void onClose() async {
-    await _isar.close();
-    isReady.value = false;
-
-    super.onClose();
   }
 }

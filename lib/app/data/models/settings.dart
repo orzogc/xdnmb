@@ -85,6 +85,8 @@ abstract class Settings {
 
   static const String showRelativeTime = 'showRelativeTime';
 
+  static const String showLatestPostTimeInFeed = 'showLatestPostTimeInFeed';
+
   static const String postHeaderFontSize = 'postHeaderFontSize';
 
   static const String postHeaderFontWeight = 'postHeaderFontWeight';

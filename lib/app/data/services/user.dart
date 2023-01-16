@@ -45,7 +45,7 @@ class UserService extends GetxService {
 
   final RxInt totalCookiesNum = 0.obs;
 
-  late HashMap<String, _CookieData> _cookieMap;
+  final HashMap<String, _CookieData> _cookieMap = HashMap();
 
   final Notifier cookieNotifier = Notifier();
 
@@ -138,7 +138,8 @@ class UserService extends GetxService {
   }
 
   void _updateCookieMap() {
-    _cookieMap = HashMap.fromEntries(_deletedCookiesBox.values
+    _cookieMap.clear();
+    _cookieMap.addEntries(_deletedCookiesBox.values
         .followedBy(xdnmbCookies)
         .map((cookie) =>
             MapEntry(cookie.name, _CookieData.fromCookieData(cookie))));
@@ -358,6 +359,7 @@ class UserService extends GetxService {
 
   @override
   void onClose() async {
+    cookieNotifier.dispose();
     await _userCookieSubscription.cancel();
     await _browseCookieSubscription.cancel();
     await _cookiesBoxSubscription.cancel();

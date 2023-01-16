@@ -70,7 +70,7 @@ class ReplyData {
             content: post.content,
             isAdmin: post.isAdmin,
             page: page,
-            hasImage: post.hasImage());
+            hasImage: post.hasImage);
 
   Post toPost() => Post(
       id: postId ?? 0,
@@ -113,7 +113,7 @@ class ReplyData {
     title = (post.title.isNotEmpty && post.title != '无标题') ? post.title : null;
     content = post.content.isNotEmpty ? post.content : '分享图片';
     isAdmin = post.isAdmin;
-    hasImage = post.hasImage();
+    hasImage = post.hasImage;
   }
 
   @override

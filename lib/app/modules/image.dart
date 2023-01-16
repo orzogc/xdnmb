@@ -926,7 +926,7 @@ class ImageController {
       this.poUserHash,
       Uint8List? imageData,
       this.canReturnImageData = false})
-      : assert(post == null || post.hasImage()),
+      : assert(post == null || post.hasImage),
         assert((post != null && imageData == null) ||
             (post == null && imageData != null)),
         post = Rxn(post),
@@ -1116,7 +1116,7 @@ class ImageView extends StatelessWidget {
               final CachedNetworkImage? thumbImage = _controller.post.value !=
                       null
                   ? CachedNetworkImage(
-                      imageUrl: _controller.post.value!.thumbImageUrl()!,
+                      imageUrl: _controller.post.value!.thumbImageUrl!,
                       cacheKey: _controller.post.value!.thumbImageKey()!,
                       cacheManager: XdnmbImageCacheManager(),
                       errorWidget: (context, url, error) =>
@@ -1149,7 +1149,7 @@ class ImageView extends StatelessWidget {
                         child: (_controller.post.value != null &&
                                 thumbImage != null)
                             ? CachedNetworkImage(
-                                imageUrl: _controller.post.value!.imageUrl()!,
+                                imageUrl: _controller.post.value!.imageUrl!,
                                 cacheKey: _controller.post.value!.imageKey()!,
                                 cacheManager: XdnmbImageCacheManager(),
                                 progressIndicatorBuilder:

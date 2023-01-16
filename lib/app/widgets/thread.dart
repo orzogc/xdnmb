@@ -581,8 +581,8 @@ class _ThreadBodyState extends State<ThreadBody> {
     }
   }
 
-  Future<List<PostWithPage>> _fetch(int firstPage, int page) async {
-    final client = XdnmbClientService.to.client;
+  Future<List<PostWithPage<PostBase>>> _fetch(int firstPage, int page) async {
+    final client = XdnmbClientService.to;
     final blacklist = BlacklistService.to;
     final postId = controller.id;
 
@@ -609,7 +609,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
     _saveHistoryAndJumpToIndex(thread, firstPage, page);
 
-    final List<PostWithPage> posts = [];
+    final List<PostWithPage<PostBase>> posts = [];
     if (page == 1) {
       posts.add(PostWithPage(mainPost, page));
     }
@@ -625,7 +625,8 @@ class _ThreadBodyState extends State<ThreadBody> {
     return posts;
   }
 
-  Widget _itemBuilder(BuildContext context, PostWithPage postWithPage) {
+  Widget _itemBuilder(
+      BuildContext context, PostWithPage<PostBase> postWithPage) {
     final post = postWithPage.post;
 
     if (post is _DumpTip) {
@@ -718,7 +719,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                       maintainState: true,
                       maintainAnimation: true,
                       maintainSize: true,
-                      child: BiListView<PostWithPage>(
+                      child: BiListView<PostWithPage<PostBase>>(
                         key: ValueKey<int>(refresh),
                         controller: biListViewController,
                         scrollController: scrollController,
@@ -753,7 +754,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                           }
                         },
                         fetchFallback: (page) => Future.value(
-                          [PostWithPage(const _DumbPost(), page)],
+                          [PostWithPage<PostBase>(const _DumbPost(), page)],
                         ),
                         getMaxPage: () => _maxPage,
                       ),
@@ -806,10 +807,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
     _pageSubscription = controller.listenPage(_trySave);
 
-    final replyCount = controller.post?.replyCount;
-    if (replyCount != null) {
-      _maxPage = replyCount > 0 ? (replyCount / 19).ceil() : 1;
-    }
+    _maxPage = controller.post?.maxPage ?? 1;
 
     if (controller.isThread) {
       (controller as ThreadController)._loadMore =

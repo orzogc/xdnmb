@@ -15,7 +15,6 @@ import '../data/services/draft.dart';
 import '../data/services/emoticon.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
-import '../data/services/history.dart';
 import '../data/services/settings.dart';
 import '../data/services/stack.dart';
 import '../data/services/time.dart';
@@ -1831,7 +1830,6 @@ class _PostListViewState extends State<PostListView>
     final drafts = PostDraftListService.to;
     final emoticons = EmoticonListService.to;
     final forums = ForumListService.to;
-    final history = PostHistoryService.to;
     final settings = SettingsService.to;
     final stacks = ControllerStacksService.to;
     final time = TimeService.to;
@@ -1853,7 +1851,6 @@ class _PostListViewState extends State<PostListView>
                 drafts.isReady.value &&
                 emoticons.isReady.value &&
                 forums.isReady.value &&
-                history.isReady.value &&
                 settings.isReady.value &&
                 stacks.isReady.value &&
                 time.isReady.value &&

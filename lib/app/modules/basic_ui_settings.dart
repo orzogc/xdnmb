@@ -37,37 +37,48 @@ class _ShowBottomBar extends StatelessWidget {
 
           return DropdownButton<int>(
             value: n,
+            alignment: Alignment.centerRight,
             underline: const SizedBox.shrink(),
             icon: const SizedBox.shrink(),
             style: textStyle,
             onChanged: (value) {
               if (value != null) {
                 value = value.clamp(0, GetPlatform.isIOS ? 1 : 2);
-                if (value != n) {
-                  switch (value) {
-                    case 0:
-                      settings.showBottomBar = true;
-                      settings.autoHideBottomBar = true;
-                      break;
-                    case 1:
-                      settings.showBottomBar = true;
+                switch (value) {
+                  case 0:
+                    settings.showBottomBar = true;
+                    settings.autoHideBottomBar = true;
+                    break;
+                  case 1:
+                    settings.showBottomBar = true;
+                    settings.autoHideBottomBar = false;
+                    break;
+                  case 2:
+                    if (!GetPlatform.isIOS) {
+                      settings.showBottomBar = false;
                       settings.autoHideBottomBar = false;
-                      break;
-                    case 2:
-                      if (!GetPlatform.isIOS) {
-                        settings.showBottomBar = false;
-                        settings.autoHideBottomBar = false;
-                      }
-                      break;
-                  }
+                    }
+                    break;
                 }
               }
             },
             items: [
-              const DropdownMenuItem<int>(value: 0, child: Text('向下滑动时隐藏')),
-              const DropdownMenuItem<int>(value: 1, child: Text('始终显示')),
+              const DropdownMenuItem<int>(
+                value: 0,
+                alignment: Alignment.centerRight,
+                child: Text('向下滑动时隐藏'),
+              ),
+              const DropdownMenuItem<int>(
+                value: 1,
+                alignment: Alignment.centerRight,
+                child: Text('始终显示'),
+              ),
               if (!GetPlatform.isIOS)
-                const DropdownMenuItem<int>(value: 2, child: Text('不显示')),
+                const DropdownMenuItem<int>(
+                  value: 2,
+                  alignment: Alignment.centerRight,
+                  child: Text('不显示'),
+                ),
             ],
           );
         },
@@ -214,6 +225,67 @@ class _FloatingButton extends StatelessWidget {
             ? 1
             : (settings.autoHideFloatingButton ? 2 : 0);
 
+        late final Widget trailing;
+        if (settings.showBottomBar) {
+          final style = textStyle?.apply(color: AppTheme.inactiveSettingColor);
+
+          switch (n) {
+            case 0:
+              trailing = Text('始终显示', style: style);
+              break;
+            case 1:
+              trailing = Text('隐藏', style: style);
+              break;
+            case 2:
+              trailing = Text('向下滑动时隐藏', style: style);
+              break;
+          }
+        } else {
+          trailing = DropdownButton<int>(
+            value: n,
+            alignment: Alignment.centerRight,
+            underline: const SizedBox.shrink(),
+            icon: const SizedBox.shrink(),
+            style: textStyle,
+            onChanged: (value) {
+              if (value != null) {
+                value = value.clamp(0, 2);
+                switch (value) {
+                  case 0:
+                    settings.hideFloatingButton = false;
+                    settings.autoHideFloatingButton = false;
+                    break;
+                  case 1:
+                    settings.hideFloatingButton = true;
+                    settings.autoHideFloatingButton = false;
+                    break;
+                  case 2:
+                    settings.hideFloatingButton = false;
+                    settings.autoHideFloatingButton = true;
+                    break;
+                }
+              }
+            },
+            items: const [
+              DropdownMenuItem<int>(
+                value: 0,
+                alignment: Alignment.centerRight,
+                child: Text('始终显示'),
+              ),
+              DropdownMenuItem<int>(
+                value: 1,
+                alignment: Alignment.centerRight,
+                child: Text('隐藏'),
+              ),
+              DropdownMenuItem<int>(
+                value: 2,
+                alignment: Alignment.centerRight,
+                child: Text('向下滑动时隐藏'),
+              ),
+            ],
+          );
+        }
+
         return ListTile(
           title: Text(
             '右下角的悬浮球',
@@ -222,40 +294,7 @@ class _FloatingButton extends StatelessWidget {
                   settings.showBottomBar ? AppTheme.inactiveSettingColor : null,
             ),
           ),
-          trailing: !settings.showBottomBar
-              ? DropdownButton<int>(
-                  value: n,
-                  underline: const SizedBox.shrink(),
-                  icon: const SizedBox.shrink(),
-                  style: textStyle,
-                  onChanged: (value) {
-                    if (value != null) {
-                      value = value.clamp(0, 2);
-                      if (value != n) {
-                        switch (value) {
-                          case 0:
-                            settings.hideFloatingButton = false;
-                            settings.autoHideFloatingButton = false;
-                            break;
-                          case 1:
-                            settings.hideFloatingButton = true;
-                            settings.autoHideFloatingButton = false;
-                            break;
-                          case 2:
-                            settings.hideFloatingButton = false;
-                            settings.autoHideFloatingButton = true;
-                            break;
-                        }
-                      }
-                    }
-                  },
-                  items: const [
-                    DropdownMenuItem<int>(value: 0, child: Text('始终显示')),
-                    DropdownMenuItem<int>(value: 1, child: Text('隐藏')),
-                    DropdownMenuItem<int>(value: 2, child: Text('向下滑动时隐藏')),
-                  ],
-                )
-              : const SizedBox.shrink(),
+          trailing: trailing,
         );
       },
     );
@@ -489,6 +528,53 @@ class _ShowRelativeTime extends StatelessWidget {
   }
 }
 
+class _ShowLatestPostTimeInFeed extends StatelessWidget {
+  // ignore: unused_element
+  const _ShowLatestPostTimeInFeed({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    final textStyle = Theme.of(context).textTheme.bodyMedium;
+
+    return ListTile(
+      title: const Text('订阅里的串显示最后回复时间'),
+      trailing: ListenableBuilder(
+        listenable: settings.showLatestPostTimeInFeedListenable,
+        builder: (context, child) => DropdownButton<int>(
+          value: settings.showLatestPostTimeInFeed,
+          alignment: Alignment.centerRight,
+          underline: const SizedBox.shrink(),
+          icon: const SizedBox.shrink(),
+          style: textStyle,
+          onChanged: (value) {
+            if (value != null) {
+              settings.showLatestPostTimeInFeed = value.clamp(0, 2);
+            }
+          },
+          items: const [
+            DropdownMenuItem<int>(
+              value: 0,
+              alignment: Alignment.centerRight,
+              child: Text('不显示'),
+            ),
+            DropdownMenuItem<int>(
+              value: 1,
+              alignment: Alignment.centerRight,
+              child: Text('显示绝对时间'),
+            ),
+            DropdownMenuItem<int>(
+              value: 2,
+              alignment: Alignment.centerRight,
+              child: Text('显示相对时间'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class BasicUISettingsView extends StatelessWidget {
   const BasicUISettingsView({super.key});
 
@@ -516,6 +602,7 @@ class BasicUISettingsView extends StatelessWidget {
               const _ShowUserCookieColor(),
               const Divider(height: 10.0, thickness: 1.0),
               const _ShowRelativeTime(),
+              const _ShowLatestPostTimeInFeed(),
             ],
           ),
         ),

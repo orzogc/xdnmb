@@ -310,7 +310,7 @@ class _ForumBodyState extends State<ForumBody> {
 
   @override
   Widget build(BuildContext context) {
-    final client = XdnmbClientService.to.client;
+    final client = XdnmbClientService.to;
     final settings = SettingsService.to;
     final forums = ForumListService.to;
     final blacklist = BlacklistService.to;

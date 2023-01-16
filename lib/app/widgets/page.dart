@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../modules/post_list.dart';
 import '../utils/extensions.dart';
@@ -121,11 +122,8 @@ class _PageButtonState extends State<PageButton> {
           try {
             int? maxPage;
             if (widget.controller is ThreadTypeController) {
-              final replyCount =
-                  (widget.controller as ThreadTypeController).post?.replyCount;
-              maxPage = replyCount != null
-                  ? (replyCount > 0 ? (replyCount / 19).ceil() : 1)
-                  : null;
+              maxPage =
+                  (widget.controller as ThreadTypeController).post?.maxPage;
             }
 
             final page = await postListDialog<int>(_JumpPageDialog(

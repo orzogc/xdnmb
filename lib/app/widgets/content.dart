@@ -243,7 +243,7 @@ class _ContentState extends State<Content> {
     return ListenableBuilder(
       listenable: settings.showImageListenable,
       builder: (context, child) =>
-          (settings.showImage && widget.displayImage && widget.post.hasImage())
+          (settings.showImage && widget.displayImage && widget.post.hasImage)
               ? FloatColumn(
                   children: [
                     Floatable(

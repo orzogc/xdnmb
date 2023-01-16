@@ -87,13 +87,13 @@ class CheckAppVersionService extends GetxService {
             _showUpdateDialog(Urls.appLatestRelease);
           } else if (GetPlatform.isAndroid) {
             switch (SysInfo.kernelArchitecture) {
-              case 'x86_64':
-                _showUpdateDialog(Urls.appX64Apk);
+              case ProcessorArchitecture.x86_64:
+                _showUpdateDialog(Urls.appX8664Apk);
                 break;
-              case 'armv7':
+              case ProcessorArchitecture.arm:
                 _showUpdateDialog(Urls.appArmeabiv7aApk);
                 break;
-              case 'aarch64':
+              case ProcessorArchitecture.arm64:
                 _showUpdateDialog(Urls.appArm64Apk);
                 break;
               default:

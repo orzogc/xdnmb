@@ -35,7 +35,7 @@ abstract class Urls {
   static const String appArm64Apk =
       'https://nmb.ovear.info/orzogc/xdnmb-latest-arm64-v8a.apk';
 
-  static const String appX64Apk =
+  static const String appX8664Apk =
       'https://nmb.ovear.info/orzogc/xdnmb-latest-x86_64.apk';
 
   static const String appFullApk =

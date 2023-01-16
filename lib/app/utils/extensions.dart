@@ -46,6 +46,8 @@ extension IntExtension on int {
   int getPageFromPostIndex() => this >>> 32;
 
   int getPostIdFromPostIndex() => this & _int32Max;
+
+  int get postMaxPage => this > 0 ? (this / 19).ceil() : 1;
 }
 
 extension PostExtension on PostBase {
@@ -64,14 +66,14 @@ extension PostExtension on PostBase {
   }
 
   String? thumbImageKey() =>
-      hasImage() ? hashImage('thumb/${imageFile()}', imageHashLength) : null;
+      hasImage ? hashImage('thumb/$imageFile', imageHashLength) : null;
 
   String? imageKey() =>
-      hasImage() ? hashImage('image/${imageFile()}', imageHashLength) : null;
+      hasImage ? hashImage('image/$imageFile', imageHashLength) : null;
 
   String? imageHashFileName() {
-    if (hasImage()) {
-      final imageName = imageFile()!;
+    if (hasImage) {
+      final imageName = imageFile!;
       final hash = hashImage(imageName, _imageNameHashLength);
 
       return (Regex.replaceImageHash(imageName: imageName, hash: hash)

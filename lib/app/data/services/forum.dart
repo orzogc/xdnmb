@@ -77,15 +77,16 @@ class ForumListService extends GetxService {
   late final ValueListenable<Box<ForumData>> forumsListenable;
 
   /// key为顺序，value为[_forumBox]里的index
-  final ValueNotifier<HashMap<int, int>> displayedForumIndexNotifier =
-      ValueNotifier(intHashMap<int>());
+  final HashMap<int, int> _displayedForumIndexMap = intHashMap<int>();
 
-  late HashMap<_ForumKey, _ForumValue> _forumMap;
+  final Notifier displayedForumIndexNotifier = Notifier();
+
+  final HashMap<_ForumKey, _ForumValue> _forumMap = HashMap();
 
   /// 应用本次运行期间新增加的废弃版块ID，防止短时间内多次重复请求[_getHtmlForum]
   final HashSet<int> _deprecatedForumId = intHashSet();
 
-  int get displayedForumsCount => displayedForumIndexNotifier.value.length;
+  int get displayedForumsCount => _displayedForumIndexMap.length;
 
   Iterable<ForumData> get forums => _forumBox.values;
 
@@ -95,17 +96,23 @@ class ForumListService extends GetxService {
   Iterable<ForumData> get hiddenForums =>
       forums.where((forum) => forum.isHidden);
 
-  void _updateDisplayedForumIndexNotifier() =>
-      displayedForumIndexNotifier.value = intHashMapOf<int>(
-          (intHashMapOf<ForumData>(forums.toList().asMap())
-                ..removeWhere((key, forum) => forum.isHidden))
-              .keys
-              .toList()
-              .asMap());
+  void _updateDisplayedForumIndexNotifier() {
+    _displayedForumIndexMap.clear();
+    _displayedForumIndexMap.addAll(
+        (intHashMapOf<ForumData>(forums.toList().asMap())
+              ..removeWhere((key, forum) => forum.isHidden))
+            .keys
+            .toList()
+            .asMap());
 
-  void _updateForumMap() =>
-      _forumMap = HashMap.fromEntries(forums.map((forum) => MapEntry(
-          _ForumKey.fromForumData(forum), _ForumValue.fromForum(forum))));
+    displayedForumIndexNotifier.notify();
+  }
+
+  void _updateForumMap() {
+    _forumMap.clear();
+    _forumMap.addEntries(forums.map((forum) => MapEntry(
+        _ForumKey.fromForumData(forum), _ForumValue.fromForum(forum))));
+  }
 
   void _notifyUpdateForumName() => updateForumNameNotifier.notify();
 
@@ -196,7 +203,7 @@ class ForumListService extends GetxService {
   }
 
   ForumData? displayedForum(int index) {
-    final index_ = displayedForumIndexNotifier.value[index];
+    final index_ = _displayedForumIndexMap[index];
 
     return index_ != null ? _forumBox.getAt(index_) : null;
   }
@@ -287,8 +294,8 @@ class ForumListService extends GetxService {
 
   @override
   void onClose() async {
-    await _forumBox.close();
     updateForumNameNotifier.dispose();
+    await _forumBox.close();
     isReady.value = false;
 
     super.onClose();

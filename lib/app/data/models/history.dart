@@ -120,7 +120,7 @@ class BrowseHistory implements PostBase {
             browsePostId: !isOnlyPo ? browsePostId : null,
             onlyPoBrowsePage: isOnlyPo ? browsePage : null,
             onlyPoBrowsePostId: isOnlyPo ? browsePostId : null,
-            hasImage: mainPost.hasImage());
+            hasImage: mainPost.hasImage);
 
   void update(
       {required Post mainPost,
@@ -151,7 +151,7 @@ class BrowseHistory implements PostBase {
     isAdmin = mainPost.isAdmin;
     isHidden = mainPost.isHidden;
     this.browseTime = browseTime ?? DateTime.now().toUtc();
-    hasImage = mainPost.hasImage();
+    hasImage = mainPost.hasImage;
   }
 
   int? toIndex({bool isOnlyPo = false}) {

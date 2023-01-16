@@ -607,7 +607,7 @@ packages:
       name: image_painter
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.4.6"
+    version: "0.5.0"
   infinite_scroll_pagination:
     dependency: "direct main"
     description:
@@ -1081,7 +1081,7 @@ packages:
       name: system_info2
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.4"
+    version: "3.0.1"
   term_glyph:
     dependency: transitive
     description:
@@ -1241,7 +1241,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: b5a759a570630f42045394e2340266b0e58f781a
+      resolved-ref: d28c590859082ad6605b177c4f09e2cbfd24ea83
       url: "https://github.com/orzogc/xdnmb_api.git"
     source: git
     version: "0.1.0"
