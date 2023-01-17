@@ -538,7 +538,7 @@ class _ShowLatestPostTimeInFeed extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme.bodyMedium;
 
     return ListTile(
-      title: const Text('订阅里的串显示最后回复时间'),
+      title: const Text('订阅界面里的串显示最后回复时间'),
       trailing: ListenableBuilder(
         listenable: settings.showLatestPostTimeInFeedListenable,
         builder: (context, child) => DropdownButton<int>(

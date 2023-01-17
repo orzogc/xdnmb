@@ -114,7 +114,7 @@ class _FollowPlatformBrightness extends StatelessWidget {
     return ListenableBuilder(
       listenable: settings.followPlatformBrightnessListenable,
       builder: (context, child) => SwitchListTile(
-        title: const Text('白天/黑夜模式跟随系统'),
+        title: const Text('白天/黑夜模式跟随系统设置'),
         subtitle: const Text('更改后需要重启应用'),
         value: settings.followPlatformBrightness,
         onChanged: (value) => settings.followPlatformBrightness = value,

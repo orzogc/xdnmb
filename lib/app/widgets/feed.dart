@@ -63,48 +63,87 @@ class FeedAppBarTitle extends StatelessWidget {
 }
 
 class _FeedDialog extends StatelessWidget {
+  final FeedController controller;
+
   final PostBase post;
 
   final VoidCallback onDelete;
 
   // ignore: unused_element
-  const _FeedDialog({super.key, required this.post, required this.onDelete});
+  const _FeedDialog(
+      {super.key,
+      required this.controller,
+      required this.post,
+      required this.onDelete});
 
   @override
-  Widget build(BuildContext context) => SimpleDialog(
-        title: Text(post.toPostNumber()),
-        children: [
-          Report(post.id),
-          SharePost(mainPostId: post.id),
-          SimpleDialogOption(
-            onPressed: () async {
-              postListBack();
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    final client = XdnmbClientService.to.client;
+    final textStyle = Theme.of(context).textTheme.titleMedium;
+
+    return SimpleDialog(
+      title: Text(post.toPostNumber()),
+      children: [
+        Report(post.id),
+        SharePost(mainPostId: post.id),
+        SimpleDialogOption(
+          onPressed: () async {
+            postListBack();
+
+            try {
+              await client.deleteFeed(settings.feedId, post.id);
+
+              showToast('取消订阅 ${post.toPostNumber()} 成功');
+              onDelete();
+            } catch (e) {
+              showToast(
+                  '取消订阅 ${post.toPostNumber()} 失败：${exceptionMessage(e)}');
+            }
+          },
+          child: Text('取消订阅', style: textStyle),
+        ),
+        CopyPostId(post.id),
+        CopyPostReference(post.id),
+        CopyPostContent(post),
+        SimpleDialogOption(
+          onPressed: () async {
+            postListBack();
+
+            try {
+              await client.deleteFeed(settings.feedId, post.id);
+              await client.addFeed(settings.feedId, post.id);
+
+              showToast('提升 ${post.toPostNumber()} 至订阅最上方成功');
+              controller.refreshPage();
+            } catch (e) {
+              showToast(
+                  '提升至订阅最上方失败，请手动重新订阅 ${post.toPostNumber()} ：${exceptionMessage(e)}');
+
               try {
-                await XdnmbClientService.to.client
-                    .deleteFeed(SettingsService.to.feedId, post.id);
-                showToast('取消订阅 ${post.id.toPostNumber()} 成功');
-                onDelete();
+                await client.addFeed(settings.feedId, post.id);
               } catch (e) {
-                showToast(
-                    '取消订阅 ${post.id.toPostNumber()} 失败：${exceptionMessage(e)}');
+                debugPrint(
+                    '订阅 ${post.toPostNumber()} 失败：${exceptionMessage(e)}');
               }
-            },
-            child: Text('取消订阅', style: Theme.of(context).textTheme.titleMedium),
-          ),
-          CopyPostId(post.id),
-          CopyPostReference(post.id),
-          CopyPostContent(post),
-          NewTab(post),
-          NewTabBackground(post),
-        ],
-      );
+            }
+          },
+          child: Text('提升至最上方', style: textStyle),
+        ),
+        NewTab(post),
+        NewTabBackground(post),
+      ],
+    );
+  }
 }
 
 class _FeedItem extends StatefulWidget {
+  final FeedController controller;
+
   final Visible<PostWithPage<Feed>> feed;
 
   // ignore: unused_element
-  const _FeedItem(this.feed, {super.key});
+  const _FeedItem({super.key, required this.controller, required this.feed});
 
   @override
   State<_FeedItem> createState() => _FeedItemState();
@@ -216,6 +255,7 @@ class _FeedItemState extends State<_FeedItem> {
                 mainPost: widget.feed.item.post),
             onLongPress: (post) => postListDialog(
               _FeedDialog(
+                controller: widget.controller,
                 post: post,
                 onDelete: () => widget.feed.isVisible = false,
               ),
@@ -292,7 +332,8 @@ class _FeedBodyState extends State<FeedBody> {
                     controller: scrollController,
                     index: feed.item.toIndex(),
                     child: _FeedItem(
-                      feed,
+                      controller: widget.controller,
+                      feed: feed,
                       key: ValueKey<int>(settings.isShowLatestPostTimeInFeed),
                     ),
                   )
