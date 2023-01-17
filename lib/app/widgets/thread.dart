@@ -458,7 +458,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   final BiListViewController biListViewController = BiListViewController();
 
-  late final Future<void> _getHistory;
+  late Future<void> _getHistory;
 
   ThreadTypeController get controller => widget.controller;
 
@@ -786,6 +786,31 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   void _trySave(int page) => controller.trySave();
 
+  void _setGetHistory() => _getHistory = Future(() async {
+        final settings = SettingsService.to;
+
+        _history = await PostHistoryService.to.getBrowseHistory(controller.id);
+
+        if (controller.jumpToId == null) {
+          if (!controller.cancelAutoJump &&
+              settings.isJumpToLastBrowsePage &&
+              _history != null) {
+            final page = controller.isThread
+                ? _history!.browsePage
+                : _history!.onlyPoBrowsePage;
+            if (page != null) {
+              controller.page = page;
+
+              if (settings.isJumpToLastBrowsePosition) {
+                _setToJump();
+              }
+            }
+          }
+        } else {
+          _setToJump();
+        }
+      });
+
   @override
   void initState() {
     super.initState();
@@ -814,30 +839,7 @@ class _ThreadBodyState extends State<ThreadBody> {
           biListViewController.loadMore;
     }
 
-    _getHistory = Future(() async {
-      final settings = SettingsService.to;
-
-      _history = await PostHistoryService.to.getBrowseHistory(controller.id);
-
-      if (controller.jumpToId == null) {
-        if (!controller.cancelAutoJump &&
-            settings.isJumpToLastBrowsePage &&
-            _history != null) {
-          final page = controller.isThread
-              ? _history!.browsePage
-              : _history!.onlyPoBrowsePage;
-          if (page != null) {
-            controller.page = page;
-
-            if (settings.isJumpToLastBrowsePosition) {
-              _setToJump();
-            }
-          }
-        }
-      } else {
-        _setToJump();
-      }
-    });
+    _setGetHistory();
   }
 
   @override
@@ -856,6 +858,8 @@ class _ThreadBodyState extends State<ThreadBody> {
         (controller as ThreadController)._loadMore =
             biListViewController.loadMore;
       }
+
+      _setGetHistory();
     }
   }
 
@@ -882,8 +886,7 @@ class _ThreadBodyState extends State<ThreadBody> {
             showToast('读取数据库出错：${snapshot.error!}');
           }
 
-          if (snapshot.connectionState == ConnectionState.none ||
-              snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.connectionState == ConnectionState.done) {
             return _body();
           }
 

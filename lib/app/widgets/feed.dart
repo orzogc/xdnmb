@@ -111,12 +111,9 @@ class _FeedItem extends StatefulWidget {
 }
 
 class _FeedItemState extends State<_FeedItem> {
-  late final Future<DateTime?>? _getLatestPostTime;
+  Future<DateTime?>? _getLatestPostTime;
 
-  @override
-  void initState() {
-    super.initState();
-
+  void _setGetLatestPostTime() {
     final settings = SettingsService.to;
     final client = XdnmbClientService.to;
     final references = ReferenceService.to;
@@ -154,6 +151,22 @@ class _FeedItemState extends State<_FeedItem> {
             return null;
           })
         : null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _setGetLatestPostTime();
+  }
+
+  @override
+  void didUpdateWidget(covariant _FeedItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.feed != oldWidget.feed) {
+      _setGetLatestPostTime();
+    }
   }
 
   @override

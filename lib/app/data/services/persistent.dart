@@ -123,12 +123,17 @@ class PersistentDataService extends GetxService {
         this.notice = notice.content;
         noticeDate = notice.date;
         SettingsService.to.showNotice = true;
+
+        debugPrint('保存公告成功');
       }
     }
   }
 
-  Future<void> updateNotice() async =>
-      saveNotice(await XdnmbClientService.to.client.getNotice());
+  Future<void> updateNotice() async {
+    debugPrint('开始获取公告');
+
+    saveNotice(await XdnmbClientService.to.client.getNotice());
+  }
 
   Future<void> showNotice() async {
     if (SettingsService.to.showNotice) {

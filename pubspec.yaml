@@ -17,7 +17,7 @@ dependencies:
   crypto: ^3.0.2
   date_format: ^2.0.7
   device_info_plus: ^8.0.0
-  easy_refresh: ^3.2.2+1
+  easy_refresh: ^3.2.2+2
   expandable_text: ^2.3.0
   external_path: ^1.0.3
   file_picker: ^5.2.5

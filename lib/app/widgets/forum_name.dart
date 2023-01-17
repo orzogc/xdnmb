@@ -6,9 +6,9 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 import '../data/models/forum.dart';
 import '../data/services/forum.dart';
 import '../utils/text.dart';
-import '../utils/theme.dart';
 import 'dialog.dart';
 import 'listenable.dart';
+import 'tag.dart';
 
 class ForumNameText extends StatelessWidget {
   final String forumName;
@@ -114,24 +114,17 @@ class ForumName extends StatelessWidget {
                         : TextOverflow.clip)
                 : const SizedBox.shrink());
 
-        if (isDeprecated ?? false) {
-          final style = textStyle?.merge(AppTheme.boldRed);
-
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(child: nameWidget),
-              Text(
-                '隐藏',
-                style: style,
-                strutStyle:
-                    style != null ? StrutStyle.fromTextStyle(style) : null,
-              ),
-            ],
-          );
-        } else {
-          return nameWidget;
-        }
+        return (isDeprecated ?? false)
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: nameWidget),
+                  Tag(
+                      text: '隐藏',
+                      textStyle: Theme.of(context).textTheme.bodySmall),
+                ],
+              )
+            : nameWidget;
       },
     );
   }

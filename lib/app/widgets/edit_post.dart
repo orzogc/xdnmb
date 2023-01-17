@@ -307,11 +307,7 @@ class _WatermarkDialog extends StatelessWidget {
   }
 }
 
-class _Image extends StatelessWidget {
-  static final UniqueKey _imageHeroTag = UniqueKey();
-
-  static final UniqueKey _buttonHeroTag = UniqueKey();
-
+class _Image extends StatefulWidget {
   final double maxWidth;
 
   final double maxHeight;
@@ -330,9 +326,7 @@ class _Image extends StatelessWidget {
 
   final ImageDataCallback onImagePainted;
 
-  final Future<Uint8List>? _readImageFile;
-
-  _Image(
+  const _Image(
       // ignore: unused_element
       {super.key,
       required this.maxWidth,
@@ -344,19 +338,31 @@ class _Image extends StatelessWidget {
       required this.onWatermark,
       required this.onImageFileLoaded,
       required this.onImagePainted})
-      : assert(imagePath != null || imageData != null),
-        _readImageFile =
-            imageData == null ? File(imagePath!).readAsBytes() : null;
+      : assert(imagePath != null || imageData != null);
+
+  @override
+  State<_Image> createState() => _ImageState();
+}
+
+class _ImageState extends State<_Image> {
+  static final UniqueKey _imageHeroTag = UniqueKey();
+
+  static final UniqueKey _buttonHeroTag = UniqueKey();
+
+  Future<Uint8List>? _readImageFile;
+
+  void _setReadImageFile() => _readImageFile =
+      widget.imageData == null ? File(widget.imagePath!).readAsBytes() : null;
 
   Widget _memoryImage(Uint8List imageData) => Image.memory(
         imageData,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) =>
-            loadingImageErrorBuilder(context, imagePath, error),
+            loadingImageErrorBuilder(context, widget.imagePath, error),
       );
 
   Widget _fileImage() => FutureBuilder<Uint8List>(
-        future: _readImageFile,
+        future: _readImageFile!,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasError) {
@@ -366,7 +372,7 @@ class _Image extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData) {
             WidgetsBinding.instance.addPostFrameCallback(
-                (timeStamp) => onImageFileLoaded(snapshot.data!));
+                (timeStamp) => widget.onImageFileLoaded(snapshot.data!));
 
             return _memoryImage(snapshot.data!);
           }
@@ -376,46 +382,74 @@ class _Image extends StatelessWidget {
       );
 
   @override
-  Widget build(BuildContext context) => ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
-        child: AlignPositioned.relative(
-          alignment: Alignment.topRight,
-          container: GestureDetector(
-            onTap: imageData != null
-                ? () async {
-                    final result = await AppRoutes.toImage(ImageController(
-                        heroTag: _imageHeroTag,
-                        imageData: imageData,
-                        canReturnImageData: true));
-                    if (result is Uint8List) {
-                      onImagePainted(result);
-                    }
+  void initState() {
+    super.initState();
+
+    _setReadImageFile();
+  }
+
+  @override
+  void didUpdateWidget(covariant _Image oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.imageData != oldWidget.imageData ||
+        widget.imagePath != oldWidget.imagePath) {
+      _setReadImageFile();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final minWidth = min(ThumbImage.minWidth, widget.maxWidth);
+    final minHeight = min(ThumbImage.minHeight, widget.maxHeight);
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+          minWidth: minWidth,
+          maxWidth: widget.maxWidth.clamp(minWidth, ThumbImage.maxWidth),
+          minHeight: minHeight,
+          maxHeight: widget.maxHeight.clamp(minHeight, ThumbImage.maxHeight)),
+      child: AlignPositioned.relative(
+        alignment: Alignment.topRight,
+        container: GestureDetector(
+          onTap: widget.imageData != null
+              ? () async {
+                  final result = await AppRoutes.toImage(ImageController(
+                      heroTag: _imageHeroTag,
+                      imageData: widget.imageData,
+                      canReturnImageData: true));
+                  if (result is Uint8List) {
+                    widget.onImagePainted(result);
                   }
-                : null,
-            onLongPress: () => Get.dialog(_WatermarkDialog(
-                isWatermark: isWatermark, onWatermark: onWatermark)),
-            child: Hero(
-              tag: _imageHeroTag,
-              transitionOnUserGestures: true,
-              child:
-                  imageData != null ? _memoryImage(imageData!) : _fileImage(),
-            ),
-          ),
+                }
+              : null,
+          onLongPress: () => Get.dialog(_WatermarkDialog(
+              isWatermark: widget.isWatermark,
+              onWatermark: widget.onWatermark)),
           child: Hero(
-            tag: _buttonHeroTag,
-            child: ElevatedButton(
-              onPressed: onCancel,
-              style: ElevatedButton.styleFrom(shape: const CircleBorder()),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return Icon(Icons.close,
-                      size: min(constraints.maxHeight, 24.0));
-                },
-              ),
+            tag: _imageHeroTag,
+            transitionOnUserGestures: true,
+            child: widget.imageData != null
+                ? _memoryImage(widget.imageData!)
+                : _fileImage(),
+          ),
+        ),
+        child: Hero(
+          tag: _buttonHeroTag,
+          child: ElevatedButton(
+            onPressed: widget.onCancel,
+            style: ElevatedButton.styleFrom(shape: const CircleBorder()),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Icon(Icons.close,
+                    size: min(constraints.maxHeight, 24.0));
+              },
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 typedef _OnCheckCallback = void Function(bool isCheck);
@@ -708,15 +742,26 @@ class _CookieList extends StatefulWidget {
 class _CookieListState extends State<_CookieList> {
   static const Duration _recent = Duration(days: 3);
 
-  late final Future<HashSet<String>>? _getReplyUserHash;
+  late Future<HashMap<String, int>>? _getReplyCount;
+
+  void _setGetReplyCount() => _getReplyCount = widget.mainPostId != null
+      ? PostHistoryService.to.getReplyCount(widget.mainPostId!)
+      : null;
 
   @override
   void initState() {
     super.initState();
 
-    _getReplyUserHash = widget.mainPostId != null
-        ? PostHistoryService.to.getReplyUserHash(widget.mainPostId!)
-        : null;
+    _setGetReplyCount();
+  }
+
+  @override
+  void didUpdateWidget(covariant _CookieList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.mainPostId != oldWidget.mainPostId) {
+      _setGetReplyCount();
+    }
   }
 
   @override
@@ -724,8 +769,8 @@ class _CookieListState extends State<_CookieList> {
     final user = UserService.to;
     final theme = Theme.of(context);
 
-    return FutureBuilder<HashSet<String>>(
-      future: _getReplyUserHash,
+    return FutureBuilder<HashMap<String, int>>(
+      future: _getReplyCount,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasError) {
@@ -733,6 +778,7 @@ class _CookieListState extends State<_CookieList> {
         }
 
         final now = DateTime.now();
+        final map = snapshot.data;
 
         return ListenableBuilder(
           listenable: user.cookiesListenable,
@@ -755,12 +801,21 @@ class _CookieListState extends State<_CookieList> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(color: cookie.color)),
                       if (cookie.name == widget.poUserHash)
-                        Tag(text: 'Po', textStyle: theme.textTheme.bodySmall),
+                        Tag(
+                            text: (snapshot.connectionState ==
+                                        ConnectionState.done &&
+                                    map != null &&
+                                    map.containsKey(widget.poUserHash))
+                                ? 'Po・${map[widget.poUserHash]}'
+                                : 'Po',
+                            textStyle: theme.textTheme.bodySmall),
                       if (cookie.name != widget.poUserHash &&
                           snapshot.connectionState == ConnectionState.done &&
-                          snapshot.hasData &&
-                          snapshot.data!.contains(cookie.name))
-                        Tag(text: '有回串', textStyle: theme.textTheme.bodySmall),
+                          map != null &&
+                          map.containsKey(cookie.name))
+                        Tag(
+                            text: '回串・${map[cookie.name]}',
+                            textStyle: theme.textTheme.bodySmall),
                       if (cookie.lastPostTime != null &&
                           now.difference(cookie.lastPostTime!) < _recent)
                         Tag(text: '最近使用', textStyle: theme.textTheme.bodySmall),

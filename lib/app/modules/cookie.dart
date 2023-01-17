@@ -17,6 +17,7 @@ import '../utils/url.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
 import '../widgets/safe_area.dart';
+import '../widgets/tag.dart';
 
 class _VerifyImage extends StatefulWidget {
   // ignore: unused_element
@@ -29,14 +30,14 @@ class _VerifyImage extends StatefulWidget {
 class _VerifyImageState extends State<_VerifyImage> {
   late Future<Uint8List> _getVerifyImage;
 
-  Future<Uint8List> _toGetVerifyImage() =>
-      XdnmbClientService.to.client.getVerifyImage();
+  void _setGetVerifyImage() =>
+      _getVerifyImage = XdnmbClientService.to.client.getVerifyImage();
 
   @override
   void initState() {
     super.initState();
 
-    _getVerifyImage = _toGetVerifyImage();
+    _setGetVerifyImage();
   }
 
   @override
@@ -44,7 +45,7 @@ class _VerifyImageState extends State<_VerifyImage> {
         onTap: () {
           if (mounted) {
             setState(() {
-              _getVerifyImage = _toGetVerifyImage();
+              _setGetVerifyImage();
             });
           }
         },
@@ -416,32 +417,15 @@ class _Cookie extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (user.isUserCookieValid && cookie.isDeprecated)
-            const Flexible(
-              child: Text(
-                '非登陆帐号饼干',
-                style: AppTheme.boldRed,
-              ),
+            Flexible(
+              child: Tag(text: '非登陆帐号饼干', textStyle: theme.textTheme.bodySmall),
             ),
           if (user.isUserCookieValid &&
               cookie.isDeprecated &&
               (cookie.userHash == user.browseCookie?.userHash))
             const SizedBox(width: 10.0),
           if (cookie.userHash == user.browseCookie?.userHash)
-            DecoratedBox(
-              decoration: BoxDecoration(
-                  color: theme.primaryColor,
-                  borderRadius: BorderRadius.circular(5)),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 5),
-                child: Text(
-                  '浏览',
-                  style: TextStyle(
-                    color: theme.colorScheme.onPrimary,
-                    fontSize: theme.textTheme.bodyMedium?.fontSize,
-                  ),
-                ),
-              ),
-            ),
+            Tag(text: '浏览', textStyle: theme.textTheme.bodySmall),
           if (cookie.userHash == user.browseCookie?.userHash)
             const SizedBox(width: 10.0),
           IconButton(

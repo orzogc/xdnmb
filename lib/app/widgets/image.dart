@@ -18,13 +18,13 @@ import '../utils/toast.dart';
 typedef ImageDataCallback = void Function(Uint8List imageData);
 
 class ThumbImage extends StatelessWidget {
-  static const double _minWidth = 70.0;
+  static const double minWidth = 70.0;
 
-  static const double _maxWidth = 250.0;
+  static const double maxWidth = 250.0;
 
-  static const double _minHeight = _minWidth;
+  static const double minHeight = minWidth;
 
-  static const double _maxHeight = _maxWidth;
+  static const double maxHeight = maxWidth;
 
   final PostBase post;
 
@@ -63,11 +63,11 @@ class ThumbImage extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, constraints) => ConstrainedBox(
               constraints: BoxConstraints(
-                minWidth: _minWidth,
+                minWidth: minWidth,
                 maxWidth:
-                    (constraints.maxWidth / 3.0).clamp(_minWidth, _maxWidth),
-                minHeight: _minHeight,
-                maxHeight: _maxHeight,
+                    (constraints.maxWidth / 3.0).clamp(minWidth, maxWidth),
+                minHeight: minHeight,
+                maxHeight: maxHeight,
               ),
               child: Hero(
                 tag: _heroTag,

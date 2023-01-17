@@ -147,17 +147,41 @@ class ConfirmCancelDialog extends StatelessWidget {
   }
 }
 
-class NoticeDialog extends StatelessWidget {
+class NoticeDialog extends StatefulWidget {
   final bool showCheckbox;
 
   final bool isAutoUpdate;
 
-  final Future<void> _updateNotice = PersistentDataService.to.updateNotice();
-
-  NoticeDialog(
+  const NoticeDialog(
       {super.key, this.showCheckbox = false, this.isAutoUpdate = false})
       : assert(
             (showCheckbox && !isAutoUpdate) || (!showCheckbox && isAutoUpdate));
+
+  @override
+  State<NoticeDialog> createState() => _NoticeDialogState();
+}
+
+class _NoticeDialogState extends State<NoticeDialog> {
+  Future<void>? _updateNotice;
+
+  void _setUpdateNotice() => _updateNotice =
+      widget.isAutoUpdate ? PersistentDataService.to.updateNotice() : null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _setUpdateNotice();
+  }
+
+  @override
+  void didUpdateWidget(covariant NoticeDialog oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.isAutoUpdate != oldWidget.isAutoUpdate) {
+      _setUpdateNotice();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -169,8 +193,9 @@ class NoticeDialog extends StatelessWidget {
     return AlertDialog(
       actionsPadding:
           const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
-      actionsAlignment:
-          showCheckbox ? MainAxisAlignment.spaceBetween : MainAxisAlignment.end,
+      actionsAlignment: widget.showCheckbox
+          ? MainAxisAlignment.spaceBetween
+          : MainAxisAlignment.end,
       contentPadding: const EdgeInsets.fromLTRB(24.0, 10.0, 24.0, 5.0),
       title: ListenableBuilder(
           listenable: data.noticeDateListenable,
@@ -178,9 +203,9 @@ class NoticeDialog extends StatelessWidget {
               ? Text('公告 ${formatDay(data.noticeDate!)}')
               : const Text('公告')),
       content: SingleChildScrollViewWithScrollbar(
-        child: isAutoUpdate
+        child: (widget.isAutoUpdate && _updateNotice != null)
             ? FutureBuilder<void>(
-                future: _updateNotice,
+                future: _updateNotice!,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.done &&
                       snapshot.hasError) {
@@ -210,7 +235,7 @@ class NoticeDialog extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (showCheckbox)
+            if (widget.showCheckbox)
               Row(
                 children: [
                   Obx(
@@ -231,7 +256,7 @@ class NoticeDialog extends StatelessWidget {
                 const Spacer(),
                 TextButton(
                   onPressed: () {
-                    if (showCheckbox) {
+                    if (widget.showCheckbox) {
                       settings.showNotice = !isChecked.value;
                     }
                     postListBack();
@@ -250,29 +275,51 @@ class NoticeDialog extends StatelessWidget {
   }
 }
 
-class ForumRuleDialog extends StatelessWidget {
+class ForumRuleDialog extends StatefulWidget {
   final int forumId;
 
-  final Future<void> _getForumRule;
+  const ForumRuleDialog(this.forumId, {super.key});
 
-  ForumRuleDialog(this.forumId, {super.key})
-      : _getForumRule = Future(() async {
-          final forums = ForumListService.to;
+  @override
+  State<ForumRuleDialog> createState() => _ForumRuleDialogState();
+}
 
-          final entry = forums.forums.toList().asMap().entries.singleWhere(
-              (entry) => entry.value.isForum && entry.value.id == forumId);
+class _ForumRuleDialogState extends State<ForumRuleDialog> {
+  late Future<void> _getForumRule;
 
-          if (entry.value.isDeprecated) {
-            final htmlForum =
-                await XdnmbClientService.to.client.getHtmlForumInfo(forumId);
-            final forum = ForumData.fromHtmlForum(htmlForum);
-            forum.userDefinedName = entry.value.userDefinedName;
-            forum.isHidden = entry.value.isHidden;
-            await forums.updateForum(entry.key, forum);
+  void _setGetForumRule() => _getForumRule = Future(() async {
+        final forums = ForumListService.to;
 
-            debugPrint('更新废弃版块成功');
-          }
-        });
+        final entry = forums.forums.toList().asMap().entries.singleWhere(
+            (entry) => entry.value.isForum && entry.value.id == widget.forumId);
+
+        if (entry.value.isDeprecated) {
+          final htmlForum = await XdnmbClientService.to.client
+              .getHtmlForumInfo(widget.forumId);
+          final forum = ForumData.fromHtmlForum(htmlForum);
+          forum.userDefinedName = entry.value.userDefinedName;
+          forum.isHidden = entry.value.isHidden;
+          await forums.updateForum(entry.key, forum);
+
+          debugPrint('更新废弃版块成功');
+        }
+      });
+
+  @override
+  void initState() {
+    super.initState();
+
+    _setGetForumRule();
+  }
+
+  @override
+  void didUpdateWidget(covariant ForumRuleDialog oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.forumId != oldWidget.forumId) {
+      _setGetForumRule();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -286,7 +333,7 @@ class ForumRuleDialog extends StatelessWidget {
           showToast('更新版规出现错误：${exceptionMessage(snapshot.error!)}');
         }
 
-        final forum = forums.forum(forumId);
+        final forum = forums.forum(widget.forumId);
 
         return AlertDialog(
           actionsPadding: const EdgeInsets.only(right: 20.0, bottom: 20.0),

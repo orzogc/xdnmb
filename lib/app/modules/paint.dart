@@ -102,26 +102,51 @@ class _Confirm extends StatelessWidget {
 
 typedef _BuildPainter = Widget Function(Uint8List image);
 
-class _Canvas extends StatelessWidget {
+class _Canvas extends StatefulWidget {
   final BoxConstraints constraints;
 
   final _BuildPainter painter;
 
-  final Future<Uint8List> _paint;
-
   // ignore: unused_element
-  _Canvas({super.key, required this.constraints, required this.painter})
-      : _paint = Future(() async {
-          debugPrint(
-              'blank image size: ${constraints.maxWidth} ${constraints.maxHeight - 52}');
-          final recorder = PictureRecorder();
-          final canvas = Canvas(recorder);
-          canvas.drawPaint(Paint()..color = Colors.white);
-          final image = await recorder.endRecording().toImage(
-              constraints.maxWidth.floor(), constraints.maxHeight.floor() - 52);
-          final data = await image.toByteData(format: ImageByteFormat.png);
-          return data!.buffer.asUint8List();
-        });
+  const _Canvas({super.key, required this.constraints, required this.painter});
+
+  @override
+  State<_Canvas> createState() => _CanvasState();
+}
+
+class _CanvasState extends State<_Canvas> {
+  late Future<Uint8List> _paint;
+
+  void _setPaint() => _paint = Future(() async {
+        debugPrint(
+            'blank image size: ${widget.constraints.maxWidth} ${widget.constraints.maxHeight - 52}');
+
+        final recorder = PictureRecorder();
+        final canvas = Canvas(recorder);
+        canvas.drawPaint(Paint()..color = Colors.white);
+        final image = await recorder.endRecording().toImage(
+            widget.constraints.maxWidth.floor(),
+            widget.constraints.maxHeight.floor() - 52);
+        final data = await image.toByteData(format: ImageByteFormat.png);
+
+        return data!.buffer.asUint8List();
+      });
+
+  @override
+  void initState() {
+    super.initState();
+
+    _setPaint();
+  }
+
+  @override
+  void didUpdateWidget(covariant _Canvas oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.constraints != oldWidget.constraints) {
+      _setPaint();
+    }
+  }
 
   @override
   Widget build(BuildContext context) => FutureBuilder<Uint8List>(
@@ -134,7 +159,7 @@ class _Canvas extends StatelessWidget {
 
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData) {
-            return painter(snapshot.data!);
+            return widget.painter(snapshot.data!);
           }
 
           return const SizedBox.shrink();

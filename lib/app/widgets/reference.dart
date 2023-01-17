@@ -75,17 +75,26 @@ class _ReferenceCardState extends State<ReferenceCard> {
 
   String? errorMessage;
 
-  Future<ReferenceWithData> _toGetReference() async {
+  void _setGetReference() {
     debugPrint('获取串 ${widget.postId.toPostNumber()} 的引用');
 
-    return XdnmbClientService.to.getHtmlReference(widget.postId);
+    _getReference = XdnmbClientService.to.getHtmlReference(widget.postId);
   }
 
   @override
   void initState() {
     super.initState();
 
-    _getReference = _toGetReference();
+    _setGetReference();
+  }
+
+  @override
+  void didUpdateWidget(covariant ReferenceCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.postId != oldWidget.postId) {
+      _setGetReference();
+    }
   }
 
   @override
@@ -185,7 +194,7 @@ class _ReferenceCardState extends State<ReferenceCard> {
                       if (mounted) {
                         setState(() {
                           errorMessage = null;
-                          _getReference = _toGetReference();
+                          _setGetReference();
                         });
                       }
                     },

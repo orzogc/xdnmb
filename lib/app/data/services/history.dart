@@ -318,10 +318,21 @@ class PostHistoryService extends GetxService {
         .findAll();
   }
 
-  Future<HashSet<String>> getReplyUserHash(int mainPostId) async {
-    final list =
-        await _replyData.filter().mainPostIdEqualTo(mainPostId).findAll();
+  Future<HashMap<String, int>> getReplyCount(int mainPostId) async {
+    final list = await _replyData
+        .filter()
+        .mainPostIdEqualTo(mainPostId)
+        .userHashProperty()
+        .findAll();
 
-    return HashSet.of(list.map((reply) => reply.userHash));
+    return list.fold<HashMap<String, int>>(HashMap(), (map, userHash) {
+      map.update(
+        userHash,
+        (value) => ++value,
+        ifAbsent: () => 1,
+      );
+
+      return map;
+    });
   }
 }

@@ -394,7 +394,7 @@ class _CompactTabAndForumList extends StatelessWidget {
       ]),
       builder: (context, child) => SwitchListTile(
         title: Text(
-          '同时显示标签页列表和版块列表',
+          '合并显示标签页列表和版块列表',
           style: TextStyle(
             color: !(settings.showBottomBar || settings.backdropUI)
                 ? AppTheme.inactiveSettingColor

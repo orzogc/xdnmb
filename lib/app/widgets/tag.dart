@@ -17,7 +17,7 @@ class Tag extends StatelessWidget {
         TextStyle(color: theme.colorScheme.onPrimary);
     final strut = strutStyle ?? StrutStyle.fromTextStyle(style);
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: theme.primaryColor,
         borderRadius: BorderRadius.circular(3.0),

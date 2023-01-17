@@ -16,8 +16,11 @@ final List<CollectionSchema<dynamic>> _isarSchemas = [
   ReferenceDataSchema,
 ];
 
-/// [Isar]实例只能存在一个
+/// [Isar]实例只能同时存在一个
 late final Isar isar;
 
 Future<void> initIsar() async => isar = await Isar.open(_isarSchemas,
-    directory: databasePath, name: _databaseName, inspector: false);
+    directory: databasePath,
+    name: _databaseName,
+    maxSizeMiB: 10240,
+    inspector: false);

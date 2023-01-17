@@ -254,7 +254,7 @@ packages:
       name: easy_refresh
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.2.2+1"
+    version: "3.2.2+2"
   expandable_text:
     dependency: "direct main"
     description:
