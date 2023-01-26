@@ -69,8 +69,8 @@ class _FeedDialog extends StatelessWidget {
 
   final VoidCallback onDelete;
 
-  // ignore: unused_element
   const _FeedDialog(
+      // ignore: unused_element
       {super.key,
       required this.controller,
       required this.post,

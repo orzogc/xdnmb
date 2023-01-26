@@ -1,11 +1,11 @@
 name: xdnmb
 description: An app for nmbxd.com.
 publish_to: 'none'
-version: 0.3.0+7
+version: 0.3.1-alpha+7
 
 environment:
-  sdk: ">=2.18.6 <3.0.0"
-  flutter: ">=3.3.10"
+  sdk: ">=2.19.0 <3.0.0"
+  flutter: ">=3.7.0"
 
 dependencies:
   align_positioned: ^3.0.0
@@ -21,7 +21,7 @@ dependencies:
   expandable_text: ^2.3.0
   external_path: ^1.0.3
   file_picker: ^5.2.5
-  float_column: ^1.3.1
+  float_column: ^1.3.3
   flutter:
     sdk: flutter
   flutter_cache_manager: ^3.3.0
@@ -50,15 +50,15 @@ dependencies:
   mobile_scanner: ^2.1.0
   package_info_plus: ^3.0.2
   path: ^1.8.2
-  path_provider: ^2.0.11
+  path_provider: ^2.0.12
   permission_handler: ^10.2.0
   responsive_grid_list: ^1.3.0
   screenshot: ^1.3.0
   showcaseview: ^2.0.0+1
-  swipeable_page_route: ^0.2.6
+  swipeable_page_route: ^0.3.0
   system_info2: ^3.0.1
   timeago_flutter: ^1.2.0
-  url_launcher: ^6.1.7
+  url_launcher: ^6.1.8
   uuid: ^3.0.7
   version: ^3.0.2
   xdg_directories: ^0.2.0+3

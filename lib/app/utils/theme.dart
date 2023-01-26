@@ -95,10 +95,12 @@ abstract class AppTheme {
         cursorColor: AppTheme.primaryColorLight,
         selectionColor: AppTheme.primaryColorLight),
     iconTheme: const IconThemeData(color: iconColor),
+    switchTheme: SwitchThemeData(
+        thumbColor: _SwitchColor(AppTheme.primaryColorLight),
+        trackColor: _SwitchColor(AppTheme.primaryColorLight.withOpacity(0.5))),
     checkboxTheme: CheckboxThemeData(
         fillColor: _CheckboxFillColor(primaryColorLight),
         checkColor: MaterialStateColor.resolveWith((states) => Colors.white)),
-    toggleableActiveColor: AppTheme.primaryColorLight,
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
         selectedItemColor: primaryColorLight,
         unselectedItemColor: Colors.grey,
@@ -149,10 +151,12 @@ abstract class AppTheme {
     textSelectionTheme: const TextSelectionThemeData(
         cursorColor: Colors.white, selectionColor: Colors.white),
     iconTheme: const IconThemeData(color: iconColor),
+    switchTheme: SwitchThemeData(
+        thumbColor: _SwitchColor(AppTheme.primaryColorLight),
+        trackColor: _SwitchColor(AppTheme.primaryColorLight.withOpacity(0.5))),
     checkboxTheme: CheckboxThemeData(
         fillColor: _CheckboxFillColor(Colors.white),
         checkColor: MaterialStateColor.resolveWith((states) => Colors.black)),
-    toggleableActiveColor: AppTheme.primaryColorLight,
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
         selectedItemColor: Colors.grey,
         unselectedItemColor: primaryColorDark,
@@ -198,29 +202,39 @@ abstract class AppTheme {
 }
 
 class _ButtonDefaultOverlay extends MaterialStateProperty<Color?> {
-  final Color primary;
+  final Color color;
 
-  _ButtonDefaultOverlay(this.primary);
+  _ButtonDefaultOverlay(this.color);
 
   @override
   Color? resolve(Set<MaterialState> states) {
     if (states.contains(MaterialState.hovered)) {
-      return primary.withOpacity(0.04);
+      return color.withOpacity(0.04);
     }
     if (states.contains(MaterialState.focused) ||
         states.contains(MaterialState.pressed)) {
-      return primary.withOpacity(0.12);
+      return color.withOpacity(0.12);
     }
     return null;
   }
 }
 
 class _CheckboxFillColor extends MaterialStateProperty<Color?> {
-  final Color primary;
+  final Color color;
 
-  _CheckboxFillColor(this.primary);
+  _CheckboxFillColor(this.color);
 
   @override
   Color? resolve(Set<MaterialState> states) =>
-      states.contains(MaterialState.disabled) ? Colors.grey.shade400 : primary;
+      states.contains(MaterialState.disabled) ? Colors.grey.shade400 : color;
+}
+
+class _SwitchColor extends MaterialStateProperty<Color?> {
+  final Color color;
+
+  _SwitchColor(this.color);
+
+  @override
+  Color? resolve(Set<MaterialState> states) =>
+      states.contains(MaterialState.selected) ? color : null;
 }
