@@ -1,5 +1,4 @@
 import 'package:isar/isar.dart';
-import 'package:get/get.dart';
 
 import '../data/models/history.dart';
 import '../data/models/post.dart';
@@ -23,6 +22,6 @@ late final Isar isar;
 Future<void> initIsar() async => isar = await Isar.open(_isarSchemas,
     directory: databasePath,
     name: _databaseName,
-    // ios 设备内存不足
-    maxSizeMiB: GetPlatform.isIOS ? 1024 : 10240,
+    // iOS设备可能内存不足
+    maxSizeMiB: 1024,
     inspector: false);
