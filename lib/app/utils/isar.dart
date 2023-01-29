@@ -1,4 +1,8 @@
+import 'dart:io';
+import 'dart:math';
+
 import 'package:isar/isar.dart';
+import 'package:path/path.dart';
 
 import '../data/models/history.dart';
 import '../data/models/post.dart';
@@ -19,9 +23,17 @@ final List<CollectionSchema<dynamic>> _isarSchemas = [
 /// [Isar]实例只能同时存在一个
 late final Isar isar;
 
-Future<void> initIsar() async => isar = await Isar.open(_isarSchemas,
-    directory: databasePath,
-    name: _databaseName,
-    // iOS设备可能内存不足
-    maxSizeMiB: 1024,
-    inspector: false);
+/// 注意iOS设备可能内存不足
+Future<void> initIsar() async {
+  final databaseFile = File(join(databasePath, '$_databaseName.isar'));
+  // 至少保留200MB左右的空间
+  final maxSizeGiB = await databaseFile.exists()
+      ? ((await databaseFile.length() / (1024 * 1024 * 1024) + 0.2).floor() + 1)
+      : 1;
+
+  isar = await Isar.open(_isarSchemas,
+      directory: databasePath,
+      name: _databaseName,
+      maxSizeMiB: max(maxSizeGiB, 1) * 1024,
+      inspector: false);
+}

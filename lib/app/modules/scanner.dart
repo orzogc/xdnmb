@@ -27,8 +27,12 @@ class QRCodeScannerView extends StatelessWidget {
           title: const Text('扫描饼干二维码'),
           actions: [
             PickImage(onPickImage: (path) async {
-              if (!await _controller.analyzeImage(path)) {
-                showToast('无效的饼干二维码');
+              try {
+                if (!await _controller.analyzeImage(path)) {
+                  showToast('无效的饼干二维码');
+                }
+              } catch (e) {
+                showToast('扫描图片里的饼干二维码失败：$e');
               }
             }),
             IconButton(
@@ -60,17 +64,23 @@ class QRCodeScannerView extends StatelessWidget {
 
                 if (name == null || userHash == null) {
                   showToast('无效的饼干二维码');
+
+                  Get.back();
                   return;
                 }
 
                 if (await user.addCookie(name: name, userHash: userHash)) {
                   showToast('饼干添加成功');
-                  Get.back();
                 } else {
                   showToast('已存在要添加的饼干');
                 }
+
+                Get.back();
               } catch (e) {
+                debugPrint('扫描饼干二维码出现错误：$e');
                 showToast('无效的饼干二维码');
+
+                Get.back();
               }
             }
           },

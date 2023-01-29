@@ -2112,11 +2112,9 @@ Future<String?> _getDeviceInfo() async {
     return 'Android ${info.brand} ${info.device} ${info.display} ${version.release} ${version.sdkInt}';
   } else if (GetPlatform.isIOS) {
     final info = await deviceInfo.iosInfo;
-    //final utsname = info.utsname;
+    final utsname = info.utsname;
 
-    // TODO: 需要确认需要哪些信息
-    return 'iOS ${info.data}';
-    //return 'iOS: ${info.localizedModel} ${info.model} ${info.name} ${info.systemName} ${info.systemVersion} ${utsname.machine} ${utsname.sysname} ${utsname.version}';
+    return 'iOS ${info.systemVersion} ${utsname.machine} ${utsname.release}';
   } else if (GetPlatform.isLinux) {
     final info = await deviceInfo.linuxInfo;
     final message = StringBuffer('Linux ${info.prettyName}');
