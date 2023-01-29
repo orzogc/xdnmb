@@ -15,9 +15,7 @@ import '../utils/extensions.dart';
 import '../utils/image.dart';
 import '../utils/toast.dart';
 
-typedef ImageDataCallback = void Function(Uint8List imageData);
-
-class ThumbImage extends StatelessWidget {
+class ThumbImage extends StatefulWidget {
   static const double minWidth = 70.0;
 
   static const double maxWidth = 250.0;
@@ -30,13 +28,10 @@ class ThumbImage extends StatelessWidget {
 
   final String? poUserHash;
 
-  final ImageDataCallback? onImagePainted;
+  /// 涂鸦后调用，参数是图片数据
+  final ValueSetter<Uint8List>? onImagePainted;
 
   final bool canReturnImageData;
-
-  final UniqueKey _heroTag = UniqueKey();
-
-  final RxBool _hasError = false.obs;
 
   ThumbImage(
       {super.key,
@@ -47,54 +42,64 @@ class ThumbImage extends StatelessWidget {
       : assert(post.hasImage);
 
   @override
-  Widget build(BuildContext context) => post.hasImage
+  State<ThumbImage> createState() => _ThumbImageState();
+}
+
+class _ThumbImageState extends State<ThumbImage> {
+  final UniqueKey _heroTag = UniqueKey();
+
+  bool _hasError = false;
+
+  PostBase get _post => widget.post;
+
+  @override
+  Widget build(BuildContext context) => _post.hasImage
       ? GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: () async {
             final result = await AppRoutes.toImage(ImageController(
                 heroTag: _heroTag,
-                post: post,
-                poUserHash: poUserHash,
-                canReturnImageData: canReturnImageData));
-            if (onImagePainted != null && result is Uint8List) {
-              onImagePainted!(result);
+                post: _post,
+                poUserHash: widget.poUserHash,
+                canReturnImageData: widget.canReturnImageData));
+            if (widget.onImagePainted != null && result is Uint8List) {
+              widget.onImagePainted!(result);
             }
           },
           child: LayoutBuilder(
             builder: (context, constraints) => ConstrainedBox(
               constraints: BoxConstraints(
-                minWidth: minWidth,
-                maxWidth:
-                    (constraints.maxWidth / 3.0).clamp(minWidth, maxWidth),
-                minHeight: minHeight,
-                maxHeight: maxHeight,
+                minWidth: ThumbImage.minWidth,
+                maxWidth: (constraints.maxWidth / 3.0)
+                    .clamp(ThumbImage.minWidth, ThumbImage.maxWidth),
+                minHeight: ThumbImage.minHeight,
+                maxHeight: ThumbImage.maxHeight,
               ),
               child: Hero(
                 tag: _heroTag,
                 transitionOnUserGestures: true,
                 // 因为部分GIF略缩图显示会出错，所以小图加载错误就加载大图
-                child: Obx(
-                  () => CachedNetworkImage(
-                    imageUrl:
-                        _hasError.value ? post.imageUrl! : post.thumbImageUrl!,
-                    cacheKey: _hasError.value
-                        ? post.imageKey()!
-                        : post.thumbImageKey()!,
-                    fit: BoxFit.contain,
-                    cacheManager: XdnmbImageCacheManager(),
-                    progressIndicatorBuilder: loadingThumbImageIndicatorBuilder,
-                    errorWidget: (context, url, error) {
-                      if (!_hasError.value) {
-                        WidgetsBinding.instance.addPostFrameCallback(
-                            (timeStamp) => _hasError.value = true);
-                      }
+                child: CachedNetworkImage(
+                  imageUrl: _hasError ? _post.imageUrl! : _post.thumbImageUrl!,
+                  cacheKey:
+                      _hasError ? _post.imageKey()! : _post.thumbImageKey()!,
+                  fit: BoxFit.contain,
+                  cacheManager: XdnmbImageCacheManager(),
+                  progressIndicatorBuilder: loadingThumbImageIndicatorBuilder,
+                  errorWidget: (context, url, error) {
+                    if (!_hasError) {
+                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                        if (mounted) {
+                          setState(() => _hasError = true);
+                        }
+                      });
+                    }
 
-                      return _hasError.value
-                          ? loadingImageErrorBuilder(context, url, error,
-                              showError: false)
-                          : const SizedBox.shrink();
-                    },
-                  ),
+                    return _hasError
+                        ? loadingImageErrorBuilder(context, url, error,
+                            showError: false)
+                        : const SizedBox.shrink();
+                  },
                 ),
               ),
             ),
@@ -103,10 +108,9 @@ class ThumbImage extends StatelessWidget {
       : const SizedBox.shrink();
 }
 
-typedef PickImageCallback = void Function(String path);
-
 class PickImage extends StatelessWidget {
-  final PickImageCallback onPickImage;
+  /// 选取图片后调用，参数为图片路径
+  final ValueSetter<String> onPickImage;
 
   const PickImage({super.key, required this.onPickImage});
 

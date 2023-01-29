@@ -169,8 +169,6 @@ Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
   }
 }
 
-typedef ThumbImageBuilder = Widget Function();
-
 Widget loadingThumbImageIndicatorBuilder(
         BuildContext context, String url, DownloadProgress progress) =>
     progress.progress != null

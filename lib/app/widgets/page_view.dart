@@ -6,8 +6,6 @@ import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 import '../data/services/settings.dart';
 
-typedef OnIndexCallback = void Function(int index);
-
 class PageViewTabBar extends StatefulWidget implements PreferredSizeWidget {
   static const animationDuration = kTabScrollDuration;
 
@@ -21,7 +19,8 @@ class PageViewTabBar extends StatefulWidget implements PreferredSizeWidget {
 
   final int initialIndex;
 
-  final OnIndexCallback onIndex;
+  /// [PageViewTabBar]的index变化时调用，参数是index
+  final ValueChanged<int> onIndex;
 
   final List<Widget> tabs;
 

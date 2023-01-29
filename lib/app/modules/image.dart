@@ -292,14 +292,13 @@ class _ImageDialog extends StatelessWidget {
   }
 }
 
-typedef _SetOpacityCallback = void Function(double opacity);
-
 class _Image<T extends Object> extends StatefulWidget {
   final UniqueKey heroTag;
 
   final ImageProvider<T> provider;
 
-  final _SetOpacityCallback setOpacity;
+  /// 设置背景透明度，参数是透明度（0.0到 1.0）
+  final ValueSetter<double> setOpacity;
 
   final VoidCallback hideOverlay;
 

@@ -75,8 +75,6 @@ class PostList {
   int get hashCode => Object.hash(postListType, id);
 }
 
-typedef OnPageCallback = void Function(int page);
-
 abstract class PostListController extends ChangeNotifier {
   static final Rx<ScrollDirection> _scrollDirection = Rx(ScrollDirection.idle);
 
@@ -185,7 +183,8 @@ abstract class PostListController extends ChangeNotifier {
 
   void trySave() => save?.call();
 
-  StreamSubscription<int> listenPage(OnPageCallback onPage) =>
+  /// [onPage]参数为页数
+  StreamSubscription<int> listenPage(ValueChanged<int> onPage) =>
       _page.listen(onPage);
 
   @override

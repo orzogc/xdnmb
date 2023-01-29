@@ -8,8 +8,6 @@ import '../utils/padding.dart';
 import '../utils/theme.dart';
 import 'listenable.dart';
 
-typedef OnShowBackLayerCallback = void Function(bool isShowed);
-
 class BackdropController {
   static final BackdropController controller = BackdropController();
 
@@ -41,7 +39,8 @@ class BackdropController {
     }
   }
 
-  StreamSubscription<bool> listen(OnShowBackLayerCallback callback) =>
+  /// [callback]参数为backdrop是否显示
+  StreamSubscription<bool> listen(ValueChanged<bool> callback) =>
       _isShowBackLayer.listen(callback);
 }
 

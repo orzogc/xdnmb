@@ -14,6 +14,7 @@ import 'package:xdnmb_api/xdnmb_api.dart' as xdnmb_api;
 import '../data/models/controller.dart';
 import '../data/models/draft.dart';
 import '../data/models/emoticon.dart';
+import '../data/models/forum.dart';
 import '../data/models/post.dart';
 import '../data/models/reply.dart';
 import '../data/services/draft.dart';
@@ -55,14 +56,15 @@ class _ForumName extends StatelessWidget {
 
   final int? forumId;
 
-  final ForumCallback onForum;
+  /// 选取版块时调用，参数是版块数据
+  final ValueSetter<ForumData> onSelected;
 
   const _ForumName(
       // ignore: unused_element
       {super.key,
       required this.postListType,
       required this.forumId,
-      required this.onForum});
+      required this.onSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +87,7 @@ class _ForumName extends StatelessWidget {
                       SelectForum(
                         isOnlyForum: true,
                         onSelect: (forum) {
-                          onForum(forum);
+                          onSelected(forum);
                           Get.back();
                         },
                       ),
@@ -148,12 +150,11 @@ class _ReportReasonDialog extends StatelessWidget {
   }
 }
 
-typedef _ReportReasonCallback = void Function(String? text);
-
 class _ReportReason extends StatelessWidget {
   final String? reportReason;
 
-  final _ReportReasonCallback onReportReason;
+  /// 选取举报理由后调用，参数是举报理由
+  final ValueSetter<String?> onReportReason;
 
   final RxnString _value;
 
@@ -237,12 +238,11 @@ class _ReportReason extends StatelessWidget {
   }
 }
 
-typedef _WatermarkCallback = void Function(bool isWatermark);
-
 class _WatermarkDialog extends StatelessWidget {
   final RxBool isWatermark;
 
-  final _WatermarkCallback onWatermark;
+  /// 选取是否有水印时调用，参数为是否有水印
+  final ValueSetter<bool> onWatermark;
 
   _WatermarkDialog(
       // ignore: unused_element
@@ -320,11 +320,14 @@ class _Image extends StatefulWidget {
 
   final VoidCallback onCancel;
 
-  final _WatermarkCallback onWatermark;
+  /// 选取是否有水印时调用，参数为是否有水印
+  final ValueSetter<bool> onWatermark;
 
-  final ImageDataCallback onImageFileLoaded;
+  /// 文件图片加载后调用，参数是图片数据
+  final ValueSetter<Uint8List> onImageFileLoaded;
 
-  final ImageDataCallback onImagePainted;
+  /// 涂鸦后调用，参数是图片数据
+  final ValueSetter<Uint8List> onImagePainted;
 
   const _Image(
       // ignore: unused_element
@@ -452,12 +455,11 @@ class _ImageState extends State<_Image> {
   }
 }
 
-typedef _OnCheckCallback = void Function(bool isCheck);
-
 class _AttachDeviceInfo extends StatelessWidget {
   final bool isChecked;
 
-  final _OnCheckCallback onCheck;
+  /// 选择是否附加设备数据时调用，参数为是否附加设备数据
+  final ValueChanged<bool> onCheck;
 
   const _AttachDeviceInfo(
       // ignore: unused_element
@@ -507,10 +509,10 @@ class _ShowEmoticon extends StatelessWidget {
   }
 }
 
-typedef _InsertTextCallback = void Function(String text, [int? offset]);
+typedef InsertTextCallback = void Function(String text, [int? offset]);
 
 class _DiceDialog extends StatefulWidget {
-  final _InsertTextCallback onDice;
+  final InsertTextCallback onDice;
 
   // ignore: unused_element
   const _DiceDialog({super.key, required this.onDice});
@@ -656,7 +658,7 @@ class _DiceDialogState extends State<_DiceDialog> {
 }
 
 class _Dice extends StatelessWidget {
-  final _InsertTextCallback onDice;
+  final InsertTextCallback onDice;
 
   // ignore: unused_element
   const _Dice({super.key, required this.onDice});
@@ -671,10 +673,11 @@ class _Dice extends StatelessWidget {
 class _Paint extends StatelessWidget {
   final Uint8List? imageData;
 
-  final ImageDataCallback onImage;
+  /// 涂鸦后调用，参数是图片数据
+  final ValueSetter<Uint8List> onImagePainted;
 
   // ignore: unused_element
-  const _Paint({super.key, this.imageData, required this.onImage});
+  const _Paint({super.key, this.imageData, required this.onImagePainted});
 
   @override
   Widget build(BuildContext context) {
@@ -683,7 +686,7 @@ class _Paint extends StatelessWidget {
         final data = await AppRoutes.toPaint(
             imageData != null ? PaintController(imageData) : null);
         if (data is Uint8List) {
-          onImage(data);
+          onImagePainted(data);
         }
       },
       icon: const Icon(Icons.brush),
@@ -691,14 +694,12 @@ class _Paint extends StatelessWidget {
   }
 }
 
-typedef _GetText = String Function();
-
 class _SaveDraft extends StatelessWidget {
-  final _GetText getTitle;
+  final ValueGetter<String> getTitle;
 
-  final _GetText getName;
+  final ValueGetter<String> getName;
 
-  final _GetText getContent;
+  final ValueGetter<String> getContent;
 
   const _SaveDraft(
       // ignore: unused_element
@@ -903,11 +904,11 @@ class _Post extends StatelessWidget {
 
   final bool isAttachDeviceInfo;
 
-  final _GetText getTitle;
+  final ValueGetter<String> getTitle;
 
-  final _GetText getName;
+  final ValueGetter<String> getName;
 
-  final _GetText getContent;
+  final ValueGetter<String> getContent;
 
   final VoidCallback onPost;
 
@@ -1407,7 +1408,7 @@ class _EmoticonDialog extends StatelessWidget {
 }
 
 class _Emoticon extends StatefulWidget {
-  final _InsertTextCallback onTap;
+  final InsertTextCallback onTap;
 
   // ignore: unused_element
   const _Emoticon({super.key, required this.onTap});
@@ -1543,14 +1544,6 @@ class _EmoticonState extends State<_Emoticon> {
   }
 }
 
-typedef IsPostedCallback = bool Function();
-
-typedef ToContorllerCallback = EditPostController Function();
-
-typedef InsertTextCallback = void Function(String text, [int? offset]);
-
-typedef InsertImageCallback = void Function(Uint8List imageData);
-
 typedef SetPostListCallback = void Function(
     PostList postList, int? forumId, String? poUserHash);
 
@@ -1559,21 +1552,22 @@ class EditPostCallback {
 
   static EditPostCallback? page;
 
-  final IsPostedCallback _isPosted;
+  final ValueGetter<bool> _isPosted;
 
-  final ToContorllerCallback _toController;
+  final ValueGetter<EditPostController> _toController;
 
   final InsertTextCallback _insertText;
 
-  final InsertImageCallback _insertImage;
+  /// 插入图片时调用，参数是图片数据
+  final ValueSetter<Uint8List> _insertImage;
 
   final SetPostListCallback _setPostList;
 
   EditPostCallback._internal(
-      {required IsPostedCallback isPosted,
-      required ToContorllerCallback toController,
+      {required ValueGetter<bool> isPosted,
+      required ValueGetter<EditPostController> toController,
       required InsertTextCallback insertText,
-      required InsertImageCallback insertImage,
+      required ValueSetter<Uint8List> insertImage,
       required SetPostListCallback setPostList})
       : _isPosted = isPosted,
         _toController = toController,
@@ -1758,7 +1752,7 @@ class _EditPostState extends State<EditPost> {
                     child: _ForumName(
                       postListType: _postList.value.postListType,
                       forumId: _forumId.value,
-                      onForum: (forum) => _forumId.value = forum.id,
+                      onSelected: (forum) => _forumId.value = forum.id,
                     ),
                   ),
                   if (_postList.value.postListType.isThreadType)
@@ -1948,7 +1942,7 @@ class _EditPostState extends State<EditPost> {
                   child: Obx(
                     () => _Paint(
                       imageData: _imageData.value,
-                      onImage: (imageData) {
+                      onImagePainted: (imageData) {
                         _imagePath.value = null;
                         _imageData.value = imageData;
                       },

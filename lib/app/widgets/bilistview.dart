@@ -73,8 +73,6 @@ class DumpItem extends StatelessWidget {
 
 typedef FetchPage<T> = Future<List<T>> Function(int page);
 
-typedef GetPageCallback = int Function();
-
 class BiListViewController {
   bool _isLoadingMore = false;
 
@@ -119,7 +117,7 @@ class BiListView<T> extends StatefulWidget {
 
   final FetchPage<T>? fetchFallback;
 
-  final GetPageCallback? getMaxPage;
+  final ValueGetter<int>? getMaxPage;
 
   const BiListView(
       {super.key,

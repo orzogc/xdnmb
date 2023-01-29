@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
@@ -14,14 +15,11 @@ import '../utils/theme.dart';
 import '../utils/time.dart';
 import 'content.dart';
 import 'forum_name.dart';
-import 'image.dart';
 import 'listenable.dart';
 import 'scroll.dart';
 import 'tag.dart';
 import 'time.dart';
 import 'tooltip.dart';
-
-typedef PostGestureCallback = void Function(PostBase post);
 
 class _PostUser extends StatelessWidget {
   final String userHash;
@@ -182,12 +180,11 @@ class _PostTimeState extends State<_PostTime> {
   }
 }
 
-typedef OnPostIdCallback = void Function(int postId);
-
 class _PostId extends StatelessWidget {
   final int postId;
 
-  final OnPostIdCallback? onPostIdTap;
+  /// 串号被按时调用，参数是串号
+  final ValueSetter<int>? onPostIdTap;
 
   final TextStyle? textStyle;
 
@@ -448,7 +445,8 @@ class PostContent extends StatelessWidget {
 
   final double? contentMaxHeight;
 
-  final OnPostIdCallback? onPostIdTap;
+  /// 串号被按时调用，参数是串号
+  final ValueSetter<int>? onPostIdTap;
 
   late final TextStyle? headerTextStyle;
 
@@ -466,7 +464,7 @@ class PostContent extends StatelessWidget {
       String? poUserHash,
       int? contentMaxLines,
       OnLinkTapCallback? onLinkTap,
-      ImageDataCallback? onImagePainted,
+      ValueSetter<Uint8List>? onImagePainted,
       bool displayImage = true,
       bool canReturnImageData = false,
       bool canTapHiddenText = false,
@@ -580,7 +578,8 @@ class PostContent extends StatelessWidget {
           if (isSage != null && isSage) _PostSage(textStyle: contentTextStyle),
           if (contentMaxHeight != null)
             ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: contentMaxHeight!),
+              constraints: BoxConstraints(
+                  minWidth: double.infinity, maxHeight: contentMaxHeight!),
               child: SingleChildScrollViewWithScrollbar(child: content),
             )
           else
@@ -595,9 +594,11 @@ class PostContent extends StatelessWidget {
 class PostInkWell extends StatelessWidget {
   final PostContent content;
 
-  final PostGestureCallback? onTap;
+  /// 按下时调用，参数是被按的串的数据
+  final ValueSetter<PostBase>? onTap;
 
-  final PostGestureCallback? onLongPress;
+  /// 长按时调用，参数是被按的串的数据
+  final ValueSetter<PostBase>? onLongPress;
 
   final MouseCursor? mouseCursor;
 
@@ -611,7 +612,7 @@ class PostInkWell extends StatelessWidget {
       String? poUserHash,
       int? contentMaxLines,
       OnLinkTapCallback? onLinkTap,
-      ImageDataCallback? onImagePainted,
+      ValueSetter<Uint8List>? onImagePainted,
       bool displayImage = true,
       bool canReturnImageData = false,
       bool canTapHiddenText = false,
@@ -625,7 +626,7 @@ class PostInkWell extends StatelessWidget {
       bool showPoTag = false,
       double? headerHeight,
       double? contentMaxHeight,
-      OnPostIdCallback? onPostIdTap,
+      ValueSetter<int>? onPostIdTap,
       TextStyle? headerTextStyle,
       Widget? footer,
       this.onTap,

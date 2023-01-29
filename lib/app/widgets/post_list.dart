@@ -6,10 +6,8 @@ import '../modules/post_list.dart';
 import '../utils/extensions.dart';
 import 'listenable.dart';
 
-typedef GetOffset = double Function();
-
 class PostListScrollController extends AnchorScrollController {
-  final GetOffset? getInitialScrollOffset;
+  final ValueGetter<double>? getInitialScrollOffset;
 
   @override
   double get initialScrollOffset =>

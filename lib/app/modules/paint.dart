@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_painter/image_painter.dart';
@@ -58,10 +58,9 @@ class _Text implements TextDelegate {
   const _Text();
 }
 
-typedef _ExportImageCallback = Future<Uint8List?> Function();
-
 class _SaveImage extends StatelessWidget {
-  final _ExportImageCallback exportImage;
+  /// 导出涂鸦，返回图片数据
+  final AsyncValueGetter<Uint8List?> exportImage;
 
   // ignore: unused_element
   const _SaveImage({super.key, required this.exportImage});
@@ -81,7 +80,8 @@ class _SaveImage extends StatelessWidget {
 }
 
 class _Confirm extends StatelessWidget {
-  final _ExportImageCallback exportImage;
+  /// 导出涂鸦，返回图片数据
+  final AsyncValueGetter<Uint8List?> exportImage;
 
   // ignore: unused_element
   const _Confirm({super.key, required this.exportImage});

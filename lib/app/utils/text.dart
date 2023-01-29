@@ -4,8 +4,6 @@ import 'package:html_to_text/html_to_text.dart';
 import 'regex.dart';
 import 'theme.dart';
 
-typedef GetHiddenText = HiddenText Function();
-
 class HiddenText {
   HtmlText? _text;
 
@@ -23,7 +21,7 @@ TextSpan getHiddenText(
     required Element element,
     required TextStyle textStyle,
     Color? hiddenColor,
-    GetHiddenText? getHiddenText,
+    ValueGetter<HiddenText>? getHiddenText,
     VoidCallback? refresh,
     OnLinkTapCallback? onLinkTap}) {
   assert((getHiddenText != null && refresh != null && onLinkTap != null) ||

@@ -361,7 +361,7 @@ class ReorderForumsGuide extends StatelessWidget {
   Widget build(BuildContext context) => SettingsService.shouldShowGuide
       ? Showcase(
           key: _key,
-          title: '版块排序',
+          title: '版块管理',
           description: '点击可以设置版块顺序和显示/隐藏版块',
           child: child)
       : child;

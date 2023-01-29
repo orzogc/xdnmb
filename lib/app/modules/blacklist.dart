@@ -121,9 +121,7 @@ class _AppBarPopupMenuButton extends StatelessWidget {
 
 typedef _IndexCallback<T> = T Function(int index);
 
-typedef _WidgetBuilder<T> = Widget Function(T item);
-
-typedef _ItemCallback<T> = void Function(T item);
+typedef _ItemWidgetBuilder<T> = Widget Function(T item);
 
 typedef _GetText<T> = String Function(T item);
 
@@ -132,13 +130,14 @@ class _List<T> extends StatelessWidget {
 
   final _IndexCallback<T?> getItem;
 
-  final _WidgetBuilder<T> titleBuilder;
+  final _ItemWidgetBuilder<T> titleBuilder;
 
-  final _WidgetBuilder<T>? subtitleBuilder;
+  final _ItemWidgetBuilder<T>? subtitleBuilder;
 
-  final _ItemCallback<T> onDelete;
+  /// 删除item时调用，参数是被删除的item
+  final ValueSetter<T> onDelete;
 
-  final _WidgetBuilder<T> deleteDialogContent;
+  final _ItemWidgetBuilder<T> deleteDialogContent;
 
   final _GetText<T> deleteToastContent;
 

@@ -6,14 +6,14 @@ import 'extensions.dart';
 import 'theme.dart';
 
 abstract class Regex {
+  static const String _link =
+      r'((?:https?:\/\/)*(?:www\.){0,1}nmbxd[0-9]*\.com\/f\/[^ ]{1,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*|www\.[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*)';
+
   static const String _postReference1 = r'(?:&gt;)*No\.([0-9]+)';
 
   static const String _postReference2 = r'(?:&gt;)+([0-9]+)';
 
   static const String _postReference3 = r'([0-9]{8,})';
-
-  static const String _link =
-      r'((?:https?:\/\/)*(?:www\.){0,1}nmbxd[0-9]*\.com\/f\/[^ ]{1,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*|www\.[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;]*)';
 
   static const String _postId = r'(^[0-9]+$)';
 
@@ -33,8 +33,9 @@ abstract class Regex {
 
   static const String _imageHash = r'(?<=\/)(?:.+(?=\.)|.+)';
 
-  static final RegExp _textRegex =
-      RegExp('$_postReference1|$_postReference2|$_postReference3|$_link');
+  /// 优先解析链接，然后是串号
+  static final RegExp _contentRegex =
+      RegExp('$_link|$_postReference1|$_postReference2|$_postReference3');
 
   static final RegExp _postIdRegex =
       RegExp('$_postId|$_postReference4|$_postReference5');
@@ -66,24 +67,31 @@ abstract class Regex {
   static String? onText(String text) {
     bool isReplaced = false;
 
-    text = text.replaceAllMapped(_textRegex, (match) {
-      isReplaced = true;
-      String? id = match[1] ?? match[2];
+    text = text.replaceAllMapped(_contentRegex, (match) {
+      final link = match[1];
+      if (link != null) {
+        isReplaced = true;
 
+        return '<a href="$link">${match[0]}</a>';
+      }
+
+      String? id = match[2] ?? match[3];
       // 纯数字只有大于50000000才算是串号
       if (id == null) {
-        final n = match[3];
+        final n = match[4];
         if (n != null && int.parse(n) >= 50000000) {
           id = n;
         }
       }
 
-      final link = match[4];
+      if (id != null) {
+        isReplaced = true;
 
-      return id != null
-          ? '<a href="${AppRoutes.referenceUrl(int.parse(id))}" '
-              'style="color:#789922;">${match[0]}</a>'
-          : (link != null ? '<a href="$link">${match[0]}</a>' : match[0]!);
+        return '<a href="${AppRoutes.referenceUrl(int.parse(id))}" '
+            'style="color:#789922;">${match[0]}</a>';
+      }
+
+      return match[0]!;
     });
 
     if (isReplaced) {

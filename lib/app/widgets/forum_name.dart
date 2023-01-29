@@ -198,12 +198,11 @@ class _EditForumNameState extends State<EditForumName> {
   }
 }
 
-typedef ForumCallback = void Function(ForumData forum);
-
 class SelectForum extends StatelessWidget {
   final bool isOnlyForum;
 
-  final ForumCallback onSelect;
+  /// 选取版块时调用，参数是版块数据
+  final ValueSetter<ForumData> onSelect;
 
   const SelectForum(
       {super.key, this.isOnlyForum = false, required this.onSelect});

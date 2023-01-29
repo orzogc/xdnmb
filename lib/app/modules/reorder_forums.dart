@@ -244,7 +244,7 @@ class ReorderForumsView extends StatelessWidget {
   Widget build(BuildContext context) => ColoredSafeArea(
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('版块排序'),
+            title: const Text('版块管理'),
             actions: [
               IconButton(
                   onPressed: () =>

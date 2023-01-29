@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:typed_data';
 
 import 'package:float_column/float_column.dart';
 import 'package:flutter/material.dart';
@@ -76,7 +77,8 @@ class Content extends StatefulWidget {
 
   final OnLinkTapCallback? onLinkTap;
 
-  final ImageDataCallback? onImagePainted;
+  /// 涂鸦后调用，参数是图片数据
+  final ValueSetter<Uint8List>? onImagePainted;
 
   final bool displayImage;
 

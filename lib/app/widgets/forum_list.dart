@@ -37,7 +37,7 @@ class _Dialog extends StatelessWidget {
 
               AppRoutes.toReorderForums();
             },
-            child: Text('版块排序', style: textStyle),
+            child: Text('版块管理', style: textStyle),
           ),
         if (client.isReady.value)
           SimpleDialogOption(
