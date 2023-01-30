@@ -788,47 +788,39 @@ class _SaveDraftDialog extends StatelessWidget {
             ? const Text('保存草稿或图片？')
             : (controller.hasText ? const Text('保存草稿？') : const Text('保存图片？')),
         actions: [
+          if (canPost)
+            TextButton(
+                onPressed: () => Get.back<bool>(result: false),
+                child: const Text('返回')),
           TextButton(
               onPressed: () => Get.back<bool>(result: true),
-              child: const Text('取消')),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (canPost)
-                TextButton(
-                    onPressed: () => Get.back<bool>(result: false),
-                    child: const Text('返回')),
-              if (controller.isImagePainted)
-                TextButton(
-                  onPressed: () async {
-                    await saveImageData(controller.imageData!);
+              child: const Text('不保存')),
+          if (controller.isImagePainted)
+            TextButton(
+              onPressed: () async {
+                await saveImageData(controller.imageData!);
 
-                    if (!controller.hasText) {
-                      Get.back<bool>(result: true);
-                    }
-                  },
-                  child: controller.hasText
-                      ? const Text('保存图片')
-                      : const Text('保存'),
-                ),
-              if (controller.hasText)
-                TextButton(
-                  onPressed: () async {
-                    await PostDraftListService.to
-                        .addDraft(PostDraftData.fromController(controller));
-                    showToast('已保存为草稿');
+                if (!controller.hasText) {
+                  Get.back<bool>(result: true);
+                }
+              },
+              child: controller.hasText ? const Text('保存图片') : const Text('保存'),
+            ),
+          if (controller.hasText)
+            TextButton(
+              onPressed: () async {
+                await PostDraftListService.to
+                    .addDraft(PostDraftData.fromController(controller));
+                showToast('已保存为草稿');
 
-                    if (!controller.isImagePainted) {
-                      Get.back<bool>(result: true);
-                    }
-                  },
-                  child: controller.isImagePainted
-                      ? const Text('保存草稿')
-                      : const Text('保存'),
-                ),
-            ],
-          ),
+                if (!controller.isImagePainted) {
+                  Get.back<bool>(result: true);
+                }
+              },
+              child: controller.isImagePainted
+                  ? const Text('保存草稿')
+                  : const Text('保存'),
+            ),
         ],
       );
 }

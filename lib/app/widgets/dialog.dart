@@ -623,20 +623,14 @@ class ApplyImageDialog extends StatelessWidget {
         actionsAlignment: MainAxisAlignment.spaceBetween,
         content: onApply != null ? const Text('应用图片？') : const Text('保存图片？'),
         actions: [
+          TextButton(onPressed: onCancel, child: const Text('取消')),
           TextButton(
               onPressed: onNotSave,
               child: onApply != null ? const Text('不应用') : const Text('不保存')),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton(onPressed: onCancel, child: const Text('取消')),
-              if (onSave != null)
-                TextButton(onPressed: onSave, child: const Text('保存')),
-              if (onApply != null)
-                TextButton(onPressed: onApply, child: const Text('应用')),
-            ],
-          ),
+          if (onSave != null)
+            TextButton(onPressed: onSave, child: const Text('保存')),
+          if (onApply != null)
+            TextButton(onPressed: onApply, child: const Text('应用')),
         ],
       );
 }
