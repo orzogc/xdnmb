@@ -38,10 +38,10 @@ packages:
     dependency: transitive
     description:
       name: archive
-      sha256: ed7cc591a948744994714375caf9a2ce89e1d82e8243997c8a2994d57181c212
+      sha256: d6347d54a2d8028e0437e3c099f66fdb8ae02c4720c1e7534c9f24c10351f85d
       url: "https://pub.dev"
     source: hosted
-    version: "3.3.5"
+    version: "3.3.6"
   args:
     dependency: transitive
     description:
@@ -286,10 +286,10 @@ packages:
     dependency: "direct main"
     description:
       name: easy_refresh
-      sha256: a08391d05e1daedafdd543fcfa84aeba1a7d06f5dac1082a9e8eac8301447a46
+      sha256: "241f92a59f5e78c6a95ff1e046dc739262d522164990426314563a43d8d7ad9c"
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.2+2"
+    version: "3.3.0"
   expandable_text:
     dependency: "direct main"
     description:
@@ -780,10 +780,10 @@ packages:
     dependency: transitive
     description:
       name: logging
-      sha256: c0bbfe94d46aedf9b8b3e695cf3bd48c8e14b35e3b2c639e0aa7755d589ba946
+      sha256: "04094f2eb032cbb06c6f6e8d3607edcfcb0455e2bb6cbc010cb01171dcb64e6d"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "1.1.1"
   matcher:
     dependency: transitive
     description:
@@ -1153,18 +1153,18 @@ packages:
     dependency: transitive
     description:
       name: sqflite
-      sha256: "067ab48dbc66bae05e18073a604443baa35957101bd3905b94f65e764c6d0688"
+      sha256: "78324387dc81df14f78df06019175a86a2ee0437624166c382e145d0a7fd9a4f"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.3"
+    version: "2.2.4+1"
   sqflite_common:
     dependency: transitive
     description:
       name: sqflite_common
-      sha256: b2ed22d1d62c944ec0dac5cc687ae99cb3331c3ebe146d726ed24704634b5ccd
+      sha256: bfd6973aaeeb93475bc0d875ac9aefddf7965ef22ce09790eb963992ffc5183f
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.1"
+    version: "2.4.2+2"
   stack_trace:
     dependency: transitive
     description:

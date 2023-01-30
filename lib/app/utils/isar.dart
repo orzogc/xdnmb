@@ -26,7 +26,7 @@ late final Isar isar;
 /// 注意iOS设备可能内存不足
 Future<void> initIsar() async {
   final databaseFile = File(join(databasePath, '$_databaseName.isar'));
-  // 至少保留200MB左右的空间
+  // 保留至少200MB左右的空间
   final maxSizeGiB = await databaseFile.exists()
       ? ((await databaseFile.length() / (1024 * 1024 * 1024) + 0.2).floor() + 1)
       : 1;

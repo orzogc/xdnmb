@@ -790,7 +790,7 @@ class _SaveDraftDialog extends StatelessWidget {
         actions: [
           TextButton(
               onPressed: () => Get.back<bool>(result: true),
-              child: const Text('关闭')),
+              child: const Text('取消')),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
@@ -798,7 +798,7 @@ class _SaveDraftDialog extends StatelessWidget {
               if (canPost)
                 TextButton(
                     onPressed: () => Get.back<bool>(result: false),
-                    child: const Text('取消')),
+                    child: const Text('返回')),
               if (controller.isImagePainted)
                 TextButton(
                   onPressed: () async {
