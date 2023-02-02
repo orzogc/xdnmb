@@ -4,8 +4,8 @@ publish_to: 'none'
 version: 0.3.1-alpha+7
 
 environment:
-  sdk: ">=2.19.0 <3.0.0"
-  flutter: ">=3.7.0"
+  sdk: ">=2.19.1 <3.0.0"
+  flutter: ">=3.7.1"
 
 dependencies:
   align_positioned: ^3.0.0
@@ -17,7 +17,7 @@ dependencies:
   crypto: ^3.0.2
   date_format: ^2.0.7
   device_info_plus: ^8.0.0
-  easy_refresh: ^3.3.0
+  easy_refresh: ^3.3.0+1
   expandable_text: ^2.3.0
   external_path: ^1.0.3
   file_picker: ^5.2.5
@@ -52,7 +52,7 @@ dependencies:
   path: ^1.8.2
   path_provider: ^2.0.12
   permission_handler: ^10.2.0
-  responsive_grid_list: ^1.3.0
+  responsive_grid_list: ^1.3.1
   screenshot: ^1.3.0
   showcaseview: ^2.0.0+1
   swipeable_page_route: ^0.3.0
@@ -111,7 +111,7 @@ flutter_icons:
   image_path_ios: assets/icons/icon_ios.png
   android: true
   ios: true
-  min_sdk_android: 18
+  min_sdk_android: 21
   linux:
     generate: true
     image_path: assets/icons/icon.png

@@ -291,6 +291,8 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    final client = XdnmbClientService.to.client;
     final blacklist = BlacklistService.to;
     final postId = controller.id;
 
@@ -313,8 +315,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
           PopupMenuItem(
             onTap: () async {
               try {
-                await XdnmbClientService.to.client
-                    .addFeed(SettingsService.to.feedId, postId);
+                await client.addFeed(settings.feedId, postId);
                 showToast('订阅 ${postId.toPostNumber()} 成功');
               } catch (e) {
                 showToast(
@@ -350,6 +351,18 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
                   mainPostId: postId, mainPost: mainPost),
               child: const Text('只看Po'),
             ),
+          PopupMenuItem(
+            onTap: () async {
+              try {
+                await client.deleteFeed(settings.feedId, postId);
+                showToast('取消订阅 ${postId.toPostNumber()} 成功');
+              } catch (e) {
+                showToast(
+                    '取消订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');
+              }
+            },
+            child: const Text('取消订阅'),
+          ),
           if (((mainPost != null && !mainPost.isAdmin) || mainPost == null) &&
               !isBlockedPost)
             PopupMenuItem(
