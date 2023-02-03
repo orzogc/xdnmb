@@ -633,10 +633,8 @@ class _HistoryDialog extends StatelessWidget {
             page: page,
             postId: hasPostId ? post!.id : null,
           ),
-        if (hasPostIdOrMainPostId) CopyPostId(postHistory.id),
         if (hasPostIdOrMainPostId) CopyPostReference(postHistory.id),
         CopyPostContent(postHistory),
-        if (post != null) CopyPostId(mainPost.id, text: '复制主串串号'),
         if (post != null) CopyPostReference(mainPost.id, text: '复制主串串号引用'),
         if (hasMainPostId)
           NewTab(mainPost, text: post != null ? '在新标签页打开主串' : null),

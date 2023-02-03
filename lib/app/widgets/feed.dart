@@ -103,7 +103,6 @@ class _FeedDialog extends StatelessWidget {
           },
           child: Text('取消订阅', style: textStyle),
         ),
-        CopyPostId(post.id),
         CopyPostReference(post.id),
         CopyPostContent(post),
         SimpleDialogOption(

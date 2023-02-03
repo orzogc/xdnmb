@@ -277,7 +277,6 @@ class _ThreadDialog extends StatelessWidget {
                 }
               },
             ),
-          if (post is! Tip) CopyPostId(post.id),
           if (post is! Tip) CopyPostReference(post.id),
           CopyPostContent(post),
         ],

@@ -41,11 +41,8 @@ class _Dialog extends StatelessWidget {
       title: Text(post.id.toPostNumber()),
       children: [
         Report(post.id),
-        CopyPostId(post.id),
         CopyPostReference(post.id),
         CopyPostContent(post),
-        if (mainPost != null && mainPost.id != post.id)
-          CopyPostId(mainPost.id, text: '复制原串主串串号'),
         if (mainPost != null && mainPost.id != post.id)
           CopyPostReference(mainPost.id, text: '复制原串主串串号引用'),
         if (mainPost != null) NewTab(mainPost, text: '在新标签页打开原串'),

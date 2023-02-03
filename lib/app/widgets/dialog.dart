@@ -431,25 +431,6 @@ class NewTabBackground extends StatelessWidget {
       );
 }
 
-class CopyPostId extends StatelessWidget {
-  final int postId;
-
-  final String? text;
-
-  const CopyPostId(this.postId, {super.key, this.text});
-
-  @override
-  Widget build(BuildContext context) => SimpleDialogOption(
-        onPressed: () async {
-          await Clipboard.setData(ClipboardData(text: '$postId'));
-          showToast('已复制 $postId');
-          postListBack();
-        },
-        child: Text(text ?? '复制串号',
-            style: Theme.of(context).textTheme.titleMedium),
-      );
-}
-
 class CopyPostReference extends StatelessWidget {
   final int postId;
 
