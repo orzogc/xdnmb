@@ -16,6 +16,7 @@ import '../data/services/settings.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
+import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/hash.dart';
 import '../utils/navigation.dart';
@@ -153,6 +154,28 @@ class ForumAppBarPopupMenuButton extends StatelessWidget {
   }
 }
 
+class _AddFeed extends StatelessWidget {
+  final int postId;
+
+  // ignore: unused_element
+  const _AddFeed(this.postId, {super.key});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          postListBack();
+          try {
+            await XdnmbClientService.to.client
+                .addFeed(SettingsService.to.feedId, postId);
+            showToast('订阅 ${postId.toPostNumber()} 成功');
+          } catch (e) {
+            showToast('订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');
+          }
+        },
+        child: Text('订阅', style: Theme.of(context).textTheme.titleMedium),
+      );
+}
+
 class _BlockForum extends StatelessWidget {
   final ForumTypeController controller;
 
@@ -209,6 +232,7 @@ class _ForumDialog extends StatelessWidget {
   Widget build(BuildContext context) => SimpleDialog(
         title: Text(post.toPostNumber()),
         children: [
+          _AddFeed(post.id),
           Report(post.id),
           SharePost(mainPostId: post.id),
           if (controller.isTimeline && post.forumId != null)
