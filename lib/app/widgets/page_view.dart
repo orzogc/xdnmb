@@ -128,12 +128,14 @@ class SwipeablePageView extends StatelessWidget {
     final media = MediaQuery.of(context);
     final settings = SettingsService.to;
 
+    // 手机上PageView能左右滑动换页
     return Obx(() => (settings.isSwipeablePage && GetPlatform.isMobile)
         ? Listener(
             onPointerDown: (event) {
               final route = ModalRoute.of(context);
               if (route is SwipeablePageRoute) {
-                if (controller?.page == 0.0 &&
+                // iOS上在左边缘向右滑动为返回手势
+                if ((GetPlatform.isIOS || controller?.page == 0.0) &&
                     event.position.dx <=
                         media.size.width *
                             settings.swipeablePageDragWidthRatio) {
@@ -145,15 +147,13 @@ class SwipeablePageView extends StatelessWidget {
               }
             },
             onPointerUp: (event) => _isScrollable.value = true,
-            child: Obx(
-              () => PageView.builder(
-                controller: controller,
-                physics: !_isScrollable.value
-                    ? const NeverScrollableScrollPhysics()
-                    : null,
-                itemCount: itemCount,
-                itemBuilder: itemBuilder,
-              ),
+            child: PageView.builder(
+              controller: controller,
+              physics: !_isScrollable.value
+                  ? const NeverScrollableScrollPhysics()
+                  : null,
+              itemCount: itemCount,
+              itemBuilder: itemBuilder,
             ),
           )
         : PageView.builder(
