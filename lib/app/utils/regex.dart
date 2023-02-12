@@ -7,7 +7,7 @@ import 'theme.dart';
 
 abstract class Regex {
   static const String _link =
-      r'((?:https?:\/\/)*(?:www\.)?nmbxd[0-9]*\.com\/f\/[^ \r\n]+|https?:\/\/(?:[a-zA-Z0-9]+\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*|www[0-9]*\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*)';
+      r'((?:https?:\/\/)*(?:www\.)?nmbxd[0-9]*\.com\/f\/[^\s]+|https?:\/\/(?:[a-zA-Z0-9]+\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*|www[0-9]*\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*)';
 
   static const String _postReference1 = r'(?:&gt;)*No\.([0-9]+)';
 
