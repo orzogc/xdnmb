@@ -10,6 +10,7 @@ import '../utils/theme.dart';
 import 'content.dart';
 import 'forum_name.dart';
 import 'guide.dart';
+import 'history.dart';
 import 'listenable.dart';
 import 'thread.dart';
 
@@ -59,10 +60,11 @@ class _TabTitle extends StatelessWidget {
 
         break;
       case PostListType.feed:
-        title = const Text('订阅');
+        title = Text('订阅', style: theme.textTheme.bodyLarge);
         break;
       case PostListType.history:
-        title = const Text('历史记录');
+        final text = (controller as HistoryController).text();
+        title = Text('$text历史', style: theme.textTheme.bodyLarge);
         break;
     }
 

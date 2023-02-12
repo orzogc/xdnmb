@@ -404,7 +404,8 @@ Route? backdropOnGenerateRoute(RouteSettings settings) {
             settings: settings, builder: (context) => const CookieView());
       case AppRoutes.qrCodeScannerPath:
         return AppSwipeablePageRoute(
-            settings: settings, builder: (context) => QRCodeScannerView());
+            settings: settings,
+            builder: (context) => const QRCodeScannerView());
       case AppRoutes.blacklistPath:
         return AppSwipeablePageRoute(
             settings: settings, builder: (context) => const BlacklistView());

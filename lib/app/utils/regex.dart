@@ -7,7 +7,7 @@ import 'theme.dart';
 
 abstract class Regex {
   static const String _link =
-      r'((?:https?:\/\/)*(?:www\.){0,1}nmbxd[0-9]*\.com\/f\/[^ ]{1,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*|www\.[a-zA-Z0-9]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*)';
+      r'((?:https?:\/\/)*(?:www\.)?nmbxd[0-9]*\.com\/f\/[^ \r\n]+|https?:\/\/(?:[a-zA-Z0-9]+\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*|www[0-9]*\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[-a-zA-Z0-9@%_+.~#?&/=|:;,]*)';
 
   static const String _postReference1 = r'(?:&gt;)*No\.([0-9]+)';
 
@@ -25,7 +25,7 @@ abstract class Regex {
 
   static const String _hiddenTag = r'(\[h\])|(\[\/h\])';
 
-  static const String _xdnmbHost = r'^(?:www\.){0,1}nmbxd[0-9]*\.com$';
+  static const String _xdnmbHost = r'^(?:www\.)?nmbxd[0-9]*\.com$';
 
   static const String _xdnmbHtml = r'(.+)(?=\.html$)|(.+)';
 

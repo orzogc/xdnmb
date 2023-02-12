@@ -120,6 +120,7 @@ class PickImage extends StatelessWidget {
     final image = ImageService.to;
 
     return IconButton(
+      tooltip: '加载图片',
       onPressed: () async {
         if (image.hasStoragePermission && image.hasPhotoLibraryPermission) {
           try {

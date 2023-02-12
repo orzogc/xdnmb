@@ -6,16 +6,34 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:xdnmb/app/utils/toast.dart';
 
 import '../data/services/user.dart';
+import '../utils/theme.dart';
 import '../widgets/image.dart';
 import '../widgets/safe_area.dart';
 
-class QRCodeScannerView extends StatelessWidget {
+class QRCodeScannerView extends StatefulWidget {
+  const QRCodeScannerView({super.key});
+
+  @override
+  State<QRCodeScannerView> createState() => _QRCodeScannerViewState();
+}
+
+class _QRCodeScannerViewState extends State<QRCodeScannerView> {
   final MobileScannerController _controller = MobileScannerController(
       facing: CameraFacing.back,
+      detectionSpeed: DetectionSpeed.normal,
+      detectionTimeoutMs: 1000,
       torchEnabled: false,
       formats: [BarcodeFormat.qrCode]);
 
-  QRCodeScannerView({super.key});
+  bool _isBack = false;
+
+  @override
+  void dispose() {
+    _isBack = true;
+    _controller.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +54,14 @@ class QRCodeScannerView extends StatelessWidget {
               }
             }),
             IconButton(
-              onPressed: () => _controller.toggleTorch(),
+              tooltip: '切换闪光灯',
+              onPressed: () {
+                try {
+                  _controller.toggleTorch();
+                } catch (e) {
+                  showToast('切换闪光灯失败：$e');
+                }
+              },
               icon: ValueListenableBuilder(
                 valueListenable: _controller.torchState,
                 builder: (context, state, child) {
@@ -53,35 +78,60 @@ class QRCodeScannerView extends StatelessWidget {
         ),
         body: MobileScanner(
           controller: _controller,
-          allowDuplicates: false,
-          onDetect: (barcode, args) async {
-            final value = barcode.rawValue;
-            if (value != null) {
-              try {
-                final Map<String, dynamic> data = json.decode(value);
-                final name = data['name'];
-                final userHash = data['cookie'];
+          errorBuilder: (context, exception, widget) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (exception.errorCode ==
+                    MobileScannerErrorCode.permissionDenied)
+                  const Text('没有相机权限，请给予应用相机权限以便可以使用相机扫描饼干二维码',
+                      style: AppTheme.boldRed),
+                TextButton(
+                  onPressed: () {
+                    try {
+                      _controller.start();
+                    } catch (e) {
+                      showToast('使用相机扫描饼干二维码失败：$e');
+                    }
+                  },
+                  child: const Text('使用相机扫描饼干二维码'),
+                ),
+              ],
+            ),
+          ),
+          onDetect: (barcodes) async {
+            for (final barcode in barcodes.barcodes) {
+              final value = barcode.rawValue;
+              if (value != null) {
+                try {
+                  final Map<String, dynamic> data = json.decode(value);
+                  final name = data['name'];
+                  final userHash = data['cookie'];
 
-                if (name == null || userHash == null) {
+                  if (name == null || userHash == null) {
+                    showToast('无效的饼干二维码');
+
+                    continue;
+                  }
+
+                  if (await user.addCookie(name: name, userHash: userHash)) {
+                    showToast('饼干添加成功');
+                  } else {
+                    showToast('已存在要添加的饼干');
+                  }
+                } catch (e) {
+                  debugPrint('扫描饼干二维码出现错误：$e');
                   showToast('无效的饼干二维码');
-
-                  Get.back();
-                  return;
                 }
-
-                if (await user.addCookie(name: name, userHash: userHash)) {
-                  showToast('饼干添加成功');
-                } else {
-                  showToast('已存在要添加的饼干');
-                }
-
-                Get.back();
-              } catch (e) {
-                debugPrint('扫描饼干二维码出现错误：$e');
-                showToast('无效的饼干二维码');
-
-                Get.back();
               }
+            }
+
+            // 防止多次调用
+            if (mounted && !_isBack) {
+              _isBack = true;
+
+              Get.back();
             }
           },
         ),

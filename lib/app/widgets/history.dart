@@ -200,7 +200,7 @@ class HistoryController extends PostListController {
     _counts[index ?? pageIndex] = count;
   }
 
-  String _text([String unknown = '未知', int? index]) {
+  String text([String unknown = '未知', int? index]) {
     index ??= pageIndex;
 
     switch (index) {
@@ -286,7 +286,7 @@ class HistoryAppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Obx(() {
-        final text = controller._text('历史记录');
+        final text = controller.text('历史记录');
         final count = controller._getCount();
 
         return count != null ? Text('$text（$count）') : Text(text);
@@ -406,7 +406,7 @@ class _ClearDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = controller._text();
+    final text = controller.text();
 
     return LoaderOverlay(
       child: ConfirmCancelDialog(

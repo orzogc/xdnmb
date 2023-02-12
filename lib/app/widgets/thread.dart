@@ -351,15 +351,21 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
               child: const Text('只看Po'),
             ),
           PopupMenuItem(
-            onTap: () async {
-              try {
-                await client.deleteFeed(settings.feedId, postId);
-                showToast('取消订阅 ${postId.toPostNumber()} 成功');
-              } catch (e) {
-                showToast(
-                    '取消订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');
-              }
-            },
+            onTap: () => postListDialog(ConfirmCancelDialog(
+              content: '确定取消订阅 ${postId.toPostNumber()} ？',
+              onConfirm: () async {
+                postListBack();
+
+                try {
+                  await client.deleteFeed(settings.feedId, postId);
+                  showToast('取消订阅 ${postId.toPostNumber()} 成功');
+                } catch (e) {
+                  showToast(
+                      '取消订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');
+                }
+              },
+              onCancel: postListBack,
+            )),
             child: const Text('取消订阅'),
           ),
           if (((mainPost != null && !mainPost.isAdmin) || mainPost == null) &&
@@ -374,7 +380,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
                     showToast('屏蔽主串 ${postId.toPostNumber()}');
                     postListBack();
                   },
-                  onCancel: () => postListBack(),
+                  onCancel: postListBack,
                 ),
               ),
               child: const Text('屏蔽主串'),
@@ -389,7 +395,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
                   showToast('屏蔽Po饼干 ${mainPost.userHash}');
                   postListBack();
                 },
-                onCancel: () => postListBack(),
+                onCancel: postListBack,
               )),
               child: const Text('屏蔽Po饼干'),
             ),
@@ -426,6 +432,14 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
               },
               child: const Text('在新标签页打开'),
             ),
+          PopupMenuItem(
+            onTap: () async {
+              await Clipboard.setData(
+                  ClipboardData(text: postId.toPostReference()));
+              showToast('已复制 ${postId.toPostReference()}');
+            },
+            child: const Text('复制主串串号引用'),
+          ),
           if (!isBlockedPost && !isBlockedUser)
             PopupMenuItem(
               onTap: () {

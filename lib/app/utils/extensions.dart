@@ -37,8 +37,10 @@ extension WidgetListExtension on List<Widget> {
 }
 
 extension IntExtension on int {
+  /// “No.xxx”形式
   String toPostNumber() => 'No.$this';
 
+  /// “>>No.xxx”形式
   String toPostReference() => '>>${toPostNumber()}';
 
   int postIdToPostIndex(int page) => page << 32 | this;
