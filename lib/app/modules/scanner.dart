@@ -81,7 +81,7 @@ class _QRCodeScannerViewState extends State<QRCodeScannerView> {
           errorBuilder: (context, exception, widget) => Center(
             child: Text(
               exception.errorCode == MobileScannerErrorCode.permissionDenied
-                  ? '应用没有相机权限，请给予应用相机权限后重启应用以便可以使用相机扫描饼干二维码'
+                  ? '应用没有相机权限，请授予应用相机权限后重启应用以便可以使用相机扫描饼干二维码'
                   : (exception.errorDetails?.message != null
                       ? '使用相机扫描饼干二维码出现错误，可能是应用没有相机权限：${exception.errorDetails?.message}'
                       : '使用相机扫描饼干二维码出现错误，可能是应用没有相机权限'),
