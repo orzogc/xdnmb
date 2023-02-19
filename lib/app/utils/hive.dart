@@ -6,6 +6,7 @@ import '../data/models/cookie.dart';
 import '../data/models/emoticon.dart';
 import '../data/models/draft.dart';
 import '../data/models/forum.dart';
+import '../data/models/tag.dart';
 import 'directory.dart';
 
 /// 初始化Hive数据库
@@ -22,4 +23,5 @@ Future<void> initHive() async {
   Hive.registerAdapter<PostListType>(PostListTypeAdapter());
   Hive.registerAdapter<PostListControllerData>(PostListControllerDataAdapter());
   Hive.registerAdapter<Search>(SearchAdapter());
+  Hive.registerAdapter<TagData>(TagDataAdapter());
 }
