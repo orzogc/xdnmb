@@ -34,6 +34,8 @@ void main() async {
   await SettingsService.getSettings();
   await PersistentDataService.getData();
 
+  SettingsService.setSystemUIOverlayStyle(false);
+
   runApp(const _XdnmbApp());
 }
 
