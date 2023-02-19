@@ -10,7 +10,6 @@ import '../data/models/controller.dart';
 import '../data/models/history.dart';
 import '../data/models/post.dart';
 import '../data/models/reply.dart';
-import '../data/services/history.dart';
 import '../data/services/settings.dart';
 import '../data/services/time.dart';
 import '../data/services/xdnmb_client.dart';
@@ -19,6 +18,7 @@ import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/hash.dart';
+import '../utils/history.dart';
 import '../utils/navigation.dart';
 import '../utils/post_list.dart';
 import '../utils/regex.dart';
@@ -218,20 +218,19 @@ class HistoryController extends PostListController {
 
   /// 设置没有搜索时的数据数量
   Future<void> _setDataCount([int? index]) async {
-    final history = PostHistoryService.to;
     index ??= pageIndex;
     final range = _getDateRange(index);
 
     if (_getSearch(index) == null) {
       switch (index) {
         case _BrowseHistoryBody._index:
-          _setCount(await history.browseHistoryCount(range), index);
+          _setCount(await BrowseDataHistory.browseDataCount(range), index);
           break;
         case _PostHistoryBody._index:
-          _setCount(await history.postDataCount(range), index);
+          _setCount(await PostHistory.postDataCount(range), index);
           break;
         case _ReplyHistoryBody._index:
-          _setCount(await history.replyDataCount(range), index);
+          _setCount(await ReplyHistory.replyDataCount(range), index);
           break;
         default:
           debugPrint('未知index：$index');
@@ -240,20 +239,19 @@ class HistoryController extends PostListController {
   }
 
   Future<void> _clear([int? index]) async {
-    final history = PostHistoryService.to;
     index ??= pageIndex;
     final range = _getDateRange(index);
     final search = _getSearch(index);
 
     switch (index) {
       case _BrowseHistoryBody._index:
-        await history.clearBrowseHistory(range: range, search: search);
+        await BrowseDataHistory.clearBrowseData(range: range, search: search);
         break;
       case _PostHistoryBody._index:
-        await history.clearPostData(range: range, search: search);
+        await PostHistory.clearPostData(range: range, search: search);
         break;
       case _ReplyHistoryBody._index:
-        await history.clearReplyData(range: range, search: search);
+        await ReplyHistory.clearReplyData(range: range, search: search);
         break;
       default:
         debugPrint('未知index：$index');
@@ -724,8 +722,8 @@ class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
                       mainPost: browse.item,
                       confirmDelete: false,
                       onDelete: () async {
-                        await PostHistoryService.to
-                            .deleteBrowseHistory(browse.item.id);
+                        await BrowseDataHistory.deleteBrowseData(
+                            browse.item.id);
                         showToast('删除 ${browse.item.toPostNumber()} 的浏览记录');
                         browse.isVisible = false;
                       },
@@ -798,67 +796,64 @@ class _BrowseHistoryBody extends StatelessWidget {
   const _BrowseHistoryBody({super.key, required this.controller});
 
   @override
-  Widget build(BuildContext context) {
-    final history = PostHistoryService.to;
+  Widget build(BuildContext context) => PostListScrollView(
+        controller: controller,
+        builder: (context, scrollController, refresh) =>
+            ValueListenableBuilder<bool>(
+          valueListenable: controller._getNotifier(_index),
+          builder: (context, value, child) {
+            final range = controller._getDateRange(_index);
+            final search = controller._getSearch(_index);
 
-    return PostListScrollView(
-      controller: controller,
-      builder: (context, scrollController, refresh) =>
-          ValueListenableBuilder<bool>(
-        valueListenable: controller._getNotifier(_index),
-        builder: (context, value, child) {
-          final range = controller._getDateRange(_index);
-          final search = controller._getSearch(_index);
-
-          return BiListView<Visible<BrowseHistory>>(
-            key: ValueKey<_HistoryKey>(
-                _HistoryKey(range, search, refresh, value)),
-            scrollController: scrollController,
-            postListController: controller,
-            initialPage: controller.page,
-            canLoadMoreAtBottom: false,
-            fetch: (page) async {
-              if (page == 1) {
-                WidgetsBinding.instance.addPostFrameCallback(
-                    (timeStamp) => controller._setCount(null, _index));
-              }
-
-              final data = (search == null || page == 1)
-                  ? (await history.browseHistoryList(
-                          start: search == null
-                              ? (page - 1) * _historyEachPage
-                              : null,
-                          end: search == null ? page * _historyEachPage : null,
-                          range: range,
-                          search: search))
-                      .map((history) => Visible(history))
-                      .toList()
-                  : <Visible<BrowseHistory>>[];
-
-              if (page == 1) {
-                if (search != null) {
-                  controller._setCount(data.length, _index);
-                } else {
-                  await controller._setDataCount(_index);
+            return BiListView<Visible<BrowseHistory>>(
+              key: ValueKey<_HistoryKey>(
+                  _HistoryKey(range, search, refresh, value)),
+              scrollController: scrollController,
+              postListController: controller,
+              initialPage: controller.page,
+              canLoadMoreAtBottom: false,
+              fetch: (page) async {
+                if (page == 1) {
+                  WidgetsBinding.instance.addPostFrameCallback(
+                      (timeStamp) => controller._setCount(null, _index));
                 }
-              }
 
-              return data;
-            },
-            itemBuilder: (context, browse, index) =>
-                _BrowseHistoryItem(browse: browse, search: search),
-            noItemsFoundBuilder: (context) => Center(
-              child: Text(
-                '没有浏览记录',
-                style: AppTheme.boldRedPostContentTextStyle,
-                strutStyle: AppTheme.boldRedPostContentStrutStyle,
+                final data = (search == null || page == 1)
+                    ? (await BrowseDataHistory.browseDataList(
+                            start: search == null
+                                ? (page - 1) * _historyEachPage
+                                : null,
+                            end:
+                                search == null ? page * _historyEachPage : null,
+                            range: range,
+                            search: search))
+                        .map((history) => Visible(history))
+                        .toList()
+                    : <Visible<BrowseHistory>>[];
+
+                if (page == 1) {
+                  if (search != null) {
+                    controller._setCount(data.length, _index);
+                  } else {
+                    await controller._setDataCount(_index);
+                  }
+                }
+
+                return data;
+              },
+              itemBuilder: (context, browse, index) =>
+                  _BrowseHistoryItem(browse: browse, search: search),
+              noItemsFoundBuilder: (context) => Center(
+                child: Text(
+                  '没有浏览记录',
+                  style: AppTheme.boldRedPostContentTextStyle,
+                  strutStyle: AppTheme.boldRedPostContentStrutStyle,
+                ),
               ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+            );
+          },
+        ),
+      );
 }
 
 class _PostHistoryItem extends StatefulWidget {
@@ -938,8 +933,7 @@ class _PostHistoryItemState extends State<_PostHistoryItem> {
                       onLongPress: (post) => postListDialog(_HistoryDialog(
                         mainPost: post,
                         onDelete: () async {
-                          await PostHistoryService.to
-                              .deletePostData(mainPost.item.id);
+                          await PostHistory.deletePostData(mainPost.item.id);
                           showToast(mainPost.item.postId != null
                               ? '删除主题 ${mainPost.item.postId?.toPostNumber()} 的记录'
                               : '删除主题记录');
@@ -963,67 +957,64 @@ class _PostHistoryBody extends StatelessWidget {
   const _PostHistoryBody({super.key, required this.controller});
 
   @override
-  Widget build(BuildContext context) {
-    final history = PostHistoryService.to;
+  Widget build(BuildContext context) => PostListScrollView(
+        controller: controller,
+        builder: (context, scrollController, refresh) =>
+            ValueListenableBuilder<bool>(
+          valueListenable: controller._getNotifier(_index),
+          builder: (context, value, child) {
+            final range = controller._getDateRange(_index);
+            final search = controller._getSearch(_index);
 
-    return PostListScrollView(
-      controller: controller,
-      builder: (context, scrollController, refresh) =>
-          ValueListenableBuilder<bool>(
-        valueListenable: controller._getNotifier(_index),
-        builder: (context, value, child) {
-          final range = controller._getDateRange(_index);
-          final search = controller._getSearch(_index);
-
-          return BiListView<Visible<PostData>>(
-            key: ValueKey<_HistoryKey>(
-                _HistoryKey(range, search, refresh, value)),
-            scrollController: scrollController,
-            postListController: controller,
-            initialPage: controller.page,
-            canLoadMoreAtBottom: false,
-            fetch: (page) async {
-              if (page == 1) {
-                WidgetsBinding.instance.addPostFrameCallback(
-                    (timeStamp) => controller._setCount(null, _index));
-              }
-
-              final data = (search == null || page == 1)
-                  ? (await history.postDataList(
-                          start: search == null
-                              ? (page - 1) * _historyEachPage
-                              : null,
-                          end: search == null ? page * _historyEachPage : null,
-                          range: range,
-                          search: search))
-                      .map((mainPost) => Visible(mainPost))
-                      .toList()
-                  : <Visible<PostData>>[];
-
-              if (page == 1) {
-                if (search != null) {
-                  controller._setCount(data.length, _index);
-                } else {
-                  await controller._setDataCount(_index);
+            return BiListView<Visible<PostData>>(
+              key: ValueKey<_HistoryKey>(
+                  _HistoryKey(range, search, refresh, value)),
+              scrollController: scrollController,
+              postListController: controller,
+              initialPage: controller.page,
+              canLoadMoreAtBottom: false,
+              fetch: (page) async {
+                if (page == 1) {
+                  WidgetsBinding.instance.addPostFrameCallback(
+                      (timeStamp) => controller._setCount(null, _index));
                 }
-              }
 
-              return data;
-            },
-            itemBuilder: (context, mainPost, index) =>
-                _PostHistoryItem(mainPost: mainPost, search: search),
-            noItemsFoundBuilder: (context) => Center(
-              child: Text(
-                '没有主题记录',
-                style: AppTheme.boldRedPostContentTextStyle,
-                strutStyle: AppTheme.boldRedPostContentStrutStyle,
+                final data = (search == null || page == 1)
+                    ? (await PostHistory.postDataList(
+                            start: search == null
+                                ? (page - 1) * _historyEachPage
+                                : null,
+                            end:
+                                search == null ? page * _historyEachPage : null,
+                            range: range,
+                            search: search))
+                        .map((mainPost) => Visible(mainPost))
+                        .toList()
+                    : <Visible<PostData>>[];
+
+                if (page == 1) {
+                  if (search != null) {
+                    controller._setCount(data.length, _index);
+                  } else {
+                    await controller._setDataCount(_index);
+                  }
+                }
+
+                return data;
+              },
+              itemBuilder: (context, mainPost, index) =>
+                  _PostHistoryItem(mainPost: mainPost, search: search),
+              noItemsFoundBuilder: (context) => Center(
+                child: Text(
+                  '没有主题记录',
+                  style: AppTheme.boldRedPostContentTextStyle,
+                  strutStyle: AppTheme.boldRedPostContentStrutStyle,
+                ),
               ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+            );
+          },
+        ),
+      );
 }
 
 class _ReplyHistoryItem extends StatefulWidget {
@@ -1099,8 +1090,7 @@ class _ReplyHistoryItemState extends State<_ReplyHistoryItem> {
                           mainPost: reply.item.toMainPost(),
                           post: post,
                           onDelete: () async {
-                            await PostHistoryService.to
-                                .deletePostData(reply.item.id);
+                            await PostHistory.deletePostData(reply.item.id);
                             showToast(reply.item.postId != null
                                 ? '删除回复 ${reply.item.postId?.toPostNumber()} 的记录'
                                 : '删除回复记录');
@@ -1169,67 +1159,64 @@ class _ReplyHistoryBody extends StatelessWidget {
   const _ReplyHistoryBody({super.key, required this.controller});
 
   @override
-  Widget build(BuildContext context) {
-    final history = PostHistoryService.to;
+  Widget build(BuildContext context) => PostListScrollView(
+        controller: controller,
+        builder: (context, scrollController, refresh) =>
+            ValueListenableBuilder<bool>(
+          valueListenable: controller._getNotifier(_index),
+          builder: (context, value, child) {
+            final range = controller._getDateRange(_index);
+            final search = controller._getSearch(_index);
 
-    return PostListScrollView(
-      controller: controller,
-      builder: (context, scrollController, refresh) =>
-          ValueListenableBuilder<bool>(
-        valueListenable: controller._getNotifier(_index),
-        builder: (context, value, child) {
-          final range = controller._getDateRange(_index);
-          final search = controller._getSearch(_index);
-
-          return BiListView<Visible<ReplyData>>(
-            key: ValueKey<_HistoryKey>(
-                _HistoryKey(range, search, refresh, value)),
-            scrollController: scrollController,
-            postListController: controller,
-            initialPage: controller.page,
-            canLoadMoreAtBottom: false,
-            fetch: (page) async {
-              if (page == 1) {
-                WidgetsBinding.instance.addPostFrameCallback(
-                    (timeStamp) => controller._setCount(null, _index));
-              }
-
-              final data = (search == null || page == 1)
-                  ? (await history.replyDataList(
-                          start: search == null
-                              ? (page - 1) * _historyEachPage
-                              : null,
-                          end: search == null ? page * _historyEachPage : null,
-                          range: range,
-                          search: search))
-                      .map((reply) => Visible(reply))
-                      .toList()
-                  : <Visible<ReplyData>>[];
-
-              if (page == 1) {
-                if (search != null) {
-                  controller._setCount(data.length, _index);
-                } else {
-                  await controller._setDataCount(_index);
+            return BiListView<Visible<ReplyData>>(
+              key: ValueKey<_HistoryKey>(
+                  _HistoryKey(range, search, refresh, value)),
+              scrollController: scrollController,
+              postListController: controller,
+              initialPage: controller.page,
+              canLoadMoreAtBottom: false,
+              fetch: (page) async {
+                if (page == 1) {
+                  WidgetsBinding.instance.addPostFrameCallback(
+                      (timeStamp) => controller._setCount(null, _index));
                 }
-              }
 
-              return data;
-            },
-            itemBuilder: (context, reply, index) =>
-                _ReplyHistoryItem(reply: reply, search: search),
-            noItemsFoundBuilder: (context) => Center(
-              child: Text(
-                '没有回复记录',
-                style: AppTheme.boldRedPostContentTextStyle,
-                strutStyle: AppTheme.boldRedPostContentStrutStyle,
+                final data = (search == null || page == 1)
+                    ? (await ReplyHistory.replyDataList(
+                            start: search == null
+                                ? (page - 1) * _historyEachPage
+                                : null,
+                            end:
+                                search == null ? page * _historyEachPage : null,
+                            range: range,
+                            search: search))
+                        .map((reply) => Visible(reply))
+                        .toList()
+                    : <Visible<ReplyData>>[];
+
+                if (page == 1) {
+                  if (search != null) {
+                    controller._setCount(data.length, _index);
+                  } else {
+                    await controller._setDataCount(_index);
+                  }
+                }
+
+                return data;
+              },
+              itemBuilder: (context, reply, index) =>
+                  _ReplyHistoryItem(reply: reply, search: search),
+              noItemsFoundBuilder: (context) => Center(
+                child: Text(
+                  '没有回复记录',
+                  style: AppTheme.boldRedPostContentTextStyle,
+                  strutStyle: AppTheme.boldRedPostContentStrutStyle,
+                ),
               ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+            );
+          },
+        ),
+      );
 }
 
 // TODO: 高亮显示使用通配符的搜索结果

@@ -9,7 +9,6 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 import '../data/models/controller.dart';
 import '../data/models/history.dart';
 import '../data/services/blacklist.dart';
-import '../data/services/history.dart';
 import '../data/services/settings.dart';
 import '../data/services/time.dart';
 import '../data/services/xdnmb_client.dart';
@@ -18,6 +17,7 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
+import '../utils/history.dart';
 import '../utils/navigation.dart';
 import '../utils/post_list.dart';
 import '../utils/theme.dart';
@@ -502,7 +502,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                 browsePage: controller.page,
                 browsePostId: browsePostId,
                 isOnlyPo: controller.isOnlyPoThread);
-            await PostHistoryService.to.saveBrowseHistory(_history!);
+            await BrowseDataHistory.saveBrowseData(_history!);
           }
         });
       } finally {
@@ -513,7 +513,6 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   void _saveHistoryAndJumpToIndex(Thread thread, int firstPage, int page) {
     if (page == firstPage) {
-      final history = PostHistoryService.to;
       final jumpToId = controller.jumpToId;
       final isOnlyPoThread = controller.isOnlyPoThread;
 
@@ -528,7 +527,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                 browsePage: page,
                 browsePostId: firstPost.id,
                 isOnlyPo: isOnlyPoThread);
-            history.saveBrowseHistory(_history!);
+            BrowseDataHistory.saveBrowseData(_history!);
           }
         }
 
@@ -815,7 +814,7 @@ class _ThreadBodyState extends State<ThreadBody> {
   void _setGetHistory() => _getHistory = Future(() async {
         final settings = SettingsService.to;
 
-        _history = await PostHistoryService.to.getBrowseHistory(controller.id);
+        _history = await BrowseDataHistory.getBrowseData(controller.id);
 
         if (controller.jumpToId == null) {
           if (!controller.cancelAutoJump &&

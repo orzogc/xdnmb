@@ -1,48 +1,41 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
-import '../../utils/extensions.dart';
-import '../../utils/isar.dart';
-import '../models/controller.dart';
-import '../models/history.dart';
-import '../models/post.dart';
-import '../models/reply.dart';
+import '../data/models/controller.dart';
+import '../data/models/history.dart';
+import '../data/models/post.dart';
+import '../data/models/reply.dart';
+import 'extensions.dart';
+import 'isar.dart';
 
-class PostHistoryService extends GetxService {
-  static PostHistoryService get to => Get.find<PostHistoryService>();
+abstract class BrowseDataHistory {
+  static IsarCollection<BrowseHistory> get _browseData => isar.browseHistorys;
 
-  IsarCollection<BrowseHistory> get _browseHistory => isar.browseHistorys;
+  static Future<BrowseHistory?> getBrowseData(int postId) =>
+      _browseData.get(postId);
 
-  IsarCollection<PostData> get _postData => isar.postDatas;
-
-  IsarCollection<ReplyData> get _replyData => isar.replyDatas;
-
-  Future<BrowseHistory?> getBrowseHistory(int postId) =>
-      _browseHistory.get(postId);
-
-  Future<int> browseHistoryCount([DateTimeRange? range]) => range != null
-      ? _browseHistory
+  static Future<int> browseDataCount([DateTimeRange? range]) => range != null
+      ? _browseData
           .where()
           .browseTimeBetween(range.start, range.end.addOneDay(),
               includeUpper: false)
           .count()
-      : _browseHistory.count();
+      : _browseData.count();
 
-  Future<int> saveBrowseHistory(BrowseHistory history) =>
-      isar.writeTxn(() => _browseHistory.put(history));
+  static Future<int> saveBrowseData(BrowseHistory history) =>
+      isar.writeTxn(() => _browseData.put(history));
 
-  Future<bool> deleteBrowseHistory(int postId) =>
-      isar.writeTxn(() => _browseHistory.delete(postId));
+  static Future<bool> deleteBrowseData(int postId) =>
+      isar.writeTxn(() => _browseData.delete(postId));
 
-  Future<void> clearBrowseHistory({DateTimeRange? range, Search? search}) =>
+  static Future<void> clearBrowseData({DateTimeRange? range, Search? search}) =>
       isar.writeTxn(() async {
         if (range != null || search != null) {
           QueryBuilder<BrowseHistory, BrowseHistory, dynamic> query =
-              _browseHistory.where();
+              _browseData.where();
 
           if (range != null) {
             query = (query
@@ -71,18 +64,18 @@ class PostHistoryService extends GetxService {
                   QQueryOperations>)
               .deleteAll();
         } else {
-          await _browseHistory.clear();
+          await _browseData.clear();
         }
       });
 
   /// 包括start，不包括end
-  Future<List<BrowseHistory>> browseHistoryList(
+  static Future<List<BrowseHistory>> browseDataList(
       {int? start, int? end, DateTimeRange? range, Search? search}) {
     assert((search != null && start == null && end == null) ||
         (search == null && start != null && end != null && start <= end));
 
     QueryBuilder<BrowseHistory, BrowseHistory, dynamic> query =
-        _browseHistory.where(sort: Sort.desc);
+        _browseData.where(sort: Sort.desc);
 
     if (range != null) {
       query =
@@ -115,10 +108,14 @@ class PostHistoryService extends GetxService {
             as QueryBuilder<BrowseHistory, BrowseHistory, QQueryOperations>)
         .findAll();
   }
+}
 
-  Future<PostData?> _getPostData(int id) => _postData.get(id);
+abstract class PostHistory {
+  static IsarCollection<PostData> get _postData => isar.postDatas;
 
-  Future<int> postDataCount([DateTimeRange? range]) => range != null
+  static Future<PostData?> _getPostData(int id) => _postData.get(id);
+
+  static Future<int> postDataCount([DateTimeRange? range]) => range != null
       ? _postData
           .where()
           .postTimeBetween(range.start, range.end.addOneDay(),
@@ -126,13 +123,13 @@ class PostHistoryService extends GetxService {
           .count()
       : _postData.count();
 
-  Future<int> savePostData(PostData post) =>
+  static Future<int> savePostData(PostData post) =>
       isar.writeTxn(() => _postData.put(post));
 
-  Future<bool> deletePostData(int id) =>
+  static Future<bool> deletePostData(int id) =>
       isar.writeTxn(() => _postData.delete(id));
 
-  Future<void> updatePostData(int id, PostBase post) async {
+  static Future<void> updatePostData(int id, PostBase post) async {
     final postData = await _getPostData(id);
     if (postData != null) {
       postData.update(post);
@@ -142,7 +139,7 @@ class PostHistoryService extends GetxService {
     }
   }
 
-  Future<void> clearPostData({DateTimeRange? range, Search? search}) =>
+  static Future<void> clearPostData({DateTimeRange? range, Search? search}) =>
       isar.writeTxn(() async {
         if (range != null || search != null) {
           QueryBuilder<PostData, PostData, dynamic> query = _postData.where();
@@ -175,7 +172,7 @@ class PostHistoryService extends GetxService {
       });
 
   /// 包括start，不包括end
-  Future<List<PostData>> postDataList(
+  static Future<List<PostData>> postDataList(
       {int? start, int? end, DateTimeRange? range, Search? search}) {
     assert((search != null && start == null && end == null) ||
         (search == null && start != null && end != null && start <= end));
@@ -211,10 +208,14 @@ class PostHistoryService extends GetxService {
     return (query as QueryBuilder<PostData, PostData, QQueryOperations>)
         .findAll();
   }
+}
 
-  Future<ReplyData?> _getReplyData(int id) => _replyData.get(id);
+abstract class ReplyHistory {
+  static IsarCollection<ReplyData> get _replyData => isar.replyDatas;
 
-  Future<int> replyDataCount([DateTimeRange? range]) => range != null
+  static Future<ReplyData?> _getReplyData(int id) => _replyData.get(id);
+
+  static Future<int> replyDataCount([DateTimeRange? range]) => range != null
       ? _replyData
           .where()
           .postTimeBetween(range.start, range.end.addOneDay(),
@@ -222,13 +223,13 @@ class PostHistoryService extends GetxService {
           .count()
       : _replyData.count();
 
-  Future<int> saveReplyData(ReplyData reply) =>
+  static Future<int> saveReplyData(ReplyData reply) =>
       isar.writeTxn(() => _replyData.put(reply));
 
-  Future<bool> deleteReplyData(int id) =>
+  static Future<bool> deleteReplyData(int id) =>
       isar.writeTxn(() => _replyData.delete(id));
 
-  Future<bool> updateReplyData(
+  static Future<bool> updateReplyData(
       {required int id,
       required PostBase post,
       int? mainPostId,
@@ -246,7 +247,7 @@ class PostHistoryService extends GetxService {
     }
   }
 
-  Future<void> clearReplyData({DateTimeRange? range, Search? search}) =>
+  static Future<void> clearReplyData({DateTimeRange? range, Search? search}) =>
       isar.writeTxn(() async {
         if (range != null || search != null) {
           QueryBuilder<ReplyData, ReplyData, dynamic> query =
@@ -280,7 +281,7 @@ class PostHistoryService extends GetxService {
       });
 
   /// 包括start，不包括end
-  Future<List<ReplyData>> replyDataList(
+  static Future<List<ReplyData>> replyDataList(
       {int? start, int? end, DateTimeRange? range, Search? search}) {
     assert((search != null && start == null && end == null) ||
         (search == null && start != null && end != null && start <= end));
@@ -318,7 +319,7 @@ class PostHistoryService extends GetxService {
         .findAll();
   }
 
-  Future<HashMap<String, int>> getReplyCount(int mainPostId) async {
+  static Future<HashMap<String, int>> getReplyCount(int mainPostId) async {
     final list = await _replyData
         .filter()
         .mainPostIdEqualTo(mainPostId)

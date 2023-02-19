@@ -20,7 +20,6 @@ import '../data/models/reply.dart';
 import '../data/services/draft.dart';
 import '../data/services/emoticon.dart';
 import '../data/services/forum.dart';
-import '../data/services/history.dart';
 import '../data/services/image.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
@@ -34,6 +33,7 @@ import '../routes/routes.dart';
 import '../utils/emoticons.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
+import '../utils/history.dart';
 import '../utils/image.dart';
 import '../utils/icons.dart';
 import '../utils/padding.dart';
@@ -746,7 +746,7 @@ class _CookieListState extends State<_CookieList> {
   late Future<HashMap<String, int>>? _getReplyCount;
 
   void _setGetReplyCount() => _getReplyCount = widget.mainPostId != null
-      ? PostHistoryService.to.getReplyCount(widget.mainPostId!)
+      ? ReplyHistory.getReplyCount(widget.mainPostId!)
       : null;
 
   @override
@@ -939,17 +939,16 @@ class _Post extends StatelessWidget {
 
   Future<void> _savePost(PostData post, String cookie) async {
     debugPrint('开始获取发布的新串数据');
-    final history = PostHistoryService.to;
 
     try {
-      final id = await history.savePostData(post);
+      final id = await PostHistory.savePostData(post);
 
       final lastPost = await _getLastPost(cookie);
 
       if (lastPost != null &&
           lastPost.mainPostId == null &&
           lastPost.userHash == post.userHash) {
-        await history.updatePostData(id, lastPost);
+        await PostHistory.updatePostData(id, lastPost);
       } else {
         final forumThreads =
             await XdnmbClientService.to.getForum(post.forumId, cookie: cookie);
@@ -958,7 +957,7 @@ class _Post extends StatelessWidget {
             thread.mainPost.postTime.difference(post.postTime).abs() <
                 _difference);
         if (threads.isNotEmpty) {
-          await history.updatePostData(id, threads.first.mainPost);
+          await PostHistory.updatePostData(id, threads.first.mainPost);
         } else {
           showToast('获取发布的新串数据失败');
         }
@@ -981,8 +980,8 @@ class _Post extends StatelessWidget {
         post.userHash == reply.userHash &&
         (post.postTime.difference(reply.postTime).abs() < _difference));
     if (posts.isNotEmpty) {
-      return await PostHistoryService.to
-          .updateReplyData(id: id, post: posts.last, page: page);
+      return await ReplyHistory.updateReplyData(
+          id: id, post: posts.last, page: page);
     }
 
     return false;
@@ -1001,8 +1000,8 @@ class _Post extends StatelessWidget {
         debugPrint('postId出现重复');
       }
 
-      return await PostHistoryService.to
-          .updateReplyData(id: id, post: posts.last, page: page);
+      return await ReplyHistory.updateReplyData(
+          id: id, post: posts.last, page: page);
     }
 
     return false;
@@ -1010,17 +1009,16 @@ class _Post extends StatelessWidget {
 
   Future<void> _saveReply(ReplyData reply, String cookie) async {
     debugPrint('开始获取回串数据');
-    final history = PostHistoryService.to;
     final client = XdnmbClientService.to;
 
     try {
-      final id = await history.saveReplyData(reply);
+      final id = await ReplyHistory.saveReplyData(reply);
 
       final lastPost = await _getLastPost(cookie);
       if (lastPost != null &&
           lastPost.mainPostId == reply.mainPostId &&
           lastPost.userHash == reply.userHash) {
-        await history.updateReplyData(id: id, post: lastPost);
+        await ReplyHistory.updateReplyData(id: id, post: lastPost);
         final thread = await client.getThread(reply.mainPostId, cookie: cookie);
         final maxPage = thread.maxPage;
 

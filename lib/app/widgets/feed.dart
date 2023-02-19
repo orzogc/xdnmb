@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/controller.dart';
-import '../data/services/reference.dart';
 import '../data/services/settings.dart';
 import '../data/services/time.dart';
 import '../data/services/xdnmb_client.dart';
@@ -16,6 +15,7 @@ import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/navigation.dart';
 import '../utils/post_list.dart';
+import '../utils/reference.dart';
 import '../utils/theme.dart';
 import '../utils/time.dart';
 import '../utils/toast.dart';
@@ -154,7 +154,6 @@ class _FeedItemState extends State<_FeedItem> {
   void _setGetLatestPostTime() {
     final settings = SettingsService.to;
     final client = XdnmbClientService.to;
-    final references = ReferenceService.to;
     final time = TimeService.to;
 
     _getLatestPostTime = !settings.isNotShowedLatestPostTimeInFeed
@@ -162,7 +161,7 @@ class _FeedItemState extends State<_FeedItem> {
             for (final postId in widget.feed.item.post.recentReplies.reversed) {
               try {
                 DateTime? postTime =
-                    (await references.getReference(postId))?.postTime;
+                    (await ReferenceDatabase.getReference(postId))?.postTime;
 
                 if (postTime == null) {
                   debugPrint(

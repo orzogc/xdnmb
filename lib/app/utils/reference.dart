@@ -1,19 +1,17 @@
 import 'dart:collection';
 
-import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
-import '../../utils/hash.dart';
-import '../../utils/isar.dart';
-import '../models/reference.dart';
+import '../data/models/reference.dart';
+import 'hash.dart';
+import 'isar.dart';
 
-class ReferenceService extends GetxService {
-  static ReferenceService get to => Get.find<ReferenceService>();
+abstract class ReferenceDatabase {
+  static IsarCollection<ReferenceData> get _referenceData =>
+      isar.referenceDatas;
 
-  IsarCollection<ReferenceData> get _referenceData => isar.referenceDatas;
-
-  Future<HashMap<int, ReferenceData>> _getReferenceMap(
+  static Future<HashMap<int, ReferenceData>> _getReferenceMap(
       Iterable<ReferenceData> references) async {
     final postIds = references.map((reference) => reference.id);
     final posts = await _referenceData
@@ -24,7 +22,7 @@ class ReferenceService extends GetxService {
     return intHashMapFromEntries(posts.map((post) => MapEntry(post.id, post)));
   }
 
-  Future<void> _addReferences(Iterable<ReferenceData> references) async {
+  static Future<void> _addReferences(Iterable<ReferenceData> references) async {
     if (references.isEmpty) {
       return;
     }
@@ -49,9 +47,10 @@ class ReferenceService extends GetxService {
     });
   }
 
-  Future<ReferenceData?> getReference(int postId) => _referenceData.get(postId);
+  static Future<ReferenceData?> getReference(int postId) =>
+      _referenceData.get(postId);
 
-  Future<ReferenceData> addPost(
+  static Future<ReferenceData> addPost(
       {required PostBase post,
       int? mainPostId,
       int? accuratePage,
@@ -77,12 +76,12 @@ class ReferenceService extends GetxService {
     });
   }
 
-  Future<void> addForumThreads(Iterable<ForumThread> threads) =>
+  static Future<void> addForumThreads(Iterable<ForumThread> threads) =>
       _addReferences(ReferenceData.fromForumThreads(threads));
 
-  Future<void> addThread(Thread thread, int page) =>
+  static Future<void> addThread(Thread thread, int page) =>
       _addReferences(ReferenceData.fromThread(thread, page));
 
-  Future<void> addFeeds(Iterable<Feed> feeds) =>
+  static Future<void> addFeeds(Iterable<Feed> feeds) =>
       _addReferences(ReferenceData.fromFeeds(feeds));
 }

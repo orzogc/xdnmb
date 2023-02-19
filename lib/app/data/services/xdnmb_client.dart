@@ -4,11 +4,11 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../../utils/exception.dart';
 import '../../utils/http_client.dart';
+import '../../utils/reference.dart';
 import '../../utils/toast.dart';
 import '../models/reference.dart';
 import 'forum.dart';
 import 'persistent.dart';
-import 'reference.dart';
 import 'settings.dart';
 
 class ReferenceWithData {
@@ -59,7 +59,7 @@ class XdnmbClientService extends GetxService {
   Future<List<ForumThread>> getForum(int forumId,
       {int page = 1, String? cookie}) async {
     final threads = await client.getForum(forumId, page: page, cookie: cookie);
-    ReferenceService.to.addForumThreads(threads);
+    ReferenceDatabase.addForumThreads(threads);
 
     return threads;
   }
@@ -68,7 +68,7 @@ class XdnmbClientService extends GetxService {
       {int page = 1, String? cookie}) async {
     final threads =
         await client.getTimeline(timelineId, page: page, cookie: cookie);
-    ReferenceService.to.addForumThreads(threads);
+    ReferenceDatabase.addForumThreads(threads);
 
     return threads;
   }
@@ -77,7 +77,7 @@ class XdnmbClientService extends GetxService {
       {int page = 1, String? cookie}) async {
     final thread =
         await client.getThread(mainPostId, page: page, cookie: cookie);
-    ReferenceService.to.addThread(thread, page);
+    ReferenceDatabase.addThread(thread, page);
 
     return thread;
   }
@@ -86,7 +86,7 @@ class XdnmbClientService extends GetxService {
       {int page = 1, String? cookie}) async {
     final thread =
         await client.getOnlyPoThread(mainPostId, page: page, cookie: cookie);
-    ReferenceService.to.addThread(thread, page);
+    ReferenceDatabase.addThread(thread, page);
 
     return thread;
   }
@@ -94,7 +94,7 @@ class XdnmbClientService extends GetxService {
   Future<Reference> getReference(int postId,
       {String? cookie, int? mainPostId}) async {
     final reference = await client.getReference(postId, cookie: cookie);
-    ReferenceService.to.addPost(post: reference, mainPostId: mainPostId);
+    ReferenceDatabase.addPost(post: reference, mainPostId: mainPostId);
 
     return reference;
   }
@@ -102,8 +102,8 @@ class XdnmbClientService extends GetxService {
   Future<ReferenceWithData> getHtmlReference(int postId,
       {String? cookie}) async {
     final reference = await client.getHtmlReference(postId, cookie: cookie);
-    final data = await ReferenceService.to
-        .addPost(post: reference, mainPostId: reference.mainPostId);
+    final data = await ReferenceDatabase.addPost(
+        post: reference, mainPostId: reference.mainPostId);
 
     return ReferenceWithData(reference, data);
   }
@@ -111,7 +111,7 @@ class XdnmbClientService extends GetxService {
   Future<List<Feed>> getFeed(String feedId,
       {int page = 1, String? cookie}) async {
     final feeds = await client.getFeed(feedId, page: page, cookie: cookie);
-    ReferenceService.to.addFeeds(feeds);
+    ReferenceDatabase.addFeeds(feeds);
 
     return feeds;
   }
@@ -119,7 +119,7 @@ class XdnmbClientService extends GetxService {
   Future<LastPost?> getLastPost({String? cookie}) async {
     final post = await client.getLastPost(cookie: cookie);
     if (post != null) {
-      ReferenceService.to.addPost(
+      ReferenceDatabase.addPost(
           post: post,
           mainPostId: post.mainPostId ?? post.id,
           accuratePage: post.mainPostId == null ? 1 : null);
