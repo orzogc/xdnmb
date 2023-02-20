@@ -39,6 +39,8 @@ abstract class Settings {
 
   static const String fixedImageDisposeRatio = 'fixedImageDisposeRatio';
 
+  static const String systemNavigationBarByTheme = 'systemNavigationBarByTheme';
+
   static const String fixMissingFont = 'fixMissingFont';
 
   static const String showGuide = 'showGuide';

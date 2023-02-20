@@ -3,11 +3,13 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../utils/extensions.dart';
+import '../../utils/theme.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
 import '../models/settings.dart';
@@ -57,6 +59,8 @@ class SettingsService extends GetxService {
   static SettingsService get to => Get.find<SettingsService>();
 
   static late final bool isRestoreForumPage;
+
+  static late final bool isSystemNavigationBarByTheme;
 
   static late final bool isFixMissingFont;
 
@@ -206,6 +210,13 @@ class SettingsService extends GetxService {
 
   set fixedImageDisposeRatio(double ratio) =>
       _settingsBox.put(Settings.fixedImageDisposeRatio, ratio.clamp(0.0, 1.0));
+
+  bool get systemNavigationBarByTheme => _settingsBox
+      .get(Settings.systemNavigationBarByTheme, defaultValue: false);
+
+  set systemNavigationBarByTheme(bool systemNavigationBarByTheme) =>
+      _settingsBox.put(
+          Settings.systemNavigationBarByTheme, systemNavigationBarByTheme);
 
   bool get fixMissingFont => _settingsBox.get(Settings.fixMissingFont,
       defaultValue: GetPlatform.isIOS);
@@ -534,6 +545,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> fixedImageDisposeRatioListenable;
 
+  late final ValueListenable<Box> systemNavigationBarByThemeListenable;
+
   late final ValueListenable<Box> fixMissingFontListenable;
 
   late final ValueListenable<Box> showGuideListenable;
@@ -578,11 +591,31 @@ class SettingsService extends GetxService {
     final box = await Hive.openBox(HiveBoxName.settings);
 
     ImageService.savePath = box.get(Settings.saveImagePath, defaultValue: null);
-    // 是否修复字体，结果保存在`fixMissingFont`
-    isFixMissingFont =
-        box.get(Settings.fixMissingFont, defaultValue: GetPlatform.isIOS);
     isRestoreForumPage =
         box.get(Settings.restoreForumPage, defaultValue: false);
+    isSystemNavigationBarByTheme =
+        box.get(Settings.systemNavigationBarByTheme, defaultValue: false);
+    // 是否修复字体
+    isFixMissingFont =
+        box.get(Settings.fixMissingFont, defaultValue: GetPlatform.isIOS);
+  }
+
+  static void setSystemUIOverlayStyle(bool isDark) {
+    isDark
+        ? SystemChrome.setSystemUIOverlayStyle(isSystemNavigationBarByTheme
+            ? SystemUiOverlayStyle.light.copyWith(
+                systemNavigationBarColor: AppTheme.primaryColorDark,
+                systemNavigationBarDividerColor: AppTheme.primaryColorDark,
+                systemNavigationBarIconBrightness: Brightness.light,
+              )
+            : SystemUiOverlayStyle.light)
+        : SystemChrome.setSystemUIOverlayStyle(isSystemNavigationBarByTheme
+            ? SystemUiOverlayStyle.dark.copyWith(
+                systemNavigationBarColor: AppTheme.primaryColorLight,
+                systemNavigationBarDividerColor: AppTheme.primaryColorLight,
+                systemNavigationBarIconBrightness: Brightness.light,
+              )
+            : SystemUiOverlayStyle.dark);
   }
 
   void _setDarkModeWithPlatformBrightness() => isDarkMode =
@@ -603,6 +636,7 @@ class SettingsService extends GetxService {
     }
 
     hasBeenDarkMode.value = Get.isDarkMode;
+    setSystemUIOverlayStyle(hasBeenDarkMode.value);
   }
 
   TextStyle postHeaderTextStyle([TextStyle? textStyle]) => TextStyle(
@@ -680,6 +714,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.imageDisposeDistance]);
     fixedImageDisposeRatioListenable =
         _settingsBox.listenable(keys: [Settings.fixedImageDisposeRatio]);
+    systemNavigationBarByThemeListenable =
+        _settingsBox.listenable(keys: [Settings.systemNavigationBarByTheme]);
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
     showGuideListenable = _settingsBox.listenable(keys: [
