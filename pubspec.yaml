@@ -5,7 +5,7 @@ version: 0.3.1-alpha+7
 
 environment:
   sdk: ">=2.19.2 <3.0.0"
-  flutter: ">=3.7.3"
+  flutter: ">=3.7.5"
 
 dependencies:
   align_positioned: ^3.0.0
@@ -50,15 +50,15 @@ dependencies:
   mobile_scanner: ^3.0.0
   package_info_plus: ^3.0.3
   path: ^1.8.2
-  path_provider: ^2.0.12
+  path_provider: ^2.0.13
   permission_handler: ^10.2.0
   responsive_grid_list: ^1.3.1
   screenshot: ^1.3.0
-  showcaseview: ^2.0.0+1
+  showcaseview: ^2.0.1
   swipeable_page_route: ^0.3.0
   system_info2: ^3.0.1
   timeago_flutter: ^1.2.0
-  url_launcher: ^6.1.9
+  url_launcher: ^6.1.10
   uuid: ^3.0.7
   version: ^3.0.2
   xdg_directories: ^1.0.0
@@ -67,7 +67,7 @@ dependencies:
 
 dev_dependencies:
   build_runner: ^2.3.3
-  flutter_launcher_icons: ^0.11.0
+  flutter_launcher_icons: ^0.12.0
   flutter_lints: ^2.0.1
   flutter_test:
     sdk: flutter
