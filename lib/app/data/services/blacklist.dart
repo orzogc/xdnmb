@@ -11,7 +11,7 @@ import '../models/forum.dart';
 import '../models/hive.dart';
 
 class BlacklistService extends GetxService {
-  static BlacklistService get to => Get.find<BlacklistService>();
+  static final BlacklistService to = Get.find<BlacklistService>();
 
   late final Box<BlockForumData> _forumBlacklistBox;
 

@@ -26,4 +26,6 @@ abstract class HiveBoxName {
   static const String userBlacklist = 'userBlacklist';
 
   static const String controllers = 'controllers';
+
+  static const String tags = 'tags';
 }

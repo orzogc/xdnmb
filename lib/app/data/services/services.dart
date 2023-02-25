@@ -8,6 +8,7 @@ import 'image.dart';
 import 'persistent.dart';
 import 'settings.dart';
 import 'stack.dart';
+import 'tag.dart';
 import 'time.dart';
 import 'user.dart';
 import 'version.dart';
@@ -25,6 +26,7 @@ Bindings servicesBindings() => BindingsBuilder(() {
       Get.put(BlacklistService());
       Get.put(PostDraftListService());
       Get.put(EmoticonListService());
+      Get.put(TagService());
       Get.put(CheckAppVersionService());
       Get.put(XdnmbClientService());
     });

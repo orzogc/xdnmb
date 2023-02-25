@@ -6,6 +6,7 @@ part 'tag.g.dart';
 
 @HiveType(typeId: 11)
 class TagData extends HiveObject {
+  /// 从0开始
   @HiveField(0)
   final int id;
 
@@ -32,6 +33,15 @@ class TagData extends HiveObject {
       this.backgroundColorValue,
       this.textColorValue})
       : assert(name.isNotEmpty);
+
+  TagData copyWith(
+          {String? name, int? backgroundColorValue, int? textColorValue}) =>
+      TagData(
+          id: id,
+          name: name ?? this.name,
+          backgroundColorValue:
+              backgroundColorValue ?? this.backgroundColorValue,
+          textColorValue: textColorValue ?? this.textColorValue);
 
   @override
   bool operator ==(Object other) =>

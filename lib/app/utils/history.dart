@@ -26,7 +26,9 @@ abstract class BrowseDataHistory {
       : _browseData.count();
 
   static Future<int> saveBrowseData(BrowseHistory history) =>
-      isar.writeTxn(() => _browseData.put(history));
+      isar.writeTxn(() => _browseData.put(history
+        ..image = ''
+        ..imageExtension = ''));
 
   static Future<bool> deleteBrowseData(int postId) =>
       isar.writeTxn(() => _browseData.delete(postId));
@@ -124,7 +126,9 @@ abstract class PostHistory {
       : _postData.count();
 
   static Future<int> savePostData(PostData post) =>
-      isar.writeTxn(() => _postData.put(post));
+      isar.writeTxn(() => _postData.put(post
+        ..image = null
+        ..imageExtension = null));
 
   static Future<bool> deletePostData(int id) =>
       isar.writeTxn(() => _postData.delete(id));
@@ -224,7 +228,9 @@ abstract class ReplyHistory {
       : _replyData.count();
 
   static Future<int> saveReplyData(ReplyData reply) =>
-      isar.writeTxn(() => _replyData.put(reply));
+      isar.writeTxn(() => _replyData.put(reply
+        ..image = null
+        ..imageExtension = null));
 
   static Future<bool> deleteReplyData(int id) =>
       isar.writeTxn(() => _replyData.delete(id));

@@ -66,7 +66,7 @@ class _ForumValue {
 }
 
 class ForumListService extends GetxService {
-  static ForumListService get to => Get.find<ForumListService>();
+  static final ForumListService to = Get.find<ForumListService>();
 
   late final Box<ForumData> _forumBox;
 

@@ -17,7 +17,7 @@ import 'settings.dart';
 import 'xdnmb_client.dart';
 
 class PersistentDataService extends GetxService {
-  static PersistentDataService get to => Get.find<PersistentDataService>();
+  static final PersistentDataService to = Get.find<PersistentDataService>();
 
   static const Duration updateForumListInterval = Duration(hours: 6);
 

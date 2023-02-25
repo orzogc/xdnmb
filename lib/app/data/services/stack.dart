@@ -57,7 +57,7 @@ class _StackData {
 }
 
 class ControllerStacksService extends GetxService {
-  static ControllerStacksService get to => Get.find<ControllerStacksService>();
+  static final ControllerStacksService to = Get.find<ControllerStacksService>();
 
   late final Box<PostListControllerData> _controllerBox;
 

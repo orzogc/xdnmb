@@ -56,7 +56,7 @@ class _CustomMessages implements LookupMessages {
 }
 
 class TimeService extends GetxService {
-  static TimeService get to => Get.find<TimeService>();
+  static final TimeService to = Get.find<TimeService>();
 
   late final Timer _timer;
 

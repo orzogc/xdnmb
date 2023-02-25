@@ -20,7 +20,7 @@ class ReferenceWithData {
 }
 
 class XdnmbClientService extends GetxService {
-  static XdnmbClientService get to => Get.find<XdnmbClientService>();
+  static final XdnmbClientService to = Get.find<XdnmbClientService>();
 
   // TODO: 允许用户设置timeout
   final XdnmbApi client;

@@ -14,7 +14,7 @@ import '../../utils/url.dart';
 import '../../widgets/dialog.dart';
 
 class CheckAppVersionService extends GetxService {
-  static CheckAppVersionService get to => Get.find<CheckAppVersionService>();
+  static final CheckAppVersionService to = Get.find<CheckAppVersionService>();
 
   static const Duration _checkUpdatePeriod = Duration(seconds: 10);
 

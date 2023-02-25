@@ -56,7 +56,7 @@ class SettingsService extends GetxService {
 
   static const double defaultLetterSpacing = 0.25;
 
-  static SettingsService get to => Get.find<SettingsService>();
+  static final SettingsService to = Get.find<SettingsService>();
 
   static late final bool isRestoreForumPage;
 

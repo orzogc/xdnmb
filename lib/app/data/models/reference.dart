@@ -38,10 +38,11 @@ class ReferenceData {
 
   ReferenceData(
       {required this.id,
-      this.postTime,
+      DateTime? postTime,
       this.mainPostId,
       this.accuratePage,
-      this.fuzzyPage});
+      this.fuzzyPage})
+      : postTime = postTime?.toUtc();
 
   ReferenceData.fromPost(
       {required PostBase post,
@@ -49,7 +50,7 @@ class ReferenceData {
       this.accuratePage,
       this.fuzzyPage})
       : id = post.id,
-        postTime = post.postTime;
+        postTime = post.postTime.toUtc();
 
   static List<ReferenceData> fromForumThreads(Iterable<ForumThread> threads) =>
       threads.fold(<ReferenceData>[], (list, thread) {
@@ -103,8 +104,10 @@ class ReferenceData {
       });
 
   void update(ReferenceData other) {
+    assert(id == other.id);
+
     if (other.postTime != null) {
-      postTime = other.postTime;
+      postTime = other.postTime!.toUtc();
     }
     if (other.mainPostId != null) {
       mainPostId = other.mainPostId;

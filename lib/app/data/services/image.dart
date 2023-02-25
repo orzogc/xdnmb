@@ -8,7 +8,7 @@ import '../../utils/toast.dart';
 import 'settings.dart';
 
 class ImageService extends GetxService {
-  static ImageService get to => Get.find<ImageService>();
+  static final ImageService to = Get.find<ImageService>();
 
   static String? savePath;
 

@@ -8,16 +8,18 @@ import '../data/models/history.dart';
 import '../data/models/post.dart';
 import '../data/models/reference.dart';
 import '../data/models/reply.dart';
+import '../data/models/tagged_post.dart';
 import 'directory.dart';
 
 /// 由于兼容原因，isar数据库名字为`history`
 const String _databaseName = 'history';
 
-final List<CollectionSchema<dynamic>> _isarSchemas = [
+const List<CollectionSchema<dynamic>> _isarSchemas = [
   BrowseHistorySchema,
   PostDataSchema,
   ReplyDataSchema,
   ReferenceDataSchema,
+  TaggedPostSchema,
 ];
 
 /// [Isar]实例只能同时存在一个

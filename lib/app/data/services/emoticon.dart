@@ -6,7 +6,7 @@ import '../models/emoticon.dart';
 import '../models/hive.dart';
 
 class EmoticonListService extends GetxService {
-  static EmoticonListService get to => Get.find<EmoticonListService>();
+  static final EmoticonListService to = Get.find<EmoticonListService>();
 
   late final Box<EmoticonData> _emoticonBox;
 

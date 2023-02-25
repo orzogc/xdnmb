@@ -29,7 +29,7 @@ class _CookieData {
 class UserService extends GetxService {
   static const String _secureKey = 'xdnmbUserData';
 
-  static UserService get to => Get.find<UserService>();
+  static final UserService to = Get.find<UserService>();
 
   late final Box _userBox;
 

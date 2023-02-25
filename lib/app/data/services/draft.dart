@@ -6,7 +6,7 @@ import '../models/draft.dart';
 import '../models/hive.dart';
 
 class PostDraftListService extends GetxService {
-  static PostDraftListService get to => Get.find<PostDraftListService>();
+  static final PostDraftListService to = Get.find<PostDraftListService>();
 
   late final Box<PostDraftData> _draftBox;
 
