@@ -235,6 +235,7 @@ class _ForumDialog extends StatelessWidget {
           _AddFeed(post.id),
           Report(post.id),
           SharePost(mainPostId: post.id),
+          AddPostTag(post),
           if (controller.isTimeline && post.forumId != null)
             _BlockForum(controller: controller, forumId: post.forumId!),
           if (!post.isAdmin) BlockPost(postId: post.id),

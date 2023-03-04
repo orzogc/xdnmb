@@ -5,9 +5,9 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 import '../data/services/settings.dart';
 import '../utils/extensions.dart';
 import '../utils/theme.dart';
+import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/post.dart';
-import '../widgets/safe_area.dart';
 import '../widgets/scroll.dart';
 
 class _Confirm extends StatelessWidget {
@@ -50,10 +50,11 @@ class _Restore extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-        title: OverflowBar(
+        title: Wrap(
+          alignment: WrapAlignment.spaceBetween,
           spacing: 5.0,
-          alignment: MainAxisAlignment.spaceBetween,
-          overflowSpacing: 5.0,
+          runSpacing: 5.0,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             ElevatedButton(
               onPressed: () {

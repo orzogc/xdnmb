@@ -10,6 +10,7 @@ import '../models/reference.dart';
 import 'forum.dart';
 import 'persistent.dart';
 import 'settings.dart';
+import 'tag.dart';
 
 class ReferenceWithData {
   final HtmlReference reference;
@@ -60,6 +61,7 @@ class XdnmbClientService extends GetxService {
       {int page = 1, String? cookie}) async {
     final threads = await client.getForum(forumId, page: page, cookie: cookie);
     ReferenceDatabase.addForumThreads(threads);
+    TagService.to.addForumThreads(threads);
 
     return threads;
   }
@@ -69,24 +71,27 @@ class XdnmbClientService extends GetxService {
     final threads =
         await client.getTimeline(timelineId, page: page, cookie: cookie);
     ReferenceDatabase.addForumThreads(threads);
+    TagService.to.addForumThreads(threads);
 
     return threads;
   }
 
   Future<Thread> getThread(int mainPostId,
-      {int page = 1, String? cookie}) async {
+      {int page = 1, String? cookie, bool isFirstPage = false}) async {
     final thread =
         await client.getThread(mainPostId, page: page, cookie: cookie);
     ReferenceDatabase.addThread(thread, page);
+    TagService.to.addThread(thread, isFirstPage);
 
     return thread;
   }
 
   Future<Thread> getOnlyPoThread(int mainPostId,
-      {int page = 1, String? cookie}) async {
+      {int page = 1, String? cookie, bool isFirstPage = false}) async {
     final thread =
         await client.getOnlyPoThread(mainPostId, page: page, cookie: cookie);
     ReferenceDatabase.addThread(thread, page);
+    TagService.to.addThread(thread, isFirstPage);
 
     return thread;
   }
@@ -95,6 +100,7 @@ class XdnmbClientService extends GetxService {
       {String? cookie, int? mainPostId}) async {
     final reference = await client.getReference(postId, cookie: cookie);
     ReferenceDatabase.addPost(post: reference, mainPostId: mainPostId);
+    TagService.to.updatePosts([reference]);
 
     return reference;
   }
@@ -102,6 +108,7 @@ class XdnmbClientService extends GetxService {
   Future<ReferenceWithData> getHtmlReference(int postId,
       {String? cookie}) async {
     final reference = await client.getHtmlReference(postId, cookie: cookie);
+    TagService.to.updatePosts([reference]);
     final data = await ReferenceDatabase.addPost(
         post: reference, mainPostId: reference.mainPostId);
 
@@ -112,6 +119,7 @@ class XdnmbClientService extends GetxService {
       {int page = 1, String? cookie}) async {
     final feeds = await client.getFeed(feedId, page: page, cookie: cookie);
     ReferenceDatabase.addFeeds(feeds);
+    TagService.to.addFeeds(feeds);
 
     return feeds;
   }

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../data/models/controller.dart';
+import '../widgets/color.dart';
 import '../widgets/edit_post.dart';
-import '../widgets/safe_area.dart';
 
 class EditPostController extends GetxController {
   final PostListType postListType;

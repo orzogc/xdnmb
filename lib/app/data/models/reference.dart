@@ -33,7 +33,7 @@ class ReferenceData {
   int? get page => accuratePage ?? fuzzyPage;
 
   @ignore
-  bool get isDone =>
+  bool get isComplete =>
       postTime != null && mainPostId != null && accuratePage != null;
 
   ReferenceData(

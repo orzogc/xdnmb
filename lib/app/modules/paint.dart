@@ -8,9 +8,9 @@ import 'package:image_painter/image_painter.dart';
 
 import '../utils/image.dart';
 import '../utils/toast.dart';
+import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/image.dart';
-import '../widgets/safe_area.dart';
 
 class _Text implements TextDelegate {
   @override

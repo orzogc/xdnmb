@@ -36,6 +36,12 @@ class ReplyData {
 
   bool hasImage;
 
+  @ignore
+  bool get hasPostId => postId != null;
+
+  @ignore
+  bool get isComplete => hasPostId && page != null;
+
   /// [image]是为了兼容旧版本，用来判断[hasImage]
   ReplyData(
       {required this.mainPostId,

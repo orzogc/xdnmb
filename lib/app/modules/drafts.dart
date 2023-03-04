@@ -9,10 +9,10 @@ import '../data/models/draft.dart';
 import '../data/services/draft.dart';
 import '../utils/toast.dart';
 import '../utils/theme.dart';
+import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
 import '../widgets/post.dart';
-import '../widgets/safe_area.dart';
 
 class _PopupMenuButton extends StatelessWidget {
   // ignore: unused_element

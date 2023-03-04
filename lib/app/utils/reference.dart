@@ -8,7 +8,7 @@ import 'hash.dart';
 import 'isar.dart';
 
 abstract class ReferenceDatabase {
-  static IsarCollection<ReferenceData> get _referenceData =>
+  static final IsarCollection<ReferenceData> _referenceData =
       isar.referenceDatas;
 
   static Future<HashMap<int, ReferenceData>> _getReferenceMap(
@@ -34,7 +34,7 @@ abstract class ReferenceDatabase {
       for (final reference in references) {
         final stored = map[reference.id];
         if (stored != null) {
-          if (!stored.isDone) {
+          if (!stored.isComplete) {
             stored.update(reference);
             toAdd.add(stored);
           }
@@ -64,7 +64,7 @@ abstract class ReferenceDatabase {
     return isar.writeTxn(() async {
       final stored = await _referenceData.get(post.id);
       if (stored != null) {
-        if (!stored.isDone) {
+        if (!stored.isComplete) {
           stored.update(reference);
           await _referenceData.put(stored);
         }

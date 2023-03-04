@@ -263,6 +263,8 @@ class HistoryController extends PostListController {
 
   @override
   void dispose() {
+    //_pageIndex.close();
+    //_dateRange.close();
     for (final notifier in _notifiers) {
       notifier.dispose();
     }
@@ -550,11 +552,10 @@ class _HistoryHeader extends StatelessWidget {
                             ),
                           ),
                           subtitle: (search.caseSensitive || search.useWildcard)
-                              ? OverflowBar(
-                                  alignment: MainAxisAlignment.spaceAround,
-                                  overflowSpacing: 5.0,
-                                  overflowAlignment:
-                                      OverflowBarAlignment.center,
+                              ? Wrap(
+                                  alignment: WrapAlignment.spaceAround,
+                                  spacing: 5.0,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
                                   children: [
                                     if (search.caseSensitive)
                                       const Text('英文字母区分大小写'),
@@ -599,8 +600,8 @@ class _HistoryDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasMainPostId = mainPost.id > 0;
     final hasPostId = post != null && post!.id > 0;
-    final hasPostIdOrMainPostId = hasPostId || (post == null && hasMainPostId);
     final postHistory = post ?? mainPost;
+    final hasPostIdOrMainPostId = postHistory.id > 0;
 
     return SimpleDialog(
       title: hasPostIdOrMainPostId ? Text(postHistory.toPostNumber()) : null,
@@ -631,6 +632,7 @@ class _HistoryDialog extends StatelessWidget {
             page: page,
             postId: hasPostId ? post!.id : null,
           ),
+        if (hasPostIdOrMainPostId) AddPostTag(postHistory),
         if (hasPostIdOrMainPostId) CopyPostReference(postHistory.id),
         CopyPostContent(postHistory),
         if (post != null) CopyPostReference(mainPost.id, text: '复制主串串号引用'),
@@ -658,14 +660,14 @@ class _BrowseHistoryItem extends StatefulWidget {
 class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
   late Future<void> _getBrowseHistory;
 
-  Visible<BrowseHistory> get browse => widget.browse;
+  BrowseHistory get _history => widget.browse.item;
 
   void _setGetBrowseHistory() => _getBrowseHistory = Future(() async {
-        if (browse.item.hasImage) {
-          final image = await _Image._getImage(browse.item.id, browse.item.id);
+        if (_history.hasImage) {
+          final image = await _Image._getImage(_history.id, _history.id);
           if (image != null) {
-            browse.item.image = image.image;
-            browse.item.imageExtension = image.imageExtension;
+            _history.image = image.image;
+            _history.imageExtension = image.imageExtension;
           }
         }
       });
@@ -678,7 +680,7 @@ class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
 
     final time = TimeService.to;
     if (SettingsService.to.showRelativeTime &&
-        browse.item.browseTime.isAfter(time.now)) {
+        _history.browseTime.isAfter(time.now)) {
       time.updateTime();
     }
   }
@@ -702,82 +704,60 @@ class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasError) {
-          debugPrint(
-              '获取串 ${browse.item.toPostNumber()} 的引用出错：${snapshot.error}');
+          debugPrint('获取串 ${_history.toPostNumber()} 的引用出错：${snapshot.error}');
         }
 
-        final browsePage =
-            browse.item.browsePage ?? browse.item.onlyPoBrowsePage;
+        final browsePage = _history.browsePage ?? _history.onlyPoBrowsePage;
         final browsePostId =
-            browse.item.browsePostId ?? browse.item.onlyPoBrowsePostId;
+            _history.browsePostId ?? _history.onlyPoBrowsePostId;
 
         return Obx(
-          () => browse.isVisible
+          () => widget.browse.isVisible
               ? PostCard(
-                  key: ValueKey<int>(browse.item.id),
-                  child: InkWell(
-                    onTap: () => AppRoutes.toThread(
-                        mainPostId: browse.item.id, mainPost: browse.item),
-                    onLongPress: () => postListDialog(_HistoryDialog(
-                      mainPost: browse.item,
+                  key: ValueKey<int>(_history.id),
+                  child: PostInkWell(
+                    post: _history,
+                    poUserHash: _history.userHash,
+                    contentMaxLines: 8,
+                    onText: !(widget.search?.useWildcard ?? true)
+                        ? (context, text) => Regex.onSearchText(
+                            text: text, search: widget.search!)
+                        : null,
+                    showFullTime: false,
+                    showReplyCount: false,
+                    header: (textStyle) => _PostHeader(children: [
+                      if (settings.showRelativeTime)
+                        TimerRefresher(
+                          builder: (context) => Text(
+                            '最后浏览时间：${time.relativeTime(_history.browseTime)}',
+                            style: AppTheme.postHeaderTextStyle,
+                            strutStyle: AppTheme.postHeaderStrutStyle,
+                          ),
+                        )
+                      else
+                        Text(
+                          '最后浏览时间：${fullFormatTime(_history.browseTime)}',
+                          style: AppTheme.postHeaderTextStyle,
+                          strutStyle: AppTheme.postHeaderStrutStyle,
+                        ),
+                      if (browsePage != null && browsePostId != null)
+                        Text(
+                          '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
+                          style: AppTheme.postHeaderTextStyle,
+                          strutStyle: AppTheme.postHeaderStrutStyle,
+                        ),
+                    ]),
+                    onTap: (post) =>
+                        AppRoutes.toThread(mainPostId: post.id, mainPost: post),
+                    onLongPress: (post) => postListDialog(_HistoryDialog(
+                      mainPost: post,
                       confirmDelete: false,
                       onDelete: () async {
-                        await BrowseDataHistory.deleteBrowseData(
-                            browse.item.id);
-                        showToast('删除 ${browse.item.toPostNumber()} 的浏览记录');
-                        browse.isVisible = false;
+                        await BrowseDataHistory.deleteBrowseData(post.id);
+                        showToast('删除 ${post.toPostNumber()} 的浏览记录');
+                        widget.browse.isVisible = false;
                       },
                     )),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              left: 10.0, top: 5.0, right: 10.0),
-                          child: PostHeader(
-                            fontSize: AppTheme.postHeaderTextStyle.fontSize,
-                            child: OverflowBar(
-                              spacing: 5.0,
-                              alignment: MainAxisAlignment.spaceBetween,
-                              overflowSpacing: 5.0,
-                              children: [
-                                if (settings.showRelativeTime)
-                                  TimerRefresher(
-                                    builder: (context) => Text(
-                                      '最后浏览时间：${time.relativeTime(browse.item.browseTime)}',
-                                      style: AppTheme.postHeaderTextStyle,
-                                      strutStyle: AppTheme.postHeaderStrutStyle,
-                                    ),
-                                  )
-                                else
-                                  Text(
-                                    '最后浏览时间：${fullFormatTime(browse.item.browseTime)}',
-                                    style: AppTheme.postHeaderTextStyle,
-                                    strutStyle: AppTheme.postHeaderStrutStyle,
-                                  ),
-                                if (browsePage != null && browsePostId != null)
-                                  Text(
-                                    '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
-                                    style: AppTheme.postHeaderTextStyle,
-                                    strutStyle: AppTheme.postHeaderStrutStyle,
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        PostContent(
-                          post: browse.item,
-                          poUserHash: browse.item.userHash,
-                          contentMaxLines: 8,
-                          onText: !(widget.search?.useWildcard ?? true)
-                              ? (context, text) => Regex.onSearchText(
-                                  text: text, search: widget.search!)
-                              : null,
-                          showFullTime: false,
-                          showReplyCount: false,
-                        ),
-                      ],
-                    ),
                   ),
                 )
               : const SizedBox.shrink(),
@@ -869,17 +849,16 @@ class _PostHistoryItem extends StatefulWidget {
 }
 
 class _PostHistoryItemState extends State<_PostHistoryItem> {
-  Visible<PostData> get mainPost => widget.mainPost;
-
   late Future<void> _getPostHistory;
 
+  PostData get _post => widget.mainPost.item;
+
   void _setGetPostHistory() => _getPostHistory = Future(() async {
-        if (mainPost.item.postId != null && mainPost.item.hasImage) {
-          final image = await _Image._getImage(
-              mainPost.item.postId!, mainPost.item.postId!);
+        if (_post.hasPostId && _post.hasImage) {
+          final image = await _Image._getImage(_post.postId!, _post.postId!);
           if (image != null) {
-            mainPost.item.image = image.image;
-            mainPost.item.imageExtension = image.imageExtension;
+            _post.image = image.image;
+            _post.imageExtension = image.imageExtension;
           }
         }
       });
@@ -907,37 +886,39 @@ class _PostHistoryItemState extends State<_PostHistoryItem> {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasError) {
             debugPrint(
-                '获取串 ${mainPost.item.postId?.toPostNumber()} 的引用出错：${snapshot.error}');
+                '获取串 ${_post.postId?.toPostNumber()} 的引用出错：${snapshot.error}');
           }
 
           return Obx(
-            () => mainPost.isVisible
+            () => widget.mainPost.isVisible
                 ? PostCard(
-                    key: ValueKey<int>(mainPost.item.id),
+                    key: ValueKey<int>(_post.id),
                     child: PostInkWell(
-                      post: mainPost.item.toPost(),
-                      poUserHash: mainPost.item.userHash,
+                      post: _post.toPost(),
+                      poUserHash: _post.userHash,
                       contentMaxLines: 8,
                       onText: !(widget.search?.useWildcard ?? true)
                           ? (context, text) => Regex.onSearchText(
                               text: text, search: widget.search!)
                           : null,
-                      showPostId: mainPost.item.postId != null,
+                      showPostId: _post.hasPostId,
                       showReplyCount: false,
-                      onTap: (post) {
-                        if (post.id > 0) {
-                          AppRoutes.toThread(
-                              mainPostId: post.id, mainPost: post);
-                        }
-                      },
+                      onTap: _post.hasPostId
+                          ? (post) {
+                              if (post.id > 0) {
+                                AppRoutes.toThread(
+                                    mainPostId: post.id, mainPost: post);
+                              }
+                            }
+                          : null,
                       onLongPress: (post) => postListDialog(_HistoryDialog(
                         mainPost: post,
                         onDelete: () async {
-                          await PostHistory.deletePostData(mainPost.item.id);
-                          showToast(mainPost.item.postId != null
-                              ? '删除主题 ${mainPost.item.postId?.toPostNumber()} 的记录'
+                          await PostHistory.deletePostData(_post.id);
+                          showToast(_post.hasPostId
+                              ? '删除主题 ${_post.postId?.toPostNumber()} 的记录'
                               : '删除主题记录');
-                          mainPost.isVisible = false;
+                          widget.mainPost.isVisible = false;
                         },
                       )),
                     ),
@@ -1032,15 +1013,15 @@ class _ReplyHistoryItem extends StatefulWidget {
 class _ReplyHistoryItemState extends State<_ReplyHistoryItem> {
   late Future<void> _getReplyHistory;
 
-  Visible<ReplyData> get reply => widget.reply;
+  ReplyData get _reply => widget.reply.item;
 
   void setGetReplyHistory() => _getReplyHistory = Future(() async {
-        if (reply.item.postId != null && reply.item.hasImage) {
+        if (_reply.hasPostId && _reply.hasImage) {
           final image =
-              await _Image._getImage(reply.item.postId!, reply.item.mainPostId);
+              await _Image._getImage(_reply.postId!, _reply.mainPostId);
           if (image != null) {
-            reply.item.image = image.image;
-            reply.item.imageExtension = image.imageExtension;
+            _reply.image = image.image;
+            _reply.imageExtension = image.imageExtension;
           }
         }
       });
@@ -1068,83 +1049,54 @@ class _ReplyHistoryItemState extends State<_ReplyHistoryItem> {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasError) {
             debugPrint(
-                '获取串 ${reply.item.postId?.toPostNumber()} 的引用出错：${snapshot.error}');
+                '获取串 ${_reply.postId?.toPostNumber()} 的引用出错：${snapshot.error}');
           }
 
           return Obx(
-            () {
-              final post = reply.item.toPost();
-
-              return reply.isVisible
-                  ? PostCard(
-                      key: ValueKey<int>(reply.item.id),
-                      child: InkWell(
-                        onTap: () => AppRoutes.toThread(
-                            mainPostId: reply.item.mainPostId,
-                            page: reply.item.page ?? 1,
-                            jumpToId: (reply.item.page != null &&
-                                    reply.item.postId != null)
-                                ? reply.item.postId
-                                : null),
-                        onLongPress: () => postListDialog(_HistoryDialog(
-                          mainPost: reply.item.toMainPost(),
-                          post: post,
-                          onDelete: () async {
-                            await PostHistory.deletePostData(reply.item.id);
-                            showToast(reply.item.postId != null
-                                ? '删除回复 ${reply.item.postId?.toPostNumber()} 的记录'
-                                : '删除回复记录');
-                            reply.isVisible = false;
-                          },
-                          page: reply.item.page,
-                        )),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 10.0,
-                                top: 5.0,
-                                right: 10.0,
-                              ),
-                              child: PostHeader(
-                                fontSize: AppTheme.postHeaderTextStyle.fontSize,
-                                child: OverflowBar(
-                                  spacing: 5.0,
-                                  alignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '主串：${reply.item.mainPostId.toPostNumber()}',
-                                      style: AppTheme.postHeaderTextStyle,
-                                      strutStyle: AppTheme.postHeaderStrutStyle,
-                                    ),
-                                    if (reply.item.page != null)
-                                      Text(
-                                        '第 ${reply.item.page} 页',
-                                        style: AppTheme.postHeaderTextStyle,
-                                        strutStyle:
-                                            AppTheme.postHeaderStrutStyle,
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            PostContent(
-                              post: post,
-                              contentMaxLines: 8,
-                              onText: !(widget.search?.useWildcard ?? true)
-                                  ? (context, text) => Regex.onSearchText(
-                                      text: text, search: widget.search!)
-                                  : null,
-                              showPostId: reply.item.postId != null,
-                              showReplyCount: false,
-                            ),
-                          ],
+            () => widget.reply.isVisible
+                ? PostCard(
+                    key: ValueKey<int>(_reply.id),
+                    child: PostInkWell(
+                      post: _reply.toPost(),
+                      contentMaxLines: 8,
+                      onText: !(widget.search?.useWildcard ?? true)
+                          ? (context, text) => Regex.onSearchText(
+                              text: text, search: widget.search!)
+                          : null,
+                      showPostId: _reply.hasPostId,
+                      showReplyCount: false,
+                      header: (textStyle) => _PostHeader(children: [
+                        Text(
+                          '主串：${_reply.mainPostId.toPostNumber()}',
+                          style: AppTheme.postHeaderTextStyle,
+                          strutStyle: AppTheme.postHeaderStrutStyle,
                         ),
-                      ),
-                    )
-                  : const SizedBox.shrink();
-            },
+                        if (_reply.page != null)
+                          Text(
+                            '第 ${_reply.page} 页',
+                            style: AppTheme.postHeaderTextStyle,
+                            strutStyle: AppTheme.postHeaderStrutStyle,
+                          ),
+                      ]),
+                      onTap: (post) => AppRoutes.toThread(
+                          mainPostId: _reply.mainPostId,
+                          page: _reply.page ?? 1,
+                          jumpToId: _reply.isComplete ? _reply.postId : null),
+                      onLongPress: (post) => postListDialog(_HistoryDialog(
+                        mainPost: _reply.toMainPost(),
+                        post: post,
+                        onDelete: () async {
+                          await PostHistory.deletePostData(_reply.id);
+                          showToast(_reply.hasPostId
+                              ? '删除回复 ${_reply.postId?.toPostNumber()} 的记录'
+                              : '删除回复记录');
+                          widget.reply.isVisible = false;
+                        },
+                        page: _reply.page,
+                      )),
+                    ),
+                  )
+                : const SizedBox.shrink(),
           );
         },
       );
@@ -1362,4 +1314,20 @@ class _HistoryBodyState extends State<HistoryBody> {
       ],
     );
   }
+}
+
+class _PostHeader extends StatelessWidget {
+  final List<Widget> children;
+
+  // ignore: unused_element
+  const _PostHeader({super.key, required this.children});
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        spacing: 5.0,
+        runSpacing: 5.0,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: children,
+      );
 }

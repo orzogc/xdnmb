@@ -7,8 +7,8 @@ import 'package:xdnmb/app/utils/toast.dart';
 
 import '../data/services/user.dart';
 import '../utils/theme.dart';
+import '../widgets/color.dart';
 import '../widgets/image.dart';
-import '../widgets/safe_area.dart';
 
 class QRCodeScannerView extends StatefulWidget {
   const QRCodeScannerView({super.key});

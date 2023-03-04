@@ -6,9 +6,9 @@ import 'package:get/get.dart';
 import '../data/services/image.dart';
 import '../data/services/settings.dart';
 import '../utils/toast.dart';
+import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
-import '../widgets/safe_area.dart';
 
 class _SaveImagePath extends StatelessWidget {
   final Future<AndroidDeviceInfo>? _androidInfo =

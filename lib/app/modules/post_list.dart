@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:get/get.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:xdnmb/app/data/services/tag.dart';
 
 import '../data/models/controller.dart';
 import '../data/models/draft.dart';
@@ -31,6 +32,7 @@ import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/backdrop.dart';
 import '../widgets/buttons.dart';
+import '../widgets/color.dart';
 import '../widgets/drawer.dart';
 import '../widgets/edit_post.dart';
 import '../widgets/end_drawer.dart';
@@ -41,7 +43,6 @@ import '../widgets/guide.dart';
 import '../widgets/history.dart';
 import '../widgets/listenable.dart';
 import '../widgets/page.dart';
-import '../widgets/safe_area.dart';
 import '../widgets/scroll.dart';
 import '../widgets/tab_list.dart';
 import '../widgets/thread.dart';
@@ -189,6 +190,8 @@ abstract class PostListController extends ChangeNotifier {
 
   @override
   void dispose() {
+    //_page.close();
+    //_scrollController.close();
     _isDisposed = true;
 
     super.dispose();
@@ -754,7 +757,7 @@ class PostListPageState extends State<PostListPage> {
       ),
     );
 
-    return GetPlatform.isDesktop
+    return (GetPlatform.isDesktop && !settings.showBottomBar)
         ? SwipeDetector(
             onSwipeLeft: (offset) => scaffold.openEndDrawer(),
             onSwipeRight: (offset) {
@@ -1823,6 +1826,7 @@ class _PostListViewState extends State<PostListView>
     final forums = ForumListService.to;
     final settings = SettingsService.to;
     final stacks = ControllerStacksService.to;
+    final tagService = TagService.to;
     final time = TimeService.to;
     final user = UserService.to;
 
@@ -1844,6 +1848,7 @@ class _PostListViewState extends State<PostListView>
                 forums.isReady.value &&
                 settings.isReady.value &&
                 stacks.isReady.value &&
+                tagService.isReady.value &&
                 time.isReady.value &&
                 user.isReady.value &&
                 (!PersistentDataService.isFirstLaunched ||

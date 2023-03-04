@@ -7,9 +7,9 @@ import '../data/services/version.dart';
 import '../routes/routes.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
+import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
-import '../widgets/safe_area.dart';
 
 class _DarkMode extends StatelessWidget {
   // ignore: unused_element

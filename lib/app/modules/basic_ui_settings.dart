@@ -4,9 +4,9 @@ import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
 import '../utils/theme.dart';
+import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
-import '../widgets/safe_area.dart';
 
 class _ShowBottomBar extends StatelessWidget {
   // ignore: unused_element

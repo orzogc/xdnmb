@@ -8,10 +8,12 @@ import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 import '../data/models/controller.dart';
 import '../data/models/cookie.dart';
 import '../data/models/forum.dart';
+import '../data/models/tag.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
+import '../data/services/tag.dart';
 import '../data/services/user.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
@@ -26,11 +28,13 @@ import '../utils/time.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'checkbox.dart';
+import 'color.dart';
 import 'content.dart';
 import 'edit_post.dart';
 import 'forum_name.dart';
 import 'listenable.dart';
 import 'scroll.dart';
+import 'tag.dart';
 import 'thread.dart';
 
 Future<T?> postListDialog<T>(Widget widget, {int? index}) {
@@ -579,6 +583,81 @@ class SharePost extends StatelessWidget {
       );
 }
 
+class AddPostTag extends StatelessWidget {
+  final PostBase post;
+
+  const AddPostTag(this.post, {super.key});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          final result = await postListDialog<bool>(_AddTagDialog(post));
+
+          if (result ?? false) {
+            postListBack();
+          }
+        },
+        child: Text('添加标签', style: Theme.of(context).textTheme.titleMedium),
+      );
+}
+
+class EditTag extends StatelessWidget {
+  final int? postId;
+
+  final TagData tag;
+
+  const EditTag({super.key, this.postId, required this.tag});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          final result = await postListDialog<bool>(
+              _EditTagDialog(postId: postId, tag: tag));
+
+          if (result ?? false) {
+            postListBack();
+          }
+        },
+        child: Text('修改标签', style: Theme.of(context).textTheme.titleMedium),
+      );
+}
+
+class DeletePostTag extends StatelessWidget {
+  final int postId;
+
+  final TagData tag;
+
+  const DeletePostTag({super.key, required this.postId, required this.tag});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          final result = await postListDialog<bool>(ConfirmCancelDialog(
+            contentWidget: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('确定删除标签'),
+                Flexible(child: Tag.fromTagData(tag: tag)),
+                const Text('？'),
+              ].withSpaceBetween(width: 5.0),
+            ),
+            onConfirm: () async {
+              await TagService.to.deletePostTag(postId, tag.id);
+
+              showToast('删除串 ${postId.toPostNumber()} 的标签成功');
+              postListBack<bool>(result: true);
+            },
+            onCancel: () => postListBack<bool>(result: false),
+          ));
+
+          if (result ?? false) {
+            postListBack();
+          }
+        },
+        child: Text('删除标签', style: Theme.of(context).textTheme.titleMedium),
+      );
+}
+
 class ApplyImageDialog extends StatelessWidget {
   final VoidCallback? onApply;
 
@@ -739,7 +818,7 @@ class EditCookieDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = UserService.to;
-    String? note;
+    String? note = cookie.note;
     final Rx<Color> color = Rx(cookie.color);
 
     return InputDialog(
@@ -754,39 +833,11 @@ class EditCookieDialog extends StatelessWidget {
           ),
           if (setColor) const SizedBox(height: 15.0),
           if (setColor)
-            GestureDetector(
-              onTap: () {
-                Color? color_;
-                Get.dialog(
-                  ConfirmCancelDialog(
-                    contentWidget: MaterialPicker(
-                      pickerColor: cookie.color,
-                      onColorChanged: (value) => color_ = value,
-                      enableLabel: true,
-                    ),
-                    onConfirm: () {
-                      if (color_ != null) {
-                        color.value = color_!;
-                      }
-                      Get.back();
-                    },
-                    onCancel: Get.back,
-                  ),
-                );
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('颜色'),
-                  Obx(
-                    () => ColorIndicator(
-                      HSVColor.fromColor(color.value),
-                      key: ValueKey<Color>(color.value),
-                      width: 25.0,
-                      height: 25.0,
-                    ),
-                  ),
-                ],
+            Obx(
+              () => ColorListTile(
+                title: const Text('颜色'),
+                color: color.value,
+                onColorChanged: (value) => color.value = value,
               ),
             ),
         ],
@@ -858,4 +909,330 @@ class SetCookieColor extends StatelessWidget {
         },
         child: Text('设置饼干颜色', style: Theme.of(context).textTheme.titleMedium),
       );
+}
+
+class _AddTagDialog extends StatefulWidget {
+  final PostBase post;
+
+  // ignore: unused_element
+  const _AddTagDialog(this.post, {super.key});
+
+  @override
+  State<_AddTagDialog> createState() => _AddTagDialogState();
+}
+
+class _AddTagDialogState extends State<_AddTagDialog> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  final TextEditingController _controller = TextEditingController();
+
+  final RxString _tagName = ''.obs;
+
+  final Rxn<TagData> _existingTag = Rxn(null);
+
+  final RxBool _userUseDefaultColor = true.obs;
+
+  final Rxn<Color> _userBackgroundColor = Rxn(null);
+
+  final Rxn<Color> _userTextColor = Rxn(null);
+
+  bool get _tagExists => _existingTag.value != null;
+
+  bool get _useDefaultColor =>
+      _existingTag.value?.useDefaultColor ?? _userUseDefaultColor.value;
+
+  Color? get _backgroundColor => !_useDefaultColor
+      ? (_existingTag.value?.backgroundColor ?? _userBackgroundColor.value)
+      : null;
+
+  Color? get _textColor => !_useDefaultColor
+      ? (_existingTag.value?.textColor ?? _userTextColor.value)
+      : null;
+
+  void _onTextChanged({String? text, TagData? tag}) {
+    assert((text != null && tag == null) || (text == null && tag != null));
+
+    if (text != null) {
+      tag = TagService.to.getTagData(text);
+    }
+
+    if (tag != null) {
+      _tagName.value = tag.name;
+      if (text == null) {
+        _controller.text = tag.name;
+      }
+      _existingTag.value = tag;
+    } else {
+      _tagName.value = text!;
+      _existingTag.value = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tagService = TagService.to;
+    final data = PersistentDataService.to;
+    final theme = Theme.of(context);
+
+    return InputDialog(
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Obx(() => _tagName.value.isNotEmpty
+                ? Tag(
+                    text: _tagName.value,
+                    textStyle: AppTheme.postContentTextStyle,
+                    backgroundColor: _backgroundColor,
+                    textColor: _textColor)
+                : const SizedBox.shrink()),
+            TextFormField(
+              controller: _controller,
+              decoration: const InputDecoration(labelText: '标签'),
+              onChanged: (value) => _onTextChanged(text: value),
+              validator: (value) =>
+                  (value == null || value.isEmpty) ? '请输入标签名字' : null,
+            ),
+            Obx(
+              () => CheckboxListTile(
+                enabled: !_tagExists,
+                contentPadding: EdgeInsets.zero,
+                visualDensity:
+                    const VisualDensity(vertical: VisualDensity.minimumDensity),
+                title: const Text('配色跟随应用主题'),
+                value: _useDefaultColor,
+                onChanged: (value) {
+                  if (value != null) {
+                    _userUseDefaultColor.value = value;
+                  }
+                },
+              ),
+            ),
+            Obx(
+              () => ColorListTile(
+                enabled: !(_tagExists || _useDefaultColor),
+                title: const Text('文字颜色'),
+                color: _textColor ?? theme.colorScheme.onPrimary,
+                onColorChanged: (value) => _userTextColor.value = value,
+              ),
+            ),
+            Obx(
+              () => ColorListTile(
+                enabled: !(_tagExists || _useDefaultColor),
+                title: const Text('背景颜色'),
+                color: _backgroundColor ?? theme.primaryColor,
+                onColorChanged: (value) => _userBackgroundColor.value = value,
+              ),
+            ),
+            if (data.recentTags.isNotEmpty) const SizedBox(height: 5.0),
+            if (data.recentTags.isNotEmpty)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('最近使用'),
+                  const SizedBox(width: 10.0),
+                  Flexible(
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 10.0,
+                      runSpacing: 5.0,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        for (final tag
+                            in tagService.getTagsData(data.recentTags))
+                          Tag.fromTagData(
+                            tag: tag,
+                            textStyle: AppTheme.postContentTextStyle,
+                            onTap: () => _onTextChanged(tag: tag),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            if (data.recentTags.isNotEmpty) const SizedBox(height: 5.0),
+          ],
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+              try {
+                final tagId = await tagService.getTagIdOrAddNewTag(
+                    tagName: _controller.text,
+                    backgroundColor: _backgroundColor,
+                    textColor: _textColor);
+                await tagService.addPostTag(widget.post, tagId);
+
+                showToast('给串 ${widget.post.toPostNumber()} 添加标签成功');
+                postListBack<bool>(result: true);
+              } catch (e) {
+                showToast('给串 ${widget.post.toPostNumber()} 添加标签失败：$e');
+              }
+            }
+          },
+          child: const Text('添加'),
+        ),
+      ],
+    );
+  }
+}
+
+class _EditTagDialog extends StatelessWidget {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  final int? postId;
+
+  final TagData tag;
+
+  final RxnString _tagName;
+
+  final Rxn<TagData> _existingTag = Rxn(null);
+
+  final RxBool _userUseDefaultColor;
+
+  final Rxn<Color> _userBackgroundColor;
+
+  final Rxn<Color> _userTextColor;
+
+  bool get _tagExists => _existingTag.value != null;
+
+  bool get _useDefaultColor =>
+      _existingTag.value?.useDefaultColor ?? _userUseDefaultColor.value;
+
+  Color? get _backgroundColor => !_useDefaultColor
+      ? (_existingTag.value?.backgroundColor ?? _userBackgroundColor.value)
+      : null;
+
+  Color? get _textColor => !_useDefaultColor
+      ? (_existingTag.value?.textColor ?? _userTextColor.value)
+      : null;
+
+  // ignore: unused_element
+  _EditTagDialog({super.key, this.postId, required this.tag})
+      : _tagName = RxnString(tag.name),
+        _userUseDefaultColor = tag.useDefaultColor.obs,
+        _userBackgroundColor = Rxn(tag.backgroundColor),
+        _userTextColor = Rxn(tag.textColor);
+
+  @override
+  Widget build(BuildContext context) {
+    final tagService = TagService.to;
+    final theme = Theme.of(context);
+
+    return InputDialog(
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Obx(() => (_tagName.value?.isNotEmpty ?? false)
+                ? Tag(
+                    text: _tagName.value!,
+                    textStyle: AppTheme.postContentTextStyle,
+                    backgroundColor: _backgroundColor,
+                    textColor: _textColor)
+                : const SizedBox.shrink()),
+            TextFormField(
+              decoration: const InputDecoration(labelText: '标签'),
+              initialValue: _tagName.value,
+              onChanged: (value) {
+                _existingTag.value = tagService.getTagData(value);
+                _tagName.value = value;
+              },
+              onSaved: (newValue) => _tagName.value = newValue,
+              validator: (value) => (value == null || value.isEmpty)
+                  ? '请输入标签名字'
+                  : ((postId == null && _tagExists) ? '已存在该标签名字' : null),
+            ),
+            Obx(
+              () => CheckboxListTile(
+                enabled: !_tagExists,
+                contentPadding: EdgeInsets.zero,
+                visualDensity:
+                    const VisualDensity(vertical: VisualDensity.minimumDensity),
+                title: const Text('配色跟随应用主题'),
+                value: _useDefaultColor,
+                onChanged: (value) {
+                  if (value != null) {
+                    _userUseDefaultColor.value = value;
+                  }
+                },
+              ),
+            ),
+            Obx(
+              () => ColorListTile(
+                enabled: !(_tagExists || _useDefaultColor),
+                title: const Text('文字颜色'),
+                color: _textColor ?? theme.colorScheme.onPrimary,
+                onColorChanged: (value) => _userTextColor.value = value,
+              ),
+            ),
+            Obx(
+              () => ColorListTile(
+                enabled: !(_tagExists || _useDefaultColor),
+                title: const Text('背景颜色'),
+                color: _backgroundColor ?? theme.primaryColor,
+                onColorChanged: (value) => _userBackgroundColor.value = value,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              if (_tagName.value != null) {
+                try {
+                  if (postId != null && _tagExists) {
+                    await tagService.replacePostTag(
+                        postId: postId!,
+                        oldTagId: tag.id,
+                        newTagId: _existingTag.value!.id);
+                  } else {
+                    if (await tagService.editTag(tag.copyWith(
+                        name: _tagName.value,
+                        backgroundColor: _userBackgroundColor.value,
+                        textColor: _userTextColor.value))) {
+                    } else {
+                      showToast('修改标签失败：标签名字重复');
+
+                      return;
+                    }
+                  }
+
+                  if (postId != null) {
+                    showToast('给串 ${postId!.toPostNumber()} 修改标签成功');
+                  } else {
+                    showToast('修改标签成功');
+                  }
+
+                  postListBack<bool>(result: true);
+                } catch (e) {
+                  if (postId != null) {
+                    showToast('给串 ${postId!.toPostNumber()} 修改标签失败：$e');
+                  } else {
+                    showToast('修改标签失败：$e');
+                  }
+                }
+              }
+            }
+          },
+          child: const Text('修改'),
+        ),
+      ],
+    );
+  }
 }

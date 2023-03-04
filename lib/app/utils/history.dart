@@ -12,7 +12,7 @@ import 'extensions.dart';
 import 'isar.dart';
 
 abstract class BrowseDataHistory {
-  static IsarCollection<BrowseHistory> get _browseData => isar.browseHistorys;
+  static final IsarCollection<BrowseHistory> _browseData = isar.browseHistorys;
 
   static Future<BrowseHistory?> getBrowseData(int postId) =>
       _browseData.get(postId);
@@ -113,7 +113,7 @@ abstract class BrowseDataHistory {
 }
 
 abstract class PostHistory {
-  static IsarCollection<PostData> get _postData => isar.postDatas;
+  static final IsarCollection<PostData> _postData = isar.postDatas;
 
   static Future<PostData?> _getPostData(int id) => _postData.get(id);
 
@@ -215,7 +215,7 @@ abstract class PostHistory {
 }
 
 abstract class ReplyHistory {
-  static IsarCollection<ReplyData> get _replyData => isar.replyDatas;
+  static final IsarCollection<ReplyData> _replyData = isar.replyDatas;
 
   static Future<ReplyData?> _getReplyData(int id) => _replyData.get(id);
 

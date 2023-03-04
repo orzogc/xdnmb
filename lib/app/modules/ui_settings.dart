@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../routes/routes.dart';
-import '../widgets/safe_area.dart';
+import '../widgets/color.dart';
 
 class UISettingsView extends StatelessWidget {
   const UISettingsView({super.key});

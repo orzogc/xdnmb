@@ -4,10 +4,10 @@ import 'package:uuid/uuid.dart';
 
 import '../data/services/settings.dart';
 import '../utils/theme.dart';
+import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
 import '../widgets/listenable.dart';
-import '../widgets/safe_area.dart';
 
 class _RestoreTabs extends StatelessWidget {
   // ignore: unused_element

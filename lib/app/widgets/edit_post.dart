@@ -794,8 +794,9 @@ class _CookieListState extends State<_CookieList> {
                   tileColor: cookie.userHash == user.postCookie?.userHash
                       ? theme.focusColor
                       : null,
-                  title: OverflowBar(
+                  title: Wrap(
                     spacing: 10.0,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(cookie.name,
                           maxLines: 1,

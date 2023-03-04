@@ -259,6 +259,7 @@ class _ThreadDialog extends StatelessWidget {
               page: page,
               postId: post.id,
             ),
+          if (post is! Tip) AddPostTag(post),
           if (post is! Tip && !post.isAdmin)
             BlockPost(
               postId: post.id,
@@ -612,8 +613,10 @@ class _ThreadBodyState extends State<ThreadBody> {
     final postId = controller.id;
 
     final thread = controller.isThread
-        ? await client.getThread(postId, page: page)
-        : await client.getOnlyPoThread(postId, page: page);
+        ? await client.getThread(postId,
+            page: page, isFirstPage: firstPage == page)
+        : await client.getOnlyPoThread(postId,
+            page: page, isFirstPage: firstPage == page);
     final mainPost = thread.mainPost;
 
     _maxPage = thread.maxPage;

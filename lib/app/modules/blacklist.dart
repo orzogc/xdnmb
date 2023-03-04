@@ -9,10 +9,10 @@ import '../utils/extensions.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
+import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
 import '../widgets/page_view.dart';
-import '../widgets/safe_area.dart';
 
 class _AppBarTitle extends StatelessWidget {
   final int index;

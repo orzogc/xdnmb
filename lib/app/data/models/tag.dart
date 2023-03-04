@@ -19,6 +19,9 @@ class TagData extends HiveObject {
   @HiveField(3, defaultValue: null)
   final int? textColorValue;
 
+  bool get useDefaultColor =>
+      backgroundColorValue == null && textColorValue == null;
+
   Color get backgroundColor => backgroundColorValue != null
       ? Color(backgroundColorValue!)
       : Get.theme.colorScheme.primary;
@@ -34,14 +37,12 @@ class TagData extends HiveObject {
       this.textColorValue})
       : assert(name.isNotEmpty);
 
-  TagData copyWith(
-          {String? name, int? backgroundColorValue, int? textColorValue}) =>
+  TagData copyWith({String? name, Color? backgroundColor, Color? textColor}) =>
       TagData(
           id: id,
           name: name ?? this.name,
-          backgroundColorValue:
-              backgroundColorValue ?? this.backgroundColorValue,
-          textColorValue: textColorValue ?? this.textColorValue);
+          backgroundColorValue: backgroundColor?.value ?? backgroundColorValue,
+          textColorValue: textColor?.value ?? textColorValue);
 
   @override
   bool operator ==(Object other) =>

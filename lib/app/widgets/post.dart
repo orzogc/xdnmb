@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -6,7 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:html_to_text/html_to_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/tag.dart';
 import '../data/services/settings.dart';
+import '../data/services/tag.dart';
 import '../data/services/time.dart';
 import '../data/services/user.dart';
 import '../utils/extensions.dart';
@@ -14,6 +17,7 @@ import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/time.dart';
 import 'content.dart';
+import 'dialog.dart';
 import 'forum_name.dart';
 import 'listenable.dart';
 import 'scroll.dart';
@@ -370,6 +374,120 @@ class _PostSage extends StatelessWidget {
   }
 }
 
+class _PostTagDialog extends StatelessWidget {
+  final PostBase post;
+
+  final TagData tag;
+
+  // ignore: unused_element
+  const _PostTagDialog({super.key, required this.post, required this.tag});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialog(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(post.toPostNumber()),
+            const SizedBox(width: 5.0),
+            Flexible(child: Tag.fromTagData(tag: tag)),
+          ],
+        ),
+        children: [
+          AddPostTag(post),
+          EditTag(postId: post.id, tag: tag),
+          DeletePostTag(postId: post.id, tag: tag),
+        ],
+      );
+}
+
+class _PostTag extends StatefulWidget {
+  final PostBase post;
+
+  final TextStyle? textStyle;
+
+  // ignore: unused_element
+  const _PostTag({super.key, required this.post, this.textStyle});
+
+  @override
+  State<_PostTag> createState() => _PostTagState();
+}
+
+class _PostTagState extends State<_PostTag> {
+  Stream<List<int>?>? _stream;
+
+  PostBase get _post => widget.post;
+
+  void _setStream() => _stream = _post.id > 0
+      ? TagService.getPostTagsIdStream(_post.id).map((event) {
+          if (event.isNotEmpty) {
+            debugPrint('串 ${_post.toPostNumber()} 有标签');
+          }
+
+          return event.isNotEmpty ? event.last : null;
+        })
+      : null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _setStream();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PostTag oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.post.id != oldWidget.post.id) {
+      _setStream();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tagService = TagService.to;
+
+    return StreamBuilder<List<int>?>(
+      stream: _stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          debugPrint('获取串 ${_post.toPostNumber()} 标签失败：${snapshot.error}');
+        }
+
+        if (snapshot.hasData) {
+          return Align(
+            alignment: Alignment.centerRight,
+            child: ListenableBuilder(
+              listenable: tagService.tagListenable(snapshot.data!),
+              builder: (context, child) => Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 10.0,
+                runSpacing: 5.0,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  for (final tag in tagService.getTagsData(snapshot.data!))
+                    Tag.fromTagData(
+                      tag: tag,
+                      textStyle:
+                          widget.textStyle ?? AppTheme.postContentTextStyle,
+                      onTap: _post.id > 0
+                          ? () => postListDialog(
+                                _PostTagDialog(post: _post, tag: tag),
+                              )
+                          : null,
+                    ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+}
+
 class PostDraft extends StatelessWidget {
   final String? title;
 
@@ -428,6 +546,8 @@ class PostDraft extends StatelessWidget {
       );
 }
 
+typedef AttachmentBuilder = Widget Function(TextStyle? textStyle);
+
 class PostContent extends StatelessWidget {
   late final Content content;
 
@@ -450,7 +570,9 @@ class PostContent extends StatelessWidget {
 
   late final TextStyle? headerTextStyle;
 
-  final Widget? footer;
+  final AttachmentBuilder? header;
+
+  final AttachmentBuilder? footer;
 
   PostBase get post => content.post;
 
@@ -480,6 +602,7 @@ class PostContent extends StatelessWidget {
       this.contentMaxHeight,
       this.onPostIdTap,
       TextStyle? headerTextStyle,
+      this.header,
       this.footer}) {
     final settings = SettingsService.to;
 
@@ -517,6 +640,13 @@ class PostContent extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (header != null)
+            _PostHeader(
+              fontSize:
+                  (headerTextStyle ?? AppTheme.postHeaderTextStyle).fontSize,
+              height: headerHeight,
+              child: header!(headerTextStyle),
+            ),
           if (post is Tip)
             Text(
               '来自X岛匿名版官方的内容',
@@ -525,7 +655,7 @@ class PostContent extends StatelessWidget {
                   ? StrutStyle.fromTextStyle(headerTextStyle!)
                   : AppTheme.postHeaderStrutStyle,
             ),
-          PostHeader(
+          _PostHeader(
             fontSize:
                 (headerTextStyle ?? AppTheme.postHeaderTextStyle).fontSize,
             height: headerHeight,
@@ -584,7 +714,8 @@ class PostContent extends StatelessWidget {
             )
           else
             content,
-          if (footer != null) footer!,
+          if (post is! Tip) _PostTag(post: post, textStyle: contentTextStyle),
+          if (footer != null) footer!(headerTextStyle),
         ].withSpaceBetween(height: 5.0),
       ),
     );
@@ -628,7 +759,8 @@ class PostInkWell extends StatelessWidget {
       double? contentMaxHeight,
       ValueSetter<int>? onPostIdTap,
       TextStyle? headerTextStyle,
-      Widget? footer,
+      AttachmentBuilder? header,
+      AttachmentBuilder? footer,
       this.onTap,
       this.onLongPress,
       this.mouseCursor,
@@ -654,6 +786,7 @@ class PostInkWell extends StatelessWidget {
             contentMaxHeight: contentMaxHeight,
             onPostIdTap: onPostIdTap,
             headerTextStyle: headerTextStyle,
+            header: header,
             footer: footer);
 
   @override
@@ -679,14 +812,14 @@ class PostCard extends StatelessWidget {
       );
 }
 
-class PostHeader extends StatelessWidget {
+class _PostHeader extends StatelessWidget {
   final double? fontSize;
 
   final double? height;
 
   final Widget child;
 
-  const PostHeader(
+  const _PostHeader(
       // ignore: unused_element
       {super.key,
       this.fontSize,

@@ -10,9 +10,9 @@ import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/text.dart';
 import '../utils/toast.dart';
+import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
-import '../widgets/safe_area.dart';
 
 class _AddForum extends StatelessWidget {
   final GlobalKey<_ForumsState> forumListKey;

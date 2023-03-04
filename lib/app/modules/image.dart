@@ -18,10 +18,10 @@ import '../utils/image.dart';
 import '../utils/padding.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
+import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/loading.dart';
 import '../widgets/post.dart';
-import '../widgets/safe_area.dart';
 import '../widgets/size.dart';
 import 'paint.dart';
 

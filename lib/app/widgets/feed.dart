@@ -87,6 +87,7 @@ class _FeedDialog extends StatelessWidget {
       children: [
         Report(post.id),
         SharePost(mainPostId: post.id),
+        AddPostTag(post),
         SimpleDialogOption(
           onPressed: () async {
             postListBack();
@@ -231,22 +232,23 @@ class _FeedItemState extends State<_FeedItem> {
             footer: (!settings.isNotShowedLatestPostTimeInFeed &&
                     snapshot.connectionState == ConnectionState.done &&
                     replyTime != null)
-                ? Align(
-                    alignment: Alignment.centerRight,
-                    child: (settings.isShowedLatestAbsolutePostTimeInFeed
-                        ? Text(
-                            '最新回复 ${formatTime(replyTime)}',
-                            style: AppTheme.postHeaderTextStyle,
-                            strutStyle: AppTheme.postHeaderStrutStyle,
-                          )
-                        : TimerRefresher(
-                            builder: (context) => Text(
-                              '最新回复 ${time.relativeTime(replyTime)}',
-                              style: AppTheme.postHeaderTextStyle,
+                ? (textStyle) => Align(
+                      alignment: Alignment.centerRight,
+                      child: (settings.isShowedLatestAbsolutePostTimeInFeed
+                          ? Text(
+                              '最新回复 ${formatTime(replyTime)}',
+                              style: textStyle ?? AppTheme.postHeaderTextStyle,
                               strutStyle: AppTheme.postHeaderStrutStyle,
-                            ),
-                          )),
-                  )
+                            )
+                          : TimerRefresher(
+                              builder: (context) => Text(
+                                '最新回复 ${time.relativeTime(replyTime)}',
+                                style:
+                                    textStyle ?? AppTheme.postHeaderTextStyle,
+                                strutStyle: AppTheme.postHeaderStrutStyle,
+                              ),
+                            )),
+                    )
                 : null,
             onTap: (post) => AppRoutes.toThread(
                 mainPostId: widget.feed.item.post.id,

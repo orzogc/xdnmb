@@ -499,6 +499,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
   void dispose() {
     _isLoadingMoreSubscription?.cancel();
     _isLoadingMoreSubscription = null;
+    //_isLoadingMore.close();
     widget.controller?._loadMore = null;
     _pagingUpController?.removePageRequestListener(_fetchUpPage);
     _pagingUpController?.error = null;

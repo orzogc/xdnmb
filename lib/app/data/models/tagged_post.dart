@@ -8,6 +8,7 @@ class TaggedPost implements PostBase {
   @override
   final Id id;
 
+  // TODO: 更准确的版块ID和兼容没有串ID的串数据
   @override
   int? forumId;
 
@@ -117,11 +118,11 @@ class TaggedPost implements PostBase {
   }
 
   /// 添加标签成功返回`true`，有重复标签返回`false`
-  bool addTag(int tag) {
+  bool addTag(int tagId) {
     assert(hasTag);
 
-    if (!tags.contains(tag)) {
-      tags.add(tag);
+    if (!tags.contains(tagId)) {
+      tags = [...tags, tagId];
       taggedTime = DateTime.now().toUtc();
 
       return true;
@@ -131,11 +132,40 @@ class TaggedPost implements PostBase {
   }
 
   /// 删除标签，返回是否还有标签
-  bool deleteTag(int tag) {
+  bool deleteTag(int tagId) {
     assert(hasTag);
 
-    tags.removeWhere((element) => element == tag);
+    tags = [...tags.where((element) => element != tagId)];
 
     return hasTag;
+  }
+
+  /// 替换标签，返回是否更改了标签
+  bool replaceTag(int oldTagId, int newTagId) {
+    assert(hasTag);
+
+    if (oldTagId == newTagId) {
+      return false;
+    }
+
+    final hasOldTag = tags.contains(oldTagId);
+    final hasNewTag = tags.contains(newTagId);
+
+    if (hasOldTag || !hasNewTag) {
+      final tags = [...this.tags];
+      if (hasOldTag) {
+        tags.remove(oldTagId);
+      }
+      if (!hasNewTag) {
+        tags.add(newTagId);
+      }
+
+      this.tags = tags;
+      taggedTime = DateTime.now().toUtc();
+
+      return true;
+    } else {
+      return false;
+    }
   }
 }

@@ -20,4 +20,6 @@ abstract class PersistentData {
   static const String controllerStackListIndex = 'controllerStackListIndex';
 
   static const String imageHashSalt = 'imageHashSalt';
+
+  static const String recentTags = 'recentTags';
 }

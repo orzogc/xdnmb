@@ -21,6 +21,8 @@ class PersistentDataService extends GetxService {
 
   static const Duration updateForumListInterval = Duration(hours: 6);
 
+  static const int _maxRecentTags = 5;
+
   static late final bool isFirstLaunched;
 
   static late final bool clearImageCache;
@@ -92,6 +94,15 @@ class PersistentDataService extends GetxService {
 
   set imageHashSalt(String salt) =>
       _dataBox.put(PersistentData.imageHashSalt, salt);
+
+  /// 最新的tag在最后
+  List<int> get _recentTags =>
+      _dataBox.get(PersistentData.recentTags, defaultValue: <int>[]);
+
+  set _recentTags(List<int> tags) =>
+      _dataBox.put(PersistentData.recentTags, tags);
+
+  List<int> get recentTags => _recentTags;
 
   late final ValueListenable<Box> noticeDateListenable;
 
@@ -167,6 +178,26 @@ class PersistentDataService extends GetxService {
       }
 
       bottomHeight.value = height;
+    }
+  }
+
+  void addRecentTag(int tagId) {
+    final tags = _recentTags;
+    if (tags.contains(tagId)) {
+      _recentTags = [...tags.where((element) => element != tagId), tagId];
+    } else {
+      if (tags.length >= _maxRecentTags) {
+        _recentTags = [...tags.skip(1), tagId];
+      } else {
+        _recentTags = [...tags, tagId];
+      }
+    }
+  }
+
+  void deleteRecentTag(int tagId) {
+    final tags = _recentTags;
+    if (tags.contains(tagId)) {
+      _recentTags = [...tags.where((element) => element != tagId)];
     }
   }
 

@@ -32,6 +32,12 @@ class PostData {
 
   bool hasImage;
 
+  @ignore
+  bool get hasPostId => postId != null;
+
+  @ignore
+  bool get isComplete => hasPostId;
+
   /// [image]是为了兼容旧版本，用来判断[hasImage]
   PostData(
       {this.postId,
