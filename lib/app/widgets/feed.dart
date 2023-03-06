@@ -14,7 +14,7 @@ import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/navigation.dart';
-import '../utils/post_list.dart';
+import '../utils/post.dart';
 import '../utils/reference.dart';
 import '../utils/theme.dart';
 import '../utils/time.dart';
@@ -87,7 +87,7 @@ class _FeedDialog extends StatelessWidget {
       children: [
         Report(post.id),
         SharePost(mainPostId: post.id),
-        AddPostTag(post),
+        AddOrReplacePostTag(post: post),
         SimpleDialogOption(
           onPressed: () async {
             postListBack();

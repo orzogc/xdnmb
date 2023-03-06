@@ -7,7 +7,7 @@ import '../../utils/extensions.dart';
 
 part 'reference.g.dart';
 
-@collection
+@Collection(ignore: {'hashCode'})
 class ReferenceData {
   final Id id;
 

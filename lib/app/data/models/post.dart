@@ -4,8 +4,10 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 part 'post.g.dart';
 
 /// 应官方要求，本地不再保存图片地址相关字段
-@collection
+@Collection(ignore: {'hashCode'})
 class PostData {
+  static const int taggedPostIdPrefix = 1;
+
   Id id = Isar.autoIncrement;
 
   int? postId;
@@ -37,6 +39,9 @@ class PostData {
 
   @ignore
   bool get isComplete => hasPostId;
+
+  @ignore
+  int get taggedPostId => (taggedPostIdPrefix << 32) | id;
 
   /// [image]是为了兼容旧版本，用来判断[hasImage]
   PostData(
@@ -70,8 +75,9 @@ class PostData {
             isAdmin: post.isAdmin,
             hasImage: post.hasImage);
 
+  /// 返回的postId可能是[taggedPostId]
   Post toPost() => Post(
-      id: postId ?? 0,
+      id: postId ?? taggedPostId,
       forumId: forumId,
       replyCount: 0,
       image: image ?? '',

@@ -6,7 +6,7 @@ import '../../utils/extensions.dart';
 part 'history.g.dart';
 
 /// 应官方要求，本地不再保存图片地址相关字段
-@collection
+@Collection(ignore: {'postType', 'hashCode'})
 class BrowseHistory implements PostBase {
   @override
   final Id id;
@@ -61,6 +61,10 @@ class BrowseHistory implements PostBase {
   int? onlyPoBrowsePostId;
 
   bool hasImage;
+
+  @ignore
+  @override
+  PostType get postType => PostType.post;
 
   /// [image]是为了兼容旧版本，用来判断[hasImage]
   BrowseHistory(
@@ -188,7 +192,8 @@ class BrowseHistory implements PostBase {
           browsePostId == other.browsePostId &&
           onlyPoBrowsePage == other.onlyPoBrowsePage &&
           onlyPoBrowsePostId == other.onlyPoBrowsePostId &&
-          hasImage == other.hasImage);
+          hasImage == other.hasImage &&
+          postType == other.postType);
 
   @ignore
   @override
@@ -211,5 +216,6 @@ class BrowseHistory implements PostBase {
       browsePostId,
       onlyPoBrowsePage,
       onlyPoBrowsePostId,
-      hasImage);
+      hasImage,
+      postType);
 }

@@ -81,8 +81,7 @@ class _ThumbImageState extends State<ThumbImage> {
                 // 因为部分GIF略缩图显示会出错，所以小图加载错误就加载大图
                 child: CachedNetworkImage(
                   imageUrl: _hasError ? _post.imageUrl! : _post.thumbImageUrl!,
-                  cacheKey:
-                      _hasError ? _post.imageKey()! : _post.thumbImageKey()!,
+                  cacheKey: _hasError ? _post.imageKey! : _post.thumbImageKey!,
                   fit: BoxFit.contain,
                   cacheManager: XdnmbImageCacheManager(),
                   progressIndicatorBuilder: loadingThumbImageIndicatorBuilder,

@@ -3,12 +3,21 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 part 'tagged_post.g.dart';
 
-@collection
+@Collection(ignore: {
+  'image',
+  'imageExtension',
+  'replyCount',
+  'isSage',
+  'isHidden',
+  'postType',
+})
 class TaggedPost implements PostBase {
+  /// 右边32位，0为普通串数据，1为发串数据，2为回串数据
+  ///
+  /// 左边32位为对应的串号或Id
   @override
   final Id id;
 
-  // TODO: 更准确的版块ID和兼容没有串ID的串数据
   @override
   int? forumId;
 
@@ -63,6 +72,10 @@ class TaggedPost implements PostBase {
   bool? get isHidden => null;
 
   @ignore
+  @override
+  PostType get postType => PostType.post;
+
+  @ignore
   bool get hasTag => tags.isNotEmpty;
 
   TaggedPost(
@@ -85,10 +98,13 @@ class TaggedPost implements PostBase {
         taggedTime = taggedTime.toUtc();
 
   TaggedPost.fromPost(
-      {required PostBase post, DateTime? taggedTime, required List<int> tags})
+      {required PostBase post,
+      int? forumId,
+      DateTime? taggedTime,
+      required List<int> tags})
       : this(
             id: post.id,
-            forumId: post.forumId,
+            forumId: forumId ?? post.forumId,
             postTime: post.postTime,
             userHash: post.userHash,
             name: post.name,
@@ -99,13 +115,11 @@ class TaggedPost implements PostBase {
             taggedTime: taggedTime ?? DateTime.now(),
             tags: tags);
 
-  void update(PostBase post) {
+  void update(PostBase post, [int? forumId]) {
     assert(id == post.id);
     assert(hasTag);
 
-    if (post.forumId != null) {
-      forumId = post.forumId;
-    }
+    this.forumId = forumId ?? (post.forumId ?? this.forumId);
     image = '';
     imageExtension = '';
     postTime = post.postTime.toUtc();

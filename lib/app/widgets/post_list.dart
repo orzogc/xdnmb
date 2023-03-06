@@ -72,7 +72,7 @@ class _PostListScrollViewState extends State<PostListScrollView> {
           getAnchorOffset: () =>
               settings.autoHideAppBar ? widget.controller.appBarHeight : 0.0,
           onIndexChanged: (index, userScroll) =>
-              widget.controller.page = index.getPageFromPostIndex(),
+              widget.controller.page = index.pageFromPostIndex,
         );
   }
 

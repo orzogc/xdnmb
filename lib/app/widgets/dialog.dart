@@ -583,42 +583,27 @@ class SharePost extends StatelessWidget {
       );
 }
 
-class AddPostTag extends StatelessWidget {
+class AddOrReplacePostTag extends StatelessWidget {
   final PostBase post;
 
-  const AddPostTag(this.post, {super.key});
+  final TagData? replacedTag;
 
-  @override
-  Widget build(BuildContext context) => SimpleDialogOption(
-        onPressed: () async {
-          final result = await postListDialog<bool>(_AddTagDialog(post));
-
-          if (result ?? false) {
-            postListBack();
-          }
-        },
-        child: Text('添加标签', style: Theme.of(context).textTheme.titleMedium),
-      );
-}
-
-class EditTag extends StatelessWidget {
-  final int? postId;
-
-  final TagData tag;
-
-  const EditTag({super.key, this.postId, required this.tag});
+  const AddOrReplacePostTag({super.key, required this.post, this.replacedTag});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () async {
           final result = await postListDialog<bool>(
-              _EditTagDialog(postId: postId, tag: tag));
+              _AddOrReplaceTagDialog(post: post, repacedTag: replacedTag));
 
           if (result ?? false) {
             postListBack();
           }
         },
-        child: Text('修改标签', style: Theme.of(context).textTheme.titleMedium),
+        child: Text(
+          '${replacedTag == null ? '添加' : '替换'}标签',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
       );
 }
 
@@ -655,6 +640,24 @@ class DeletePostTag extends StatelessWidget {
           }
         },
         child: Text('删除标签', style: Theme.of(context).textTheme.titleMedium),
+      );
+}
+
+class EditTag extends StatelessWidget {
+  final TagData tag;
+
+  const EditTag(this.tag, {super.key});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          final result = await postListDialog<bool>(_EditTagDialog(tag: tag));
+
+          if (result ?? false) {
+            postListBack();
+          }
+        },
+        child: Text('修改标签', style: Theme.of(context).textTheme.titleMedium),
       );
 }
 
@@ -911,30 +914,39 @@ class SetCookieColor extends StatelessWidget {
       );
 }
 
-class _AddTagDialog extends StatefulWidget {
+class _AddOrReplaceTagDialog extends StatefulWidget {
   final PostBase post;
 
-  // ignore: unused_element
-  const _AddTagDialog(this.post, {super.key});
+  final TagData? repacedTag;
+
+  const _AddOrReplaceTagDialog(
+      // ignore: unused_element
+      {super.key,
+      required this.post,
+      this.repacedTag});
 
   @override
-  State<_AddTagDialog> createState() => _AddTagDialogState();
+  State<_AddOrReplaceTagDialog> createState() => _AddOrReplaceTagDialogState();
 }
 
-class _AddTagDialogState extends State<_AddTagDialog> {
+class _AddOrReplaceTagDialogState extends State<_AddOrReplaceTagDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _controller = TextEditingController();
+  late final TextEditingController _controller;
 
-  final RxString _tagName = ''.obs;
+  late final RxString _tagName;
 
-  final Rxn<TagData> _existingTag = Rxn(null);
+  late final Rxn<TagData> _existingTag;
 
   final RxBool _userUseDefaultColor = true.obs;
 
-  final Rxn<Color> _userBackgroundColor = Rxn(null);
+  final Rxn<Color> _userBackgroundColor = Rxn();
 
-  final Rxn<Color> _userTextColor = Rxn(null);
+  final Rxn<Color> _userTextColor = Rxn();
+
+  PostBase get _post => widget.post;
+
+  TagData? get _replacedTag => widget.repacedTag;
 
   bool get _tagExists => _existingTag.value != null;
 
@@ -948,6 +960,8 @@ class _AddTagDialogState extends State<_AddTagDialog> {
   Color? get _textColor => !_useDefaultColor
       ? (_existingTag.value?.textColor ?? _userTextColor.value)
       : null;
+
+  String get _text => _replacedTag == null ? '添加' : '替换';
 
   void _onTextChanged({String? text, TagData? tag}) {
     assert((text != null && tag == null) || (text == null && tag != null));
@@ -966,6 +980,15 @@ class _AddTagDialogState extends State<_AddTagDialog> {
       _tagName.value = text!;
       _existingTag.value = null;
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = TextEditingController(text: _replacedTag?.name);
+    _tagName = (_replacedTag?.name ?? '').obs;
+    _existingTag = Rxn(_replacedTag);
   }
 
   @override
@@ -1071,16 +1094,24 @@ class _AddTagDialogState extends State<_AddTagDialog> {
                     tagName: _controller.text,
                     backgroundColor: _backgroundColor,
                     textColor: _textColor);
-                await tagService.addPostTag(widget.post, tagId);
 
-                showToast('给串 ${widget.post.toPostNumber()} 添加标签成功');
+                if (_replacedTag == null) {
+                  await tagService.addPostTag(_post, tagId);
+                } else {
+                  await tagService.replacePostTag(
+                      postId: _post.id,
+                      oldTagId: _replacedTag!.id,
+                      newTagId: tagId);
+                }
+
+                showToast('给串 ${_post.toPostNumber()} $_text标签成功');
                 postListBack<bool>(result: true);
               } catch (e) {
-                showToast('给串 ${widget.post.toPostNumber()} 添加标签失败：$e');
+                showToast('给串 ${_post.toPostNumber()} $_text标签失败：$e');
               }
             }
           },
-          child: const Text('添加'),
+          child: Text(_text),
         ),
       ],
     );
@@ -1090,39 +1121,22 @@ class _AddTagDialogState extends State<_AddTagDialog> {
 class _EditTagDialog extends StatelessWidget {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final int? postId;
-
   final TagData tag;
 
   final RxnString _tagName;
 
-  final Rxn<TagData> _existingTag = Rxn(null);
+  final RxBool _useDefaultColor;
 
-  final RxBool _userUseDefaultColor;
+  final Rxn<Color> _backgroundColor;
 
-  final Rxn<Color> _userBackgroundColor;
-
-  final Rxn<Color> _userTextColor;
-
-  bool get _tagExists => _existingTag.value != null;
-
-  bool get _useDefaultColor =>
-      _existingTag.value?.useDefaultColor ?? _userUseDefaultColor.value;
-
-  Color? get _backgroundColor => !_useDefaultColor
-      ? (_existingTag.value?.backgroundColor ?? _userBackgroundColor.value)
-      : null;
-
-  Color? get _textColor => !_useDefaultColor
-      ? (_existingTag.value?.textColor ?? _userTextColor.value)
-      : null;
+  final Rxn<Color> _textColor;
 
   // ignore: unused_element
-  _EditTagDialog({super.key, this.postId, required this.tag})
+  _EditTagDialog({super.key, required this.tag})
       : _tagName = RxnString(tag.name),
-        _userUseDefaultColor = tag.useDefaultColor.obs,
-        _userBackgroundColor = Rxn(tag.backgroundColor),
-        _userTextColor = Rxn(tag.textColor);
+        _useDefaultColor = tag.useDefaultColor.obs,
+        _backgroundColor = Rxn(tag.backgroundColor),
+        _textColor = Rxn(tag.textColor);
 
   @override
   Widget build(BuildContext context) {
@@ -1139,50 +1153,48 @@ class _EditTagDialog extends StatelessWidget {
                 ? Tag(
                     text: _tagName.value!,
                     textStyle: AppTheme.postContentTextStyle,
-                    backgroundColor: _backgroundColor,
-                    textColor: _textColor)
+                    backgroundColor: _backgroundColor.value,
+                    textColor: _textColor.value)
                 : const SizedBox.shrink()),
             TextFormField(
               decoration: const InputDecoration(labelText: '标签'),
               initialValue: _tagName.value,
-              onChanged: (value) {
-                _existingTag.value = tagService.getTagData(value);
-                _tagName.value = value;
-              },
+              onChanged: (value) => _tagName.value = value,
               onSaved: (newValue) => _tagName.value = newValue,
               validator: (value) => (value == null || value.isEmpty)
                   ? '请输入标签名字'
-                  : ((postId == null && _tagExists) ? '已存在该标签名字' : null),
+                  : ((value != tag.name && tagService.tagNameExists(value))
+                      ? '已存在该标签名字'
+                      : null),
             ),
             Obx(
               () => CheckboxListTile(
-                enabled: !_tagExists,
                 contentPadding: EdgeInsets.zero,
                 visualDensity:
                     const VisualDensity(vertical: VisualDensity.minimumDensity),
                 title: const Text('配色跟随应用主题'),
-                value: _useDefaultColor,
+                value: _useDefaultColor.value,
                 onChanged: (value) {
                   if (value != null) {
-                    _userUseDefaultColor.value = value;
+                    _useDefaultColor.value = value;
                   }
                 },
               ),
             ),
             Obx(
               () => ColorListTile(
-                enabled: !(_tagExists || _useDefaultColor),
+                enabled: !_useDefaultColor.value,
                 title: const Text('文字颜色'),
-                color: _textColor ?? theme.colorScheme.onPrimary,
-                onColorChanged: (value) => _userTextColor.value = value,
+                color: _textColor.value ?? theme.colorScheme.onPrimary,
+                onColorChanged: (value) => _textColor.value = value,
               ),
             ),
             Obx(
               () => ColorListTile(
-                enabled: !(_tagExists || _useDefaultColor),
+                enabled: !_useDefaultColor.value,
                 title: const Text('背景颜色'),
-                color: _backgroundColor ?? theme.primaryColor,
-                onColorChanged: (value) => _userBackgroundColor.value = value,
+                color: _backgroundColor.value ?? theme.primaryColor,
+                onColorChanged: (value) => _backgroundColor.value = value,
               ),
             ),
           ],
@@ -1196,36 +1208,20 @@ class _EditTagDialog extends StatelessWidget {
 
               if (_tagName.value != null) {
                 try {
-                  if (postId != null && _tagExists) {
-                    await tagService.replacePostTag(
-                        postId: postId!,
-                        oldTagId: tag.id,
-                        newTagId: _existingTag.value!.id);
+                  if (await tagService.editTag(tag.copyWith(
+                      name: _tagName.value,
+                      backgroundColor: _backgroundColor.value,
+                      textColor: _textColor.value))) {
                   } else {
-                    if (await tagService.editTag(tag.copyWith(
-                        name: _tagName.value,
-                        backgroundColor: _userBackgroundColor.value,
-                        textColor: _userTextColor.value))) {
-                    } else {
-                      showToast('修改标签失败：标签名字重复');
+                    showToast('修改标签失败：标签名字重复');
 
-                      return;
-                    }
+                    return;
                   }
 
-                  if (postId != null) {
-                    showToast('给串 ${postId!.toPostNumber()} 修改标签成功');
-                  } else {
-                    showToast('修改标签成功');
-                  }
-
+                  showToast('修改标签成功');
                   postListBack<bool>(result: true);
                 } catch (e) {
-                  if (postId != null) {
-                    showToast('给串 ${postId!.toPostNumber()} 修改标签失败：$e');
-                  } else {
-                    showToast('修改标签失败：$e');
-                  }
+                  showToast('修改标签失败：$e');
                 }
               }
             }

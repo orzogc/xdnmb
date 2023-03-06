@@ -98,6 +98,9 @@ class PostBaseData implements PostBase {
   @override
   final bool? isHidden;
 
+  @override
+  PostType get postType => PostType.post;
+
   const PostBaseData(
       {required this.id,
       this.forumId,
@@ -141,7 +144,8 @@ class PostBaseData implements PostBase {
           content == other.content &&
           isSage == other.isSage &&
           isAdmin == other.isAdmin &&
-          isHidden == other.isHidden);
+          isHidden == other.isHidden &&
+          postType == other.postType);
 
   @override
   int get hashCode => Object.hash(
@@ -157,7 +161,8 @@ class PostBaseData implements PostBase {
       content,
       isSage,
       isAdmin,
-      isHidden);
+      isHidden,
+      postType);
 }
 
 @HiveType(typeId: 8)

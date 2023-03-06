@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../data/models/post.dart';
+import '../data/models/reply.dart';
 import '../data/services/blacklist.dart';
 import '../data/services/settings.dart';
 import 'image.dart';
@@ -12,6 +14,8 @@ const int _int32Max = 4294967295;
 const int imageHashLength = 20;
 
 const int _imageNameHashLength = 13;
+
+const int _normalPostIdPrefix = 0;
 
 extension ParseStringExtension on String? {
   int? tryParseInt() => this != null ? int.tryParse(this!) : null;
@@ -43,18 +47,28 @@ extension IntExtension on int {
   /// “>>No.xxx”形式
   String toPostReference() => '>>${toPostNumber()}';
 
-  int postIdToPostIndex(int page) => page << 32 | this;
+  int postIdToPostIndex(int page) => (page << 32) | this;
 
-  int getPageFromPostIndex() => this >>> 32;
+  int get pageFromPostIndex => this >>> 32;
 
-  int getPostIdFromPostIndex() => this & _int32Max;
+  int get postIdFromPostIndex => this & _int32Max;
 
   int get postMaxPage => this > 0 ? (this / 19).ceil() : 1;
+
+  bool get isNormalPost => (this >>> 32) == _normalPostIdPrefix;
+
+  bool get isPostHistory => (this >>> 32) == PostData.taggedPostIdPrefix;
+
+  bool get isReplyHistory => (this >>> 32) == ReplyData.taggedPostIdPrefix;
+
+  int get historyId => this & _int32Max;
 }
 
 extension PostExtension on PostBase {
+  /// “No.xxx”形式
   String toPostNumber() => id.toPostNumber();
 
+  /// “>>No.xxx”形式
   String toPostReference() => id.toPostReference();
 
   int toIndex(int page) => id.postIdToPostIndex(page);
@@ -67,10 +81,10 @@ extension PostExtension on PostBase {
     return !isAdmin && (blacklist.hasPost(id) || blacklist.hasUser(userHash));
   }
 
-  String? thumbImageKey() =>
+  String? get thumbImageKey =>
       hasImage ? hashImage('thumb/$imageFile', imageHashLength) : null;
 
-  String? imageKey() =>
+  String? get imageKey =>
       hasImage ? hashImage('image/$imageFile', imageHashLength) : null;
 
   String? imageHashFileName() {
@@ -85,6 +99,14 @@ extension PostExtension on PostBase {
 
     return null;
   }
+
+  bool get isNormalPost => id.isNormalPost;
+
+  bool get isPostHistory => id.isPostHistory;
+
+  bool get isReplyHistory => id.isReplyHistory;
+
+  int get historyId => id.historyId;
 }
 
 extension TextEditingControllerExtension on TextEditingController {

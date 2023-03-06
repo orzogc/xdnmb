@@ -20,7 +20,7 @@ import '../utils/extensions.dart';
 import '../utils/hash.dart';
 import '../utils/history.dart';
 import '../utils/navigation.dart';
-import '../utils/post_list.dart';
+import '../utils/post.dart';
 import '../utils/regex.dart';
 import '../utils/theme.dart';
 import '../utils/time.dart';
@@ -598,10 +598,10 @@ class _HistoryDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasMainPostId = mainPost.id > 0;
-    final hasPostId = post != null && post!.id > 0;
+    final hasMainPostId = mainPost.isNormalPost;
+    final hasPostId = post?.isNormalPost ?? false;
     final postHistory = post ?? mainPost;
-    final hasPostIdOrMainPostId = postHistory.id > 0;
+    final hasPostIdOrMainPostId = postHistory.isNormalPost;
 
     return SimpleDialog(
       title: hasPostIdOrMainPostId ? Text(postHistory.toPostNumber()) : null,
@@ -632,7 +632,7 @@ class _HistoryDialog extends StatelessWidget {
             page: page,
             postId: hasPostId ? post!.id : null,
           ),
-        if (hasPostIdOrMainPostId) AddPostTag(postHistory),
+        AddOrReplacePostTag(post: postHistory),
         if (hasPostIdOrMainPostId) CopyPostReference(postHistory.id),
         CopyPostContent(postHistory),
         if (post != null) CopyPostReference(mainPost.id, text: '复制主串串号引用'),
@@ -905,7 +905,7 @@ class _PostHistoryItemState extends State<_PostHistoryItem> {
                       showReplyCount: false,
                       onTap: _post.hasPostId
                           ? (post) {
-                              if (post.id > 0) {
+                              if (post.isNormalPost) {
                                 AppRoutes.toThread(
                                     mainPostId: post.id, mainPost: post);
                               }

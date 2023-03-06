@@ -948,7 +948,7 @@ class ImageView extends StatelessWidget {
       if (post != null) {
         final manager = XdnmbImageCacheManager();
         try {
-          final info = await manager.getFileFromCache(post.imageKey()!);
+          final info = await manager.getFileFromCache(post.imageKey!);
           if (info != null) {
             debugPrint('缓存图片路径：${info.file.path}');
             return await info.file.readAsBytes();
@@ -989,7 +989,7 @@ class ImageView extends StatelessWidget {
           final fileName = post.imageHashFileName()!;
           final manager = XdnmbImageCacheManager();
 
-          final info = await manager.getFileFromCache(post.imageKey()!);
+          final info = await manager.getFileFromCache(post.imageKey!);
           if (info != null) {
             debugPrint('缓存图片路径：${info.file.path}');
             if (GetPlatform.isIOS) {
@@ -1116,7 +1116,7 @@ class ImageView extends StatelessWidget {
                       null
                   ? CachedNetworkImage(
                       imageUrl: _controller.post.value!.thumbImageUrl!,
-                      cacheKey: _controller.post.value!.thumbImageKey()!,
+                      cacheKey: _controller.post.value!.thumbImageKey!,
                       cacheManager: XdnmbImageCacheManager(),
                       errorWidget: (context, url, error) =>
                           loadingImageErrorBuilder(context, url, error,
@@ -1149,7 +1149,7 @@ class ImageView extends StatelessWidget {
                                 thumbImage != null)
                             ? CachedNetworkImage(
                                 imageUrl: _controller.post.value!.imageUrl!,
-                                cacheKey: _controller.post.value!.imageKey()!,
+                                cacheKey: _controller.post.value!.imageKey!,
                                 cacheManager: XdnmbImageCacheManager(),
                                 progressIndicatorBuilder:
                                     (context, url, progress) => Stack(

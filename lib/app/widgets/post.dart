@@ -393,8 +393,8 @@ class _PostTagDialog extends StatelessWidget {
           ],
         ),
         children: [
-          AddPostTag(post),
-          EditTag(postId: post.id, tag: tag),
+          AddOrReplacePostTag(post: post),
+          AddOrReplacePostTag(post: post, replacedTag: tag),
           DeletePostTag(postId: post.id, tag: tag),
         ],
       );
@@ -413,19 +413,18 @@ class _PostTag extends StatefulWidget {
 }
 
 class _PostTagState extends State<_PostTag> {
-  Stream<List<int>?>? _stream;
+  late Stream<List<int>?> _stream;
 
   PostBase get _post => widget.post;
 
-  void _setStream() => _stream = _post.id > 0
-      ? TagService.getPostTagsIdStream(_post.id).map((event) {
-          if (event.isNotEmpty) {
-            debugPrint('串 ${_post.toPostNumber()} 有标签');
-          }
+  void _setStream() =>
+      _stream = TagService.getPostTagsIdStream(_post.id).map((event) {
+        if (event.isNotEmpty) {
+          debugPrint('串 ${_post.toPostNumber()} 有标签');
+        }
 
-          return event.isNotEmpty ? event.last : null;
-        })
-      : null;
+        return event.isNotEmpty ? event.last : null;
+      });
 
   @override
   void initState() {
@@ -470,11 +469,9 @@ class _PostTagState extends State<_PostTag> {
                       tag: tag,
                       textStyle:
                           widget.textStyle ?? AppTheme.postContentTextStyle,
-                      onTap: _post.id > 0
-                          ? () => postListDialog(
-                                _PostTagDialog(post: _post, tag: tag),
-                              )
-                          : null,
+                      onTap: () => postListDialog(
+                        _PostTagDialog(post: _post, tag: tag),
+                      ),
                     ),
                 ],
               ),
@@ -647,7 +644,7 @@ class PostContent extends StatelessWidget {
               height: headerHeight,
               child: header!(headerTextStyle),
             ),
-          if (post is Tip)
+          if (post.isTipType)
             Text(
               '来自X岛匿名版官方的内容',
               style: headerTextStyle ?? AppTheme.postHeaderTextStyle,
@@ -714,7 +711,8 @@ class PostContent extends StatelessWidget {
             )
           else
             content,
-          if (post is! Tip) _PostTag(post: post, textStyle: contentTextStyle),
+          if (!post.isTipType)
+            _PostTag(post: post, textStyle: contentTextStyle),
           if (footer != null) footer!(headerTextStyle),
         ].withSpaceBetween(height: 5.0),
       ),

@@ -4,8 +4,10 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 part 'reply.g.dart';
 
 /// 应官方要求，本地不再保存图片地址相关字段
-@collection
+@Collection(ignore: {'hashCode'})
 class ReplyData {
+  static const int taggedPostIdPrefix = 2;
+
   Id id = Isar.autoIncrement;
 
   int mainPostId;
@@ -41,6 +43,9 @@ class ReplyData {
 
   @ignore
   bool get isComplete => hasPostId && page != null;
+
+  @ignore
+  int get taggedPostId => (taggedPostIdPrefix << 32) | id;
 
   /// [image]是为了兼容旧版本，用来判断[hasImage]
   ReplyData(
@@ -78,8 +83,9 @@ class ReplyData {
             page: page,
             hasImage: post.hasImage);
 
+  /// 返回的postId可能是[taggedPostId]
   Post toPost() => Post(
-      id: postId ?? 0,
+      id: postId ?? taggedPostId,
       forumId: forumId,
       replyCount: 0,
       image: image ?? '',
@@ -91,6 +97,7 @@ class ReplyData {
       content: content,
       isAdmin: isAdmin);
 
+  /// 返回的只有postId正确
   Post toMainPost() => Post(
       id: mainPostId,
       forumId: forumId,

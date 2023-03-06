@@ -19,7 +19,7 @@ import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/history.dart';
 import '../utils/navigation.dart';
-import '../utils/post_list.dart';
+import '../utils/post.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
@@ -71,6 +71,9 @@ class _DumbPost implements PostBase {
 
   @override
   bool? get isHidden => null;
+
+  @override
+  PostType get postType => PostType.other;
 
   const _DumbPost();
 }
@@ -243,7 +246,7 @@ class _ThreadDialog extends StatelessWidget {
   Widget build(BuildContext context) => SimpleDialog(
         title: Text(post.toPostNumber()),
         children: [
-          if (post is! Tip)
+          if (!post.isTipType)
             SimpleDialogOption(
               onPressed: () {
                 _replyPost(controller, post.id);
@@ -251,16 +254,16 @@ class _ThreadDialog extends StatelessWidget {
               },
               child: Text('回复', style: Theme.of(context).textTheme.titleMedium),
             ),
-          if (post is! Tip) Report(post.id),
-          if (post is! Tip && controller.post != null)
+          if (!post.isTipType) Report(post.id),
+          if (!post.isTipType && controller.post != null)
             SharePost(
               mainPostId: controller.post!.id,
               isOnlyPo: controller.isOnlyPoThread,
               page: page,
               postId: post.id,
             ),
-          if (post is! Tip) AddPostTag(post),
-          if (post is! Tip && !post.isAdmin)
+          if (!post.isTipType) AddOrReplacePostTag(post: post),
+          if (!post.isTipType && !post.isAdmin)
             BlockPost(
               postId: post.id,
               onBlock: () {
@@ -269,7 +272,7 @@ class _ThreadDialog extends StatelessWidget {
                 }
               },
             ),
-          if (post is! Tip && !post.isAdmin)
+          if (!post.isTipType && !post.isAdmin)
             BlockUser(
               userHash: post.userHash,
               onBlock: () {
@@ -278,7 +281,7 @@ class _ThreadDialog extends StatelessWidget {
                 }
               },
             ),
-          if (post is! Tip) CopyPostReference(post.id),
+          if (!post.isTipType) CopyPostReference(post.id),
           CopyPostContent(post),
         ],
       );
@@ -545,7 +548,7 @@ class _ThreadBodyState extends State<ThreadBody> {
             final postIds = thread.replies
                 .where((post) => !post.isBlocked())
                 .map((post) => post.id);
-            final id = index.getPostIdFromPostIndex();
+            final id = index.postIdFromPostIndex;
             if (postIds.contains(id)) {
               // 存在目标ID时
               WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
@@ -647,7 +650,8 @@ class _ThreadBodyState extends State<ThreadBody> {
       posts.add(PostWithPage(const _DumpTip(), page));
     }
     if (thread.replies.isNotEmpty) {
-      posts.addAll(thread.replies.map((post) => PostWithPage(post, page)));
+      posts.addAll(thread.replies.map((post) =>
+          PostWithPage(PostOverideForumId(post, mainPost.forumId), page)));
     }
 
     return posts;
@@ -673,7 +677,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     final mainPost = controller.post;
 
     final Widget item = PostInkWell(
-      key: post is Tip ? UniqueKey() : null,
+      key: post.isTipType ? UniqueKey() : null,
       post: post,
       poUserHash: mainPost?.userHash,
       onLinkTap: (context, link, text) => parseUrl(
@@ -685,7 +689,7 @@ class _ThreadBodyState extends State<ThreadBody> {
       showReplyCount: false,
       showPoTag: true,
       onPostIdTap:
-          post is! Tip ? (postId) => _replyPost(controller, postId) : null,
+          !post.isTipType ? (postId) => _replyPost(controller, postId) : null,
       onTap: (post) {},
       onLongPress: (post) => postListDialog(_ThreadDialog(
         controller: controller,
@@ -697,7 +701,7 @@ class _ThreadBodyState extends State<ThreadBody> {
           Get.isDarkMode ? theme.cardColor : theme.scaffoldBackgroundColor,
     );
 
-    return post is! Tip
+    return !post.isTipType
         ? ListenableBuilder(
             listenable: BlacklistService.to.postAndUserBlacklistNotifier,
             builder: (context, child) => !post.isBlocked()
@@ -851,8 +855,8 @@ class _ThreadBodyState extends State<ThreadBody> {
       getAnchorOffset: () =>
           settings.autoHideAppBar ? controller.appBarHeight : 0.0,
       onIndexChanged: (index, userScroll) {
-        controller.page = index.getPageFromPostIndex();
-        controller.browsePostId = index.getPostIdFromPostIndex();
+        controller.page = index.pageFromPostIndex;
+        controller.browsePostId = index.postIdFromPostIndex;
 
         _saveBrowseHistory();
       },

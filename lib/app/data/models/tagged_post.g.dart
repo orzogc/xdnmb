@@ -37,63 +37,38 @@ const TaggedPostSchema = CollectionSchema(
       name: r'hashCode',
       type: IsarType.long,
     ),
-    r'image': PropertySchema(
-      id: 4,
-      name: r'image',
-      type: IsarType.string,
-    ),
-    r'imageExtension': PropertySchema(
-      id: 5,
-      name: r'imageExtension',
-      type: IsarType.string,
-    ),
     r'isAdmin': PropertySchema(
-      id: 6,
+      id: 4,
       name: r'isAdmin',
       type: IsarType.bool,
     ),
-    r'isHidden': PropertySchema(
-      id: 7,
-      name: r'isHidden',
-      type: IsarType.bool,
-    ),
-    r'isSage': PropertySchema(
-      id: 8,
-      name: r'isSage',
-      type: IsarType.bool,
-    ),
     r'name': PropertySchema(
-      id: 9,
+      id: 5,
       name: r'name',
       type: IsarType.string,
     ),
     r'postTime': PropertySchema(
-      id: 10,
+      id: 6,
       name: r'postTime',
       type: IsarType.dateTime,
     ),
-    r'replyCount': PropertySchema(
-      id: 11,
-      name: r'replyCount',
-      type: IsarType.long,
-    ),
     r'taggedTime': PropertySchema(
-      id: 12,
+      id: 7,
       name: r'taggedTime',
       type: IsarType.dateTime,
     ),
     r'tags': PropertySchema(
-      id: 13,
+      id: 8,
       name: r'tags',
       type: IsarType.longList,
     ),
     r'title': PropertySchema(
-      id: 14,
+      id: 9,
       name: r'title',
       type: IsarType.string,
     ),
     r'userHash': PropertySchema(
-      id: 15,
+      id: 10,
       name: r'userHash',
       type: IsarType.string,
     )
@@ -146,8 +121,6 @@ int _taggedPostEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.content.length * 3;
-  bytesCount += 3 + object.image.length * 3;
-  bytesCount += 3 + object.imageExtension.length * 3;
   bytesCount += 3 + object.name.length * 3;
   bytesCount += 3 + object.tags.length * 8;
   bytesCount += 3 + object.title.length * 3;
@@ -165,18 +138,13 @@ void _taggedPostSerialize(
   writer.writeLong(offsets[1], object.forumId);
   writer.writeBool(offsets[2], object.hasImage);
   writer.writeLong(offsets[3], object.hashCode);
-  writer.writeString(offsets[4], object.image);
-  writer.writeString(offsets[5], object.imageExtension);
-  writer.writeBool(offsets[6], object.isAdmin);
-  writer.writeBool(offsets[7], object.isHidden);
-  writer.writeBool(offsets[8], object.isSage);
-  writer.writeString(offsets[9], object.name);
-  writer.writeDateTime(offsets[10], object.postTime);
-  writer.writeLong(offsets[11], object.replyCount);
-  writer.writeDateTime(offsets[12], object.taggedTime);
-  writer.writeLongList(offsets[13], object.tags);
-  writer.writeString(offsets[14], object.title);
-  writer.writeString(offsets[15], object.userHash);
+  writer.writeBool(offsets[4], object.isAdmin);
+  writer.writeString(offsets[5], object.name);
+  writer.writeDateTime(offsets[6], object.postTime);
+  writer.writeDateTime(offsets[7], object.taggedTime);
+  writer.writeLongList(offsets[8], object.tags);
+  writer.writeString(offsets[9], object.title);
+  writer.writeString(offsets[10], object.userHash);
 }
 
 TaggedPost _taggedPostDeserialize(
@@ -190,13 +158,13 @@ TaggedPost _taggedPostDeserialize(
     forumId: reader.readLongOrNull(offsets[1]),
     hasImage: reader.readBool(offsets[2]),
     id: id,
-    isAdmin: reader.readBool(offsets[6]),
-    name: reader.readString(offsets[9]),
-    postTime: reader.readDateTime(offsets[10]),
-    taggedTime: reader.readDateTime(offsets[12]),
-    tags: reader.readLongList(offsets[13]) ?? [],
-    title: reader.readString(offsets[14]),
-    userHash: reader.readString(offsets[15]),
+    isAdmin: reader.readBool(offsets[4]),
+    name: reader.readString(offsets[5]),
+    postTime: reader.readDateTime(offsets[6]),
+    taggedTime: reader.readDateTime(offsets[7]),
+    tags: reader.readLongList(offsets[8]) ?? [],
+    title: reader.readString(offsets[9]),
+    userHash: reader.readString(offsets[10]),
   );
   return object;
 }
@@ -217,28 +185,18 @@ P _taggedPostDeserializeProp<P>(
     case 3:
       return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 7:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 8:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readLongList(offset) ?? []) as P;
     case 9:
       return (reader.readString(offset)) as P;
     case 10:
-      return (reader.readDateTime(offset)) as P;
-    case 11:
-      return (reader.readLongOrNull(offset)) as P;
-    case 12:
-      return (reader.readDateTime(offset)) as P;
-    case 13:
-      return (reader.readLongList(offset) ?? []) as P;
-    case 14:
-      return (reader.readString(offset)) as P;
-    case 15:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -851,332 +809,11 @@ extension TaggedPostQueryFilter
     });
   }
 
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> imageEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'image',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> imageGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'image',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> imageLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'image',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> imageBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'image',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> imageStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'image',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> imageEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'image',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> imageContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'image',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> imageMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'image',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> imageIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'image',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      imageIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'image',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      imageExtensionEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'imageExtension',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      imageExtensionGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'imageExtension',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      imageExtensionLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'imageExtension',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      imageExtensionBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'imageExtension',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      imageExtensionStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'imageExtension',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      imageExtensionEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'imageExtension',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      imageExtensionContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'imageExtension',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      imageExtensionMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'imageExtension',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      imageExtensionIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'imageExtension',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      imageExtensionIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'imageExtension',
-        value: '',
-      ));
-    });
-  }
-
   QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> isAdminEqualTo(
       bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isAdmin',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> isHiddenIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'isHidden',
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      isHiddenIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'isHidden',
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> isHiddenEqualTo(
-      bool? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isHidden',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> isSageIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'isSage',
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      isSageIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'isSage',
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> isSageEqualTo(
-      bool? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isSage',
         value: value,
       ));
     });
@@ -1358,79 +995,6 @@ extension TaggedPostQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'postTime',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      replyCountIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'replyCount',
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      replyCountIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'replyCount',
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> replyCountEqualTo(
-      int? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'replyCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      replyCountGreaterThan(
-    int? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'replyCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition>
-      replyCountLessThan(
-    int? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'replyCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterFilterCondition> replyCountBetween(
-    int? lower,
-    int? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'replyCount',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1958,31 +1522,6 @@ extension TaggedPostQuerySortBy
     });
   }
 
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByImage() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'image', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByImageDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'image', Sort.desc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByImageExtension() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'imageExtension', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy>
-      sortByImageExtensionDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'imageExtension', Sort.desc);
-    });
-  }
-
   QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByIsAdmin() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isAdmin', Sort.asc);
@@ -1992,30 +1531,6 @@ extension TaggedPostQuerySortBy
   QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByIsAdminDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isAdmin', Sort.desc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByIsHidden() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isHidden', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByIsHiddenDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isHidden', Sort.desc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByIsSage() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isSage', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByIsSageDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isSage', Sort.desc);
     });
   }
 
@@ -2040,18 +1555,6 @@ extension TaggedPostQuerySortBy
   QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByPostTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'postTime', Sort.desc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByReplyCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'replyCount', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> sortByReplyCountDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'replyCount', Sort.desc);
     });
   }
 
@@ -2154,31 +1657,6 @@ extension TaggedPostQuerySortThenBy
     });
   }
 
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByImage() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'image', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByImageDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'image', Sort.desc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByImageExtension() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'imageExtension', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy>
-      thenByImageExtensionDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'imageExtension', Sort.desc);
-    });
-  }
-
   QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByIsAdmin() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isAdmin', Sort.asc);
@@ -2188,30 +1666,6 @@ extension TaggedPostQuerySortThenBy
   QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByIsAdminDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isAdmin', Sort.desc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByIsHidden() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isHidden', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByIsHiddenDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isHidden', Sort.desc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByIsSage() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isSage', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByIsSageDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isSage', Sort.desc);
     });
   }
 
@@ -2236,18 +1690,6 @@ extension TaggedPostQuerySortThenBy
   QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByPostTimeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'postTime', Sort.desc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByReplyCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'replyCount', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterSortBy> thenByReplyCountDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'replyCount', Sort.desc);
     });
   }
 
@@ -2315,36 +1757,9 @@ extension TaggedPostQueryWhereDistinct
     });
   }
 
-  QueryBuilder<TaggedPost, TaggedPost, QDistinct> distinctByImage(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'image', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QDistinct> distinctByImageExtension(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'imageExtension',
-          caseSensitive: caseSensitive);
-    });
-  }
-
   QueryBuilder<TaggedPost, TaggedPost, QDistinct> distinctByIsAdmin() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isAdmin');
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QDistinct> distinctByIsHidden() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'isHidden');
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QDistinct> distinctByIsSage() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'isSage');
     });
   }
 
@@ -2358,12 +1773,6 @@ extension TaggedPostQueryWhereDistinct
   QueryBuilder<TaggedPost, TaggedPost, QDistinct> distinctByPostTime() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'postTime');
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QDistinct> distinctByReplyCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'replyCount');
     });
   }
 
@@ -2426,33 +1835,9 @@ extension TaggedPostQueryProperty
     });
   }
 
-  QueryBuilder<TaggedPost, String, QQueryOperations> imageProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'image');
-    });
-  }
-
-  QueryBuilder<TaggedPost, String, QQueryOperations> imageExtensionProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'imageExtension');
-    });
-  }
-
   QueryBuilder<TaggedPost, bool, QQueryOperations> isAdminProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isAdmin');
-    });
-  }
-
-  QueryBuilder<TaggedPost, bool?, QQueryOperations> isHiddenProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'isHidden');
-    });
-  }
-
-  QueryBuilder<TaggedPost, bool?, QQueryOperations> isSageProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'isSage');
     });
   }
 
@@ -2465,12 +1850,6 @@ extension TaggedPostQueryProperty
   QueryBuilder<TaggedPost, DateTime, QQueryOperations> postTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'postTime');
-    });
-  }
-
-  QueryBuilder<TaggedPost, int?, QQueryOperations> replyCountProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'replyCount');
     });
   }
 

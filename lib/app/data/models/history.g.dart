@@ -47,68 +47,63 @@ const BrowseHistorySchema = CollectionSchema(
       name: r'hasImage',
       type: IsarType.bool,
     ),
-    r'hashCode': PropertySchema(
-      id: 6,
-      name: r'hashCode',
-      type: IsarType.long,
-    ),
     r'image': PropertySchema(
-      id: 7,
+      id: 6,
       name: r'image',
       type: IsarType.string,
     ),
     r'imageExtension': PropertySchema(
-      id: 8,
+      id: 7,
       name: r'imageExtension',
       type: IsarType.string,
     ),
     r'isAdmin': PropertySchema(
-      id: 9,
+      id: 8,
       name: r'isAdmin',
       type: IsarType.bool,
     ),
     r'isHidden': PropertySchema(
-      id: 10,
+      id: 9,
       name: r'isHidden',
       type: IsarType.bool,
     ),
     r'isSage': PropertySchema(
-      id: 11,
+      id: 10,
       name: r'isSage',
       type: IsarType.bool,
     ),
     r'name': PropertySchema(
-      id: 12,
+      id: 11,
       name: r'name',
       type: IsarType.string,
     ),
     r'onlyPoBrowsePage': PropertySchema(
-      id: 13,
+      id: 12,
       name: r'onlyPoBrowsePage',
       type: IsarType.long,
     ),
     r'onlyPoBrowsePostId': PropertySchema(
-      id: 14,
+      id: 13,
       name: r'onlyPoBrowsePostId',
       type: IsarType.long,
     ),
     r'postTime': PropertySchema(
-      id: 15,
+      id: 14,
       name: r'postTime',
       type: IsarType.dateTime,
     ),
     r'replyCount': PropertySchema(
-      id: 16,
+      id: 15,
       name: r'replyCount',
       type: IsarType.long,
     ),
     r'title': PropertySchema(
-      id: 17,
+      id: 16,
       name: r'title',
       type: IsarType.string,
     ),
     r'userHash': PropertySchema(
-      id: 18,
+      id: 17,
       name: r'userHash',
       type: IsarType.string,
     )
@@ -168,19 +163,18 @@ void _browseHistorySerialize(
   writer.writeString(offsets[3], object.content);
   writer.writeLong(offsets[4], object.forumId);
   writer.writeBool(offsets[5], object.hasImage);
-  writer.writeLong(offsets[6], object.hashCode);
-  writer.writeString(offsets[7], object.image);
-  writer.writeString(offsets[8], object.imageExtension);
-  writer.writeBool(offsets[9], object.isAdmin);
-  writer.writeBool(offsets[10], object.isHidden);
-  writer.writeBool(offsets[11], object.isSage);
-  writer.writeString(offsets[12], object.name);
-  writer.writeLong(offsets[13], object.onlyPoBrowsePage);
-  writer.writeLong(offsets[14], object.onlyPoBrowsePostId);
-  writer.writeDateTime(offsets[15], object.postTime);
-  writer.writeLong(offsets[16], object.replyCount);
-  writer.writeString(offsets[17], object.title);
-  writer.writeString(offsets[18], object.userHash);
+  writer.writeString(offsets[6], object.image);
+  writer.writeString(offsets[7], object.imageExtension);
+  writer.writeBool(offsets[8], object.isAdmin);
+  writer.writeBool(offsets[9], object.isHidden);
+  writer.writeBool(offsets[10], object.isSage);
+  writer.writeString(offsets[11], object.name);
+  writer.writeLong(offsets[12], object.onlyPoBrowsePage);
+  writer.writeLong(offsets[13], object.onlyPoBrowsePostId);
+  writer.writeDateTime(offsets[14], object.postTime);
+  writer.writeLong(offsets[15], object.replyCount);
+  writer.writeString(offsets[16], object.title);
+  writer.writeString(offsets[17], object.userHash);
 }
 
 BrowseHistory _browseHistoryDeserialize(
@@ -197,19 +191,19 @@ BrowseHistory _browseHistoryDeserialize(
     forumId: reader.readLong(offsets[4]),
     hasImage: reader.readBoolOrNull(offsets[5]) ?? false,
     id: id,
-    image: reader.readStringOrNull(offsets[7]) ?? '',
-    isAdmin: reader.readBoolOrNull(offsets[9]) ?? false,
-    isHidden: reader.readBoolOrNull(offsets[10]) ?? false,
-    isSage: reader.readBoolOrNull(offsets[11]) ?? false,
-    name: reader.readStringOrNull(offsets[12]) ?? '',
-    onlyPoBrowsePage: reader.readLongOrNull(offsets[13]),
-    onlyPoBrowsePostId: reader.readLongOrNull(offsets[14]),
-    postTime: reader.readDateTime(offsets[15]),
-    replyCount: reader.readLong(offsets[16]),
-    title: reader.readStringOrNull(offsets[17]) ?? '',
-    userHash: reader.readString(offsets[18]),
+    image: reader.readStringOrNull(offsets[6]) ?? '',
+    isAdmin: reader.readBoolOrNull(offsets[8]) ?? false,
+    isHidden: reader.readBoolOrNull(offsets[9]) ?? false,
+    isSage: reader.readBoolOrNull(offsets[10]) ?? false,
+    name: reader.readStringOrNull(offsets[11]) ?? '',
+    onlyPoBrowsePage: reader.readLongOrNull(offsets[12]),
+    onlyPoBrowsePostId: reader.readLongOrNull(offsets[13]),
+    postTime: reader.readDateTime(offsets[14]),
+    replyCount: reader.readLong(offsets[15]),
+    title: reader.readStringOrNull(offsets[16]) ?? '',
+    userHash: reader.readString(offsets[17]),
   );
-  object.imageExtension = reader.readString(offsets[8]);
+  object.imageExtension = reader.readString(offsets[7]);
   return object;
 }
 
@@ -233,30 +227,28 @@ P _browseHistoryDeserializeProp<P>(
     case 5:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
-    case 7:
       return (reader.readStringOrNull(offset) ?? '') as P;
-    case 8:
+    case 7:
       return (reader.readString(offset)) as P;
+    case 8:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 9:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 10:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 11:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
-    case 12:
       return (reader.readStringOrNull(offset) ?? '') as P;
+    case 12:
+      return (reader.readLongOrNull(offset)) as P;
     case 13:
       return (reader.readLongOrNull(offset)) as P;
     case 14:
-      return (reader.readLongOrNull(offset)) as P;
-    case 15:
       return (reader.readDateTime(offset)) as P;
-    case 16:
+    case 15:
       return (reader.readLong(offset)) as P;
-    case 17:
+    case 16:
       return (reader.readStringOrNull(offset) ?? '') as P;
-    case 18:
+    case 17:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -860,62 +852,6 @@ extension BrowseHistoryQueryFilter
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'hasImage',
         value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<BrowseHistory, BrowseHistory, QAfterFilterCondition>
-      hashCodeEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'hashCode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<BrowseHistory, BrowseHistory, QAfterFilterCondition>
-      hashCodeGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'hashCode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<BrowseHistory, BrowseHistory, QAfterFilterCondition>
-      hashCodeLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'hashCode',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<BrowseHistory, BrowseHistory, QAfterFilterCondition>
-      hashCodeBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'hashCode',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
       ));
     });
   }
@@ -2029,19 +1965,6 @@ extension BrowseHistoryQuerySortBy
     });
   }
 
-  QueryBuilder<BrowseHistory, BrowseHistory, QAfterSortBy> sortByHashCode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.asc);
-    });
-  }
-
-  QueryBuilder<BrowseHistory, BrowseHistory, QAfterSortBy>
-      sortByHashCodeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.desc);
-    });
-  }
-
   QueryBuilder<BrowseHistory, BrowseHistory, QAfterSortBy> sortByImage() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'image', Sort.asc);
@@ -2276,19 +2199,6 @@ extension BrowseHistoryQuerySortThenBy
     });
   }
 
-  QueryBuilder<BrowseHistory, BrowseHistory, QAfterSortBy> thenByHashCode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.asc);
-    });
-  }
-
-  QueryBuilder<BrowseHistory, BrowseHistory, QAfterSortBy>
-      thenByHashCodeDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hashCode', Sort.desc);
-    });
-  }
-
   QueryBuilder<BrowseHistory, BrowseHistory, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -2496,12 +2406,6 @@ extension BrowseHistoryQueryWhereDistinct
     });
   }
 
-  QueryBuilder<BrowseHistory, BrowseHistory, QDistinct> distinctByHashCode() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'hashCode');
-    });
-  }
-
   QueryBuilder<BrowseHistory, BrowseHistory, QDistinct> distinctByImage(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2624,12 +2528,6 @@ extension BrowseHistoryQueryProperty
   QueryBuilder<BrowseHistory, bool, QQueryOperations> hasImageProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'hasImage');
-    });
-  }
-
-  QueryBuilder<BrowseHistory, int, QQueryOperations> hashCodeProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'hashCode');
     });
   }
 

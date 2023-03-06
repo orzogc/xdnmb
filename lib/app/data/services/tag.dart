@@ -11,6 +11,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 import '../../utils/extensions.dart';
 import '../../utils/hash.dart';
 import '../../utils/isar.dart';
+import '../../utils/post.dart';
 import '../models/hive.dart';
 import '../models/tag.dart';
 import '../models/tagged_post.dart';
@@ -40,7 +41,7 @@ class TagService extends GetxService {
 
   bool _tagIdExists(int tagId) => _tagsBox.containsKey(tagId);
 
-  bool _tagNameExists(String tagName) => _tagsMap.containsKey(tagName);
+  bool tagNameExists(String tagName) => _tagsMap.containsKey(tagName);
 
   ValueListenable<Box<TagData>> tagListenable(List<int> tagsId) =>
       _tagsBox.listenable(keys: tagsId);
@@ -82,7 +83,7 @@ class TagService extends GetxService {
     final oldTagName = _tagsBox.get(tag.id)?.name;
 
     if (oldTagName != null) {
-      if (tag.name != oldTagName && _tagNameExists(tag.name)) {
+      if (tag.name != oldTagName && tagNameExists(tag.name)) {
         return false;
       }
 
@@ -139,15 +140,16 @@ class TagService extends GetxService {
   /// 添加串的标签
   ///
   /// 数据库里没有[post]的数据时会新建数据
-  Future<void> addPostTag(PostBase post, int tagId) async {
+  Future<void> addPostTag(PostBase post, int tagId, [int? forumId]) async {
     if (_tagIdExists(tagId)) {
       await isar.writeTxn(() async {
         TaggedPost? data = await _taggedPostData.get(post.id);
         if (data != null) {
-          data.update(post);
+          data.update(post, forumId);
           data.addTag(tagId);
         } else {
-          data = TaggedPost.fromPost(post: post, tags: [tagId]);
+          data =
+              TaggedPost.fromPost(post: post, forumId: forumId, tags: [tagId]);
         }
 
         await _taggedPostData.put(data
@@ -199,6 +201,7 @@ class TagService extends GetxService {
             await _taggedPostData.put(data
               ..image = ''
               ..imageExtension = '');
+            PersistentDataService.to.addRecentTag(newTagId);
           }
         } else {
           debugPrint('要替换标签的串 ${postId.toPostNumber()} 的数据不存在');
@@ -209,7 +212,7 @@ class TagService extends GetxService {
     }
   }
 
-  Future<void> updatePosts(Iterable<PostBase> posts) async {
+  Future<void> updatePosts(Iterable<PostBase> posts, [int? forumId]) async {
     final list =
         posts.where((post) => _taggedPostIdSet.contains(post.id)).toList();
     if (list.isNotEmpty) {
@@ -218,7 +221,7 @@ class TagService extends GetxService {
         for (final post in list) {
           final data = await _taggedPostData.get(post.id);
           if (data != null) {
-            data.update(post);
+            data.update(post, forumId);
             tagged.add(data);
           } else {
             debugPrint('不存在串 ${post.toPostNumber()} 的数据');
@@ -232,14 +235,17 @@ class TagService extends GetxService {
 
   Future<void> addForumThreads(Iterable<ForumThread> threads) =>
       updatePosts(threads.fold(
-          <Post>[],
-          (iter, thread) => iter
-              .followedBy([thread.mainPost].followedBy(thread.recentReplies))));
+          <PostBase>[],
+          (iter, thread) => iter.followedBy(<PostBase>[thread.mainPost]
+              .followedBy(thread.recentReplies.map((post) =>
+                  PostOverideForumId(post, thread.mainPost.forumId))))));
 
   Future<void> addThread(Thread thread, [bool isFirstPage = false]) =>
-      updatePosts(isFirstPage
-          ? [thread.mainPost].followedBy(thread.replies)
-          : thread.replies);
+      updatePosts(
+          isFirstPage
+              ? [thread.mainPost].followedBy(thread.replies)
+              : thread.replies,
+          thread.mainPost.forumId);
 
   Future<void> addFeeds(Iterable<Feed> feeds) => updatePosts(feeds);
 
