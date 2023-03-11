@@ -11,6 +11,7 @@ import '../models/controller.dart';
 import '../models/hive.dart';
 import 'persistent.dart';
 import 'settings.dart';
+import 'tag.dart';
 
 const int _int16Max = 65535;
 
@@ -260,8 +261,11 @@ class ControllerStacksService extends GetxService {
 
     final data = PersistentDataService.to;
     final settings = SettingsService.to;
+    final tagService = TagService.to;
 
-    while (!data.isReady.value || !settings.isReady.value) {
+    while (!data.isReady.value ||
+        !settings.isReady.value ||
+        !tagService.isReady.value) {
       debugPrint('等待读取恢复控制器栈相关数据');
 
       await Future.delayed(const Duration(milliseconds: 100));

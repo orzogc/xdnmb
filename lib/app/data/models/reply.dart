@@ -97,15 +97,6 @@ class ReplyData {
       content: content,
       isAdmin: isAdmin);
 
-  /// 返回的只有postId正确
-  Post toMainPost() => Post(
-      id: mainPostId,
-      forumId: forumId,
-      replyCount: 0,
-      postTime: postTime,
-      userHash: '',
-      content: content);
-
   void update({required PostBase post, int? mainPostId, int? page}) {
     if (mainPostId != null) {
       this.mainPostId = mainPostId;

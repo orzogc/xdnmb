@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:xdnmb/app/utils/toast.dart';
 
 import '../data/services/user.dart';
+import '../utils/toast.dart';
 import '../utils/theme.dart';
 import '../widgets/color.dart';
 import '../widgets/image.dart';

@@ -6,6 +6,7 @@ import '../../modules/post_list.dart';
 import '../../widgets/feed.dart';
 import '../../widgets/forum.dart';
 import '../../widgets/history.dart';
+import '../../widgets/tagged.dart';
 import '../../widgets/thread.dart';
 
 part 'controller.g.dart';
@@ -183,7 +184,10 @@ enum PostListType {
   feed,
 
   @HiveField(5)
-  history;
+  history,
+
+  @HiveField(6)
+  taggedPostList;
 
   bool get isThread => this == thread;
 
@@ -196,6 +200,8 @@ enum PostListType {
   bool get isFeed => this == feed;
 
   bool get isHistory => this == history;
+
+  bool get isTaggedPostList => this == taggedPostList;
 
   bool get isThreadType => isThread || isOnlyPoThread;
 
@@ -276,8 +282,8 @@ class PostListControllerData extends HiveObject {
             postListType: (controller as ThreadTypeController).postListType,
             id: controller.id,
             page: controller.page,
-            post: controller.post != null
-                ? PostBaseData.fromPost(controller.post!)
+            post: controller.mainPost != null
+                ? PostBaseData.fromPost(controller.mainPost!)
                 : null);
       case PostListType.forum:
       case PostListType.timeline:
@@ -287,7 +293,9 @@ class PostListControllerData extends HiveObject {
             page: controller.page);
       case PostListType.feed:
         return PostListControllerData(
-            postListType: controller.postListType, page: controller.page);
+            postListType: (controller as FeedController).postListType,
+            page: controller.page,
+            pageIndex: controller.pageIndex);
       case PostListType.history:
         return PostListControllerData(
             postListType: (controller as HistoryController).postListType,
@@ -295,27 +303,38 @@ class PostListControllerData extends HiveObject {
             pageIndex: controller.pageIndex,
             dateRange: controller.dateRange,
             search: controller.search);
+      case PostListType.taggedPostList:
+        return PostListControllerData(
+            postListType: (controller as TaggedPostListController).postListType,
+            id: controller.id,
+            page: controller.page,
+            search: controller.search != null ? [controller.search] : null);
     }
   }
 
   PostListController toController([bool isRetainForumPage = true]) {
     switch (postListType) {
       case PostListType.thread:
-        return ThreadController(id: id!, page: page, post: post);
+        return ThreadController(id: id!, page: page, mainPost: post);
       case PostListType.onlyPoThread:
-        return OnlyPoThreadController(id: id!, page: page, post: post);
+        return OnlyPoThreadController(id: id!, page: page, mainPost: post);
       case PostListType.forum:
         return ForumController(id: id!, page: isRetainForumPage ? page : 1);
       case PostListType.timeline:
         return TimelineController(id: id!, page: isRetainForumPage ? page : 1);
       case PostListType.feed:
-        return FeedController(page);
+        return FeedController(page: page, pageIndex: pageIndex ?? 0);
       case PostListType.history:
         return HistoryController(
             page: page,
-            pageIndex: pageIndex!,
+            pageIndex: pageIndex ?? 0,
             dateRange: dateRange,
             search: search);
+      case PostListType.taggedPostList:
+        return TaggedPostListController(
+            id: id!,
+            page: page,
+            search: (search?.isNotEmpty ?? false) ? search!.first : null);
     }
   }
 }

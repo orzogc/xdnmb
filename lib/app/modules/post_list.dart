@@ -6,7 +6,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:get/get.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:xdnmb/app/data/services/tag.dart';
 
 import '../data/models/controller.dart';
 import '../data/models/draft.dart';
@@ -18,6 +17,7 @@ import '../data/services/forum.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../data/services/stack.dart';
+import '../data/services/tag.dart';
 import '../data/services/time.dart';
 import '../data/services/user.dart';
 import '../data/services/version.dart';
@@ -45,6 +45,7 @@ import '../widgets/listenable.dart';
 import '../widgets/page.dart';
 import '../widgets/scroll.dart';
 import '../widgets/tab_list.dart';
+import '../widgets/tagged.dart';
 import '../widgets/thread.dart';
 
 const Duration _animationDuration = Duration(milliseconds: 200);
@@ -158,7 +159,7 @@ abstract class PostListController extends ChangeNotifier {
   bool get isXdnmbApi => postListType.isXdnmbApi;
 
   int? get forumOrTimelineId => isThreadType
-      ? (this as ThreadTypeController).post?.forumId
+      ? (this as ThreadTypeController).mainPost?.forumId
       : (isForumType ? id : null);
 
   int? get forumId => hasForumId ? forumOrTimelineId : null;
@@ -233,6 +234,9 @@ class PostListBinding implements Bindings {
       case AppRoutes.history:
         controller = historyController(Get.parameters);
         break;
+      case AppRoutes.taggedPostList:
+        controller = taggedPostListController(Get.parameters);
+        break;
       default:
         throw '未知URI: $uri';
     }
@@ -289,7 +293,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
         switch (controller.postListType) {
           case PostListType.thread:
           case PostListType.onlyPoThread:
-            final mainPost = (controller as ThreadTypeController).post;
+            final mainPost = (controller as ThreadTypeController).mainPost;
             // 检查主串或饼干有没有被屏蔽
             if (mainPost?.isBlocked() ?? false) {
               WidgetsBinding.instance
@@ -303,10 +307,14 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
             title = ForumAppBarTitle(controller as ForumTypeController);
             break;
           case PostListType.feed:
-            title = const FeedAppBarTitle();
+            title = FeedAppBarTitle(controller as FeedController);
             break;
           case PostListType.history:
             title = HistoryAppBarTitle(controller as HistoryController);
+            break;
+          case PostListType.taggedPostList:
+            title = TaggedPostListAppBarTitle(
+                controller as TaggedPostListController);
             break;
         }
 
@@ -333,7 +341,9 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: AppBar(
               primary: !(_backdropController.isShowBackLayer ||
                   settings.isAutoHideAppBar),
-              elevation: (settings.isAutoHideAppBar || controller.isHistory)
+              elevation: (settings.isAutoHideAppBar ||
+                      controller.isFeed ||
+                      controller.isHistory)
                   ? 0.0
                   : null,
               leading: !(_backdropController.isShowBackLayer ||
@@ -350,7 +360,10 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
               actions: !(_backdropController.isShowBackLayer ||
                       _tabAndForumListController.isShowed)
                   ? [
-                      if (controller.isXdnmbApi)
+                      if (controller.isThreadType ||
+                          controller.isForumType ||
+                          (controller.isFeed &&
+                              (controller as FeedController).isFeedPage))
                         AppBarPageButtonGuide(
                             PageButton(controller: controller)),
                       if (controller.isThreadType)
@@ -516,10 +529,11 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
 
   void _setHeight() => widget.controller.appBarHeight = _height;
 
-  double _elevation(double? elevation) => !widget.controller.isHistory
-      ? ((_animationController.upperBound - _animationController.value) *
-          (elevation ?? PostListAppBar.defaultElevation))
-      : 0.0;
+  double _elevation(double? elevation) =>
+      !(widget.controller.isFeed || widget.controller.isHistory)
+          ? ((_animationController.upperBound - _animationController.value) *
+              (elevation ?? PostListAppBar.defaultElevation))
+          : 0.0;
 
   @override
   void initState() {
@@ -629,6 +643,9 @@ class _PostListPage<T> extends Page<T> {
         break;
       case PostListType.history:
         body = HistoryBody(controller as HistoryController);
+        break;
+      case PostListType.taggedPostList:
+        body = TaggedPostListBody(controller as TaggedPostListController);
         break;
     }
 
@@ -857,7 +874,7 @@ class _EditPostBottomSheet extends StatelessWidget {
           height: height,
           forumId: controller.forumId,
           poUserHash: controller is ThreadTypeController
-              ? controller.post?.userHash
+              ? controller.mainPost?.userHash
               : null,
         ),
       );
@@ -1006,7 +1023,7 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
             PostList.fromController(controller),
             controller.forumId,
             controller is ThreadTypeController
-                ? controller.post?.userHash
+                ? controller.mainPost?.userHash
                 : null);
       } else {
         _editPostController.close();

@@ -12,6 +12,7 @@ import '../../utils/extensions.dart';
 import '../../utils/hash.dart';
 import '../../utils/isar.dart';
 import '../../utils/post.dart';
+import '../models/controller.dart';
 import '../models/hive.dart';
 import '../models/tag.dart';
 import '../models/tagged_post.dart';
@@ -22,15 +23,38 @@ class TagService extends GetxService {
 
   static final IsarCollection<TaggedPost> _taggedPostData = isar.taggedPosts;
 
+  static late final HashSet<int> _taggedPostIdSet;
+
   late final Box<TagData> _tagsBox;
 
   late int _nextTagId;
 
   late final HashMap<String, int> _tagsMap;
 
-  late final HashSet<int> _taggedPostIdSet;
-
   final RxBool isReady = false.obs;
+
+  Iterable<int> get allTagsId => _tagsBox.keys.cast<int>();
+
+  static QueryBuilder<TaggedPost, TaggedPost, dynamic> _buildQuery(
+      {required int tagId, Search? search}) {
+    QueryBuilder<TaggedPost, TaggedPost, dynamic> query =
+        _taggedPostData.where().tagsElementEqualTo(tagId);
+
+    if (search != null) {
+      if (search.useWildcard) {
+        query = (query as QueryBuilder<TaggedPost, TaggedPost, QFilter>)
+            .filter()
+            .contentMatches('*${search.text}*',
+                caseSensitive: search.caseSensitive);
+      } else {
+        query = (query as QueryBuilder<TaggedPost, TaggedPost, QFilter>)
+            .filter()
+            .contentContains(search.text, caseSensitive: search.caseSensitive);
+      }
+    }
+
+    return query;
+  }
 
   static Stream<List<List<int>>> getPostTagsIdStream(int postId) =>
       _taggedPostData
@@ -39,14 +63,118 @@ class TagService extends GetxService {
           .tagsProperty()
           .watch(fireImmediately: true);
 
-  bool _tagIdExists(int tagId) => _tagsBox.containsKey(tagId);
+  static Future<int> getTaggedPostCount(int tagId) =>
+      _taggedPostData.where().tagsElementEqualTo(tagId).count();
+
+  /// 删除拥有标签[tagId]的串的标签[tagId]
+  ///
+  /// 串数据没有任何标签时会被删除
+  static Future<void> deleteTagInPosts({required int tagId, Search? search}) =>
+      isar.writeTxn(() async {
+        final list = await (_buildQuery(tagId: tagId, search: search)
+                as QueryBuilder<TaggedPost, TaggedPost, QQueryOperations>)
+            .findAll();
+
+        if (list.isNotEmpty) {
+          final retained = <TaggedPost>[];
+          final removed = <int>[];
+
+          for (final post in list) {
+            if (post.deleteTag(tagId)) {
+              retained.add(post
+                ..image = ''
+                ..imageExtension = '');
+            } else {
+              removed.add(post.id);
+            }
+          }
+
+          await _taggedPostData.putAll(retained);
+          await _taggedPostData.deleteAll(removed);
+          _taggedPostIdSet.removeAll(removed);
+        }
+      });
+
+  static Future<List<TaggedPost>> taggedPostList(
+          {required int tagId, Search? search}) =>
+      (_buildQuery(tagId: tagId, search: search)
+              as QueryBuilder<TaggedPost, TaggedPost, QSortBy>)
+          .sortByTaggedTimeDesc()
+          .findAll();
+
+  /// 删除串的标签
+  ///
+  /// 串数据没有任何标签时会被删除
+  static Future<void> deletePostTag(int postId, int tagId) =>
+      isar.writeTxn(() async {
+        final data = await _taggedPostData.get(postId);
+        if (data != null) {
+          if (data.deleteTag(tagId)) {
+            await _taggedPostData.put(data
+              ..image = ''
+              ..imageExtension = '');
+          } else {
+            await _taggedPostData.delete(postId);
+            _taggedPostIdSet.remove(postId);
+          }
+        } else {
+          debugPrint('要删除标签的串 ${postId.toPostNumber()} 的数据不存在');
+        }
+      });
+
+  static Future<void> updatePosts(Iterable<PostBase> posts,
+      [int? forumId]) async {
+    final postMap = intHashMapFromEntries(posts
+        .where((post) => _taggedPostIdSet.contains(post.id))
+        .map((post) => MapEntry(post.id, post)));
+
+    if (postMap.isNotEmpty) {
+      await isar.writeTxn(() async {
+        final list = await _taggedPostData
+            .where()
+            .anyOf(postMap.keys, (query, postId) => query.idEqualTo(postId))
+            .findAll();
+
+        for (final data in list) {
+          final post = postMap[data.id];
+          if (post != null) {
+            data.update(post, forumId);
+          } else {
+            debugPrint('不存在串 ${data.toPostNumber()} 的数据');
+          }
+        }
+
+        await _taggedPostData.putAll(list);
+      });
+    }
+  }
+
+  static Future<void> addForumThreads(Iterable<ForumThread> threads) =>
+      updatePosts(threads.fold(
+          <PostBase>[],
+          (iter, thread) => iter.followedBy(<PostBase>[thread.mainPost]
+              .followedBy(thread.recentReplies.map((post) =>
+                  PostOverideForumId(post, thread.mainPost.forumId))))));
+
+  static Future<void> addThread(Thread thread, [bool isFirstPage = false]) =>
+      updatePosts(
+          isFirstPage
+              ? [thread.mainPost].followedBy(thread.replies)
+              : thread.replies,
+          thread.mainPost.forumId);
+
+  static Future<void> addFeeds(Iterable<Feed> feeds) => updatePosts(feeds);
+
+  bool tagIdExists(int tagId) => _tagsBox.containsKey(tagId);
 
   bool tagNameExists(String tagName) => _tagsMap.containsKey(tagName);
 
   ValueListenable<Box<TagData>> tagListenable(List<int> tagsId) =>
       _tagsBox.listenable(keys: tagsId);
 
-  TagData? getTagData(String tagName) {
+  TagData? getTagData(int tagId) => _tagsBox.get(tagId);
+
+  TagData? getTagDataFromName(String tagName) {
     final tagId = _tagsMap[tagName];
 
     return tagId != null ? _tagsBox.get(tagId) : null;
@@ -106,29 +234,10 @@ class TagService extends GetxService {
   ///
   /// 串数据没有任何标签时会被删除
   Future<void> deleteTag(int tagId) async {
+    await deleteTagInPosts(tagId: tagId);
+
     final tag = _tagsBox.get(tagId);
     if (tag != null) {
-      await isar.writeTxn(() async {
-        final list =
-            await _taggedPostData.where().tagsElementEqualTo(tagId).findAll();
-        final retained = <TaggedPost>[];
-        final removed = <int>[];
-
-        for (final post in list) {
-          if (post.deleteTag(tagId)) {
-            retained.add(post
-              ..image = ''
-              ..imageExtension = '');
-          } else {
-            removed.add(post.id);
-          }
-        }
-
-        await _taggedPostData.putAll(retained);
-        await _taggedPostData.deleteAll(removed);
-        _taggedPostIdSet.removeAll(removed);
-      });
-
       await _tagsBox.delete(tagId);
       _tagsMap.remove(tag.name);
       PersistentDataService.to.deleteRecentTag(tagId);
@@ -141,7 +250,7 @@ class TagService extends GetxService {
   ///
   /// 数据库里没有[post]的数据时会新建数据
   Future<void> addPostTag(PostBase post, int tagId, [int? forumId]) async {
-    if (_tagIdExists(tagId)) {
+    if (tagIdExists(tagId)) {
       await isar.writeTxn(() async {
         TaggedPost? data = await _taggedPostData.get(post.id);
         if (data != null) {
@@ -164,36 +273,11 @@ class TagService extends GetxService {
     }
   }
 
-  /// 删除串的标签
-  ///
-  /// 串数据没有任何标签时会被删除
-  Future<void> deletePostTag(int postId, int tagId) async {
-    if (_tagIdExists(tagId)) {
-      await isar.writeTxn(() async {
-        final data = await _taggedPostData.get(postId);
-        if (data != null) {
-          if (data.deleteTag(tagId)) {
-            await _taggedPostData.put(data
-              ..image = ''
-              ..imageExtension = '');
-          } else {
-            await _taggedPostData.delete(postId);
-            _taggedPostIdSet.remove(postId);
-          }
-        } else {
-          debugPrint('要删除标签的串 ${postId.toPostNumber()} 的数据不存在');
-        }
-      });
-    } else {
-      debugPrint('不存在标签ID：$tagId');
-    }
-  }
-
   Future<void> replacePostTag(
       {required int postId,
       required int oldTagId,
       required int newTagId}) async {
-    if (_tagIdExists(oldTagId) && _tagIdExists(newTagId)) {
+    if (tagIdExists(newTagId)) {
       await isar.writeTxn(() async {
         final data = await _taggedPostData.get(postId);
         if (data != null) {
@@ -208,46 +292,9 @@ class TagService extends GetxService {
         }
       });
     } else {
-      debugPrint('不存在标签ID：$oldTagId 或 $newTagId');
+      debugPrint('不存在要替换的标签ID： $newTagId');
     }
   }
-
-  Future<void> updatePosts(Iterable<PostBase> posts, [int? forumId]) async {
-    final list =
-        posts.where((post) => _taggedPostIdSet.contains(post.id)).toList();
-    if (list.isNotEmpty) {
-      await isar.writeTxn(() async {
-        final tagged = <TaggedPost>[];
-        for (final post in list) {
-          final data = await _taggedPostData.get(post.id);
-          if (data != null) {
-            data.update(post, forumId);
-            tagged.add(data);
-          } else {
-            debugPrint('不存在串 ${post.toPostNumber()} 的数据');
-          }
-        }
-
-        await _taggedPostData.putAll(tagged);
-      });
-    }
-  }
-
-  Future<void> addForumThreads(Iterable<ForumThread> threads) =>
-      updatePosts(threads.fold(
-          <PostBase>[],
-          (iter, thread) => iter.followedBy(<PostBase>[thread.mainPost]
-              .followedBy(thread.recentReplies.map((post) =>
-                  PostOverideForumId(post, thread.mainPost.forumId))))));
-
-  Future<void> addThread(Thread thread, [bool isFirstPage = false]) =>
-      updatePosts(
-          isFirstPage
-              ? [thread.mainPost].followedBy(thread.replies)
-              : thread.replies,
-          thread.mainPost.forumId);
-
-  Future<void> addFeeds(Iterable<Feed> feeds) => updatePosts(feeds);
 
   @override
   void onInit() async {

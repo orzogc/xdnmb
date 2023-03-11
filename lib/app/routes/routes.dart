@@ -26,6 +26,7 @@ import '../widgets/feed.dart';
 import '../widgets/forum.dart';
 import '../widgets/history.dart';
 import '../widgets/listenable.dart';
+import '../widgets/tagged.dart';
 import '../widgets/thread.dart';
 
 abstract class AppRoutes {
@@ -46,11 +47,14 @@ abstract class AppRoutes {
   /// 参数：postId
   static const String reference = '/${PathNames.reference}';
 
-  /// 参数：page
+  /// 参数：index（0到1）和page
   static const String feed = '/${PathNames.feed}';
 
   /// 参数：index（0到2）和page
   static const String history = '/${PathNames.history}';
+
+  /// 参数：tagId和page
+  static const String taggedPostList = '/${PathNames.taggedPostList}';
 
   static const String image = '/${PathNames.image}';
 
@@ -116,10 +120,14 @@ abstract class AppRoutes {
           ? '$onlyPoThread?mainPostId=$mainPostId&page=$page&cancelAutoJump=$cancelAutoJump&jumpToId=$jumpToId'
           : '$onlyPoThread?mainPostId=$mainPostId&page=$page&cancelAutoJump=$cancelAutoJump';
 
-  static String feedUrl({int page = 1}) => '$feed?page=$page';
+  static String feedUrl({int index = 0, int page = 1}) =>
+      '$feed?index=$index&page=$page';
 
   static String historyUrl({int index = 0, int page = 1}) =>
       '$history?index=$index&page=$page';
+
+  static String taggedPostListUrl(int tagId, {int page = 1}) =>
+      '$taggedPostList?tagId=$tagId&page=$page';
 
   static String referenceUrl(int postId) => '$reference?postId=$postId';
 
@@ -140,7 +148,7 @@ abstract class AppRoutes {
       ControllerStacksService.to.pushController(ThreadController(
           id: mainPostId,
           page: page,
-          post: mainPost,
+          mainPost: mainPost,
           cancelAutoJump: cancelAutoJump,
           jumpToId: jumpToId));
 
@@ -153,12 +161,13 @@ abstract class AppRoutes {
       ControllerStacksService.to.pushController(OnlyPoThreadController(
           id: mainPostId,
           page: page,
-          post: mainPost,
+          mainPost: mainPost,
           cancelAutoJump: cancelAutoJump,
           jumpToId: jumpToId));
 
-  static void toFeed<T>({int page = 1}) =>
-      ControllerStacksService.to.pushController(FeedController(page));
+  static void toFeed<T>({int index = 0, int page = 1}) =>
+      ControllerStacksService.to
+          .pushController(FeedController(page: page, pageIndex: index));
 
   static void toHistory<T>(
           {int index = 0,
@@ -167,6 +176,11 @@ abstract class AppRoutes {
           List<Search?>? search}) =>
       ControllerStacksService.to.pushController(HistoryController(
           page: page, pageIndex: index, dateRange: dateRange, search: search));
+
+  static void toTaggedPostList<T>(
+          {required int tagId, int page = 1, Search? search}) =>
+      ControllerStacksService.to.pushController(
+          TaggedPostListController(id: tagId, page: page, search: search));
 
   static Future<T?>? toImage<T>(ImageController controller) =>
       Get.toNamed<T>(image, arguments: controller);
@@ -246,6 +260,8 @@ abstract class PathNames {
   static const String feed = 'feed';
 
   static const String history = 'history';
+
+  static const String taggedPostList = 'taggedPostList';
 
   static const String image = 'image';
 

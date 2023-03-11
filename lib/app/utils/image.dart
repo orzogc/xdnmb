@@ -14,8 +14,11 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 import '../data/services/image.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
+import '../data/services/xdnmb_client.dart';
 import 'crypto.dart';
+import 'exception.dart';
 import 'extensions.dart';
+import 'hash.dart';
 import 'http_client.dart';
 import 'theme.dart';
 import 'time.dart';
@@ -59,6 +62,55 @@ class XdnmbImageCacheManager extends CacheManager with ImageCacheManager {
   XdnmbImageCacheManager._internal()
       // ignore: invalid_use_of_visible_for_testing_member
       : super.custom(_config, cacheStore: _XdnmbCacheStore(_config));
+}
+
+class ReferenceImageCache {
+  static final HashMap<int, ReferenceImageCache?> _images =
+      intHashMap<ReferenceImageCache?>();
+
+  static Future<ReferenceImageCache?> getImage(
+      int postId, int? mainPostId) async {
+    if (!_images.containsKey(postId)) {
+      debugPrint('串 ${postId.toPostNumber()} 有图片，开始获取其引用');
+
+      try {
+        final reference = await XdnmbClientService.to
+            .getReference(postId, mainPostId: mainPostId);
+        if (reference.hasImage) {
+          _images[postId] = ReferenceImageCache(
+              image: reference.image, imageExtension: reference.imageExtension);
+        } else {
+          _images[postId] = null;
+        }
+      } catch (e) {
+        final message = exceptionMessage(e);
+        if (message.contains('该串不存在')) {
+          _images[postId] = null;
+        }
+
+        rethrow;
+      }
+    }
+
+    return _images[postId];
+  }
+
+  final String image;
+
+  final String imageExtension;
+
+  const ReferenceImageCache(
+      {required this.image, required this.imageExtension});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReferenceImageCache &&
+          image == other.image &&
+          imageExtension == other.imageExtension);
+
+  @override
+  int get hashCode => Object.hash(image, imageExtension);
 }
 
 String _imageFilename(Uint8List imageData) {

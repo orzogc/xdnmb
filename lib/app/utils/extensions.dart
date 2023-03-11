@@ -61,7 +61,10 @@ extension IntExtension on int {
 
   bool get isReplyHistory => (this >>> 32) == ReplyData.taggedPostIdPrefix;
 
-  int get historyId => this & _int32Max;
+  int? get postId => isNormalPost ? this : null;
+
+  int? get historyId =>
+      (isPostHistory || isReplyHistory) ? this & _int32Max : null;
 }
 
 extension PostExtension on PostBase {
@@ -106,7 +109,9 @@ extension PostExtension on PostBase {
 
   bool get isReplyHistory => id.isReplyHistory;
 
-  int get historyId => id.historyId;
+  int? get postId => id.postId;
+
+  int? get historyId => id.historyId;
 }
 
 extension TextEditingControllerExtension on TextEditingController {

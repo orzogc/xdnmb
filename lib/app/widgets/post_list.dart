@@ -1,10 +1,45 @@
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
 import '../modules/post_list.dart';
 import '../utils/extensions.dart';
 import 'listenable.dart';
+import 'size.dart';
+
+class PostHeader extends StatelessWidget {
+  final List<Widget> children;
+
+  const PostHeader({super.key, required this.children});
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        spacing: 5.0,
+        runSpacing: 5.0,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: children,
+      );
+}
+
+class PostListHeader extends StatelessWidget {
+  final ValueChanged<Size>? onSize;
+
+  final Widget child;
+
+  const PostListHeader({super.key, this.onSize, required this.child});
+
+  @override
+  Widget build(BuildContext context) => ChildSizeNotifier(
+        builder: (context, size, _) {
+          WidgetsBinding.instance
+              .addPostFrameCallback((timeStamp) => onSize?.call(size));
+
+          return Material(elevation: 2.0, child: child);
+        },
+      );
+}
 
 class PostListScrollController extends AnchorScrollController {
   final ValueGetter<double>? getInitialScrollOffset;
@@ -130,4 +165,88 @@ class _PostListScrollViewState extends State<PostListScrollView> {
       listenable: widget.controller,
       builder: (context, child) =>
           widget.builder(context, _scrollController, _refresh));
+}
+
+class PostListWithTabBarOrHeader extends StatelessWidget {
+  final PostListController controller;
+
+  final ValueGetter<double>? tabBarHeight;
+
+  final Widget? tabBar;
+
+  final ValueGetter<double>? headerHeight;
+
+  final Widget? header;
+
+  final Widget postList;
+
+  const PostListWithTabBarOrHeader(
+      {super.key,
+      required this.controller,
+      this.tabBarHeight,
+      this.tabBar,
+      this.headerHeight,
+      this.header,
+      required this.postList})
+      : assert((tabBarHeight != null && tabBar != null) ||
+            (tabBarHeight == null && tabBar == null)),
+        assert((headerHeight != null && header != null) ||
+            (headerHeight == null && header == null));
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    final theme = Theme.of(context);
+    final dumb = false.obs;
+
+    final Widget? tabBarWidget = tabBar != null
+        ? Material(
+            elevation:
+                theme.appBarTheme.elevation ?? PostListAppBar.defaultElevation,
+            color: theme.primaryColor,
+            child: tabBar,
+          )
+        : null;
+
+    return Stack(
+      children: [
+        (tabBarWidget != null || header != null)
+            ? Obx(
+                () {
+                  // 为了Obx不崩溃
+                  dumb.value;
+
+                  return Padding(
+                    padding: EdgeInsets.only(
+                        top: (tabBarHeight?.call() ?? 0.0) +
+                            (headerHeight?.call() ?? 0.0)),
+                    child: postList,
+                  );
+                },
+              )
+            : postList,
+        if (header != null)
+          Obx(
+            () => Positioned(
+              left: 0.0,
+              top: (settings.isAutoHideAppBar ? controller.appBarHeight : 0.0) +
+                  (tabBarHeight?.call() ?? 0.0),
+              right: 0.0,
+              child: header!,
+            ),
+          ),
+        if (tabBarWidget != null)
+          Obx(
+            () => settings.isAutoHideAppBar
+                ? Positioned(
+                    left: 0.0,
+                    top: controller.appBarHeight,
+                    right: 0.0,
+                    child: tabBarWidget,
+                  )
+                : tabBarWidget,
+          ),
+      ],
+    );
+  }
 }

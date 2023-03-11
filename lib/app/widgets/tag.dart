@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../data/models/tag.dart';
+import 'tagged.dart';
 
 class Tag extends StatelessWidget {
   final String text;
@@ -65,5 +67,38 @@ class Tag extends StatelessWidget {
             child: GestureDetector(onTap: onTap, child: tag),
           )
         : tag;
+  }
+}
+
+class PostTag extends StatelessWidget {
+  final TaggedPostListController controller;
+
+  final TextStyle? textStyle;
+
+  final StrutStyle? strutStyle;
+
+  const PostTag(
+      {super.key, required this.controller, this.textStyle, this.strutStyle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final tag = controller.tag;
+
+      return tag != null
+          ? Tag.fromTagData(
+              tag: tag,
+              textStyle: !controller.tagExists
+                  ? (textStyle?.apply(
+                          decoration: TextDecoration.combine([
+                        TextDecoration.lineThrough,
+                        if (textStyle?.decoration != null)
+                          textStyle!.decoration!,
+                      ])) ??
+                      const TextStyle(decoration: TextDecoration.lineThrough))
+                  : textStyle,
+              strutStyle: strutStyle)
+          : const SizedBox.shrink();
+    });
   }
 }

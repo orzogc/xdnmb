@@ -246,7 +246,7 @@ class FeedButton extends StatelessWidget {
 
     return showLabel
         ? _Button(icon: icon, label: '订阅', onTap: _onTap)
-        : IconButton(onPressed: _onTap, tooltip: '订阅', icon: icon);
+        : IconButton(onPressed: _onTap, tooltip: '订阅/标签', icon: icon);
   }
 }
 

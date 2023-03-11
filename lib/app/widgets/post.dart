@@ -379,23 +379,31 @@ class _PostTagDialog extends StatelessWidget {
 
   final TagData tag;
 
-  // ignore: unused_element
-  const _PostTagDialog({super.key, required this.post, required this.tag});
+  final ValueSetter<int>? onTagDeleted;
+
+  const _PostTagDialog(
+      // ignore: unused_element
+      {super.key,
+      required this.post,
+      required this.tag,
+      this.onTagDeleted});
 
   @override
   Widget build(BuildContext context) => SimpleDialog(
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(post.toPostNumber()),
-            const SizedBox(width: 5.0),
+            if (post.isNormalPost) Text(post.toPostNumber()),
             Flexible(child: Tag.fromTagData(tag: tag)),
-          ],
+          ].withSpaceBetween(width: 5.0),
         ),
         children: [
           AddOrReplacePostTag(post: post),
           AddOrReplacePostTag(post: post, replacedTag: tag),
-          DeletePostTag(postId: post.id, tag: tag),
+          DeletePostTag(postId: post.id, tag: tag, onDeleted: onTagDeleted),
+          ToTaggedPostList(tag.id),
+          NewTabToTaggedPostList(tag.id),
+          NewTabBackgroundToTaggedPostList(tag.id),
         ],
       );
 }
@@ -405,8 +413,14 @@ class _PostTag extends StatefulWidget {
 
   final TextStyle? textStyle;
 
-  // ignore: unused_element
-  const _PostTag({super.key, required this.post, this.textStyle});
+  final ValueSetter<int>? onTagDeleted;
+
+  const _PostTag(
+      // ignore: unused_element
+      {super.key,
+      required this.post,
+      this.textStyle,
+      this.onTagDeleted});
 
   @override
   State<_PostTag> createState() => _PostTagState();
@@ -454,27 +468,29 @@ class _PostTagState extends State<_PostTag> {
         }
 
         if (snapshot.hasData) {
-          return Align(
-            alignment: Alignment.centerRight,
-            child: ListenableBuilder(
-              listenable: tagService.tagListenable(snapshot.data!),
-              builder: (context, child) => Wrap(
-                alignment: WrapAlignment.end,
-                spacing: 10.0,
-                runSpacing: 5.0,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  for (final tag in tagService.getTagsData(snapshot.data!))
-                    Tag.fromTagData(
+          return ListenableBuilder(
+            listenable: tagService.tagListenable(snapshot.data!),
+            builder: (context, child) => Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 10.0,
+              runSpacing: 5.0,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                for (final tag in tagService.getTagsData(snapshot.data!))
+                  Tag.fromTagData(
+                    tag: tag,
+                    textStyle:
+                        widget.textStyle ?? AppTheme.postContentTextStyle,
+                    strutStyle: widget.textStyle == null
+                        ? AppTheme.postContentStrutStyle
+                        : null,
+                    onTap: () => postListDialog(_PostTagDialog(
+                      post: _post,
                       tag: tag,
-                      textStyle:
-                          widget.textStyle ?? AppTheme.postContentTextStyle,
-                      onTap: () => postListDialog(
-                        _PostTagDialog(post: _post, tag: tag),
-                      ),
-                    ),
-                ],
-              ),
+                      onTagDeleted: widget.onTagDeleted,
+                    )),
+                  ),
+              ],
             ),
           );
         }
@@ -565,6 +581,9 @@ class PostContent extends StatelessWidget {
   /// 串号被按时调用，参数是串号
   final ValueSetter<int>? onPostIdTap;
 
+  /// 标签被删除时调用，参数是标签ID
+  final ValueSetter<int>? onTagDeleted;
+
   late final TextStyle? headerTextStyle;
 
   final AttachmentBuilder? header;
@@ -598,6 +617,7 @@ class PostContent extends StatelessWidget {
       this.headerHeight,
       this.contentMaxHeight,
       this.onPostIdTap,
+      this.onTagDeleted,
       TextStyle? headerTextStyle,
       this.header,
       this.footer}) {
@@ -635,7 +655,7 @@ class PostContent extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (header != null)
             _PostHeader(
@@ -712,7 +732,11 @@ class PostContent extends StatelessWidget {
           else
             content,
           if (!post.isTipType)
-            _PostTag(post: post, textStyle: contentTextStyle),
+            _PostTag(
+              post: post,
+              textStyle: contentTextStyle,
+              onTagDeleted: onTagDeleted,
+            ),
           if (footer != null) footer!(headerTextStyle),
         ].withSpaceBetween(height: 5.0),
       ),
@@ -756,6 +780,7 @@ class PostInkWell extends StatelessWidget {
       double? headerHeight,
       double? contentMaxHeight,
       ValueSetter<int>? onPostIdTap,
+      ValueSetter<int>? onTagDeleted,
       TextStyle? headerTextStyle,
       AttachmentBuilder? header,
       AttachmentBuilder? footer,
@@ -783,6 +808,7 @@ class PostInkWell extends StatelessWidget {
             headerHeight: headerHeight,
             contentMaxHeight: contentMaxHeight,
             onPostIdTap: onPostIdTap,
+            onTagDeleted: onTagDeleted,
             headerTextStyle: headerTextStyle,
             header: header,
             footer: footer);

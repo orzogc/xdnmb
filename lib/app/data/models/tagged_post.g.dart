@@ -79,19 +79,6 @@ const TaggedPostSchema = CollectionSchema(
   deserializeProp: _taggedPostDeserializeProp,
   idName: r'id',
   indexes: {
-    r'taggedTime': IndexSchema(
-      id: 6401288868361657321,
-      name: r'taggedTime',
-      unique: false,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'taggedTime',
-          type: IndexType.value,
-          caseSensitive: false,
-        )
-      ],
-    ),
     r'tags': IndexSchema(
       id: 4029205728550669204,
       name: r'tags',
@@ -221,14 +208,6 @@ extension TaggedPostQueryWhereSort
     });
   }
 
-  QueryBuilder<TaggedPost, TaggedPost, QAfterWhere> anyTaggedTime() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'taggedTime'),
-      );
-    });
-  }
-
   QueryBuilder<TaggedPost, TaggedPost, QAfterWhere> anyTagsElement() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
@@ -300,96 +279,6 @@ extension TaggedPostQueryWhere
         lower: lowerId,
         includeLower: includeLower,
         upper: upperId,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterWhereClause> taggedTimeEqualTo(
-      DateTime taggedTime) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'taggedTime',
-        value: [taggedTime],
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterWhereClause> taggedTimeNotEqualTo(
-      DateTime taggedTime) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'taggedTime',
-              lower: [],
-              upper: [taggedTime],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'taggedTime',
-              lower: [taggedTime],
-              includeLower: false,
-              upper: [],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'taggedTime',
-              lower: [taggedTime],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'taggedTime',
-              lower: [],
-              upper: [taggedTime],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterWhereClause> taggedTimeGreaterThan(
-    DateTime taggedTime, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'taggedTime',
-        lower: [taggedTime],
-        includeLower: include,
-        upper: [],
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterWhereClause> taggedTimeLessThan(
-    DateTime taggedTime, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'taggedTime',
-        lower: [],
-        upper: [taggedTime],
-        includeUpper: include,
-      ));
-    });
-  }
-
-  QueryBuilder<TaggedPost, TaggedPost, QAfterWhereClause> taggedTimeBetween(
-    DateTime lowerTaggedTime,
-    DateTime upperTaggedTime, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'taggedTime',
-        lower: [lowerTaggedTime],
-        includeLower: includeLower,
-        upper: [upperTaggedTime],
         includeUpper: includeUpper,
       ));
     });

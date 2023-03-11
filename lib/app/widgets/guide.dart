@@ -283,7 +283,8 @@ class FeedGuide extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SettingsService.shouldShowGuide
-      ? Showcase(key: _key, title: '订阅', description: '点击查看订阅', child: child)
+      ? Showcase(
+          key: _key, title: '订阅/标签', description: '点击查看订阅和标签', child: child)
       : child;
 }
 

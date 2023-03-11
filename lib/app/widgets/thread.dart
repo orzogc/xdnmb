@@ -86,31 +86,32 @@ abstract class ThreadTypeController extends PostListController {
   @override
   final int id;
 
-  final Rxn<PostBase> _post;
+  final Rxn<PostBase> _mainPost;
 
   final bool cancelAutoJump;
 
   int? browsePostId;
 
-  PostBase? get post => _post.value;
+  PostBase? get mainPost => _mainPost.value;
 
-  set post(PostBase? post) => _post.value = post;
+  set mainPost(PostBase? post) => _mainPost.value = post;
 
   int? get jumpToId;
 
   ThreadTypeController(
       {required this.id,
       required int page,
-      PostBase? post,
+      PostBase? mainPost,
       this.cancelAutoJump = false})
-      : _post = Rxn(post),
+      : _mainPost = Rxn(mainPost),
         super(page);
 
   factory ThreadTypeController.fromPost(
-          {required PostBase post, int page = 1, isOnlyPoThread = false}) =>
+          {required PostBase mainPost, int page = 1, isOnlyPoThread = false}) =>
       isOnlyPoThread
-          ? OnlyPoThreadController(id: post.id, page: page, post: post)
-          : ThreadController(id: post.id, page: page, post: post);
+          ? OnlyPoThreadController(
+              id: mainPost.id, page: page, mainPost: mainPost)
+          : ThreadController(id: mainPost.id, page: page, mainPost: mainPost);
 
   ThreadTypeController copyPage([int? jumpToId]);
 }
@@ -127,14 +128,18 @@ class ThreadController extends ThreadTypeController {
   ThreadController(
       {required int id,
       required int page,
-      PostBase? post,
+      PostBase? mainPost,
       bool cancelAutoJump = false,
       this.jumpToId})
-      : super(id: id, page: page, post: post, cancelAutoJump: cancelAutoJump);
+      : super(
+            id: id,
+            page: page,
+            mainPost: mainPost,
+            cancelAutoJump: cancelAutoJump);
 
   @override
-  ThreadTypeController copyPage([int? jumpToId]) =>
-      ThreadController(id: id, page: page, post: post, jumpToId: jumpToId);
+  ThreadTypeController copyPage([int? jumpToId]) => ThreadController(
+      id: id, page: page, mainPost: mainPost, jumpToId: jumpToId);
 
   void loadMore() => _loadMore?.call();
 }
@@ -149,14 +154,18 @@ class OnlyPoThreadController extends ThreadTypeController {
   OnlyPoThreadController(
       {required int id,
       required int page,
-      PostBase? post,
+      PostBase? mainPost,
       bool cancelAutoJump = false,
       this.jumpToId})
-      : super(id: id, page: page, post: post, cancelAutoJump: cancelAutoJump);
+      : super(
+            id: id,
+            page: page,
+            mainPost: mainPost,
+            cancelAutoJump: cancelAutoJump);
 
   @override
   ThreadTypeController copyPage([int? jumpToId]) => OnlyPoThreadController(
-      id: id, page: page, post: post, jumpToId: jumpToId);
+      id: id, page: page, mainPost: mainPost, jumpToId: jumpToId);
 }
 
 ThreadController threadController(
@@ -164,7 +173,7 @@ ThreadController threadController(
     ThreadController(
         id: parameters['mainPostId'].tryParseInt() ?? 0,
         page: parameters['page'].tryParseInt() ?? 1,
-        post: arguments is PostBase ? arguments : null,
+        mainPost: arguments is PostBase ? arguments : null,
         cancelAutoJump: parameters['cancelAutoJump'].tryParseBool() ?? false,
         jumpToId: parameters['jumpToId'].tryParseInt());
 
@@ -173,7 +182,7 @@ OnlyPoThreadController onlyPoThreadController(
     OnlyPoThreadController(
         id: parameters['mainPostId'].tryParseInt() ?? 0,
         page: parameters['page'].tryParseInt() ?? 1,
-        post: arguments is PostBase ? arguments : null,
+        mainPost: arguments is PostBase ? arguments : null,
         cancelAutoJump: parameters['cancelAutoJump'].tryParseBool() ?? false,
         jumpToId: parameters['jumpToId'].tryParseInt());
 
@@ -195,7 +204,7 @@ class ThreadAppBarTitle extends StatelessWidget {
             children: [
               Text(controller.id.toPostNumber()),
               if (controller.isOnlyPoThread) const Flexible(child: Text('Po')),
-              if (controller.post?.isSage ?? false)
+              if (controller.mainPost?.isSage ?? false)
                 const Flexible(child: Text('SAGE', style: AppTheme.boldRed)),
             ].withSpaceBetween(width: 5.0),
           ),
@@ -205,7 +214,7 @@ class ThreadAppBarTitle extends StatelessWidget {
               .apply(color: theme.colorScheme.onPrimary),
           child: Obx(
             () {
-              final forumId = controller.post?.forumId;
+              final forumId = controller.mainPost?.forumId;
 
               return Row(
                 children: [
@@ -255,9 +264,9 @@ class _ThreadDialog extends StatelessWidget {
               child: Text('回复', style: Theme.of(context).textTheme.titleMedium),
             ),
           if (!post.isTipType) Report(post.id),
-          if (!post.isTipType && controller.post != null)
+          if (!post.isTipType && controller.mainPost != null)
             SharePost(
-              mainPostId: controller.post!.id,
+              mainPostId: controller.mainPost!.id,
               isOnlyPo: controller.isOnlyPoThread,
               page: page,
               postId: post.id,
@@ -267,7 +276,7 @@ class _ThreadDialog extends StatelessWidget {
             BlockPost(
               postId: post.id,
               onBlock: () {
-                if (controller.post?.id == post.id) {
+                if (controller.mainPost?.id == post.id) {
                   controller.refresh();
                 }
               },
@@ -276,7 +285,7 @@ class _ThreadDialog extends StatelessWidget {
             BlockUser(
               userHash: post.userHash,
               onBlock: () {
-                if (controller.post?.userHash == post.userHash) {
+                if (controller.mainPost?.userHash == post.userHash) {
                   controller.refresh();
                 }
               },
@@ -300,7 +309,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
     final postId = controller.id;
 
     return Obx(() {
-      final mainPost = controller.post;
+      final mainPost = controller.mainPost;
       final isBlockedPost = blacklist.hasPost(postId);
       final isBlockedUser =
           mainPost != null ? blacklist.hasUser(mainPost.userHash) : false;
@@ -498,7 +507,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
       try {
         await Future.delayed(_saveBrowseHistoryPeriod, () async {
-          final post = controller.post;
+          final post = controller.mainPost;
           final browsePostId = controller.browsePostId;
           if (_history != null && post is Post && browsePostId != null) {
             _history!.update(
@@ -623,7 +632,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     final mainPost = thread.mainPost;
 
     _maxPage = thread.maxPage;
-    controller.post = mainPost;
+    controller.mainPost = mainPost;
     // 发现Po饼干被屏蔽就刷新页面
     if (page == firstPage &&
         !mainPost.isAdmin &&
@@ -674,7 +683,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     }
 
     final theme = Theme.of(context);
-    final mainPost = controller.post;
+    final mainPost = controller.mainPost;
 
     final Widget item = PostInkWell(
       key: post.isTipType ? UniqueKey() : null,
@@ -729,7 +738,7 @@ class _ThreadBodyState extends State<ThreadBody> {
         final firstPage = controller.page;
 
         bool isBlocked() {
-          final mainPost = controller.post;
+          final mainPost = controller.mainPost;
 
           return (mainPost == null || !mainPost.isAdmin) &&
               (blacklist.hasPost(postId) ||
@@ -864,7 +873,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
     _pageSubscription = controller.listenPage(_trySave);
 
-    _maxPage = controller.post?.maxPage ?? 1;
+    _maxPage = controller.mainPost?.maxPage ?? 1;
 
     if (controller.isThread) {
       (controller as ThreadController)._loadMore =
@@ -943,7 +952,7 @@ void _replyPost(ThreadTypeController controller, int postId) {
         postListType: controller.postListType,
         id: controller.id,
         forumId: controller.forumId,
-        poUserHash: controller.post?.userHash,
+        poUserHash: controller.mainPost?.userHash,
         content: text));
   }
 }
@@ -957,7 +966,7 @@ void _replyWithImage(ThreadTypeController controller, Uint8List imageData) {
         postListType: controller.postListType,
         id: controller.id,
         forumId: controller.forumId,
-        poUserHash: controller.post?.userHash,
+        poUserHash: controller.mainPost?.userHash,
         imageData: imageData));
   }
 }

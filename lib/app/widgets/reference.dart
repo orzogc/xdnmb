@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/blacklist.dart';
-import '../data/services/time.dart';
 import '../data/services/xdnmb_client.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
@@ -15,27 +14,19 @@ import 'dialog.dart';
 import 'listenable.dart';
 import 'post.dart';
 
-class _Dialog extends StatelessWidget {
+class _ReferenceDialog extends StatelessWidget {
   final PostBase post;
 
   final int? mainPostId;
 
+  bool get _isMainPost => post.id == mainPostId;
+
   // ignore: unused_element
-  const _Dialog({super.key, required this.post, this.mainPostId});
+  const _ReferenceDialog({super.key, required this.post, this.mainPostId});
 
   @override
   Widget build(BuildContext context) {
-    final PostBase? mainPost = mainPostId != null
-        ? (post.id != mainPostId
-            ? Post(
-                id: mainPostId!,
-                forumId: 4,
-                replyCount: 0,
-                postTime: TimeService.to.now,
-                userHash: '',
-                content: post.content)
-            : post)
-        : null;
+    final PostBase? mainPost = _isMainPost ? post : null;
 
     return SimpleDialog(
       title: Text(post.id.toPostNumber()),
@@ -43,10 +34,14 @@ class _Dialog extends StatelessWidget {
         Report(post.id),
         CopyPostReference(post.id),
         CopyPostContent(post),
-        if (mainPost != null && mainPost.id != post.id)
-          CopyPostReference(mainPost.id, text: '复制原串主串串号引用'),
-        if (mainPost != null) NewTab(mainPost, text: '在新标签页打开原串'),
-        if (mainPost != null) NewTabBackground(mainPost, text: '在新标签页后台打开原串'),
+        if (mainPostId != null)
+          NewTab(
+              mainPostId: mainPostId!, mainPost: mainPost, text: '在新标签页打开原串'),
+        if (mainPostId != null && !_isMainPost)
+          CopyPostReference(mainPostId!, text: '复制原串主串串号引用'),
+        if (mainPostId != null)
+          NewTabBackground(
+              mainPostId: mainPostId!, mainPost: mainPost, text: '在新标签页后台打开原串'),
       ],
     );
   }
@@ -138,7 +133,7 @@ class _ReferenceCardState extends State<ReferenceCard> {
                                         constraints.maxHeight * 0.5,
                                     onTap: (post) {},
                                     onLongPress: (post) => postListDialog(
-                                        _Dialog(
+                                        _ReferenceDialog(
                                             post: post,
                                             mainPostId: mainPostId)),
                                     mouseCursor: SystemMouseCursors.basic,

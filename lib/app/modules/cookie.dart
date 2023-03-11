@@ -3,12 +3,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-import 'package:xdnmb/app/routes/routes.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/models/cookie.dart';
 import '../data/services/user.dart';
 import '../data/services/xdnmb_client.dart';
+import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/theme.dart';

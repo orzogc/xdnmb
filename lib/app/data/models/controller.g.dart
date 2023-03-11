@@ -182,6 +182,8 @@ class PostListTypeAdapter extends TypeAdapter<PostListType> {
         return PostListType.feed;
       case 5:
         return PostListType.history;
+      case 6:
+        return PostListType.taggedPostList;
       default:
         return PostListType.thread;
     }
@@ -207,6 +209,9 @@ class PostListTypeAdapter extends TypeAdapter<PostListType> {
         break;
       case PostListType.history:
         writer.writeByte(5);
+        break;
+      case PostListType.taggedPostList:
+        writer.writeByte(6);
         break;
     }
   }

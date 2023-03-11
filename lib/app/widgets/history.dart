@@ -1,10 +1,8 @@
 import 'dart:async';
-import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/controller.dart';
 import '../data/models/history.dart';
@@ -12,13 +10,11 @@ import '../data/models/post.dart';
 import '../data/models/reply.dart';
 import '../data/services/settings.dart';
 import '../data/services/time.dart';
-import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
-import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/hash.dart';
 import '../utils/history.dart';
+import '../utils/image.dart';
 import '../utils/navigation.dart';
 import '../utils/post.dart';
 import '../utils/regex.dart';
@@ -32,45 +28,14 @@ import 'listenable.dart';
 import 'page_view.dart';
 import 'post.dart';
 import 'post_list.dart';
-import 'size.dart';
 import 'time.dart';
+
+const int _historyPageCount = 3;
 
 const int _historyEachPage = 20;
 
-class _Image {
-  static final HashMap<int, _Image?> _images = intHashMap<_Image?>();
-
-  static Future<_Image?> _getImage(int postId, int? mainPostId) async {
-    if (!_images.containsKey(postId)) {
-      debugPrint('历史记录里的串 ${postId.toPostNumber()} 有图片，开始获取其引用');
-
-      try {
-        final reference = await XdnmbClientService.to
-            .getReference(postId, mainPostId: mainPostId);
-        if (reference.hasImage) {
-          _images[postId] = _Image(
-              image: reference.image, imageExtension: reference.imageExtension);
-        } else {
-          _images[postId] = null;
-        }
-      } catch (e) {
-        final message = exceptionMessage(e);
-        if (message.contains('该串不存在')) {
-          _images[postId] = null;
-        }
-
-        rethrow;
-      }
-    }
-
-    return _images[postId];
-  }
-
-  final String image;
-
-  final String imageExtension;
-
-  const _Image({required this.image, required this.imageExtension});
+extension _IndexExtension on int? {
+  bool get isValid => this == null || (this! >= 0 && this! < _historyPageCount);
 }
 
 class _HistoryKey {
@@ -104,7 +69,7 @@ class HistoryController extends PostListController {
 
   final Rx<List<Search?>> _search;
 
-  final RxList<int?> _counts = RxList(List.filled(3, null));
+  final RxList<int?> _counts = RxList(List.filled(_historyPageCount, null));
 
   final List<ListenableNotifier> _notifiers = [
     ListenableNotifier(),
@@ -112,9 +77,7 @@ class HistoryController extends PostListController {
     ListenableNotifier(),
   ];
 
-  final PageController _pageController;
-
-  final RxDouble _height = 0.0.obs;
+  final RxDouble _headerHeight = 0.0.obs;
 
   @override
   PostListType get postListType => PostListType.history;
@@ -122,9 +85,10 @@ class HistoryController extends PostListController {
   @override
   int? get id => null;
 
-  int get pageIndex => _pageIndex.value;
+  int get pageIndex => _pageIndex.value.clamp(0, _historyPageCount - 1);
 
-  set pageIndex(int index) => _pageIndex.value = index;
+  set pageIndex(int index) =>
+      _pageIndex.value = index.clamp(0, _historyPageCount - 1);
 
   List<DateTimeRange?> get dateRange => _dateRange.value;
 
@@ -139,15 +103,14 @@ class HistoryController extends PostListController {
       int pageIndex = 0,
       List<DateTimeRange?>? dateRange,
       List<Search?>? search})
-      : assert(pageIndex >= 0 && pageIndex <= 2),
+      : assert(pageIndex.isValid),
         _pageIndex = pageIndex.obs,
-        _dateRange = Rx(dateRange ?? List.filled(3, null)),
-        _search = Rx(search ?? List.filled(3, null)),
-        _pageController = PageController(initialPage: pageIndex),
+        _dateRange = Rx(dateRange ?? List.filled(_historyPageCount, null)),
+        _search = Rx(search ?? List.filled(_historyPageCount, null)),
         super(page);
 
   ListenableNotifier _getNotifier([int? index]) {
-    assert(index == null || index < 3);
+    assert(index.isValid);
 
     return _notifiers[index ?? pageIndex];
   }
@@ -163,39 +126,39 @@ class HistoryController extends PostListController {
   }
 
   DateTimeRange? _getDateRange([int? index]) {
-    assert(index == null || index < 3);
+    assert(index.isValid);
 
     return dateRange[index ?? pageIndex];
   }
 
   void _setDateRange(DateTimeRange? range, [int? index]) {
-    assert(index == null || index < 3);
+    assert(index.isValid);
 
     dateRange[index ?? pageIndex] = range;
     _notify(index);
   }
 
   Search? _getSearch([int? index]) {
-    assert(index == null || index < 3);
+    assert(index.isValid);
 
     return search[index ?? pageIndex];
   }
 
   void _setSearch(Search? searchText, [int? index]) {
-    assert(index == null || index < 3);
+    assert(index.isValid);
 
     search[index ?? pageIndex] = searchText;
     _notify(index);
   }
 
   int? _getCount([int? index]) {
-    assert(index == null || index < 3);
+    assert(index.isValid);
 
     return _counts[index ?? pageIndex];
   }
 
   void _setCount(int? count, [int? index]) {
-    assert(index == null || index < 3);
+    assert(index.isValid);
 
     _counts[index ?? pageIndex] = count;
   }
@@ -268,7 +231,6 @@ class HistoryController extends PostListController {
     for (final notifier in _notifiers) {
       notifier.dispose();
     }
-    _pageController.dispose();
 
     super.dispose();
   }
@@ -289,7 +251,7 @@ class HistoryAppBarTitle extends StatelessWidget {
         final text = controller.text('历史记录');
         final count = controller._getCount();
 
-        return count != null ? Text('$text（$count）') : Text(text);
+        return count != null ? Text('$text・$count') : Text(text);
       });
 }
 
@@ -506,143 +468,66 @@ class _HistoryHeader extends StatelessWidget {
         final range = controller._getDateRange();
         final search = controller._getSearch();
 
-        return ChildSizeNotifier(
+        return PostListHeader(
           key: ValueKey<_HeaderKey>(_HeaderKey(range: range, search: search)),
-          builder: (context, size, child) {
-            WidgetsBinding.instance.addPostFrameCallback(
-                (timeStamp) => controller._height.value = size.height);
-
-            return child!;
-          },
+          onSize: (value) => controller._headerHeight.value = value.height,
           child: (range != null || search != null)
-              ? Material(
-                  elevation: 2.0,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (range != null)
-                        ListTile(
-                          title: Center(
-                            child: range.start != range.end
-                                ? Text(
-                                    '${formatDay(range.start)} - ${formatDay(range.end)}',
-                                  )
-                                : Text(formatDay(range.start)),
-                          ),
-                          trailing: IconButton(
-                            onPressed: () => controller._setDateRange(null),
-                            icon: const Icon(Icons.close),
-                          ),
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (range != null)
+                      ListTile(
+                        title: Center(
+                          child: range.start != range.end
+                              ? Text(
+                                  '${formatDay(range.start)} - ${formatDay(range.end)}',
+                                )
+                              : Text(formatDay(range.start)),
                         ),
-                      if (range != null && search != null)
-                        const Divider(height: 10.0, thickness: 1.0),
-                      if (search != null)
-                        ListTile(
-                          title: Center(
-                            child: Text.rich(
-                              TextSpan(
-                                text: '搜索内容：',
-                                children: [
-                                  TextSpan(
-                                    text: search.text,
-                                    style: AppTheme.boldRed,
-                                  ),
-                                ],
-                              ),
+                        trailing: IconButton(
+                          onPressed: () => controller._setDateRange(null),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ),
+                    if (range != null && search != null)
+                      const Divider(height: 10.0, thickness: 1.0),
+                    if (search != null)
+                      ListTile(
+                        title: Center(
+                          child: Text.rich(
+                            TextSpan(
+                              text: '搜索内容：',
+                              children: [
+                                TextSpan(
+                                  text: search.text,
+                                  style: AppTheme.boldRed,
+                                ),
+                              ],
                             ),
                           ),
-                          subtitle: (search.caseSensitive || search.useWildcard)
-                              ? Wrap(
-                                  alignment: WrapAlignment.spaceAround,
-                                  spacing: 5.0,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  children: [
-                                    if (search.caseSensitive)
-                                      const Text('英文字母区分大小写'),
-                                    if (search.useWildcard) const Text('使用通配符'),
-                                  ],
-                                )
-                              : null,
-                          trailing: IconButton(
-                            onPressed: () => controller._setSearch(null),
-                            icon: const Icon(Icons.close),
-                          ),
-                        )
-                    ],
-                  ),
+                        ),
+                        subtitle: (search.caseSensitive || search.useWildcard)
+                            ? Wrap(
+                                alignment: WrapAlignment.spaceAround,
+                                spacing: 5.0,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  if (search.caseSensitive)
+                                    const Text('英文字母区分大小写'),
+                                  if (search.useWildcard) const Text('使用通配符'),
+                                ],
+                              )
+                            : null,
+                        trailing: IconButton(
+                          onPressed: () => controller._setSearch(null),
+                          icon: const Icon(Icons.close),
+                        ),
+                      )
+                  ],
                 )
               : const SizedBox.shrink(),
         );
       });
-}
-
-class _HistoryDialog extends StatelessWidget {
-  final PostBase mainPost;
-
-  final PostBase? post;
-
-  final bool confirmDelete;
-
-  final VoidCallback onDelete;
-
-  final int? page;
-
-  const _HistoryDialog(
-      // ignore: unused_element
-      {super.key,
-      required this.mainPost,
-      this.post,
-      this.confirmDelete = true,
-      required this.onDelete,
-      this.page});
-
-  @override
-  Widget build(BuildContext context) {
-    final hasMainPostId = mainPost.isNormalPost;
-    final hasPostId = post?.isNormalPost ?? false;
-    final postHistory = post ?? mainPost;
-    final hasPostIdOrMainPostId = postHistory.isNormalPost;
-
-    return SimpleDialog(
-      title: hasPostIdOrMainPostId ? Text(postHistory.toPostNumber()) : null,
-      children: [
-        SimpleDialogOption(
-          onPressed: () async {
-            if (confirmDelete) {
-              final result = await postListDialog<bool>(ConfirmCancelDialog(
-                content: '确定删除？',
-                onConfirm: () => postListBack<bool>(result: true),
-                onCancel: () => postListBack<bool>(result: false),
-              ));
-
-              if (result ?? false) {
-                onDelete();
-                postListBack();
-              }
-            } else {
-              onDelete();
-              postListBack();
-            }
-          },
-          child: Text('删除', style: Theme.of(context).textTheme.titleMedium),
-        ),
-        if (hasMainPostId)
-          SharePost(
-            mainPostId: mainPost.id,
-            page: page,
-            postId: hasPostId ? post!.id : null,
-          ),
-        AddOrReplacePostTag(post: postHistory),
-        if (hasPostIdOrMainPostId) CopyPostReference(postHistory.id),
-        CopyPostContent(postHistory),
-        if (post != null) CopyPostReference(mainPost.id, text: '复制主串串号引用'),
-        if (hasMainPostId)
-          NewTab(mainPost, text: post != null ? '在新标签页打开主串' : null),
-        if (hasMainPostId)
-          NewTabBackground(mainPost, text: post != null ? '在新标签页后台打开主串' : null),
-      ],
-    );
-  }
 }
 
 class _BrowseHistoryItem extends StatefulWidget {
@@ -658,25 +543,26 @@ class _BrowseHistoryItem extends StatefulWidget {
 }
 
 class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
-  late Future<void> _getBrowseHistory;
+  Future<void>? _getBrowseHistoryImage;
 
   BrowseHistory get _history => widget.browse.item;
 
-  void _setGetBrowseHistory() => _getBrowseHistory = Future(() async {
-        if (_history.hasImage) {
-          final image = await _Image._getImage(_history.id, _history.id);
+  void _setGetBrowseHistoryImage() => _getBrowseHistoryImage = _history.hasImage
+      ? Future(() async {
+          final image =
+              await ReferenceImageCache.getImage(_history.id, _history.id);
           if (image != null) {
             _history.image = image.image;
             _history.imageExtension = image.imageExtension;
           }
-        }
-      });
+        })
+      : null;
 
   @override
   void initState() {
     super.initState();
 
-    _setGetBrowseHistory();
+    _setGetBrowseHistoryImage();
 
     final time = TimeService.to;
     if (SettingsService.to.showRelativeTime &&
@@ -690,7 +576,7 @@ class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
     super.didUpdateWidget(oldWidget);
 
     if (widget.browse != oldWidget.browse) {
-      _setGetBrowseHistory();
+      _setGetBrowseHistoryImage();
     }
   }
 
@@ -700,7 +586,7 @@ class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
     final time = TimeService.to;
 
     return FutureBuilder<void>(
-      future: _getBrowseHistory,
+      future: _getBrowseHistoryImage,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasError) {
@@ -725,7 +611,7 @@ class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
                         : null,
                     showFullTime: false,
                     showReplyCount: false,
-                    header: (textStyle) => _PostHeader(children: [
+                    header: (textStyle) => PostHeader(children: [
                       if (settings.showRelativeTime)
                         TimerRefresher(
                           builder: (context) => Text(
@@ -749,10 +635,11 @@ class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
                     ]),
                     onTap: (post) =>
                         AppRoutes.toThread(mainPostId: post.id, mainPost: post),
-                    onLongPress: (post) => postListDialog(_HistoryDialog(
-                      mainPost: post,
+                    onLongPress: (post) => postListDialog(SavedPostDialog(
+                      post: post,
+                      mainPostId: post.id,
                       confirmDelete: false,
-                      onDelete: () async {
+                      onDeleted: () async {
                         await BrowseDataHistory.deleteBrowseData(post.id);
                         showToast('删除 ${post.toPostNumber()} 的浏览记录');
                         widget.browse.isVisible = false;
@@ -773,7 +660,7 @@ class _BrowseHistoryBody extends StatelessWidget {
   final HistoryController controller;
 
   // ignore: unused_element
-  const _BrowseHistoryBody({super.key, required this.controller});
+  const _BrowseHistoryBody(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) => PostListScrollView(
@@ -849,25 +736,27 @@ class _PostHistoryItem extends StatefulWidget {
 }
 
 class _PostHistoryItemState extends State<_PostHistoryItem> {
-  late Future<void> _getPostHistory;
+  Future<void>? _getPostHistoryImage;
 
   PostData get _post => widget.mainPost.item;
 
-  void _setGetPostHistory() => _getPostHistory = Future(() async {
-        if (_post.hasPostId && _post.hasImage) {
-          final image = await _Image._getImage(_post.postId!, _post.postId!);
-          if (image != null) {
-            _post.image = image.image;
-            _post.imageExtension = image.imageExtension;
-          }
-        }
-      });
+  void _setGetPostHistoryImage() =>
+      _getPostHistoryImage = (_post.hasPostId && _post.hasImage)
+          ? Future(() async {
+              final image = await ReferenceImageCache.getImage(
+                  _post.postId!, _post.postId!);
+              if (image != null) {
+                _post.image = image.image;
+                _post.imageExtension = image.imageExtension;
+              }
+            })
+          : null;
 
   @override
   void initState() {
     super.initState();
 
-    _setGetPostHistory();
+    _setGetPostHistoryImage();
   }
 
   @override
@@ -875,13 +764,13 @@ class _PostHistoryItemState extends State<_PostHistoryItem> {
     super.didUpdateWidget(oldWidget);
 
     if (widget.mainPost != oldWidget.mainPost) {
-      _setGetPostHistory();
+      _setGetPostHistoryImage();
     }
   }
 
   @override
   Widget build(BuildContext context) => FutureBuilder<void>(
-        future: _getPostHistory,
+        future: _getPostHistoryImage,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasError) {
@@ -911,9 +800,10 @@ class _PostHistoryItemState extends State<_PostHistoryItem> {
                               }
                             }
                           : null,
-                      onLongPress: (post) => postListDialog(_HistoryDialog(
-                        mainPost: post,
-                        onDelete: () async {
+                      onLongPress: (post) => postListDialog(SavedPostDialog(
+                        post: post,
+                        mainPostId: post.postId,
+                        onDeleted: () async {
                           await PostHistory.deletePostData(_post.id);
                           showToast(_post.hasPostId
                               ? '删除主题 ${_post.postId?.toPostNumber()} 的记录'
@@ -935,7 +825,7 @@ class _PostHistoryBody extends StatelessWidget {
   final HistoryController controller;
 
   // ignore: unused_element
-  const _PostHistoryBody({super.key, required this.controller});
+  const _PostHistoryBody(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) => PostListScrollView(
@@ -1011,26 +901,27 @@ class _ReplyHistoryItem extends StatefulWidget {
 }
 
 class _ReplyHistoryItemState extends State<_ReplyHistoryItem> {
-  late Future<void> _getReplyHistory;
+  Future<void>? _getReplyHistoryImage;
 
   ReplyData get _reply => widget.reply.item;
 
-  void setGetReplyHistory() => _getReplyHistory = Future(() async {
-        if (_reply.hasPostId && _reply.hasImage) {
-          final image =
-              await _Image._getImage(_reply.postId!, _reply.mainPostId);
-          if (image != null) {
-            _reply.image = image.image;
-            _reply.imageExtension = image.imageExtension;
-          }
-        }
-      });
+  void setGetReplyHistoryImage() =>
+      _getReplyHistoryImage = (_reply.hasPostId && _reply.hasImage)
+          ? Future(() async {
+              final image = await ReferenceImageCache.getImage(
+                  _reply.postId!, _reply.mainPostId);
+              if (image != null) {
+                _reply.image = image.image;
+                _reply.imageExtension = image.imageExtension;
+              }
+            })
+          : null;
 
   @override
   void initState() {
     super.initState();
 
-    setGetReplyHistory();
+    setGetReplyHistoryImage();
   }
 
   @override
@@ -1038,13 +929,13 @@ class _ReplyHistoryItemState extends State<_ReplyHistoryItem> {
     super.didUpdateWidget(oldWidget);
 
     if (widget.reply != oldWidget.reply) {
-      setGetReplyHistory();
+      setGetReplyHistoryImage();
     }
   }
 
   @override
   Widget build(BuildContext context) => FutureBuilder<void>(
-        future: _getReplyHistory,
+        future: _getReplyHistoryImage,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasError) {
@@ -1065,7 +956,7 @@ class _ReplyHistoryItemState extends State<_ReplyHistoryItem> {
                           : null,
                       showPostId: _reply.hasPostId,
                       showReplyCount: false,
-                      header: (textStyle) => _PostHeader(children: [
+                      header: (textStyle) => PostHeader(children: [
                         Text(
                           '主串：${_reply.mainPostId.toPostNumber()}',
                           style: AppTheme.postHeaderTextStyle,
@@ -1082,17 +973,17 @@ class _ReplyHistoryItemState extends State<_ReplyHistoryItem> {
                           mainPostId: _reply.mainPostId,
                           page: _reply.page ?? 1,
                           jumpToId: _reply.isComplete ? _reply.postId : null),
-                      onLongPress: (post) => postListDialog(_HistoryDialog(
-                        mainPost: _reply.toMainPost(),
+                      onLongPress: (post) => postListDialog(SavedPostDialog(
                         post: post,
-                        onDelete: () async {
+                        mainPostId: _reply.mainPostId,
+                        page: _reply.page,
+                        onDeleted: () async {
                           await PostHistory.deletePostData(_reply.id);
                           showToast(_reply.hasPostId
                               ? '删除回复 ${_reply.postId?.toPostNumber()} 的记录'
                               : '删除回复记录');
                           widget.reply.isVisible = false;
                         },
-                        page: _reply.page,
                       )),
                     ),
                   )
@@ -1108,7 +999,7 @@ class _ReplyHistoryBody extends StatelessWidget {
   final HistoryController controller;
 
   // ignore: unused_element
-  const _ReplyHistoryBody({super.key, required this.controller});
+  const _ReplyHistoryBody(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) => PostListScrollView(
@@ -1182,31 +1073,35 @@ class HistoryBody extends StatefulWidget {
 }
 
 class _HistoryBodyState extends State<HistoryBody> {
+  late final PageController _pageController;
+
   late StreamSubscription<int> _pageIndexSubscription;
 
   late StreamSubscription<List<DateTimeRange?>> _dateRangeSubscription;
 
   late final int _initialIndex;
 
+  HistoryController get _controller => widget.controller;
+
   void _updateIndex() {
-    final page = widget.controller._pageController.page;
+    final page = _pageController.page;
     if (page != null) {
-      widget.controller.pageIndex = page.round();
+      _controller.pageIndex = page.round();
     }
   }
 
-  void _trySave(Object object) => widget.controller.trySave();
+  void _trySave(Object object) => _controller.trySave();
 
   @override
   void initState() {
     super.initState();
 
-    _initialIndex = widget.controller.pageIndex;
+    _initialIndex = _controller.pageIndex;
+    _pageController = PageController(initialPage: _initialIndex);
+    _pageController.addListener(_updateIndex);
 
-    _pageIndexSubscription = widget.controller._pageIndex.listen(_trySave);
-    _dateRangeSubscription = widget.controller._dateRange.listen(_trySave);
-
-    widget.controller._pageController.addListener(_updateIndex);
+    _pageIndexSubscription = _controller._pageIndex.listen(_trySave);
+    _dateRangeSubscription = _controller._dateRange.listen(_trySave);
   }
 
   @override
@@ -1218,9 +1113,6 @@ class _HistoryBodyState extends State<HistoryBody> {
       _pageIndexSubscription = widget.controller._pageIndex.listen(_trySave);
       _dateRangeSubscription.cancel();
       _dateRangeSubscription = widget.controller._dateRange.listen(_trySave);
-
-      oldWidget.controller._pageController.removeListener(_updateIndex);
-      widget.controller._pageController.addListener(_updateIndex);
     }
   }
 
@@ -1228,106 +1120,54 @@ class _HistoryBodyState extends State<HistoryBody> {
   void dispose() {
     _pageIndexSubscription.cancel();
     _dateRangeSubscription.cancel();
-    widget.controller._pageController.removeListener(_updateIndex);
+    _pageController.removeListener(_updateIndex);
+    _pageController.dispose();
 
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-    final theme = Theme.of(context);
-
-    final Widget tabBar = Material(
-      elevation: theme.appBarTheme.elevation ?? PostListAppBar.defaultElevation,
-      color: theme.primaryColor,
-      child: PageViewTabBar(
-        pageController: widget.controller._pageController,
-        initialIndex: _initialIndex,
-        onIndex: (index) {
-          if (widget.controller.pageIndex != index) {
-            popAllPopup();
-            widget.controller._pageController.animateToPage(index,
-                duration: PageViewTabBar.animationDuration,
-                curve: Curves.easeIn);
-          }
-        },
-        tabs: const [Tab(text: '浏览'), Tab(text: '主题'), Tab(text: '回复')],
-      ),
-    );
-
-    return Stack(
-      children: [
-        Obx(
-          () => Padding(
-            padding: EdgeInsets.only(
-                top: PageViewTabBar.height + widget.controller._height.value),
-            child: SwipeablePageView(
-              controller: widget.controller._pageController,
-              itemCount: 3,
-              itemBuilder: (context, index) {
-                late final Widget body;
-                switch (index) {
-                  case _BrowseHistoryBody._index:
-                    body = _BrowseHistoryBody(controller: widget.controller);
-                    break;
-                  case _PostHistoryBody._index:
-                    body = _PostHistoryBody(controller: widget.controller);
-                    break;
-                  case _ReplyHistoryBody._index:
-                    body = _ReplyHistoryBody(controller: widget.controller);
-                    break;
-                  default:
-                    body = const Center(
-                      child: Text('未知记录', style: AppTheme.boldRed),
-                    );
-                }
-
-                return body;
-              },
-            ),
-          ),
+  Widget build(BuildContext context) => PostListWithTabBarOrHeader(
+        controller: _controller,
+        tabBarHeight: () => PageViewTabBar.height,
+        tabBar: PageViewTabBar(
+          pageController: _pageController,
+          initialIndex: _initialIndex,
+          onIndex: (index) {
+            if (_controller.pageIndex != index) {
+              popAllPopup();
+              _pageController.animateToPage(index,
+                  duration: PageViewTabBar.animationDuration,
+                  curve: Curves.easeIn);
+            }
+          },
+          tabs: const [Tab(text: '浏览'), Tab(text: '主题'), Tab(text: '回复')],
         ),
-        Obx(() => settings.isAutoHideAppBar
-            ? Positioned(
-                left: 0.0,
-                top: widget.controller.appBarHeight + PageViewTabBar.height,
-                right: 0.0,
-                child: _HistoryHeader(controller: widget.controller),
-              )
-            : Positioned(
-                left: 0.0,
-                top: PageViewTabBar.height,
-                right: 0.0,
-                child: _HistoryHeader(controller: widget.controller),
-              )),
-        Obx(
-          () => settings.isAutoHideAppBar
-              ? Positioned(
-                  left: 0.0,
-                  top: widget.controller.appBarHeight,
-                  right: 0.0,
-                  child: tabBar,
-                )
-              : tabBar,
+        headerHeight: () => _controller._headerHeight.value,
+        header: _HistoryHeader(controller: _controller),
+        postList: SwipeablePageView(
+          controller: _pageController,
+          itemCount: _historyPageCount,
+          itemBuilder: (context, index) {
+            late final Widget body;
+            switch (index) {
+              case _BrowseHistoryBody._index:
+                body = _BrowseHistoryBody(_controller);
+                break;
+              case _PostHistoryBody._index:
+                body = _PostHistoryBody(_controller);
+                break;
+              case _ReplyHistoryBody._index:
+                body = _ReplyHistoryBody(_controller);
+                break;
+              default:
+                body = const Center(
+                  child: Text('未知记录', style: AppTheme.boldRed),
+                );
+            }
+
+            return body;
+          },
         ),
-      ],
-    );
-  }
-}
-
-class _PostHeader extends StatelessWidget {
-  final List<Widget> children;
-
-  // ignore: unused_element
-  const _PostHeader({super.key, required this.children});
-
-  @override
-  Widget build(BuildContext context) => Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        spacing: 5.0,
-        runSpacing: 5.0,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: children,
       );
 }

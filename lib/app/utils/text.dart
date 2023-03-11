@@ -103,5 +103,6 @@ double getLineHeight(BuildContext context, String text, TextStyle? style) {
   return textPainter.preferredLineHeight;
 }
 
+/// 主要是在富文本中使用
 StrutStyle? strutStyleFromHeight(TextStyle? textStyle) =>
     textStyle?.height != null ? StrutStyle(height: textStyle!.height) : null;

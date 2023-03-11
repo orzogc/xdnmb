@@ -35,6 +35,7 @@ import 'forum_name.dart';
 import 'listenable.dart';
 import 'scroll.dart';
 import 'tag.dart';
+import 'tagged.dart';
 import 'thread.dart';
 
 Future<T?> postListDialog<T>(Widget widget, {int? index}) {
@@ -392,19 +393,35 @@ class _ForumRuleDialogState extends State<ForumRuleDialog> {
 
 // TODO: SimpleDialog自动显示scrollbar
 class NewTab extends StatelessWidget {
-  final PostBase post;
+  final int mainPostId;
+
+  final int page;
+
+  final PostBase? mainPost;
+
+  final int? jumpToId;
 
   final String? text;
 
-  const NewTab(this.post, {super.key, this.text});
+  const NewTab(
+      {super.key,
+      required this.mainPostId,
+      this.page = 1,
+      this.mainPost,
+      this.jumpToId,
+      this.text});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () {
-          final controller = ThreadTypeController.fromPost(post: post);
+          final controller = ThreadController(
+              id: mainPostId,
+              page: page,
+              mainPost: mainPost,
+              jumpToId: jumpToId);
           postListBack();
           openNewTab(controller);
-          showToast('已在新标签页打开 ${post.toPostNumber()}');
+          showToast('已在新标签页打开 ${mainPostId.toPostNumber()}');
         },
         child: Text(
           text ?? '在新标签页打开',
@@ -414,18 +431,34 @@ class NewTab extends StatelessWidget {
 }
 
 class NewTabBackground extends StatelessWidget {
-  final PostBase post;
+  final int mainPostId;
+
+  final int page;
+
+  final PostBase? mainPost;
+
+  final int? jumpToId;
 
   final String? text;
 
-  const NewTabBackground(this.post, {super.key, this.text});
+  const NewTabBackground(
+      {super.key,
+      required this.mainPostId,
+      this.page = 1,
+      this.mainPost,
+      this.jumpToId,
+      this.text});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () {
-          final controller = ThreadTypeController.fromPost(post: post);
+          final controller = ThreadController(
+              id: mainPostId,
+              page: page,
+              mainPost: mainPost,
+              jumpToId: jumpToId);
           openNewTabBackground(controller);
-          showToast('已在新标签页后台打开 ${post.toPostNumber()}');
+          showToast('已在新标签页后台打开 ${mainPostId.toPostNumber()}');
           postListBack();
         },
         child: Text(
@@ -467,7 +500,9 @@ class CopyPostContent extends StatelessWidget {
         onPressed: () async {
           await Clipboard.setData(
               ClipboardData(text: htmlToPlainText(context, post.content)));
-          showToast('已复制串 ${post.toPostNumber()} 的内容');
+          showToast(post.isNormalPost
+              ? '已复制串 ${post.toPostNumber()} 的内容'
+              : '已复制串的内容');
           postListBack();
         },
         child: Text('复制串的内容', style: Theme.of(context).textTheme.titleMedium),
@@ -573,13 +608,70 @@ class SharePost extends StatelessWidget {
               text: Urls.threadUrl(
                   mainPostId: mainPostId,
                   isOnlyPo: isOnlyPo,
-                  page: page,
+                  // page不等于1时才显示在链接里
+                  page: page != 1 ? page : null,
                   postId: postId)));
 
           showToast('已复制串 ${mainPostId.toPostNumber()} 链接');
           postListBack();
         },
         child: Text('分享', style: Theme.of(context).textTheme.titleMedium),
+      );
+}
+
+class AddOrEditTag extends StatelessWidget {
+  final TagData? editedTag;
+
+  final VoidCallback? onAdded;
+
+  const AddOrEditTag({super.key, this.editedTag, this.onAdded});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          final result = await postListDialog<bool>(
+              _AddOrEditTagDialog(editedTag: editedTag, onAdded: onAdded));
+
+          if (result ?? false) {
+            postListBack();
+          }
+        },
+        child: Text('${editedTag == null ? '添加' : '修改'}标签',
+            style: Theme.of(context).textTheme.titleMedium),
+      );
+}
+
+class DeleteTag extends StatelessWidget {
+  final TagData tag;
+
+  const DeleteTag(this.tag, {super.key});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () async {
+          final result = await postListDialog<bool>(ConfirmCancelDialog(
+            contentWidget: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('确定删除标签'),
+                Flexible(child: Tag.fromTagData(tag: tag)),
+                const Text('？'),
+              ].withSpaceBetween(width: 5.0),
+            ),
+            onConfirm: () async {
+              await TagService.to.deleteTag(tag.id);
+
+              showToast('删除标签成功');
+              postListBack<bool>(result: true);
+            },
+            onCancel: () => postListBack<bool>(result: false),
+          ));
+
+          if (result ?? false) {
+            postListBack();
+          }
+        },
+        child: Text('删除标签', style: Theme.of(context).textTheme.titleMedium),
       );
 }
 
@@ -594,7 +686,7 @@ class AddOrReplacePostTag extends StatelessWidget {
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () async {
           final result = await postListDialog<bool>(
-              _AddOrReplaceTagDialog(post: post, repacedTag: replacedTag));
+              _AddOrReplacePostTagDialog(post: post, repacedTag: replacedTag));
 
           if (result ?? false) {
             postListBack();
@@ -612,7 +704,10 @@ class DeletePostTag extends StatelessWidget {
 
   final TagData tag;
 
-  const DeletePostTag({super.key, required this.postId, required this.tag});
+  final ValueSetter<int>? onDeleted;
+
+  const DeletePostTag(
+      {super.key, required this.postId, required this.tag, this.onDeleted});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
@@ -621,15 +716,20 @@ class DeletePostTag extends StatelessWidget {
             contentWidget: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('确定删除标签'),
+                Text(postId.isNormalPost
+                    ? '确定删除串 ${postId.toPostNumber()} 的标签'
+                    : '确定删除串的标签'),
                 Flexible(child: Tag.fromTagData(tag: tag)),
                 const Text('？'),
               ].withSpaceBetween(width: 5.0),
             ),
             onConfirm: () async {
-              await TagService.to.deletePostTag(postId, tag.id);
+              await TagService.deletePostTag(postId, tag.id);
+              onDeleted?.call(tag.id);
 
-              showToast('删除串 ${postId.toPostNumber()} 的标签成功');
+              showToast(postId.isNormalPost
+                  ? '删除串 ${postId.toPostNumber()} 的标签'
+                  : '删除串的标签');
               postListBack<bool>(result: true);
             },
             onCancel: () => postListBack<bool>(result: false),
@@ -643,21 +743,53 @@ class DeletePostTag extends StatelessWidget {
       );
 }
 
-class EditTag extends StatelessWidget {
-  final TagData tag;
+class ToTaggedPostList extends StatelessWidget {
+  final int tagId;
 
-  const EditTag(this.tag, {super.key});
+  const ToTaggedPostList(this.tagId, {super.key});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
-        onPressed: () async {
-          final result = await postListDialog<bool>(_EditTagDialog(tag: tag));
+        onPressed: () => AppRoutes.toTaggedPostList(tagId: tagId),
+        child: Text('查询标签', style: Theme.of(context).textTheme.titleMedium),
+      );
+}
 
-          if (result ?? false) {
-            postListBack();
-          }
+class NewTabToTaggedPostList extends StatelessWidget {
+  final int tagId;
+
+  const NewTabToTaggedPostList(this.tagId, {super.key});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () {
+          final controller = TaggedPostListController(id: tagId, page: 1);
+          postListBack();
+          openNewTab(controller);
+          showToast('已在新标签页查询标签');
         },
-        child: Text('修改标签', style: Theme.of(context).textTheme.titleMedium),
+        child:
+            Text('在新标签页查询标签', style: Theme.of(context).textTheme.titleMedium),
+      );
+}
+
+class NewTabBackgroundToTaggedPostList extends StatelessWidget {
+  final int tagId;
+
+  const NewTabBackgroundToTaggedPostList(this.tagId, {super.key});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialogOption(
+        onPressed: () {
+          final controller = TaggedPostListController(id: tagId, page: 1);
+          openNewTabBackground(controller);
+          showToast('已在新标签页后台查询标签');
+          postListBack();
+        },
+        child: Text(
+          '在新标签页后台查询标签',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
       );
 }
 
@@ -914,22 +1046,155 @@ class SetCookieColor extends StatelessWidget {
       );
 }
 
-class _AddOrReplaceTagDialog extends StatefulWidget {
+class _AddOrEditTagDialog extends StatelessWidget {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  final TagData? editedTag;
+
+  final VoidCallback? onAdded;
+
+  final RxnString _tagName;
+
+  final RxBool _useDefaultColor;
+
+  final Rxn<Color> _backgroundColor;
+
+  final Rxn<Color> _textColor;
+
+  String get _text => editedTag == null ? '添加' : '修改';
+
+  // ignore: unused_element
+  _AddOrEditTagDialog({super.key, this.editedTag, this.onAdded})
+      : _tagName = RxnString(editedTag?.name),
+        _useDefaultColor = (editedTag?.useDefaultColor ?? true).obs,
+        _backgroundColor = Rxn(editedTag?.backgroundColor),
+        _textColor = Rxn(editedTag?.textColor);
+
+  @override
+  Widget build(BuildContext context) {
+    final tagService = TagService.to;
+    final theme = Theme.of(context);
+
+    return InputDialog(
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Obx(() => (_tagName.value?.isNotEmpty ?? false)
+                ? Tag(
+                    text: _tagName.value!,
+                    textStyle: AppTheme.postContentTextStyle,
+                    strutStyle: AppTheme.postContentStrutStyle,
+                    backgroundColor: _backgroundColor.value,
+                    textColor: _textColor.value)
+                : const SizedBox.shrink()),
+            TextFormField(
+              decoration: const InputDecoration(labelText: '标签'),
+              initialValue: _tagName.value,
+              onChanged: (value) => _tagName.value = value,
+              onSaved: (newValue) => _tagName.value = newValue,
+              validator: (value) => (value == null || value.isEmpty)
+                  ? '请输入标签名字'
+                  : (((editedTag == null && tagService.tagNameExists(value)) ||
+                          (editedTag != null &&
+                              value != editedTag!.name &&
+                              tagService.tagNameExists(value)))
+                      ? '已存在该标签名字'
+                      : null),
+            ),
+            Obx(
+              () => CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                visualDensity:
+                    const VisualDensity(vertical: VisualDensity.minimumDensity),
+                title: const Text('配色跟随应用主题'),
+                value: _useDefaultColor.value,
+                onChanged: (value) {
+                  if (value != null) {
+                    _useDefaultColor.value = value;
+                  }
+                },
+              ),
+            ),
+            Obx(
+              () => ColorListTile(
+                enabled: !_useDefaultColor.value,
+                title: const Text('文字颜色'),
+                color: _textColor.value ?? theme.colorScheme.onPrimary,
+                onColorChanged: (value) => _textColor.value = value,
+              ),
+            ),
+            Obx(
+              () => ColorListTile(
+                enabled: !_useDefaultColor.value,
+                title: const Text('背景颜色'),
+                color: _backgroundColor.value ?? theme.primaryColor,
+                onColorChanged: (value) => _backgroundColor.value = value,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              if (_tagName.value != null) {
+                try {
+                  if (editedTag == null) {
+                    await tagService.getTagIdOrAddNewTag(
+                        tagName: _tagName.value!,
+                        backgroundColor: _backgroundColor.value,
+                        textColor: _textColor.value);
+
+                    onAdded?.call();
+                  } else {
+                    if (!await tagService.editTag(editedTag!.copyWith(
+                        name: _tagName.value,
+                        backgroundColor: _backgroundColor.value,
+                        textColor: _textColor.value))) {
+                      showToast('修改标签失败');
+
+                      return;
+                    }
+                  }
+
+                  showToast('$_text标签成功');
+                  postListBack<bool>(result: true);
+                } catch (e) {
+                  showToast('$_text标签失败：$e');
+                }
+              }
+            }
+          },
+          child: Text(_text),
+        ),
+      ],
+    );
+  }
+}
+
+class _AddOrReplacePostTagDialog extends StatefulWidget {
   final PostBase post;
 
   final TagData? repacedTag;
 
-  const _AddOrReplaceTagDialog(
+  const _AddOrReplacePostTagDialog(
       // ignore: unused_element
       {super.key,
       required this.post,
       this.repacedTag});
 
   @override
-  State<_AddOrReplaceTagDialog> createState() => _AddOrReplaceTagDialogState();
+  State<_AddOrReplacePostTagDialog> createState() =>
+      _AddOrReplacePostTagDialogState();
 }
 
-class _AddOrReplaceTagDialogState extends State<_AddOrReplaceTagDialog> {
+class _AddOrReplacePostTagDialogState
+    extends State<_AddOrReplacePostTagDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _controller;
@@ -967,7 +1232,7 @@ class _AddOrReplaceTagDialogState extends State<_AddOrReplaceTagDialog> {
     assert((text != null && tag == null) || (text == null && tag != null));
 
     if (text != null) {
-      tag = TagService.to.getTagData(text);
+      tag = TagService.to.getTagDataFromName(text);
     }
 
     if (tag != null) {
@@ -1005,6 +1270,7 @@ class _AddOrReplaceTagDialogState extends State<_AddOrReplaceTagDialog> {
     final theme = Theme.of(context);
 
     return InputDialog(
+      title: _post.isNormalPost ? Text(_post.toPostNumber()) : null,
       content: Form(
         key: _formKey,
         child: Column(
@@ -1014,6 +1280,7 @@ class _AddOrReplaceTagDialogState extends State<_AddOrReplaceTagDialog> {
                 ? Tag(
                     text: _tagName.value,
                     textStyle: AppTheme.postContentTextStyle,
+                    strutStyle: AppTheme.postContentStrutStyle,
                     backgroundColor: _backgroundColor,
                     textColor: _textColor)
                 : const SizedBox.shrink()),
@@ -1074,6 +1341,7 @@ class _AddOrReplaceTagDialogState extends State<_AddOrReplaceTagDialog> {
                           Tag.fromTagData(
                             tag: tag,
                             textStyle: AppTheme.postContentTextStyle,
+                            strutStyle: AppTheme.postContentStrutStyle,
                             onTap: () => _onTextChanged(tag: tag),
                           ),
                       ],
@@ -1104,10 +1372,14 @@ class _AddOrReplaceTagDialogState extends State<_AddOrReplaceTagDialog> {
                       newTagId: tagId);
                 }
 
-                showToast('给串 ${_post.toPostNumber()} $_text标签成功');
+                showToast(_post.isNormalPost
+                    ? '给串 ${_post.toPostNumber()} $_text标签成功'
+                    : '给串$_text标签成功');
                 postListBack<bool>(result: true);
               } catch (e) {
-                showToast('给串 ${_post.toPostNumber()} $_text标签失败：$e');
+                showToast(_post.isNormalPost
+                    ? '给串 ${_post.toPostNumber()} $_text标签失败：$e'
+                    : '给串$_text标签失败：$e');
               }
             }
           },
@@ -1118,117 +1390,82 @@ class _AddOrReplaceTagDialogState extends State<_AddOrReplaceTagDialog> {
   }
 }
 
-class _EditTagDialog extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+class SavedPostDialog extends StatelessWidget {
+  final PostBase post;
 
-  final TagData tag;
+  final int? mainPostId;
 
-  final RxnString _tagName;
+  final int? page;
 
-  final RxBool _useDefaultColor;
+  final bool confirmDelete;
 
-  final Rxn<Color> _backgroundColor;
+  final VoidCallback? onDeleted;
 
-  final Rxn<Color> _textColor;
+  const SavedPostDialog(
+      {super.key,
+      required this.post,
+      this.mainPostId,
+      this.page,
+      this.confirmDelete = true,
+      this.onDeleted});
 
-  // ignore: unused_element
-  _EditTagDialog({super.key, required this.tag})
-      : _tagName = RxnString(tag.name),
-        _useDefaultColor = tag.useDefaultColor.obs,
-        _backgroundColor = Rxn(tag.backgroundColor),
-        _textColor = Rxn(tag.textColor);
+  bool get _hasPostId => post.isNormalPost;
+
+  bool get _hasMainPostId => mainPostId != null;
+
+  bool get _isMainPost => _hasPostId ? post.id == mainPostId : false;
+
+  bool get _hasNonMainPostId => !_isMainPost && _hasPostId;
 
   @override
-  Widget build(BuildContext context) {
-    final tagService = TagService.to;
-    final theme = Theme.of(context);
+  Widget build(BuildContext context) => SimpleDialog(
+        title: _hasPostId ? Text(post.toPostNumber()) : null,
+        children: [
+          SimpleDialogOption(
+            onPressed: () async {
+              if (confirmDelete) {
+                final result = await postListDialog<bool>(ConfirmCancelDialog(
+                  content: '确定删除？',
+                  onConfirm: () => postListBack<bool>(result: true),
+                  onCancel: () => postListBack<bool>(result: false),
+                ));
 
-    return InputDialog(
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Obx(() => (_tagName.value?.isNotEmpty ?? false)
-                ? Tag(
-                    text: _tagName.value!,
-                    textStyle: AppTheme.postContentTextStyle,
-                    backgroundColor: _backgroundColor.value,
-                    textColor: _textColor.value)
-                : const SizedBox.shrink()),
-            TextFormField(
-              decoration: const InputDecoration(labelText: '标签'),
-              initialValue: _tagName.value,
-              onChanged: (value) => _tagName.value = value,
-              onSaved: (newValue) => _tagName.value = newValue,
-              validator: (value) => (value == null || value.isEmpty)
-                  ? '请输入标签名字'
-                  : ((value != tag.name && tagService.tagNameExists(value))
-                      ? '已存在该标签名字'
-                      : null),
-            ),
-            Obx(
-              () => CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                visualDensity:
-                    const VisualDensity(vertical: VisualDensity.minimumDensity),
-                title: const Text('配色跟随应用主题'),
-                value: _useDefaultColor.value,
-                onChanged: (value) {
-                  if (value != null) {
-                    _useDefaultColor.value = value;
-                  }
-                },
-              ),
-            ),
-            Obx(
-              () => ColorListTile(
-                enabled: !_useDefaultColor.value,
-                title: const Text('文字颜色'),
-                color: _textColor.value ?? theme.colorScheme.onPrimary,
-                onColorChanged: (value) => _textColor.value = value,
-              ),
-            ),
-            Obx(
-              () => ColorListTile(
-                enabled: !_useDefaultColor.value,
-                title: const Text('背景颜色'),
-                color: _backgroundColor.value ?? theme.primaryColor,
-                onColorChanged: (value) => _backgroundColor.value = value,
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-
-              if (_tagName.value != null) {
-                try {
-                  if (await tagService.editTag(tag.copyWith(
-                      name: _tagName.value,
-                      backgroundColor: _backgroundColor.value,
-                      textColor: _textColor.value))) {
-                  } else {
-                    showToast('修改标签失败：标签名字重复');
-
-                    return;
-                  }
-
-                  showToast('修改标签成功');
-                  postListBack<bool>(result: true);
-                } catch (e) {
-                  showToast('修改标签失败：$e');
+                if (result ?? false) {
+                  onDeleted?.call();
+                  postListBack();
                 }
+              } else {
+                onDeleted?.call();
+                postListBack();
               }
-            }
-          },
-          child: const Text('修改'),
-        ),
-      ],
-    );
-  }
+            },
+            child: Text('删除', style: Theme.of(context).textTheme.titleMedium),
+          ),
+          if (_hasMainPostId)
+            SharePost(
+              mainPostId: mainPostId!,
+              page: page,
+              postId: _hasNonMainPostId ? post.id : null,
+            ),
+          AddOrReplacePostTag(post: post),
+          if (_hasPostId) CopyPostReference(post.id),
+          CopyPostContent(post),
+          if (!_isMainPost && _hasMainPostId)
+            CopyPostReference(mainPostId!, text: '复制主串串号引用'),
+          if (_hasMainPostId)
+            NewTab(
+                mainPostId: mainPostId!,
+                page: page ?? 1,
+                mainPost: _isMainPost ? post : null,
+                jumpToId: (_hasNonMainPostId && page != null) ? post.id : null,
+                text: !_isMainPost ? '在新标签页打开主串' : null),
+          if (_hasMainPostId)
+            NewTabBackground(
+                mainPostId: mainPostId!,
+                page: page ?? 1,
+                mainPost: _isMainPost ? post : null,
+                jumpToId: (_hasNonMainPostId && page != null) ? post.id : null,
+                text: !_isMainPost ? '在新标签页后台打开主串' : null),
+        ],
+      );
 }

@@ -8,10 +8,13 @@ import '../modules/post_list.dart';
 import '../utils/extensions.dart';
 import '../utils/theme.dart';
 import 'content.dart';
+import 'feed.dart';
 import 'forum_name.dart';
 import 'guide.dart';
 import 'history.dart';
 import 'listenable.dart';
+import 'tag.dart';
+import 'tagged.dart';
 import 'thread.dart';
 
 class _TabTitle extends StatelessWidget {
@@ -30,7 +33,8 @@ class _TabTitle extends StatelessWidget {
       case PostListType.onlyPoThread:
         title = Obx(() {
           final postId = (controller as ThreadTypeController).id;
-          final forumId = (controller as ThreadTypeController).post?.forumId;
+          final forumId =
+              (controller as ThreadTypeController).mainPost?.forumId;
 
           return DefaultTextStyle.merge(
             style:
@@ -61,11 +65,21 @@ class _TabTitle extends StatelessWidget {
 
         break;
       case PostListType.feed:
-        title = Text('订阅', style: theme.textTheme.bodyLarge);
+        final text = (controller as FeedController).text();
+        title = Text(text, style: theme.textTheme.bodyLarge);
         break;
       case PostListType.history:
         final text = (controller as HistoryController).text();
         title = Text('$text历史', style: theme.textTheme.bodyLarge);
+        break;
+      case PostListType.taggedPostList:
+        title = Align(
+          alignment: Alignment.centerLeft,
+          child: PostTag(
+            controller: controller as TaggedPostListController,
+            textStyle: theme.textTheme.bodyLarge,
+          ),
+        );
         break;
     }
 
@@ -119,7 +133,8 @@ class TabList extends StatelessWidget {
                 title: _TabTitle(controller),
                 subtitle: controller.isThreadType
                     ? Obx(() {
-                        final post = (controller as ThreadTypeController).post;
+                        final post =
+                            (controller as ThreadTypeController).mainPost;
 
                         return post != null
                             ? Content(

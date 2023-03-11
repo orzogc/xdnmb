@@ -53,7 +53,6 @@ class TaggedPost implements PostBase {
   /// 最近添加标签的时间
   ///
   /// UTC
-  @Index()
   DateTime taggedTime;
 
   @Index(type: IndexType.value)

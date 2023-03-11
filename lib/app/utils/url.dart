@@ -315,7 +315,7 @@ void _parseXdnmbForum(
       case 'feed':
       case 'feed.html':
         final page = _getPage(parameters);
-        AppRoutes.toFeed(page: page ?? 1);
+        AppRoutes.toFeed(index: 0, page: page ?? 1);
 
         break;
       default:

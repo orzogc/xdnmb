@@ -217,7 +217,7 @@ abstract class PostHistory {
 abstract class ReplyHistory {
   static final IsarCollection<ReplyData> _replyData = isar.replyDatas;
 
-  static Future<ReplyData?> _getReplyData(int id) => _replyData.get(id);
+  static Future<ReplyData?> getReplyData(int id) => _replyData.get(id);
 
   static Future<int> replyDataCount([DateTimeRange? range]) => range != null
       ? _replyData
@@ -240,7 +240,7 @@ abstract class ReplyHistory {
       required PostBase post,
       int? mainPostId,
       int? page}) async {
-    final replyData = await _getReplyData(id);
+    final replyData = await getReplyData(id);
     if (replyData != null) {
       replyData.update(post: post, mainPostId: mainPostId, page: page);
       await saveReplyData(replyData);

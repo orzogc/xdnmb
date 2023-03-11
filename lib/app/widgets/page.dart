@@ -122,7 +122,7 @@ class _PageButtonState extends State<PageButton> {
             int? maxPage;
             if (widget.controller is ThreadTypeController) {
               maxPage =
-                  (widget.controller as ThreadTypeController).post?.maxPage;
+                  (widget.controller as ThreadTypeController).mainPost?.maxPage;
             }
 
             final page = await postListDialog<int>(_JumpPageDialog(

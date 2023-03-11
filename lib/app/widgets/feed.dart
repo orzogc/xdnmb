@@ -1,12 +1,16 @@
 import 'dart:async';
 
 import 'package:anchor_scroll_controller/anchor_scroll_controller.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/controller.dart';
+import '../data/models/tag.dart';
 import '../data/services/settings.dart';
+import '../data/services/tag.dart';
 import '../data/services/time.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
@@ -22,9 +26,13 @@ import '../utils/toast.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
 import 'listenable.dart';
+import 'page_view.dart';
 import 'post.dart';
 import 'post_list.dart';
+import 'tag.dart';
 import 'time.dart';
+
+const int _feedPageCount = 2;
 
 class _FeedKey {
   final int refresh;
@@ -43,23 +51,52 @@ class _FeedKey {
 }
 
 class FeedController extends PostListController {
+  final RxInt _pageIndex;
+
   @override
   PostListType get postListType => PostListType.feed;
 
   @override
   int? get id => null;
 
-  FeedController(int page) : super(page);
+  int get pageIndex => _pageIndex.value.clamp(0, _feedPageCount - 1);
+
+  set pageIndex(int index) =>
+      _pageIndex.value = index.clamp(0, _feedPageCount - 1);
+
+  bool get isFeedPage => pageIndex == _FeedBody._index;
+
+  FeedController({required int page, int pageIndex = 0})
+      : _pageIndex = pageIndex.obs,
+        super(page);
+
+  String text([int? index]) {
+    index ??= pageIndex;
+
+    switch (index) {
+      case _FeedBody._index:
+        return '订阅';
+      case _TagListBody._index:
+        return '标签';
+      default:
+        debugPrint('未知index：$index');
+        return '';
+    }
+  }
 }
 
 FeedController feedController(Map<String, String?> parameters) =>
-    FeedController(parameters['page'].tryParseInt() ?? 1);
+    FeedController(
+        page: parameters['page'].tryParseInt() ?? 1,
+        pageIndex: parameters['index'].tryParseInt() ?? 0);
 
 class FeedAppBarTitle extends StatelessWidget {
-  const FeedAppBarTitle({super.key});
+  final FeedController controller;
+
+  const FeedAppBarTitle(this.controller, {super.key});
 
   @override
-  Widget build(BuildContext context) => const Text('订阅');
+  Widget build(BuildContext context) => Obx(() => Text(controller.text()));
 }
 
 class _FeedDialog extends StatelessWidget {
@@ -130,8 +167,8 @@ class _FeedDialog extends StatelessWidget {
           },
           child: Text('提升至最上方', style: textStyle),
         ),
-        NewTab(post),
-        NewTabBackground(post),
+        NewTab(mainPostId: post.id, mainPost: post),
+        NewTabBackground(mainPostId: post.id, mainPost: post),
       ],
     );
   }
@@ -152,6 +189,8 @@ class _FeedItem extends StatefulWidget {
 class _FeedItemState extends State<_FeedItem> {
   Future<DateTime?>? _getLatestPostTime;
 
+  Feed get _feed => widget.feed.item.post;
+
   void _setGetLatestPostTime() {
     final settings = SettingsService.to;
     final client = XdnmbClientService.to;
@@ -159,17 +198,16 @@ class _FeedItemState extends State<_FeedItem> {
 
     _getLatestPostTime = !settings.isNotShowedLatestPostTimeInFeed
         ? Future(() async {
-            for (final postId in widget.feed.item.post.recentReplies.reversed) {
+            for (final postId in _feed.recentReplies.reversed) {
               try {
                 DateTime? postTime =
                     (await ReferenceDatabase.getReference(postId))?.postTime;
 
                 if (postTime == null) {
-                  debugPrint(
-                      '开始获取订阅 ${widget.feed.item.post.id} 最新回复引用 $postId');
+                  debugPrint('开始获取订阅 ${_feed.id} 最新回复引用 $postId');
 
-                  final reference = await client.getReference(postId,
-                      mainPostId: widget.feed.item.post.id);
+                  final reference =
+                      await client.getReference(postId, mainPostId: _feed.id);
                   postTime = reference.postTime;
                 }
 
@@ -224,8 +262,8 @@ class _FeedItemState extends State<_FeedItem> {
           final replyTime = snapshot.data;
 
           return PostInkWell(
-            post: widget.feed.item.post,
-            poUserHash: widget.feed.item.post.userHash,
+            post: _feed,
+            poUserHash: _feed.userHash,
             contentMaxLines: 8,
             showFullTime: false,
             showPostId: false,
@@ -238,21 +276,24 @@ class _FeedItemState extends State<_FeedItem> {
                           ? Text(
                               '最新回复 ${formatTime(replyTime)}',
                               style: textStyle ?? AppTheme.postHeaderTextStyle,
-                              strutStyle: AppTheme.postHeaderStrutStyle,
+                              strutStyle: textStyle != null
+                                  ? StrutStyle.fromTextStyle(textStyle)
+                                  : AppTheme.postHeaderStrutStyle,
                             )
                           : TimerRefresher(
                               builder: (context) => Text(
                                 '最新回复 ${time.relativeTime(replyTime)}',
                                 style:
                                     textStyle ?? AppTheme.postHeaderTextStyle,
-                                strutStyle: AppTheme.postHeaderStrutStyle,
+                                strutStyle: textStyle != null
+                                    ? StrutStyle.fromTextStyle(textStyle)
+                                    : AppTheme.postHeaderStrutStyle,
                               ),
                             )),
                     )
                 : null,
-            onTap: (post) => AppRoutes.toThread(
-                mainPostId: widget.feed.item.post.id,
-                mainPost: widget.feed.item.post),
+            onTap: (post) =>
+                AppRoutes.toThread(mainPostId: _feed.id, mainPost: _feed),
             onLongPress: (post) => postListDialog(
               _FeedDialog(
                 controller: widget.controller,
@@ -267,43 +308,13 @@ class _FeedItemState extends State<_FeedItem> {
   }
 }
 
-class FeedBody extends StatefulWidget {
+class _FeedBody extends StatelessWidget {
+  static const int _index = 0;
+
   final FeedController controller;
 
-  const FeedBody(this.controller, {super.key});
-
-  @override
-  State<FeedBody> createState() => _FeedBodyState();
-}
-
-class _FeedBodyState extends State<FeedBody> {
-  late StreamSubscription<int> _pageSubscription;
-
-  void _trySave(int page) => widget.controller.trySave();
-
-  @override
-  void initState() {
-    super.initState();
-
-    _pageSubscription = widget.controller.listenPage(_trySave);
-  }
-
-  @override
-  void didUpdateWidget(covariant FeedBody oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (widget.controller != oldWidget.controller) {
-      _pageSubscription.cancel();
-      _pageSubscription = widget.controller.listenPage(_trySave);
-    }
-  }
-
-  @override
-  void dispose() {
-    _pageSubscription.cancel();
-
-    super.dispose();
-  }
+  // ignore: unused_element
+  const _FeedBody(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -313,13 +324,13 @@ class _FeedBodyState extends State<FeedBody> {
     return ListenableBuilder(
       listenable: settings.feedIdListenable,
       builder: (context, child) => PostListScrollView(
-        controller: widget.controller,
+        controller: controller,
         builder: (context, scrollController, refresh) =>
             BiListView<Visible<PostWithPage<Feed>>>(
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
           scrollController: scrollController,
-          postListController: widget.controller,
-          initialPage: widget.controller.page,
+          postListController: controller,
+          initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async =>
               (await client.getFeed(settings.feedId, page: page))
@@ -332,9 +343,9 @@ class _FeedBodyState extends State<FeedBody> {
                     controller: scrollController,
                     index: feed.item.toIndex(),
                     child: _FeedItem(
-                      controller: widget.controller,
-                      feed: feed,
                       key: ValueKey<int>(settings.isShowLatestPostTimeInFeed),
+                      controller: controller,
+                      feed: feed,
                     ),
                   )
                 : const SizedBox.shrink(),
@@ -350,4 +361,269 @@ class _FeedBodyState extends State<FeedBody> {
       ),
     );
   }
+}
+
+class _TagListDialog extends StatelessWidget {
+  final TagData tag;
+
+  final VoidCallback onAddedTag;
+
+  const _TagListDialog(
+      // ignore: unused_element
+      {super.key,
+      required this.tag,
+      required this.onAddedTag});
+
+  @override
+  Widget build(BuildContext context) => SimpleDialog(
+        // 为了不让Tag占领整行的空间
+        title: Align(
+          alignment: Alignment.centerLeft,
+          child: Tag.fromTagData(tag: tag),
+        ),
+        children: [
+          AddOrEditTag(onAdded: onAddedTag),
+          AddOrEditTag(editedTag: tag),
+          DeleteTag(tag),
+          ToTaggedPostList(tag.id),
+          NewTabToTaggedPostList(tag.id),
+          NewTabBackgroundToTaggedPostList(tag.id),
+        ],
+      );
+}
+
+class _TagListItem extends StatefulWidget {
+  final FeedController controller;
+
+  final int tagId;
+
+  const _TagListItem(
+      // ignore: unused_element
+      {super.key,
+      required this.controller,
+      required this.tagId});
+
+  @override
+  State<_TagListItem> createState() => _TagListItemState();
+}
+
+class _TagListItemState extends State<_TagListItem> {
+  late Future<int> _getCount;
+
+  late ValueListenable<Box<TagData>> _listenable;
+
+  int get _tagId => widget.tagId;
+
+  void _setData() {
+    _getCount = Future(() => TagService.getTaggedPostCount(_tagId));
+    _listenable = TagService.to.tagListenable([_tagId]);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _setData();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TagListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.tagId != oldWidget.tagId) {
+      _setData();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tagService = TagService.to;
+
+    return FutureBuilder<int>(
+      future: _getCount,
+      builder: (context, snapshot) {
+        int? count;
+
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasError) {
+          count = null;
+          showToast('获取标签数量出现错误：${snapshot.error}');
+        }
+
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
+          count = snapshot.data;
+        }
+
+        return ListenableBuilder(
+          listenable: _listenable,
+          builder: (context, child) {
+            final tag = tagService.getTagData(_tagId);
+
+            return tag != null
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        // 为了不让Tag占领整行的空间
+                        title: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Tag.fromTagData(
+                            tag: tag,
+                            textStyle: AppTheme.postContentTextStyle,
+                            strutStyle: AppTheme.postContentStrutStyle,
+                          ),
+                        ),
+                        trailing: count != null
+                            ? Text('$count',
+                                style: AppTheme.postContentTextStyle,
+                                strutStyle: AppTheme.postContentStrutStyle)
+                            : null,
+                        onTap: (count != null && count > 0)
+                            ? () => AppRoutes.toTaggedPostList(tagId: _tagId)
+                            : null,
+                        onLongPress: () => postListDialog(_TagListDialog(
+                          tag: tag,
+                          onAddedTag: widget.controller.refreshPage,
+                        )),
+                      ),
+                      const Divider(height: 10.0, thickness: 1.0),
+                    ],
+                  )
+                : const SizedBox.shrink();
+          },
+        );
+      },
+    );
+  }
+}
+
+class _TagListBody extends StatelessWidget {
+  static const int _index = 1;
+
+  final FeedController controller;
+
+  // ignore: unused_element
+  const _TagListBody(this.controller, {super.key});
+
+  @override
+  Widget build(BuildContext context) => PostListScrollView(
+        controller: controller,
+        builder: (context, scrollController, refresh) => BiListView<int>(
+          key: ValueKey<int>(refresh),
+          scrollController: scrollController,
+          postListController: controller,
+          initialPage: 1,
+          canLoadMoreAtBottom: false,
+          fetch: (page) async =>
+              page == 1 ? TagService.to.allTagsId.toList() : <int>[],
+          itemBuilder: (context, tagId, index) =>
+              _TagListItem(controller: controller, tagId: tagId),
+          noItemsFoundBuilder: (context) => Center(
+            child: Text(
+              '没有标签',
+              style: AppTheme.boldRedPostContentTextStyle,
+              strutStyle: AppTheme.boldRedPostContentStrutStyle,
+            ),
+          ),
+        ),
+      );
+}
+
+class FeedBody extends StatefulWidget {
+  final FeedController controller;
+
+  const FeedBody(this.controller, {super.key});
+
+  @override
+  State<FeedBody> createState() => _FeedBodyState();
+}
+
+class _FeedBodyState extends State<FeedBody> {
+  late final PageController _pageController;
+
+  late StreamSubscription<int> _pageIndexSubscription;
+
+  late final int _initialIndex;
+
+  FeedController get _controller => widget.controller;
+
+  void _updateIndex() {
+    final page = _pageController.page;
+    if (page != null) {
+      _controller.pageIndex = page.round();
+    }
+  }
+
+  void _trySave(int value) => widget.controller.trySave();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _initialIndex = _controller.pageIndex;
+    _pageController = PageController(initialPage: _initialIndex);
+    _pageController.addListener(_updateIndex);
+
+    _pageIndexSubscription = _controller._pageIndex.listen(_trySave);
+  }
+
+  @override
+  void didUpdateWidget(covariant FeedBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.controller != oldWidget.controller) {
+      _pageIndexSubscription.cancel();
+      _pageIndexSubscription = widget.controller._pageIndex.listen(_trySave);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageIndexSubscription.cancel();
+    _pageController.removeListener(_updateIndex);
+    _pageController.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => PostListWithTabBarOrHeader(
+        controller: _controller,
+        tabBarHeight: () => PageViewTabBar.height,
+        tabBar: PageViewTabBar(
+          pageController: _pageController,
+          initialIndex: _initialIndex,
+          onIndex: (index) {
+            if (_controller.pageIndex != index) {
+              popAllPopup();
+              _pageController.animateToPage(index,
+                  duration: PageViewTabBar.animationDuration,
+                  curve: Curves.easeIn);
+            }
+          },
+          tabs: const [Tab(text: '订阅'), Tab(text: '标签')],
+        ),
+        postList: SwipeablePageView(
+          controller: _pageController,
+          itemCount: _feedPageCount,
+          itemBuilder: (context, index) {
+            late final Widget body;
+            switch (index) {
+              case _FeedBody._index:
+                body = _FeedBody(_controller);
+                break;
+              case _TagListBody._index:
+                body = _TagListBody(_controller);
+                break;
+              default:
+                body = const Center(
+                  child: Text('未知页面', style: AppTheme.boldRed),
+                );
+            }
+
+            return body;
+          },
+        ),
+      );
 }

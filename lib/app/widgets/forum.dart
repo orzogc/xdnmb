@@ -242,8 +242,8 @@ class _ForumDialog extends StatelessWidget {
           if (!post.isAdmin) BlockUser(userHash: post.userHash),
           CopyPostReference(post.id),
           CopyPostContent(post),
-          NewTab(post),
-          NewTabBackground(post),
+          NewTab(mainPostId: post.id, mainPost: post),
+          NewTabBackground(mainPostId: post.id, mainPost: post),
         ],
       );
 }
