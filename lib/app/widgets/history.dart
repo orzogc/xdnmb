@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:loader_overlay/loader_overlay.dart';
 
 import '../data/models/controller.dart';
 import '../data/models/history.dart';
@@ -22,9 +21,9 @@ import '../utils/theme.dart';
 import '../utils/time.dart';
 import '../utils/toast.dart';
 import 'bilistview.dart';
-import 'checkbox.dart';
 import 'dialog.dart';
 import 'listenable.dart';
+import 'list_tile.dart';
 import 'page_view.dart';
 import 'post.dart';
 import 'post_list.dart';
@@ -144,23 +143,30 @@ class HistoryController extends PostListController {
     return search[index ?? pageIndex];
   }
 
-  void _setSearch(Search? searchText, [int? index]) {
+  void _setSearch(Search? search, [int? index]) {
     assert(index.isValid);
 
-    search[index ?? pageIndex] = searchText;
+    this.search[index ?? pageIndex] = search;
     _notify(index);
   }
 
   int? _getCount([int? index]) {
     assert(index.isValid);
 
-    return _counts[index ?? pageIndex];
+    return _counts[index ?? pageIndex].notNegative;
   }
 
   void _setCount(int? count, [int? index]) {
     assert(index.isValid);
 
-    _counts[index ?? pageIndex] = count;
+    _counts[index ?? pageIndex] = count.notNegative;
+  }
+
+  void _decreaseCount([int? index]) {
+    assert(index.isValid);
+
+    final count = _getCount(index);
+    _setCount(count != null ? count - 1 : null);
   }
 
   String text([String unknown = '未知', int? index]) {
@@ -255,148 +261,6 @@ class HistoryAppBarTitle extends StatelessWidget {
       });
 }
 
-class _SearchDialog extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  final HistoryController controller;
-
-  // ignore: unused_element
-  _SearchDialog(this.controller, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.bodyMedium;
-    String? searchText;
-    final search = controller._getSearch();
-    final caseSensitive = (search?.caseSensitive ?? false).obs;
-    final useWildcard = (search?.useWildcard ?? false).obs;
-
-    return InputDialog(
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              decoration: const InputDecoration(labelText: '搜索内容'),
-              autofocus: true,
-              initialValue: search?.text,
-              onSaved: (newValue) => searchText = newValue,
-              validator: (value) =>
-                  (value == null || value.isEmpty) ? '请输入搜索内容' : null,
-            ),
-            Obx(
-              () => Row(
-                children: [
-                  AppCheckbox(
-                    value: caseSensitive.value,
-                    onChanged: (value) {
-                      if (value != null) {
-                        caseSensitive.value = value;
-                      }
-                    },
-                  ),
-                  Flexible(child: Text('英文字母区分大小写', style: textStyle)),
-                ],
-              ),
-            ),
-            Obx(
-              () => Row(
-                children: [
-                  AppCheckbox(
-                    value: useWildcard.value,
-                    onChanged: (value) {
-                      if (value != null) {
-                        useWildcard.value = value;
-                      }
-                    },
-                  ),
-                  Flexible(child: Text('使用通配符', style: textStyle)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            postListDialog(const ConfirmCancelDialog(
-              contentWidget: Text.rich(TextSpan(
-                text: "搜索内容尽量不要是HTML标签和样式相关字符串，比如'font'、'color'、'br'。\n通配符 ",
-                children: [
-                  TextSpan(
-                    children: [
-                      TextSpan(text: '*', style: AppTheme.boldRed),
-                      TextSpan(text: ' 匹配零个或多个任意字符。\n通配符 '),
-                      TextSpan(text: '?', style: AppTheme.boldRed),
-                      TextSpan(text: ' 匹配任意一个字符，通常汉字包含三个或四个字符。'),
-                    ],
-                  ),
-                ],
-              )),
-              onConfirm: postListBack,
-            ));
-          },
-          child: const Text('搜索说明'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-
-              controller._setSearch(Search(
-                  text: searchText!,
-                  caseSensitive: caseSensitive.value,
-                  useWildcard: useWildcard.value));
-              postListBack();
-            }
-          },
-          child: const Text('搜索'),
-        ),
-      ],
-    );
-  }
-}
-
-class _ClearDialog extends StatelessWidget {
-  final HistoryController controller;
-
-  // ignore: unused_element
-  const _ClearDialog(this.controller, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final text = controller.text();
-
-    return LoaderOverlay(
-      child: ConfirmCancelDialog(
-        content: '确定清空$text记录？',
-        onConfirm: () async {
-          final overlay = context.loaderOverlay;
-          try {
-            overlay.show();
-
-            await controller._clear();
-            showToast('清空$text记录');
-          } catch (e) {
-            showToast('清空$text记录失败：$e');
-          } finally {
-            if (overlay.visible) {
-              overlay.hide();
-            }
-          }
-
-          WidgetsBinding.instance
-              .addPostFrameCallback((timeStamp) => postListBack());
-        },
-        onCancel: () => postListBack(),
-      ),
-    );
-  }
-}
-
 class HistoryAppBarPopupMenuButton extends StatelessWidget {
   static final DateTime _firstDate = DateTime(2022, 6, 19);
 
@@ -426,17 +290,20 @@ class HistoryAppBarPopupMenuButton extends StatelessWidget {
             child: const Text('日期'),
           ),
           PopupMenuItem(
-            onTap: () => postListDialog(_SearchDialog(controller)),
+            onTap: () => postListDialog(SearchDialog(
+              search: controller._getSearch(),
+              onSearch: (search) => controller._setSearch(search),
+            )),
             child: const Text('搜索'),
           ),
-          PopupMenuItem(
-            onTap: () {
-              if ((controller._getCount() ?? 0) > 0) {
-                postListDialog(_ClearDialog(controller));
-              }
-            },
-            child: const Text('清空'),
-          ),
+          if ((controller._getCount() ?? 0) > 0)
+            PopupMenuItem(
+              onTap: () => postListDialog(ClearDialog(
+                text: '${controller.text()}记录',
+                onClear: controller._clear,
+              )),
+              child: const Text('清空'),
+            ),
         ],
       );
 }
@@ -461,7 +328,7 @@ class _HistoryHeader extends StatelessWidget {
   final HistoryController controller;
 
   // ignore: unused_element
-  const _HistoryHeader({super.key, required this.controller});
+  const _HistoryHeader(this.controller, {super.key});
 
   @override
   Widget build(BuildContext context) => Obx(() {
@@ -476,7 +343,7 @@ class _HistoryHeader extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (range != null)
-                      ListTile(
+                      TightListTile(
                         title: Center(
                           child: range.start != range.end
                               ? Text(
@@ -490,39 +357,12 @@ class _HistoryHeader extends StatelessWidget {
                         ),
                       ),
                     if (range != null && search != null)
-                      const Divider(height: 10.0, thickness: 1.0),
+                      const Divider(height: 1.0, thickness: 1.0),
                     if (search != null)
-                      ListTile(
-                        title: Center(
-                          child: Text.rich(
-                            TextSpan(
-                              text: '搜索内容：',
-                              children: [
-                                TextSpan(
-                                  text: search.text,
-                                  style: AppTheme.boldRed,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        subtitle: (search.caseSensitive || search.useWildcard)
-                            ? Wrap(
-                                alignment: WrapAlignment.spaceAround,
-                                spacing: 5.0,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: [
-                                  if (search.caseSensitive)
-                                    const Text('英文字母区分大小写'),
-                                  if (search.useWildcard) const Text('使用通配符'),
-                                ],
-                              )
-                            : null,
-                        trailing: IconButton(
-                          onPressed: () => controller._setSearch(null),
-                          icon: const Icon(Icons.close),
-                        ),
-                      )
+                      SearchListTile(
+                        search: search,
+                        onCancel: () => controller._setSearch(null),
+                      ),
                   ],
                 )
               : const SizedBox.shrink(),
@@ -535,8 +375,14 @@ class _BrowseHistoryItem extends StatefulWidget {
 
   final Search? search;
 
-  // ignore: unused_element
-  const _BrowseHistoryItem({super.key, required this.browse, this.search});
+  final VoidCallback decreaseCount;
+
+  const _BrowseHistoryItem(
+      // ignore: unused_element
+      {super.key,
+      required this.browse,
+      this.search,
+      required this.decreaseCount});
 
   @override
   State<_BrowseHistoryItem> createState() => _BrowseHistoryItemState();
@@ -639,8 +485,9 @@ class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
                       post: post,
                       mainPostId: post.id,
                       confirmDelete: false,
-                      onDeleted: () async {
+                      onDelete: () async {
                         await BrowseDataHistory.deleteBrowseData(post.id);
+                        widget.decreaseCount();
                         showToast('删除 ${post.toPostNumber()} 的浏览记录');
                         widget.browse.isVisible = false;
                       },
@@ -708,8 +555,11 @@ class _BrowseHistoryBody extends StatelessWidget {
 
                 return data;
               },
-              itemBuilder: (context, browse, index) =>
-                  _BrowseHistoryItem(browse: browse, search: search),
+              itemBuilder: (context, browse, index) => _BrowseHistoryItem(
+                browse: browse,
+                search: search,
+                decreaseCount: () => controller._decreaseCount(_index),
+              ),
               noItemsFoundBuilder: (context) => Center(
                 child: Text(
                   '没有浏览记录',
@@ -728,8 +578,14 @@ class _PostHistoryItem extends StatefulWidget {
 
   final Search? search;
 
-  // ignore: unused_element
-  const _PostHistoryItem({super.key, required this.mainPost, this.search});
+  final VoidCallback decreaseCount;
+
+  const _PostHistoryItem(
+      // ignore: unused_element
+      {super.key,
+      required this.mainPost,
+      this.search,
+      required this.decreaseCount});
 
   @override
   State<_PostHistoryItem> createState() => _PostHistoryItemState();
@@ -803,8 +659,9 @@ class _PostHistoryItemState extends State<_PostHistoryItem> {
                       onLongPress: (post) => postListDialog(SavedPostDialog(
                         post: post,
                         mainPostId: post.postId,
-                        onDeleted: () async {
+                        onDelete: () async {
                           await PostHistory.deletePostData(_post.id);
+                          widget.decreaseCount();
                           showToast(_post.hasPostId
                               ? '删除主题 ${_post.postId?.toPostNumber()} 的记录'
                               : '删除主题记录');
@@ -873,8 +730,11 @@ class _PostHistoryBody extends StatelessWidget {
 
                 return data;
               },
-              itemBuilder: (context, mainPost, index) =>
-                  _PostHistoryItem(mainPost: mainPost, search: search),
+              itemBuilder: (context, mainPost, index) => _PostHistoryItem(
+                mainPost: mainPost,
+                search: search,
+                decreaseCount: () => controller._decreaseCount(_index),
+              ),
               noItemsFoundBuilder: (context) => Center(
                 child: Text(
                   '没有主题记录',
@@ -893,8 +753,14 @@ class _ReplyHistoryItem extends StatefulWidget {
 
   final Search? search;
 
-  // ignore: unused_element
-  const _ReplyHistoryItem({super.key, required this.reply, this.search});
+  final VoidCallback decreaseCount;
+
+  const _ReplyHistoryItem(
+      // ignore: unused_element
+      {super.key,
+      required this.reply,
+      this.search,
+      required this.decreaseCount});
 
   @override
   State<_ReplyHistoryItem> createState() => _ReplyHistoryItemState();
@@ -977,8 +843,9 @@ class _ReplyHistoryItemState extends State<_ReplyHistoryItem> {
                         post: post,
                         mainPostId: _reply.mainPostId,
                         page: _reply.page,
-                        onDeleted: () async {
+                        onDelete: () async {
                           await PostHistory.deletePostData(_reply.id);
+                          widget.decreaseCount();
                           showToast(_reply.hasPostId
                               ? '删除回复 ${_reply.postId?.toPostNumber()} 的记录'
                               : '删除回复记录');
@@ -1047,8 +914,11 @@ class _ReplyHistoryBody extends StatelessWidget {
 
                 return data;
               },
-              itemBuilder: (context, reply, index) =>
-                  _ReplyHistoryItem(reply: reply, search: search),
+              itemBuilder: (context, reply, index) => _ReplyHistoryItem(
+                reply: reply,
+                search: search,
+                decreaseCount: () => controller._decreaseCount(_index),
+              ),
               noItemsFoundBuilder: (context) => Center(
                 child: Text(
                   '没有回复记录',
@@ -1144,7 +1014,7 @@ class _HistoryBodyState extends State<HistoryBody> {
           tabs: const [Tab(text: '浏览'), Tab(text: '主题'), Tab(text: '回复')],
         ),
         headerHeight: () => _controller._headerHeight.value,
-        header: _HistoryHeader(controller: _controller),
+        header: _HistoryHeader(_controller),
         postList: SwipeablePageView(
           controller: _pageController,
           itemCount: _historyPageCount,

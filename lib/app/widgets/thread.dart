@@ -418,6 +418,12 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
                   AppRoutes.toThread(mainPostId: postId, mainPost: mainPost),
               child: const Text('取消只看Po'),
             ),
+          if (mainPost != null)
+            PopupMenuItem(
+              onTap: () =>
+                  postListDialog(AddOrReplacePostTagDialog(post: mainPost)),
+              child: const Text('添加主串标签'),
+            ),
           if (isBlockedPost)
             PopupMenuItem(
               onTap: () async {
@@ -689,15 +695,15 @@ class _ThreadBodyState extends State<ThreadBody> {
       key: post.isTipType ? UniqueKey() : null,
       post: post,
       poUserHash: mainPost?.userHash,
-      onLinkTap: (context, link, text) => parseUrl(
+      onTapLink: (context, link, text) => parseUrl(
           url: link, mainPostId: mainPost?.id, poUserHash: mainPost?.userHash),
-      onImagePainted: (imageData) => _replyWithImage(controller, imageData),
+      onPaintImage: (imageData) => _replyWithImage(controller, imageData),
       canReturnImageData: true,
       canTapHiddenText: true,
       showForumName: false,
       showReplyCount: false,
       showPoTag: true,
-      onPostIdTap:
+      onTapPostId:
           !post.isTipType ? (postId) => _replyPost(controller, postId) : null,
       onTap: (post) {},
       onLongPress: (post) => postListDialog(_ThreadDialog(

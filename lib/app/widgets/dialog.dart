@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/models/controller.dart';
@@ -33,6 +35,7 @@ import 'content.dart';
 import 'edit_post.dart';
 import 'forum_name.dart';
 import 'listenable.dart';
+import 'list_tile.dart';
 import 'scroll.dart';
 import 'tag.dart';
 import 'tagged.dart';
@@ -224,7 +227,7 @@ class _NoticeDialogState extends State<NoticeDialog> {
                   if (snapshot.connectionState == ConnectionState.done) {
                     return TextContent(
                       text: data.notice ?? '',
-                      onLinkTap: (context, link, text) => parseUrl(url: link),
+                      onTapLink: (context, link, text) => parseUrl(url: link),
                     );
                   }
 
@@ -233,7 +236,7 @@ class _NoticeDialogState extends State<NoticeDialog> {
               )
             : TextContent(
                 text: data.notice ?? '',
-                onLinkTap: (context, link, text) => parseUrl(url: link),
+                onTapLink: (context, link, text) => parseUrl(url: link),
               ),
       ),
       actions: [
@@ -352,7 +355,7 @@ class _ForumRuleDialogState extends State<ForumRuleDialog> {
           content: SingleChildScrollViewWithScrollbar(
             child: TextContent(
               text: forum?.message ?? '',
-              onLinkTap: (context, link, text) => parseUrl(url: link),
+              onTapLink: (context, link, text) => parseUrl(url: link),
               onImage: SettingsService.to.showImage
                   ? ((context, image, element) => image != null
                       ? TextSpan(
@@ -686,7 +689,7 @@ class AddOrReplacePostTag extends StatelessWidget {
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () async {
           final result = await postListDialog<bool>(
-              _AddOrReplacePostTagDialog(post: post, repacedTag: replacedTag));
+              AddOrReplacePostTagDialog(post: post, repacedTag: replacedTag));
 
           if (result ?? false) {
             postListBack();
@@ -704,10 +707,10 @@ class DeletePostTag extends StatelessWidget {
 
   final TagData tag;
 
-  final ValueSetter<int>? onDeleted;
+  final ValueSetter<int>? onDelete;
 
   const DeletePostTag(
-      {super.key, required this.postId, required this.tag, this.onDeleted});
+      {super.key, required this.postId, required this.tag, this.onDelete});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
@@ -725,7 +728,7 @@ class DeletePostTag extends StatelessWidget {
             ),
             onConfirm: () async {
               await TagService.deletePostTag(postId, tag.id);
-              onDeleted?.call(tag.id);
+              onDelete?.call(tag.id);
 
               showToast(postId.isNormalPost
                   ? '删除串 ${postId.toPostNumber()} 的标签'
@@ -1104,10 +1107,7 @@ class _AddOrEditTagDialog extends StatelessWidget {
                       : null),
             ),
             Obx(
-              () => CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                visualDensity:
-                    const VisualDensity(vertical: VisualDensity.minimumDensity),
+              () => TightCheckboxListTile(
                 title: const Text('配色跟随应用主题'),
                 value: _useDefaultColor.value,
                 onChanged: (value) {
@@ -1177,24 +1177,20 @@ class _AddOrEditTagDialog extends StatelessWidget {
   }
 }
 
-class _AddOrReplacePostTagDialog extends StatefulWidget {
+class AddOrReplacePostTagDialog extends StatefulWidget {
   final PostBase post;
 
   final TagData? repacedTag;
 
-  const _AddOrReplacePostTagDialog(
-      // ignore: unused_element
-      {super.key,
-      required this.post,
-      this.repacedTag});
+  const AddOrReplacePostTagDialog(
+      {super.key, required this.post, this.repacedTag});
 
   @override
-  State<_AddOrReplacePostTagDialog> createState() =>
+  State<AddOrReplacePostTagDialog> createState() =>
       _AddOrReplacePostTagDialogState();
 }
 
-class _AddOrReplacePostTagDialogState
-    extends State<_AddOrReplacePostTagDialog> {
+class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _controller;
@@ -1292,11 +1288,8 @@ class _AddOrReplacePostTagDialogState
                   (value == null || value.isEmpty) ? '请输入标签名字' : null,
             ),
             Obx(
-              () => CheckboxListTile(
+              () => TightCheckboxListTile(
                 enabled: !_tagExists,
-                contentPadding: EdgeInsets.zero,
-                visualDensity:
-                    const VisualDensity(vertical: VisualDensity.minimumDensity),
                 title: const Text('配色跟随应用主题'),
                 value: _useDefaultColor,
                 onChanged: (value) {
@@ -1399,7 +1392,7 @@ class SavedPostDialog extends StatelessWidget {
 
   final bool confirmDelete;
 
-  final VoidCallback? onDeleted;
+  final VoidCallback? onDelete;
 
   const SavedPostDialog(
       {super.key,
@@ -1407,7 +1400,7 @@ class SavedPostDialog extends StatelessWidget {
       this.mainPostId,
       this.page,
       this.confirmDelete = true,
-      this.onDeleted});
+      this.onDelete});
 
   bool get _hasPostId => post.isNormalPost;
 
@@ -1431,11 +1424,11 @@ class SavedPostDialog extends StatelessWidget {
                 ));
 
                 if (result ?? false) {
-                  onDeleted?.call();
+                  onDelete?.call();
                   postListBack();
                 }
               } else {
-                onDeleted?.call();
+                onDelete?.call();
                 postListBack();
               }
             },
@@ -1467,5 +1460,138 @@ class SavedPostDialog extends StatelessWidget {
                 jumpToId: (_hasNonMainPostId && page != null) ? post.id : null,
                 text: !_isMainPost ? '在新标签页后台打开主串' : null),
         ],
+      );
+}
+
+class SearchDialog extends StatelessWidget {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  final Search? search;
+
+  final ValueSetter<Search>? onSearch;
+
+  final RxBool caseSensitive;
+
+  final RxBool useWildcard;
+
+  SearchDialog({super.key, this.search, this.onSearch})
+      : caseSensitive = (search?.caseSensitive ?? false).obs,
+        useWildcard = (search?.useWildcard ?? false).obs;
+
+  @override
+  Widget build(BuildContext context) {
+    String? searchText;
+
+    return InputDialog(
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              decoration: const InputDecoration(labelText: '搜索内容'),
+              autofocus: true,
+              initialValue: search?.text,
+              onSaved: (newValue) => searchText = newValue,
+              validator: (value) =>
+                  (value == null || value.isEmpty) ? '请输入搜索内容' : null,
+            ),
+            Obx(
+              () => TightCheckboxListTile(
+                title: const Text('英文字母区分大小写'),
+                value: caseSensitive.value,
+                onChanged: (value) {
+                  if (value != null) {
+                    caseSensitive.value = value;
+                  }
+                },
+              ),
+            ),
+            Obx(
+              () => TightCheckboxListTile(
+                title: const Text('使用通配符'),
+                value: useWildcard.value,
+                onChanged: (value) {
+                  if (value != null) {
+                    useWildcard.value = value;
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            postListDialog(const ConfirmCancelDialog(
+              contentWidget: Text.rich(TextSpan(
+                text: "搜索内容尽量不要是HTML标签和样式相关字符串，比如'font'、'color'、'br'。\n通配符 ",
+                children: [
+                  TextSpan(
+                    children: [
+                      TextSpan(text: '*', style: AppTheme.boldRed),
+                      TextSpan(text: ' 匹配零个或多个任意字符。\n通配符 '),
+                      TextSpan(text: '?', style: AppTheme.boldRed),
+                      TextSpan(text: ' 匹配任意一个字符，通常汉字包含三个或四个字符。'),
+                    ],
+                  ),
+                ],
+              )),
+              onConfirm: postListBack,
+            ));
+          },
+          child: const Text('搜索说明'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              onSearch?.call(Search(
+                  text: searchText!,
+                  caseSensitive: caseSensitive.value,
+                  useWildcard: useWildcard.value));
+              postListBack();
+            }
+          },
+          child: const Text('搜索'),
+        ),
+      ],
+    );
+  }
+}
+
+class ClearDialog extends StatelessWidget {
+  final String text;
+
+  final AsyncCallback? onClear;
+
+  const ClearDialog({super.key, required this.text, this.onClear});
+
+  @override
+  Widget build(BuildContext context) => LoaderOverlay(
+        child: ConfirmCancelDialog(
+          content: '确定清空$text？',
+          onConfirm: () async {
+            final overlay = context.loaderOverlay;
+            try {
+              overlay.show();
+
+              await onClear?.call();
+              showToast('清空$text');
+            } catch (e) {
+              showToast('清空$text失败：$e');
+            } finally {
+              if (overlay.visible) {
+                overlay.hide();
+              }
+            }
+
+            WidgetsBinding.instance
+                .addPostFrameCallback((timeStamp) => postListBack());
+          },
+          onCancel: postListBack,
+        ),
       );
 }

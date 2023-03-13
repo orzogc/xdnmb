@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
@@ -65,6 +67,10 @@ extension IntExtension on int {
 
   int? get historyId =>
       (isPostHistory || isReplyHistory) ? this & _int32Max : null;
+}
+
+extension IntNullExtension on int? {
+  int? get notNegative => this != null ? max(this!, 0) : null;
 }
 
 extension PostExtension on PostBase {

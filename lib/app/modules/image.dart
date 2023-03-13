@@ -298,7 +298,7 @@ class _Image<T extends Object> extends StatefulWidget {
   final ImageProvider<T> provider;
 
   /// 设置背景透明度，参数是透明度（0.0到 1.0）
-  final ValueSetter<double> setOpacity;
+  final ValueChanged<double> onOpacity;
 
   final VoidCallback hideOverlay;
 
@@ -314,7 +314,7 @@ class _Image<T extends Object> extends StatefulWidget {
       {super.key,
       required this.heroTag,
       required this.provider,
-      required this.setOpacity,
+      required this.onOpacity,
       required this.hideOverlay,
       this.canShowDialog = false,
       this.paint,
@@ -470,7 +470,7 @@ class _ImageState extends State<_Image>
 
   void _setOpacity({double? opacity, Size? bodySize, Size? imageSize}) {
     if (opacity != null) {
-      widget.setOpacity(opacity);
+      widget.onOpacity(opacity);
       return;
     }
 
@@ -498,9 +498,9 @@ class _ImageState extends State<_Image>
     }
 
     if (distance != null) {
-      widget.setOpacity(1.0 - (distance / _opacityDistance).clamp(0.0, 1.0));
+      widget.onOpacity(1.0 - (distance / _opacityDistance).clamp(0.0, 1.0));
     } else {
-      widget.setOpacity(1.0);
+      widget.onOpacity(1.0);
     }
   }
 
@@ -1125,7 +1125,7 @@ class ImageView extends StatelessWidget {
                           _Image<CachedNetworkImageProvider>(
                         heroTag: _controller.heroTag,
                         provider: imageProvider as CachedNetworkImageProvider,
-                        setOpacity: _setOpacity,
+                        onOpacity: _setOpacity,
                         hideOverlay: _hideOverlay,
                         size: size,
                       ),
@@ -1194,7 +1194,7 @@ class ImageView extends StatelessWidget {
                                     heroTag: _controller.heroTag,
                                     provider: imageProvider
                                         as CachedNetworkImageProvider,
-                                    setOpacity: _setOpacity,
+                                    onOpacity: _setOpacity,
                                     hideOverlay: _hideOverlay,
                                     canShowDialog: true,
                                     paint: _paint,
@@ -1209,7 +1209,7 @@ class ImageView extends StatelessWidget {
                                     heroTag: _controller.heroTag,
                                     provider: MemoryImage(
                                         _controller.imageData.value!),
-                                    setOpacity: _setOpacity,
+                                    onOpacity: _setOpacity,
                                     hideOverlay: _hideOverlay,
                                     canShowDialog: true,
                                     paint: _paint,

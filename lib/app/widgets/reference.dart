@@ -120,7 +120,7 @@ class _ReferenceCardState extends State<ReferenceCard> {
                                   PostInkWell(
                                     post: reference,
                                     poUserHash: widget.poUserHash,
-                                    onLinkTap: (context, link, text) =>
+                                    onTapLink: (context, link, text) =>
                                         parseUrl(
                                             url: link,
                                             mainPostId: widget.mainPostId,

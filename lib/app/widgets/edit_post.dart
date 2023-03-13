@@ -57,14 +57,14 @@ class _ForumName extends StatelessWidget {
   final int? forumId;
 
   /// 选取版块时调用，参数是版块数据
-  final ValueSetter<ForumData> onSelected;
+  final ValueSetter<ForumData> onSelect;
 
   const _ForumName(
       // ignore: unused_element
       {super.key,
       required this.postListType,
       required this.forumId,
-      required this.onSelected});
+      required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +87,7 @@ class _ForumName extends StatelessWidget {
                       SelectForum(
                         isOnlyForum: true,
                         onSelect: (forum) {
-                          onSelected(forum);
+                          onSelect(forum);
                           Get.back();
                         },
                       ),
@@ -324,10 +324,10 @@ class _Image extends StatefulWidget {
   final ValueSetter<bool> onWatermark;
 
   /// 文件图片加载后调用，参数是图片数据
-  final ValueSetter<Uint8List> onImageFileLoaded;
+  final ValueSetter<Uint8List> onLoadImageFile;
 
   /// 涂鸦后调用，参数是图片数据
-  final ValueSetter<Uint8List> onImagePainted;
+  final ValueSetter<Uint8List> onPaintImage;
 
   const _Image(
       // ignore: unused_element
@@ -339,8 +339,8 @@ class _Image extends StatefulWidget {
       required this.isWatermark,
       required this.onCancel,
       required this.onWatermark,
-      required this.onImageFileLoaded,
-      required this.onImagePainted})
+      required this.onLoadImageFile,
+      required this.onPaintImage})
       : assert(imagePath != null || imageData != null);
 
   @override
@@ -375,7 +375,7 @@ class _ImageState extends State<_Image> {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData) {
             WidgetsBinding.instance.addPostFrameCallback(
-                (timeStamp) => widget.onImageFileLoaded(snapshot.data!));
+                (timeStamp) => widget.onLoadImageFile(snapshot.data!));
 
             return _memoryImage(snapshot.data!);
           }
@@ -422,7 +422,7 @@ class _ImageState extends State<_Image> {
                       imageData: widget.imageData,
                       canReturnImageData: true));
                   if (result is Uint8List) {
-                    widget.onImagePainted(result);
+                    widget.onPaintImage(result);
                   }
                 }
               : null,
@@ -674,10 +674,10 @@ class _Paint extends StatelessWidget {
   final Uint8List? imageData;
 
   /// 涂鸦后调用，参数是图片数据
-  final ValueSetter<Uint8List> onImagePainted;
+  final ValueSetter<Uint8List> onPaintImage;
 
   // ignore: unused_element
-  const _Paint({super.key, this.imageData, required this.onImagePainted});
+  const _Paint({super.key, this.imageData, required this.onPaintImage});
 
   @override
   Widget build(BuildContext context) {
@@ -686,7 +686,7 @@ class _Paint extends StatelessWidget {
         final data = await AppRoutes.toPaint(
             imageData != null ? PaintController(imageData) : null);
         if (data is Uint8List) {
-          onImagePainted(data);
+          onPaintImage(data);
         }
       },
       icon: const Icon(Icons.brush),
@@ -1751,7 +1751,7 @@ class _EditPostState extends State<EditPost> {
                     child: _ForumName(
                       postListType: _postList.value.postListType,
                       forumId: _forumId.value,
-                      onSelected: (forum) => _forumId.value = forum.id,
+                      onSelect: (forum) => _forumId.value = forum.id,
                     ),
                   ),
                   if (_postList.value.postListType.isThreadType)
@@ -1879,9 +1879,9 @@ class _EditPostState extends State<EditPost> {
                                     },
                                     onWatermark: (isWatermark) =>
                                         _isWatermark.value = isWatermark,
-                                    onImageFileLoaded: (imageData) =>
+                                    onLoadImageFile: (imageData) =>
                                         _imageData.value = imageData,
-                                    onImagePainted: (imageData) {
+                                    onPaintImage: (imageData) {
                                       _imagePath.value = null;
                                       _imageData.value = imageData;
                                     },
@@ -1941,7 +1941,7 @@ class _EditPostState extends State<EditPost> {
                   child: Obx(
                     () => _Paint(
                       imageData: _imageData.value,
-                      onImagePainted: (imageData) {
+                      onPaintImage: (imageData) {
                         _imagePath.value = null;
                         _imageData.value = imageData;
                       },

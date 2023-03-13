@@ -20,7 +20,7 @@ class TextContent extends StatefulWidget {
 
   final int? maxLines;
 
-  final OnLinkTapCallback? onLinkTap;
+  final OnTapLinkCallback? onTapLink;
 
   final OnImageCallback? onImage;
 
@@ -28,7 +28,7 @@ class TextContent extends StatefulWidget {
       {super.key,
       required this.text,
       this.maxLines,
-      this.onLinkTap,
+      this.onTapLink,
       this.onImage});
 
   @override
@@ -45,9 +45,9 @@ class _TextContentState extends State<TextContent> {
     _htmlText = HtmlText(
       context,
       widget.text,
-      onLinkTap: widget.onLinkTap,
+      onTapLink: widget.onTapLink,
       onText: (context, text) => Regex.onText(text),
-      onTextRecursiveParse: true,
+      isParsingTextRecursively: true,
       onImage: widget.onImage,
     );
   }
@@ -75,10 +75,10 @@ class Content extends StatefulWidget {
 
   final int? maxLines;
 
-  final OnLinkTapCallback? onLinkTap;
+  final OnTapLinkCallback? onTapLink;
 
   /// 涂鸦后调用，参数是图片数据
-  final ValueSetter<Uint8List>? onImagePainted;
+  final ValueSetter<Uint8List>? onPaintImage;
 
   final bool displayImage;
 
@@ -97,17 +97,17 @@ class Content extends StatefulWidget {
       required this.post,
       this.poUserHash,
       this.maxLines,
-      this.onLinkTap,
-      this.onImagePainted,
+      this.onTapLink,
+      this.onPaintImage,
       this.displayImage = true,
       this.canReturnImageData = false,
       this.canTapHiddenText = false,
       this.hiddenTextColor,
       this.textStyle,
       this.onText})
-      : assert(onImagePainted == null || displayImage),
-        assert(!canReturnImageData || (displayImage && onImagePainted != null)),
-        assert(!canTapHiddenText || onLinkTap != null);
+      : assert(onPaintImage == null || displayImage),
+        assert(!canReturnImageData || (displayImage && onPaintImage != null)),
+        assert(!canTapHiddenText || onTapLink != null);
 
   @override
   State<Content> createState() => _ContentState();
@@ -139,9 +139,9 @@ class _ContentState extends State<Content> {
       _htmlText = HtmlText(
         context,
         widget.post.content,
-        onLinkTap: widget.onLinkTap,
+        onTapLink: widget.onTapLink,
         onText: _onText,
-        onTextRecursiveParse: true,
+        isParsingTextRecursively: true,
         textStyle: widget.textStyle,
       );
     }
@@ -155,9 +155,9 @@ class _ContentState extends State<Content> {
       _htmlText = HtmlText(
         context,
         _text!,
-        onLinkTap: widget.onLinkTap,
+        onTapLink: widget.onTapLink,
         onText: _onText,
-        onTextRecursiveParse: true,
+        isParsingTextRecursively: true,
         onTags: onHiddenTag(
           (context, element, textStyle) {
             if (widget.canTapHiddenText) {
@@ -180,7 +180,7 @@ class _ContentState extends State<Content> {
                 hiddenColor: widget.hiddenTextColor,
                 getHiddenText: () => text,
                 refresh: _refresh,
-                onLinkTap: widget.onLinkTap,
+                onTapLink: widget.onTapLink,
               );
             } else {
               return getHiddenText(
@@ -254,7 +254,7 @@ class _ContentState extends State<Content> {
                       child: ThumbImage(
                         post: widget.post,
                         poUserHash: widget.poUserHash,
-                        onImagePainted: widget.onImagePainted,
+                        onPaintImage: widget.onPaintImage,
                         canReturnImageData: widget.canReturnImageData,
                       ),
                     ),

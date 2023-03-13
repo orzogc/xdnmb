@@ -19,6 +19,7 @@ import '../utils/theme.dart';
 import '../utils/toast.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
+import 'list_tile.dart';
 import 'post.dart';
 import 'post_list.dart';
 import 'tag.dart';
@@ -34,6 +35,10 @@ class TaggedPostListController extends PostListController {
   final Rxn<Search> _search;
 
   final Rxn<TagData> _tag = Rxn(null);
+
+  final RxnInt _postCount = RxnInt(null);
+
+  final RxDouble _headerHeight = 0.0.obs;
 
   final ValueListenable<Box<TagData>> _listenable;
 
@@ -59,6 +64,28 @@ class TaggedPostListController extends PostListController {
     }
   }
 
+  void _setSearch(Search? search) {
+    _search.value = search;
+
+    refreshPage();
+  }
+
+  int? _getPostCount() => _postCount.value.notNegative;
+
+  void _setPostCount(int? count) => _postCount.value = count.notNegative;
+
+  void _decreasePostCount() {
+    final count = _getPostCount();
+
+    _setPostCount(count != null ? count - 1 : null);
+  }
+
+  Future<void> _clear() async {
+    await TagService.deleteTagInPosts(tagId: id, search: search);
+
+    refreshPage();
+  }
+
   @override
   void dispose() {
     _listenable.removeListener(_updateTag);
@@ -79,22 +106,80 @@ class TaggedPostListAppBarTitle extends StatelessWidget {
   const TaggedPostListAppBarTitle(this.controller, {super.key});
 
   @override
-  Widget build(BuildContext context) => PostTag(controller: controller);
+  Widget build(BuildContext context) => Obx(() {
+        final count = controller._getPostCount();
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(child: PostTag(controller: controller)),
+            if (count != null) Text('・$count')
+          ],
+        );
+      });
+}
+
+class TaggedPostListAppBarPopupMenuButton extends StatelessWidget {
+  final TaggedPostListController controller;
+
+  const TaggedPostListAppBarPopupMenuButton(this.controller, {super.key});
+
+  @override
+  Widget build(BuildContext context) => PopupMenuButton(
+        itemBuilder: (context) {
+          final count = controller._getPostCount();
+
+          return [
+            PopupMenuItem(
+              onTap: () => postListDialog(SearchDialog(
+                search: controller.search,
+                onSearch: (search) => controller._setSearch(search),
+              )),
+              child: const Text('搜索'),
+            ),
+            if (count != null && count > 0)
+              PopupMenuItem(
+                onTap: () => postListDialog(ClearDialog(
+                  text: '',
+                  onClear: controller._clear,
+                )),
+                child: const Text('清空'),
+              ),
+          ];
+        },
+      );
+}
+
+class _TaggedPostListHeader extends StatelessWidget {
+  final TaggedPostListController controller;
+
+  // ignore: unused_element
+  const _TaggedPostListHeader(this.controller, {super.key});
+
+  @override
+  Widget build(BuildContext context) => Obx(() {
+        final search = controller.search;
+
+        return PostListHeader(
+            key: ValueKey<Search?>(search),
+            onSize: (value) => controller._headerHeight.value = value.height,
+            child: search != null
+                ? SearchListTile(
+                    search: search, onCancel: () => controller._setSearch(null))
+                : const SizedBox.shrink());
+      });
 }
 
 class _TaggedPostListItem extends StatefulWidget {
+  final TaggedPostListController controller;
+
   final Visible<TaggedPost> post;
-
-  final int tagId;
-
-  final Search? search;
 
   const _TaggedPostListItem(
       // ignore: unused_element
       {super.key,
-      required this.post,
-      required this.tagId,
-      this.search});
+      required this.controller,
+      required this.post});
 
   @override
   State<_TaggedPostListItem> createState() => _TaggedPostListItemState();
@@ -107,7 +192,13 @@ class _TaggedPostListItemState extends State<_TaggedPostListItem> {
 
   int? _page;
 
+  TaggedPostListController get _controller => widget.controller;
+
   TaggedPost get _post => widget.post.item;
+
+  int get _tagId => _controller.id;
+
+  Search? get _search => _controller.search;
 
   bool get _isMainPost => _post.isNormalPost ? _post.id == _mainPostId : false;
 
@@ -162,18 +253,20 @@ class _TaggedPostListItemState extends State<_TaggedPostListItem> {
 
           return Obx(() => widget.post.isVisible
               ? PostCard(
+                  key: ValueKey<int>(_post.id),
                   child: PostInkWell(
                     post: _post,
                     contentMaxLines: 8,
-                    onText: !(widget.search?.useWildcard ?? true)
-                        ? (context, text) => Regex.onSearchText(
-                            text: text, search: widget.search!)
+                    onText: !(_search?.useWildcard ?? true)
+                        ? (context, text) =>
+                            Regex.onSearchText(text: text, search: _search!)
                         : null,
                     showFullTime: false,
                     showPostId: _post.isNormalPost,
                     showReplyCount: false,
-                    onTagDeleted: (value) {
-                      if (value == widget.tagId) {
+                    onDeleteTag: (value) {
+                      if (value == _tagId) {
+                        _controller._decreasePostCount();
                         widget.post.isVisible = false;
                       }
                     },
@@ -195,11 +288,12 @@ class _TaggedPostListItemState extends State<_TaggedPostListItem> {
                       post: post,
                       mainPostId: _mainPostId,
                       page: _page,
-                      onDeleted: () async {
-                        await TagService.deletePostTag(post.id, widget.tagId);
+                      onDelete: () async {
+                        await TagService.deletePostTag(post.id, _tagId);
+                        _controller._decreasePostCount();
                         showToast(post.isNormalPost
-                            ? '删除标签列表里的串 ${post.toPostNumber()}'
-                            : '删除标签列表里的串');
+                            ? '删除串 ${post.toPostNumber()}'
+                            : '删除串');
                         widget.post.isVisible = false;
                       },
                     )),
@@ -217,34 +311,41 @@ class TaggedPostListBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => PostListWithTabBarOrHeader(
+        headerHeight: () => controller._headerHeight.value,
+        header: _TaggedPostListHeader(controller),
         controller: controller,
         postList: PostListScrollView(
           controller: controller,
-          builder: (context, scrollController, refresh) {
-            final search = controller.search;
+          builder: (context, scrollController, refresh) =>
+              BiListView<Visible<TaggedPost>>(
+            key: ValueKey<int>(refresh),
+            scrollController: scrollController,
+            postListController: controller,
+            initialPage: 1,
+            canLoadMoreAtBottom: false,
+            fetch: (page) async {
+              if (page == 1) {
+                final list = (await TagService.taggedPostList(
+                        tagId: controller.id, search: controller.search))
+                    .map((post) => Visible(post))
+                    .toList();
+                controller._setPostCount(list.length);
 
-            return BiListView<Visible<TaggedPost>>(
-              scrollController: scrollController,
-              postListController: controller,
-              initialPage: 1,
-              canLoadMoreAtBottom: false,
-              fetch: (page) async => page == 1
-                  ? (await TagService.taggedPostList(
-                          tagId: controller.id, search: search))
-                      .map((post) => Visible(post))
-                      .toList()
-                  : [],
-              itemBuilder: (context, post, index) => _TaggedPostListItem(
-                  post: post, tagId: controller.id, search: search),
-              noItemsFoundBuilder: (context) => Center(
-                child: Text(
-                  '没有串',
-                  style: AppTheme.boldRedPostContentTextStyle,
-                  strutStyle: AppTheme.boldRedPostContentStrutStyle,
-                ),
+                return list;
+              }
+
+              return <Visible<TaggedPost>>[];
+            },
+            itemBuilder: (context, post, index) =>
+                _TaggedPostListItem(controller: controller, post: post),
+            noItemsFoundBuilder: (context) => Center(
+              child: Text(
+                '没有串',
+                style: AppTheme.boldRedPostContentTextStyle,
+                strutStyle: AppTheme.boldRedPostContentStrutStyle,
               ),
-            );
-          },
+            ),
+          ),
         ),
       );
 }

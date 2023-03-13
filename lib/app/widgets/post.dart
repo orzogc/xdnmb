@@ -188,7 +188,7 @@ class _PostId extends StatelessWidget {
   final int postId;
 
   /// 串号被按时调用，参数是串号
-  final ValueSetter<int>? onPostIdTap;
+  final ValueSetter<int>? onTapPostId;
 
   final TextStyle? textStyle;
 
@@ -196,7 +196,7 @@ class _PostId extends StatelessWidget {
       // ignore: unused_element
       {super.key,
       required this.postId,
-      this.onPostIdTap,
+      this.onTapPostId,
       this.textStyle});
 
   @override
@@ -207,11 +207,11 @@ class _PostId extends StatelessWidget {
             ? StrutStyle.fromTextStyle(textStyle!)
             : AppTheme.postHeaderStrutStyle);
 
-    return onPostIdTap != null
+    return onTapPostId != null
         ? MouseRegion(
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
-              onTap: () => onPostIdTap!(postId),
+              onTap: () => onTapPostId!(postId),
               child: text,
             ),
           )
@@ -379,14 +379,14 @@ class _PostTagDialog extends StatelessWidget {
 
   final TagData tag;
 
-  final ValueSetter<int>? onTagDeleted;
+  final ValueSetter<int>? onDeleteTag;
 
   const _PostTagDialog(
       // ignore: unused_element
       {super.key,
       required this.post,
       required this.tag,
-      this.onTagDeleted});
+      this.onDeleteTag});
 
   @override
   Widget build(BuildContext context) => SimpleDialog(
@@ -399,8 +399,9 @@ class _PostTagDialog extends StatelessWidget {
         ),
         children: [
           AddOrReplacePostTag(post: post),
+          AddOrEditTag(editedTag: tag),
           AddOrReplacePostTag(post: post, replacedTag: tag),
-          DeletePostTag(postId: post.id, tag: tag, onDeleted: onTagDeleted),
+          DeletePostTag(postId: post.id, tag: tag, onDelete: onDeleteTag),
           ToTaggedPostList(tag.id),
           NewTabToTaggedPostList(tag.id),
           NewTabBackgroundToTaggedPostList(tag.id),
@@ -413,14 +414,14 @@ class _PostTag extends StatefulWidget {
 
   final TextStyle? textStyle;
 
-  final ValueSetter<int>? onTagDeleted;
+  final ValueSetter<int>? onDeleteTag;
 
   const _PostTag(
       // ignore: unused_element
       {super.key,
       required this.post,
       this.textStyle,
-      this.onTagDeleted});
+      this.onDeleteTag});
 
   @override
   State<_PostTag> createState() => _PostTagState();
@@ -487,7 +488,7 @@ class _PostTagState extends State<_PostTag> {
                     onTap: () => postListDialog(_PostTagDialog(
                       post: _post,
                       tag: tag,
-                      onTagDeleted: widget.onTagDeleted,
+                      onDeleteTag: widget.onDeleteTag,
                     )),
                   ),
               ],
@@ -579,10 +580,10 @@ class PostContent extends StatelessWidget {
   final double? contentMaxHeight;
 
   /// 串号被按时调用，参数是串号
-  final ValueSetter<int>? onPostIdTap;
+  final ValueSetter<int>? onTapPostId;
 
   /// 标签被删除时调用，参数是标签ID
-  final ValueSetter<int>? onTagDeleted;
+  final ValueSetter<int>? onDeleteTag;
 
   late final TextStyle? headerTextStyle;
 
@@ -601,8 +602,8 @@ class PostContent extends StatelessWidget {
       required PostBase post,
       String? poUserHash,
       int? contentMaxLines,
-      OnLinkTapCallback? onLinkTap,
-      ValueSetter<Uint8List>? onImagePainted,
+      OnTapLinkCallback? onTapLink,
+      ValueSetter<Uint8List>? onPaintImage,
       bool displayImage = true,
       bool canReturnImageData = false,
       bool canTapHiddenText = false,
@@ -616,8 +617,8 @@ class PostContent extends StatelessWidget {
       this.showPoTag = false,
       this.headerHeight,
       this.contentMaxHeight,
-      this.onPostIdTap,
-      this.onTagDeleted,
+      this.onTapPostId,
+      this.onDeleteTag,
       TextStyle? headerTextStyle,
       this.header,
       this.footer}) {
@@ -633,8 +634,8 @@ class PostContent extends StatelessWidget {
         post: post,
         poUserHash: poUserHash,
         maxLines: contentMaxLines,
-        onLinkTap: onLinkTap,
-        onImagePainted: onImagePainted,
+        onTapLink: onTapLink,
+        onPaintImage: onPaintImage,
         displayImage: displayImage,
         canReturnImageData: canReturnImageData,
         canTapHiddenText: canTapHiddenText,
@@ -698,7 +699,7 @@ class PostContent extends StatelessWidget {
                 if (showPostId)
                   _PostId(
                     postId: post.id,
-                    onPostIdTap: onPostIdTap,
+                    onTapPostId: onTapPostId,
                     textStyle: headerTextStyle,
                   ),
                 if (showForumName && forumId != null)
@@ -735,7 +736,7 @@ class PostContent extends StatelessWidget {
             _PostTag(
               post: post,
               textStyle: contentTextStyle,
-              onTagDeleted: onTagDeleted,
+              onDeleteTag: onDeleteTag,
             ),
           if (footer != null) footer!(headerTextStyle),
         ].withSpaceBetween(height: 5.0),
@@ -764,8 +765,8 @@ class PostInkWell extends StatelessWidget {
       required PostBase post,
       String? poUserHash,
       int? contentMaxLines,
-      OnLinkTapCallback? onLinkTap,
-      ValueSetter<Uint8List>? onImagePainted,
+      OnTapLinkCallback? onTapLink,
+      ValueSetter<Uint8List>? onPaintImage,
       bool displayImage = true,
       bool canReturnImageData = false,
       bool canTapHiddenText = false,
@@ -779,8 +780,8 @@ class PostInkWell extends StatelessWidget {
       bool showPoTag = false,
       double? headerHeight,
       double? contentMaxHeight,
-      ValueSetter<int>? onPostIdTap,
-      ValueSetter<int>? onTagDeleted,
+      ValueSetter<int>? onTapPostId,
+      ValueSetter<int>? onDeleteTag,
       TextStyle? headerTextStyle,
       AttachmentBuilder? header,
       AttachmentBuilder? footer,
@@ -792,8 +793,8 @@ class PostInkWell extends StatelessWidget {
             post: post,
             poUserHash: poUserHash,
             contentMaxLines: contentMaxLines,
-            onLinkTap: onLinkTap,
-            onImagePainted: onImagePainted,
+            onTapLink: onTapLink,
+            onPaintImage: onPaintImage,
             displayImage: displayImage,
             canReturnImageData: canReturnImageData,
             canTapHiddenText: canTapHiddenText,
@@ -807,8 +808,8 @@ class PostInkWell extends StatelessWidget {
             showPoTag: showPoTag,
             headerHeight: headerHeight,
             contentMaxHeight: contentMaxHeight,
-            onPostIdTap: onPostIdTap,
-            onTagDeleted: onTagDeleted,
+            onTapPostId: onTapPostId,
+            onDeleteTag: onDeleteTag,
             headerTextStyle: headerTextStyle,
             header: header,
             footer: footer);

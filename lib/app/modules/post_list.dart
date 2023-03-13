@@ -148,6 +148,8 @@ abstract class PostListController extends ChangeNotifier {
 
   bool get isHistory => postListType.isHistory;
 
+  bool get isTaggedPostList => postListType.isTaggedPostList;
+
   bool get isThreadType => postListType.isThreadType;
 
   bool get isForumType => postListType.isForumType;
@@ -383,6 +385,12 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                         AppBarPopupMenuGuide(HistoryAppBarPopupMenuButton(
                           controller as HistoryController,
                         )),
+                      if (controller.isTaggedPostList)
+                        AppBarPopupMenuGuide(
+                          TaggedPostListAppBarPopupMenuButton(
+                            controller as TaggedPostListController,
+                          ),
+                        ),
                     ]
                   : const [SizedBox.shrink()],
             ),

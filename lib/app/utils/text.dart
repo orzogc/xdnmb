@@ -23,35 +23,35 @@ TextSpan getHiddenText(
     Color? hiddenColor,
     ValueGetter<HiddenText>? getHiddenText,
     VoidCallback? refresh,
-    OnLinkTapCallback? onLinkTap}) {
-  assert((getHiddenText != null && refresh != null && onLinkTap != null) ||
-      (getHiddenText == null && refresh == null && onLinkTap == null));
+    OnTapLinkCallback? onTapLink}) {
+  assert((getHiddenText != null && refresh != null && onTapLink != null) ||
+      (getHiddenText == null && refresh == null && onTapLink == null));
 
   final content = element.innerHtml;
   final size = getTextSize(context, '啊$content', textStyle);
 
-  if (getHiddenText != null && refresh != null && onLinkTap != null) {
+  if (getHiddenText != null && refresh != null && onTapLink != null) {
     final hiddenText = getHiddenText();
 
     final text = HtmlText(
       context,
       content,
-      onLinkTap: (context, link, text) {
+      onTapLink: (context, link, text) {
         if (hiddenText._isVisible) {
-          onLinkTap(context, link, text);
+          onTapLink(context, link, text);
         } else {
           hiddenText._trigger();
           refresh();
         }
       },
-      onTextTap: (context, text) {
+      onTapText: (context, text) {
         hiddenText._trigger();
         refresh();
       },
       onText: (context, text) => Regex.onText(text),
-      onTextRecursiveParse: true,
+      isParsingTextRecursively: true,
       textStyle: textStyle,
-      overrideTextStyle: TextStyle(
+      overrodeTextStyle: TextStyle(
         decoration: hiddenText._isVisible ? null : TextDecoration.lineThrough,
         decorationColor:
             hiddenText._isVisible ? null : (hiddenColor ?? AppTheme.textColor),
@@ -69,9 +69,9 @@ TextSpan getHiddenText(
     context,
     content,
     onText: (context, text) => Regex.onText(text),
-    onTextRecursiveParse: true,
+    isParsingTextRecursively: true,
     textStyle: textStyle,
-    overrideTextStyle: TextStyle(
+    overrodeTextStyle: TextStyle(
       decoration: TextDecoration.lineThrough,
       decorationColor: hiddenColor ?? AppTheme.textColor,
       decorationThickness: size.height + 5.0,

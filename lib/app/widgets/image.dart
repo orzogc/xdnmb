@@ -29,7 +29,7 @@ class ThumbImage extends StatefulWidget {
   final String? poUserHash;
 
   /// 涂鸦后调用，参数是图片数据
-  final ValueSetter<Uint8List>? onImagePainted;
+  final ValueSetter<Uint8List>? onPaintImage;
 
   final bool canReturnImageData;
 
@@ -37,7 +37,7 @@ class ThumbImage extends StatefulWidget {
       {super.key,
       required this.post,
       this.poUserHash,
-      this.onImagePainted,
+      this.onPaintImage,
       this.canReturnImageData = false})
       : assert(post.hasImage);
 
@@ -62,8 +62,8 @@ class _ThumbImageState extends State<ThumbImage> {
                 post: _post,
                 poUserHash: widget.poUserHash,
                 canReturnImageData: widget.canReturnImageData));
-            if (widget.onImagePainted != null && result is Uint8List) {
-              widget.onImagePainted!(result);
+            if (widget.onPaintImage != null && result is Uint8List) {
+              widget.onPaintImage!(result);
             }
           },
           child: LayoutBuilder(
