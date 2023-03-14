@@ -142,7 +142,8 @@ class _ReferenceCardState extends State<ReferenceCard> {
                                   if (mainPostId != null &&
                                       mainPostId != widget.mainPostId)
                                     Padding(
-                                      padding: const EdgeInsets.all(10.0),
+                                      padding: const EdgeInsets.only(
+                                          right: 5.0, bottom: 5.0),
                                       child: TextButton(
                                         onPressed: () => AppRoutes.toThread(
                                           mainPostId: mainPostId,

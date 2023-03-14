@@ -33,8 +33,6 @@ class TagService extends GetxService {
 
   final RxBool isReady = false.obs;
 
-  Iterable<int> get allTagsId => _tagsBox.keys.cast<int>();
-
   static QueryBuilder<TaggedPost, TaggedPost, dynamic> _buildQuery(
       {required int tagId, Search? search}) {
     QueryBuilder<TaggedPost, TaggedPost, dynamic> query =
@@ -165,11 +163,17 @@ class TagService extends GetxService {
 
   static Future<void> addFeeds(Iterable<Feed> feeds) => updatePosts(feeds);
 
+  Iterable<int> get allTagsId => _tagsBox.keys.cast<int>();
+
+  Iterable<TagData> get allTagsData => _tagsBox.values;
+
+  int get tagsCount => _tagsBox.length;
+
   bool tagIdExists(int tagId) => _tagsBox.containsKey(tagId);
 
   bool tagNameExists(String tagName) => _tagsMap.containsKey(tagName);
 
-  ValueListenable<Box<TagData>> tagListenable(List<int> tagsId) =>
+  ValueListenable<Box<TagData>> tagListenable(List<int>? tagsId) =>
       _tagsBox.listenable(keys: tagsId);
 
   TagData? getTagData(int tagId) => _tagsBox.get(tagId);

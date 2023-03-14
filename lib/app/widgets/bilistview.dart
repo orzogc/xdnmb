@@ -18,10 +18,10 @@ import 'loading.dart';
 class _MinHeightIndicator extends StatelessWidget {
   static const double _minHeight = 90.0;
 
-  final Widget child;
+  final Widget? child;
 
   // ignore: unused_element
-  const _MinHeightIndicator({super.key, required this.child});
+  const _MinHeightIndicator({super.key, this.child});
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
@@ -383,10 +383,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
 
     widget.onNoMoreItems?.call();
 
-    return widget.lastPage == null
-        ? (widget.canLoadMoreAtBottom
-            ? _MinHeightIndicator(
-                child: Obx(
+    return _MinHeightIndicator(
+      child: widget.lastPage == null
+          ? (widget.canLoadMoreAtBottom
+              ? Obx(
                   () => _isLoadingMore.value
                       ? const Quotation()
                       : TextButton(
@@ -401,19 +401,16 @@ class _BiListViewState<T> extends State<BiListView<T>>
                             strutStyle: StrutStyle.fromTextStyle(textStyle),
                           ),
                         ),
-                ),
-              )
-            : const SizedBox.shrink())
-        : _MinHeightIndicator(
-            child: Align(
+                )
+              : null)
+          : Align(
               alignment: Alignment.topCenter,
               child: Text(
                 '已经抵达X岛的尽头',
                 style: textStyle,
                 strutStyle: StrutStyle.fromTextStyle(textStyle),
-              ),
-            ),
-          );
+              )),
+    );
   }
 
   void _checkBoundary() {

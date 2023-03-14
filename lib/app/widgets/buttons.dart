@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
+import '../data/services/tag.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/icons.dart';
@@ -11,6 +12,7 @@ import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'dialog.dart';
 import 'reference.dart';
+import 'size.dart';
 
 class _Button extends StatelessWidget {
   final Widget icon;
@@ -70,25 +72,184 @@ class DarkModeButton extends StatelessWidget {
   }
 }
 
+// 修改自官方代码
+class _AutocompleteOptions extends StatelessWidget {
+  static const double _maxHeight = 200.0;
+
+  const _AutocompleteOptions({
+    // ignore: unused_element
+    super.key,
+    required this.maxWidth,
+    required this.options,
+    required this.onSelected,
+  });
+
+  final double maxWidth;
+
+  final List<String> options;
+
+  final AutocompleteOnSelected<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final highlightIndex = AutocompleteHighlightedOption.of(context);
+
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Material(
+        elevation: 4.0,
+        child: ConstrainedBox(
+          constraints:
+              BoxConstraints(maxWidth: maxWidth, maxHeight: _maxHeight),
+          child: ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemCount: options.length,
+            itemBuilder: (context, index) {
+              final option = options[index];
+
+              return InkWell(
+                onTap: () => onSelected(option),
+                child: Builder(builder: (context) {
+                  final bool highlight = highlightIndex == index;
+                  if (highlight) {
+                    WidgetsBinding.instance.addPostFrameCallback((timeStamp) =>
+                        Scrollable.ensureVisible(context, alignment: 0.5));
+                  }
+
+                  return Container(
+                    color: highlight ? theme.focusColor : null,
+                    padding: const EdgeInsets.all(10.0),
+                    child: Text(
+                      option,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium,
+                    ),
+                  );
+                }),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SearchDialog extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  static const int _searchIndex = 0;
+
+  static const int _postIdIndex = 1;
+
+  static const int _tagIndex = 2;
+
+  final GlobalKey<FormFieldState<String>> _formKey =
+      GlobalKey<FormFieldState<String>>();
+
+  final RxInt _index = _postIdIndex.obs;
+
+  final Iterable<String> _allTagsName =
+      TagService.to.allTagsData.map((tag) => tag.name.toLowerCase());
 
   // ignore: unused_element
   _SearchDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final tagService = TagService.to;
     String? content;
+    double width = 0.0;
 
     return InputDialog(
-      title: const Text('搜索'),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          autofocus: true,
-          onSaved: (newValue) => content = newValue,
-          validator: (value) =>
-              (value == null || value.isEmpty) ? '请输入搜索内容' : null,
+      title: const Text('查询'),
+      content: Obx(
+        () => Row(
+          children: [
+            DropdownButton<int>(
+              value: _index.value,
+              underline: const SizedBox.shrink(),
+              onChanged: (value) {
+                if (value != null) {
+                  _index.value = value;
+                }
+              },
+              items: const [
+                DropdownMenuItem(
+                  value: _searchIndex,
+                  enabled: false,
+                  child: Tooltip(
+                    message: '搜索坏了',
+                    child: Text('搜索', style: TextStyle(color: Colors.grey)),
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: _postIdIndex,
+                  child: Text('串号'),
+                ),
+                DropdownMenuItem(
+                  value: _tagIndex,
+                  child: Text('标签'),
+                ),
+              ],
+            ),
+            const SizedBox(width: 5.0),
+            Flexible(
+              child: Autocomplete<String>(
+                key: ValueKey<int>(_index.value),
+                initialValue: TextEditingValue(text: content ?? ''),
+                optionsBuilder: (textEditingValue) {
+                  if (_index.value == _tagIndex) {
+                    if (textEditingValue.text.isNotEmpty) {
+                      final text = textEditingValue.text.toLowerCase();
+
+                      return _allTagsName.where((name) => name.contains(text));
+                    } else {
+                      return _allTagsName;
+                    }
+                  }
+
+                  return [];
+                },
+                fieldViewBuilder: (context, textEditingController, focusNode,
+                        onFieldSubmitted) =>
+                    ChildSizeNotifier(
+                  builder: (context, size, child) {
+                    width = size.width;
+
+                    return child!;
+                  },
+                  child: TextFormField(
+                    key: _formKey,
+                    controller: textEditingController,
+                    focusNode: focusNode,
+                    autofocus: true,
+                    onChanged: (value) => content = value,
+                    onFieldSubmitted: (value) => onFieldSubmitted(),
+                    onSaved: (newValue) => content = newValue,
+                    validator: (value) => (value == null || value.isEmpty)
+                        ? '请输入查询内容'
+                        : (_index.value == _postIdIndex
+                            ? (Regex.getPostId(value) == null
+                                ? '请输入串号或串号引用'
+                                : null)
+                            : (_index.value == _tagIndex
+                                ? (!tagService.tagNameExists(value)
+                                    ? '标签不存在'
+                                    : null)
+                                : null)),
+                  ),
+                ),
+                optionsViewBuilder: (context, onSelected, options) =>
+                    _AutocompleteOptions(
+                  maxWidth: width,
+                  options: options.toList(),
+                  onSelected: onSelected,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       actions: [
@@ -97,21 +258,42 @@ class _SearchDialog extends StatelessWidget {
             if (_formKey.currentState!.validate()) {
               _formKey.currentState!.save();
 
-              final postId = Regex.getPostId(content!);
-              if (postId == null) {
-                showToast('请输入串号');
-                return;
-              }
+              switch (_index.value) {
+                case _searchIndex:
+                  showToast('暂不支持搜索');
 
-              Get.back<bool>(result: true);
-              postListDialog(Center(child: ReferenceCard(postId: postId)));
+                  return;
+                case _postIdIndex:
+                  final postId = Regex.getPostId(content!);
+                  if (postId != null) {
+                    Get.back<bool>(result: true);
+                    postListDialog(
+                        Center(child: ReferenceCard(postId: postId)));
+
+                    return;
+                  } else {
+                    showToast('请输入串号');
+                  }
+
+                  return;
+                case _tagIndex:
+                  final tag = tagService.getTagDataFromName(content!);
+                  if (tag != null) {
+                    Get.back<bool>(result: true);
+                    AppRoutes.toTaggedPostList(tagId: tag.id);
+
+                    return;
+                  } else {
+                    showToast('标签 $content 不存在');
+                  }
+
+                  return;
+                default:
+                  debugPrint('未知的查询选项：${_index.value}');
+              }
             }
           },
-          child: const Text('查询串号'),
-        ),
-        const ElevatedButton(
-          onPressed: null,
-          child: Text('搜索坏了', style: TextStyle(color: Colors.grey)),
+          child: const Text('查询'),
         ),
       ],
     );
@@ -138,8 +320,8 @@ class SearchButton extends StatelessWidget {
     onTapPrelude?.call();
 
     final result = await Get.dialog<bool>(_SearchDialog());
-    if ((result ?? false) && afterSearch != null) {
-      afterSearch!();
+    if (result ?? false) {
+      afterSearch?.call();
     }
   }
 
@@ -148,8 +330,8 @@ class SearchButton extends StatelessWidget {
     final Widget icon = Icon(Icons.search, color: iconColor);
 
     return showLabel
-        ? _Button(icon: icon, label: '搜索', onTap: _onTap)
-        : IconButton(onPressed: _onTap, tooltip: '搜索', icon: icon);
+        ? _Button(icon: icon, label: '查询', onTap: _onTap)
+        : IconButton(onPressed: _onTap, tooltip: '查询', icon: icon);
   }
 }
 

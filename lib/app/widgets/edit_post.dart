@@ -46,7 +46,6 @@ import 'forum_name.dart';
 import 'image.dart';
 import 'listenable.dart';
 import 'scroll.dart';
-import 'size.dart';
 import 'tag.dart';
 import 'thread.dart';
 import 'tooltip.dart';
@@ -106,136 +105,66 @@ class _ForumName extends StatelessWidget {
   }
 }
 
-class _ReportReasonDialog extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  final String? text;
-
-  // ignore: unused_element
-  _ReportReasonDialog({super.key, this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    String? reason;
-
-    return InputDialog(
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          decoration: const InputDecoration(labelText: '举报理由'),
-          initialValue: text,
-          autofocus: true,
-          onSaved: (newValue) => reason = newValue,
-          validator: (value) => (value == null || value.isEmpty)
-              ? '请输入举报理由'
-              : (xdnmb_api.ReportReason.list
-                      .any((reason) => reason.reason == value)
-                  ? '举报理由不能与已有的重复'
-                  : null),
-        ),
-      ),
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-
-              Get.back<String>(result: reason);
-            }
-          },
-          child: const Text('确定'),
-        ),
-      ],
-    );
-  }
-}
-
-class _ReportReason extends StatelessWidget {
+class _ReportReason extends StatefulWidget {
   final String? reportReason;
 
   /// 选取举报理由后调用，参数是举报理由
-  final ValueSetter<String?> onReportReason;
-
-  final RxnString _value;
-
-  final RxnString _userDefined;
+  final ValueChanged<String?>? onReportReason;
 
   // ignore: unused_element
-  _ReportReason({super.key, this.reportReason, required this.onReportReason})
-      : _value = RxnString(reportReason),
-        _userDefined = RxnString(xdnmb_api.ReportReason.list
-                .any((reason) => reason.reason == reportReason)
-            ? null
-            : reportReason);
+  const _ReportReason({super.key, this.reportReason, this.onReportReason});
 
   @override
-  Widget build(BuildContext context) {
-    final RxDouble width = 0.0.obs;
+  State<_ReportReason> createState() => _ReportReasonState();
+}
 
-    return LayoutBuilder(
-      builder: (context, constraints) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ChildSizeNotifier(builder: (context, size, child) {
-            WidgetsBinding.instance
-                .addPostFrameCallback((timeStamp) => width.value = size.width);
+class _ReportReasonState extends State<_ReportReason> {
+  late final TextEditingController _controller;
 
-            return const Text('举报理由：');
-          }),
-          Obx(
-            () => DropdownButton<String>(
-              value: _value.value,
-              style: Theme.of(context).textTheme.bodyMedium,
-              onChanged: (value) {
-                if (value?.isNotEmpty ?? false) {
-                  _value.value = value;
-                  onReportReason(value);
-                }
-              },
-              items: [
-                for (final reason in xdnmb_api.ReportReason.list)
-                  DropdownMenuItem<String>(
-                    value: reason.text,
-                    child: Text(reason.reason),
-                  ),
-                DropdownMenuItem<String>(
-                  value: _userDefined.value ?? '',
-                  onTap: () {
-                    WidgetsBinding.instance
-                        .addPostFrameCallback((timeStamp) async {
-                      final reason = await Get.dialog<String>(
-                          _ReportReasonDialog(text: _userDefined.value));
-                      if (reason?.isNotEmpty ?? false) {
-                        _value.value = reason;
-                        _userDefined.value = reason;
-                        onReportReason(reason);
-                      }
-                    });
-                  },
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      // TODO: 这里应该更加精确
-                      maxWidth: max(
-                        width.value > 0
-                            ? constraints.maxWidth - width.value - 50
-                            : constraints.maxWidth - 120,
-                        0.0,
-                      ),
-                    ),
-                    child: Text(
-                      _userDefined.value ?? '自定义',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  void _onText() => widget.onReportReason?.call(_controller.text);
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = TextEditingController(text: widget.reportReason);
+    _controller.addListener(_onText);
   }
+
+  @override
+  void didUpdateWidget(covariant _ReportReason oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.reportReason != oldWidget.reportReason) {
+      final reason = widget.reportReason;
+      if (reason != null) {
+        if (_controller.text != reason) {
+          _controller.text = reason;
+        }
+      } else {
+        _controller.clear();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    // DropdownMenu会dispose _controller
+    _controller.removeListener(_onText);
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => DropdownMenu<String>(
+        controller: _controller,
+        label: const Text('举报理由'),
+        enableFilter: true,
+        dropdownMenuEntries: [
+          for (final reason in xdnmb_api.ReportReason.list)
+            DropdownMenuEntry<String>(value: reason.text, label: reason.reason),
+        ],
+      );
 }
 
 class _WatermarkDialog extends StatelessWidget {
@@ -1826,7 +1755,6 @@ class _EditPostState extends State<EditPost> {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final height = getLineHeight(context, 'A啊', textStyle);
-                    final reportReason = _reportReason.value;
 
                     return SingleChildScrollViewWithScrollbar(
                       child: Obx(
@@ -1851,17 +1779,17 @@ class _EditPostState extends State<EditPost> {
                                   hintText: '名称',
                                 ),
                               ),
-                            if (_isExpanded.value) const SizedBox(height: 10.0),
+                            if (_isExpanded.value) const SizedBox(height: 5.0),
                             if (_postList.value.postListType.isForum &&
                                 _forumId.value == EditPost.dutyRoomId)
                               _ReportReason(
-                                reportReason: reportReason,
-                                onReportReason: (text) {
-                                  if (text?.isNotEmpty ?? false) {
-                                    _reportReason.value = text;
-                                  }
-                                },
+                                reportReason: _reportReason.value,
+                                onReportReason: (text) =>
+                                    _reportReason.value = text,
                               ),
+                            if (_postList.value.postListType.isForum &&
+                                _forumId.value == EditPost.dutyRoomId)
+                              const SizedBox(height: 5.0),
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -1886,8 +1814,9 @@ class _EditPostState extends State<EditPost> {
                                       _imageData.value = imageData;
                                     },
                                   ),
-                                if (_imagePath.value != null)
-                                  const SizedBox(width: 10.0),
+                                if (_imagePath.value != null ||
+                                    _imageData.value != null)
+                                  const SizedBox(width: 5.0),
                                 Expanded(
                                   child: TextField(
                                     controller: _contentController,

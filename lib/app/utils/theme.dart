@@ -58,6 +58,24 @@ abstract class AppTheme {
           ? postContentTextStyle.fontWeight!
           : FontWeight.bold;
 
+  static final InputDecorationTheme lightInputDecorationTheme =
+      InputDecorationTheme(
+    focusedBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: AppTheme.primaryColorLight)),
+    border: UnderlineInputBorder(
+        borderSide: BorderSide(color: AppTheme.primaryColorLight)),
+    floatingLabelStyle: TextStyle(color: AppTheme.primaryColorLight),
+  );
+
+  static final InputDecorationTheme darkInputDecorationTheme =
+      InputDecorationTheme(
+    focusedBorder:
+        UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.colorDark)),
+    border:
+        UnderlineInputBorder(borderSide: BorderSide(color: AppTheme.colorDark)),
+    floatingLabelStyle: TextStyle(color: AppTheme.colorDark),
+  );
+
   static final ThemeData theme = ThemeData(
     brightness: Brightness.light,
     primaryColor: primaryColorLight,
@@ -84,13 +102,9 @@ abstract class AppTheme {
             foregroundColor:
                 MaterialStateColor.resolveWith((states) => primaryColorLight),
             overlayColor: _ButtonDefaultOverlay(buttonOverlayColorLight))),
-    inputDecorationTheme: InputDecorationTheme(
-      focusedBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: AppTheme.primaryColorLight)),
-      border: UnderlineInputBorder(
-          borderSide: BorderSide(color: AppTheme.primaryColorLight)),
-      floatingLabelStyle: TextStyle(color: AppTheme.primaryColorLight),
-    ),
+    inputDecorationTheme: lightInputDecorationTheme,
+    dropdownMenuTheme:
+        DropdownMenuThemeData(inputDecorationTheme: lightInputDecorationTheme),
     textSelectionTheme: TextSelectionThemeData(
         cursorColor: AppTheme.primaryColorLight,
         selectionColor: AppTheme.primaryColorLight),
@@ -141,13 +155,9 @@ abstract class AppTheme {
             foregroundColor:
                 MaterialStateColor.resolveWith((states) => colorDark),
             overlayColor: _ButtonDefaultOverlay(buttonOverlayColorDark))),
-    inputDecorationTheme: InputDecorationTheme(
-      focusedBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: AppTheme.colorDark)),
-      border: UnderlineInputBorder(
-          borderSide: BorderSide(color: AppTheme.colorDark)),
-      floatingLabelStyle: TextStyle(color: AppTheme.colorDark),
-    ),
+    inputDecorationTheme: darkInputDecorationTheme,
+    dropdownMenuTheme:
+        DropdownMenuThemeData(inputDecorationTheme: darkInputDecorationTheme),
     textSelectionTheme: const TextSelectionThemeData(
         cursorColor: Colors.white, selectionColor: Colors.white),
     iconTheme: const IconThemeData(color: iconColor),

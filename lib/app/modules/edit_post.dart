@@ -61,6 +61,7 @@ class EditPostBinding implements Bindings {
   }
 }
 
+// TODO: 单独页面返回要有提示保存
 class EditPostView extends GetView<EditPostController> {
   static EditPostCallback? get _editPost => EditPostCallback.page;
 

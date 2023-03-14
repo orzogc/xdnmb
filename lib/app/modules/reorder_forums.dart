@@ -17,7 +17,8 @@ import '../widgets/forum_name.dart';
 class _AddForum extends StatelessWidget {
   final GlobalKey<_ForumsState> forumListKey;
 
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormFieldState<String>> _formKey =
+      GlobalKey<FormFieldState<String>>();
 
   // ignore: unused_element
   _AddForum({super.key, required this.forumListKey});
@@ -30,24 +31,15 @@ class _AddForum extends StatelessWidget {
 
     return LoaderOverlay(
       child: InputDialog(
-        content: Form(
+        content: TextFormField(
           key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(labelText: '版块ID'),
-                autofocus: true,
-                keyboardType: TextInputType.number,
-                onSaved: (newValue) => id = newValue,
-                validator: (value) => value.tryParseInt() == null
-                    ? '请输入版块ID数字'
-                    : (forums.forum(int.parse(value!)) != null
-                        ? '已有该版块ID'
-                        : null),
-              ),
-            ],
-          ),
+          decoration: const InputDecoration(labelText: '版块ID'),
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          onSaved: (newValue) => id = newValue,
+          validator: (value) => value.tryParseInt() == null
+              ? '请输入版块ID数字'
+              : (forums.forum(int.parse(value!)) != null ? '已有该版块ID' : null),
         ),
         actions: [
           ElevatedButton(

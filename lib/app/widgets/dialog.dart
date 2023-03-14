@@ -664,7 +664,7 @@ class DeleteTag extends StatelessWidget {
             onConfirm: () async {
               await TagService.to.deleteTag(tag.id);
 
-              showToast('删除标签成功');
+              showToast('删除标签 ${tag.name} 成功');
               postListBack<bool>(result: true);
             },
             onCancel: () => postListBack<bool>(result: false),
@@ -731,8 +731,8 @@ class DeletePostTag extends StatelessWidget {
               onDelete?.call(tag.id);
 
               showToast(postId.isNormalPost
-                  ? '删除串 ${postId.toPostNumber()} 的标签'
-                  : '删除串的标签');
+                  ? '删除串 ${postId.toPostNumber()} 的标签 ${tag.name}'
+                  : '删除串的标签 ${tag.name}');
               postListBack<bool>(result: true);
             },
             onCancel: () => postListBack<bool>(result: false),
@@ -759,17 +759,17 @@ class ToTaggedPostList extends StatelessWidget {
 }
 
 class NewTabToTaggedPostList extends StatelessWidget {
-  final int tagId;
+  final TagData tag;
 
-  const NewTabToTaggedPostList(this.tagId, {super.key});
+  const NewTabToTaggedPostList(this.tag, {super.key});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () {
-          final controller = TaggedPostListController(id: tagId, page: 1);
+          final controller = TaggedPostListController(id: tag.id, page: 1);
           postListBack();
           openNewTab(controller);
-          showToast('已在新标签页查询标签');
+          showToast('已在新标签页查询标签 ${tag.name}');
         },
         child:
             Text('在新标签页查询标签', style: Theme.of(context).textTheme.titleMedium),
@@ -777,16 +777,16 @@ class NewTabToTaggedPostList extends StatelessWidget {
 }
 
 class NewTabBackgroundToTaggedPostList extends StatelessWidget {
-  final int tagId;
+  final TagData tag;
 
-  const NewTabBackgroundToTaggedPostList(this.tagId, {super.key});
+  const NewTabBackgroundToTaggedPostList(this.tag, {super.key});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () {
-          final controller = TaggedPostListController(id: tagId, page: 1);
+          final controller = TaggedPostListController(id: tag.id, page: 1);
           openNewTabBackground(controller);
-          showToast('已在新标签页后台查询标签');
+          showToast('已在新标签页后台查询标签 ${tag.name}');
           postListBack();
         },
         child: Text(
@@ -834,7 +834,8 @@ class ApplyImageDialog extends StatelessWidget {
 }
 
 class NumRangeDialog<T extends num> extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormFieldState<String>> _formKey =
+      GlobalKey<FormFieldState<String>>();
 
   final String text;
 
@@ -856,48 +857,46 @@ class NumRangeDialog<T extends num> extends StatelessWidget {
     String? number;
 
     return InputDialog(
-      content: Form(
+      content: TextFormField(
         key: _formKey,
-        child: TextFormField(
-          decoration: InputDecoration(
-              labelText:
-                  max != null ? '$text（ $min - $max ）' : '$text（ >= $min ）'),
-          autofocus: true,
-          keyboardType: TextInputType.number,
-          initialValue: '$initialValue',
-          onSaved: (newValue) => number = newValue,
-          validator: (value) {
-            if (value != null && value.isNotEmpty) {
-              try {
-                final num? n = T == double
-                    ? double.tryParse(value)
-                    : (T == int ? int.tryParse(value) : num.tryParse(value));
+        decoration: InputDecoration(
+            labelText:
+                max != null ? '$text（ $min - $max ）' : '$text（ >= $min ）'),
+        autofocus: true,
+        keyboardType: TextInputType.number,
+        initialValue: '$initialValue',
+        onSaved: (newValue) => number = newValue,
+        validator: (value) {
+          if (value != null && value.isNotEmpty) {
+            try {
+              final num? n = T == double
+                  ? double.tryParse(value)
+                  : (T == int ? int.tryParse(value) : num.tryParse(value));
 
-                if (n != null) {
-                  if (max != null) {
-                    if (n >= min && n <= max!) {
-                      return null;
-                    } else {
-                      return '$text必须在$min与$max之间';
-                    }
+              if (n != null) {
+                if (max != null) {
+                  if (n >= min && n <= max!) {
+                    return null;
                   } else {
-                    if (n >= min) {
-                      return null;
-                    } else {
-                      return '$text必须大于等于$min';
-                    }
+                    return '$text必须在$min与$max之间';
                   }
                 } else {
-                  return '请输入$text数字';
+                  if (n >= min) {
+                    return null;
+                  } else {
+                    return '$text必须大于等于$min';
+                  }
                 }
-              } catch (e) {
+              } else {
                 return '请输入$text数字';
               }
-            } else {
+            } catch (e) {
               return '请输入$text数字';
             }
-          },
-        ),
+          } else {
+            return '请输入$text数字';
+          }
+        },
       ),
       actions: [
         ElevatedButton(
@@ -1050,7 +1049,8 @@ class SetCookieColor extends StatelessWidget {
 }
 
 class _AddOrEditTagDialog extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormFieldState<String>> _formKey =
+      GlobalKey<FormFieldState<String>>();
 
   final TagData? editedTag;
 
@@ -1066,6 +1066,8 @@ class _AddOrEditTagDialog extends StatelessWidget {
 
   String get _text => editedTag == null ? '添加' : '修改';
 
+  String? get _name => editedTag?.name ?? _tagName.value;
+
   // ignore: unused_element
   _AddOrEditTagDialog({super.key, this.editedTag, this.onAdded})
       : _tagName = RxnString(editedTag?.name),
@@ -1079,62 +1081,60 @@ class _AddOrEditTagDialog extends StatelessWidget {
     final theme = Theme.of(context);
 
     return InputDialog(
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Obx(() => (_tagName.value?.isNotEmpty ?? false)
-                ? Tag(
-                    text: _tagName.value!,
-                    textStyle: AppTheme.postContentTextStyle,
-                    strutStyle: AppTheme.postContentStrutStyle,
-                    backgroundColor: _backgroundColor.value,
-                    textColor: _textColor.value)
-                : const SizedBox.shrink()),
-            TextFormField(
-              decoration: const InputDecoration(labelText: '标签'),
-              initialValue: _tagName.value,
-              onChanged: (value) => _tagName.value = value,
-              onSaved: (newValue) => _tagName.value = newValue,
-              validator: (value) => (value == null || value.isEmpty)
-                  ? '请输入标签名字'
-                  : (((editedTag == null && tagService.tagNameExists(value)) ||
-                          (editedTag != null &&
-                              value != editedTag!.name &&
-                              tagService.tagNameExists(value)))
-                      ? '已存在该标签名字'
-                      : null),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Obx(() => (_tagName.value?.isNotEmpty ?? false)
+              ? Tag(
+                  text: _tagName.value!,
+                  textStyle: AppTheme.postContentTextStyle,
+                  strutStyle: AppTheme.postContentStrutStyle,
+                  backgroundColor: _backgroundColor.value,
+                  textColor: _textColor.value)
+              : const SizedBox.shrink()),
+          TextFormField(
+            key: _formKey,
+            decoration: const InputDecoration(labelText: '标签'),
+            initialValue: _tagName.value,
+            onChanged: (value) => _tagName.value = value,
+            onSaved: (newValue) => _tagName.value = newValue,
+            validator: (value) => (value == null || value.isEmpty)
+                ? '请输入标签名字'
+                : (((editedTag == null && tagService.tagNameExists(value)) ||
+                        (editedTag != null &&
+                            value != editedTag!.name &&
+                            tagService.tagNameExists(value)))
+                    ? '已存在该标签名字'
+                    : null),
+          ),
+          Obx(
+            () => TightCheckboxListTile(
+              title: const Text('配色跟随应用主题'),
+              value: _useDefaultColor.value,
+              onChanged: (value) {
+                if (value != null) {
+                  _useDefaultColor.value = value;
+                }
+              },
             ),
-            Obx(
-              () => TightCheckboxListTile(
-                title: const Text('配色跟随应用主题'),
-                value: _useDefaultColor.value,
-                onChanged: (value) {
-                  if (value != null) {
-                    _useDefaultColor.value = value;
-                  }
-                },
-              ),
+          ),
+          Obx(
+            () => ColorListTile(
+              enabled: !_useDefaultColor.value,
+              title: const Text('文字颜色'),
+              color: _textColor.value ?? theme.colorScheme.onPrimary,
+              onColorChanged: (value) => _textColor.value = value,
             ),
-            Obx(
-              () => ColorListTile(
-                enabled: !_useDefaultColor.value,
-                title: const Text('文字颜色'),
-                color: _textColor.value ?? theme.colorScheme.onPrimary,
-                onColorChanged: (value) => _textColor.value = value,
-              ),
+          ),
+          Obx(
+            () => ColorListTile(
+              enabled: !_useDefaultColor.value,
+              title: const Text('背景颜色'),
+              color: _backgroundColor.value ?? theme.primaryColor,
+              onColorChanged: (value) => _backgroundColor.value = value,
             ),
-            Obx(
-              () => ColorListTile(
-                enabled: !_useDefaultColor.value,
-                title: const Text('背景颜色'),
-                color: _backgroundColor.value ?? theme.primaryColor,
-                onColorChanged: (value) => _backgroundColor.value = value,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
       actions: [
         ElevatedButton(
@@ -1156,16 +1156,16 @@ class _AddOrEditTagDialog extends StatelessWidget {
                         name: _tagName.value,
                         backgroundColor: _backgroundColor.value,
                         textColor: _textColor.value))) {
-                      showToast('修改标签失败');
+                      showToast('修改标签 ${editedTag?.name} 失败');
 
                       return;
                     }
                   }
 
-                  showToast('$_text标签成功');
+                  showToast('$_text标签 $_name 成功');
                   postListBack<bool>(result: true);
                 } catch (e) {
-                  showToast('$_text标签失败：$e');
+                  showToast('$_text标签 $_name 失败：$e');
                 }
               }
             }
@@ -1191,7 +1191,8 @@ class AddOrReplacePostTagDialog extends StatefulWidget {
 }
 
 class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormFieldState<String>> _formKey =
+      GlobalKey<FormFieldState<String>>();
 
   late final TextEditingController _controller;
 
@@ -1223,6 +1224,8 @@ class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
       : null;
 
   String get _text => _replacedTag == null ? '添加' : '替换';
+
+  String get _name => _replacedTag?.name ?? _controller.text;
 
   void _onTextChanged({String? text, TagData? tag}) {
     assert((text != null && tag == null) || (text == null && tag != null));
@@ -1267,84 +1270,81 @@ class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
 
     return InputDialog(
       title: _post.isNormalPost ? Text(_post.toPostNumber()) : null,
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Obx(() => _tagName.value.isNotEmpty
-                ? Tag(
-                    text: _tagName.value,
-                    textStyle: AppTheme.postContentTextStyle,
-                    strutStyle: AppTheme.postContentStrutStyle,
-                    backgroundColor: _backgroundColor,
-                    textColor: _textColor)
-                : const SizedBox.shrink()),
-            TextFormField(
-              controller: _controller,
-              decoration: const InputDecoration(labelText: '标签'),
-              onChanged: (value) => _onTextChanged(text: value),
-              validator: (value) =>
-                  (value == null || value.isEmpty) ? '请输入标签名字' : null,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Obx(() => _tagName.value.isNotEmpty
+              ? Tag(
+                  text: _tagName.value,
+                  textStyle: AppTheme.postContentTextStyle,
+                  strutStyle: AppTheme.postContentStrutStyle,
+                  backgroundColor: _backgroundColor,
+                  textColor: _textColor)
+              : const SizedBox.shrink()),
+          TextFormField(
+            key: _formKey,
+            controller: _controller,
+            decoration: const InputDecoration(labelText: '标签'),
+            onChanged: (value) => _onTextChanged(text: value),
+            validator: (value) =>
+                (value == null || value.isEmpty) ? '请输入标签名字' : null,
+          ),
+          Obx(
+            () => TightCheckboxListTile(
+              enabled: !_tagExists,
+              title: const Text('配色跟随应用主题'),
+              value: _useDefaultColor,
+              onChanged: (value) {
+                if (value != null) {
+                  _userUseDefaultColor.value = value;
+                }
+              },
             ),
-            Obx(
-              () => TightCheckboxListTile(
-                enabled: !_tagExists,
-                title: const Text('配色跟随应用主题'),
-                value: _useDefaultColor,
-                onChanged: (value) {
-                  if (value != null) {
-                    _userUseDefaultColor.value = value;
-                  }
-                },
-              ),
+          ),
+          Obx(
+            () => ColorListTile(
+              enabled: !(_tagExists || _useDefaultColor),
+              title: const Text('文字颜色'),
+              color: _textColor ?? theme.colorScheme.onPrimary,
+              onColorChanged: (value) => _userTextColor.value = value,
             ),
-            Obx(
-              () => ColorListTile(
-                enabled: !(_tagExists || _useDefaultColor),
-                title: const Text('文字颜色'),
-                color: _textColor ?? theme.colorScheme.onPrimary,
-                onColorChanged: (value) => _userTextColor.value = value,
-              ),
+          ),
+          Obx(
+            () => ColorListTile(
+              enabled: !(_tagExists || _useDefaultColor),
+              title: const Text('背景颜色'),
+              color: _backgroundColor ?? theme.primaryColor,
+              onColorChanged: (value) => _userBackgroundColor.value = value,
             ),
-            Obx(
-              () => ColorListTile(
-                enabled: !(_tagExists || _useDefaultColor),
-                title: const Text('背景颜色'),
-                color: _backgroundColor ?? theme.primaryColor,
-                onColorChanged: (value) => _userBackgroundColor.value = value,
-              ),
-            ),
-            if (data.recentTags.isNotEmpty) const SizedBox(height: 5.0),
-            if (data.recentTags.isNotEmpty)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('最近使用'),
-                  const SizedBox(width: 10.0),
-                  Flexible(
-                    child: Wrap(
-                      alignment: WrapAlignment.end,
-                      spacing: 10.0,
-                      runSpacing: 5.0,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        for (final tag
-                            in tagService.getTagsData(data.recentTags))
-                          Tag.fromTagData(
-                            tag: tag,
-                            textStyle: AppTheme.postContentTextStyle,
-                            strutStyle: AppTheme.postContentStrutStyle,
-                            onTap: () => _onTextChanged(tag: tag),
-                          ),
-                      ],
-                    ),
+          ),
+          if (data.recentTags.isNotEmpty) const SizedBox(height: 5.0),
+          if (data.recentTags.isNotEmpty)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('最近使用'),
+                const SizedBox(width: 10.0),
+                Flexible(
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 10.0,
+                    runSpacing: 5.0,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      for (final tag in tagService.getTagsData(data.recentTags))
+                        Tag.fromTagData(
+                          tag: tag,
+                          textStyle: AppTheme.postContentTextStyle,
+                          strutStyle: AppTheme.postContentStrutStyle,
+                          onTap: () => _onTextChanged(tag: tag),
+                        ),
+                    ],
                   ),
-                ],
-              ),
-            if (data.recentTags.isNotEmpty) const SizedBox(height: 5.0),
-          ],
-        ),
+                ),
+              ],
+            ),
+          if (data.recentTags.isNotEmpty) const SizedBox(height: 5.0),
+        ],
       ),
       actions: [
         ElevatedButton(
@@ -1366,13 +1366,13 @@ class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
                 }
 
                 showToast(_post.isNormalPost
-                    ? '给串 ${_post.toPostNumber()} $_text标签成功'
-                    : '给串$_text标签成功');
+                    ? '给串 ${_post.toPostNumber()} $_text标签 $_name 成功'
+                    : '给串$_text标签 $_name 成功');
                 postListBack<bool>(result: true);
               } catch (e) {
                 showToast(_post.isNormalPost
-                    ? '给串 ${_post.toPostNumber()} $_text标签失败：$e'
-                    : '给串$_text标签失败：$e');
+                    ? '给串 ${_post.toPostNumber()} $_text标签 $_name 失败：$e'
+                    : '给串$_text标签 $_name 失败：$e');
               }
             }
           },
@@ -1464,7 +1464,8 @@ class SavedPostDialog extends StatelessWidget {
 }
 
 class SearchDialog extends StatelessWidget {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormFieldState<String>> _formKey =
+      GlobalKey<FormFieldState<String>>();
 
   final Search? search;
 
@@ -1483,43 +1484,41 @@ class SearchDialog extends StatelessWidget {
     String? searchText;
 
     return InputDialog(
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              decoration: const InputDecoration(labelText: '搜索内容'),
-              autofocus: true,
-              initialValue: search?.text,
-              onSaved: (newValue) => searchText = newValue,
-              validator: (value) =>
-                  (value == null || value.isEmpty) ? '请输入搜索内容' : null,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormField(
+            key: _formKey,
+            decoration: const InputDecoration(labelText: '搜索内容'),
+            autofocus: true,
+            initialValue: search?.text,
+            onSaved: (newValue) => searchText = newValue,
+            validator: (value) =>
+                (value == null || value.isEmpty) ? '请输入搜索内容' : null,
+          ),
+          Obx(
+            () => TightCheckboxListTile(
+              title: const Text('英文字母区分大小写'),
+              value: caseSensitive.value,
+              onChanged: (value) {
+                if (value != null) {
+                  caseSensitive.value = value;
+                }
+              },
             ),
-            Obx(
-              () => TightCheckboxListTile(
-                title: const Text('英文字母区分大小写'),
-                value: caseSensitive.value,
-                onChanged: (value) {
-                  if (value != null) {
-                    caseSensitive.value = value;
-                  }
-                },
-              ),
+          ),
+          Obx(
+            () => TightCheckboxListTile(
+              title: const Text('使用通配符'),
+              value: useWildcard.value,
+              onChanged: (value) {
+                if (value != null) {
+                  useWildcard.value = value;
+                }
+              },
             ),
-            Obx(
-              () => TightCheckboxListTile(
-                title: const Text('使用通配符'),
-                value: useWildcard.value,
-                onChanged: (value) {
-                  if (value != null) {
-                    useWildcard.value = value;
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
       actions: [
         TextButton(

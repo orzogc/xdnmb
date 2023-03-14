@@ -403,8 +403,8 @@ class _PostTagDialog extends StatelessWidget {
           AddOrReplacePostTag(post: post, replacedTag: tag),
           DeletePostTag(postId: post.id, tag: tag, onDelete: onDeleteTag),
           ToTaggedPostList(tag.id),
-          NewTabToTaggedPostList(tag.id),
-          NewTabBackgroundToTaggedPostList(tag.id),
+          NewTabToTaggedPostList(tag),
+          NewTabBackgroundToTaggedPostList(tag),
         ],
       );
 }

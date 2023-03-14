@@ -140,7 +140,8 @@ class EditForumName extends StatefulWidget {
 }
 
 class _EditForumNameState extends State<EditForumName> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormFieldState<String>> _formKey =
+      GlobalKey<FormFieldState<String>>();
 
   late final TextEditingController _controller;
 
@@ -163,15 +164,13 @@ class _EditForumNameState extends State<EditForumName> {
     final forums = ForumListService.to;
 
     return InputDialog(
-      content: Form(
+      content: TextFormField(
         key: _formKey,
-        child: TextFormField(
-          controller: _controller,
-          decoration: const InputDecoration(labelText: '版块名字'),
-          autofocus: true,
-          validator: (value) =>
-              (value == null || value.isEmpty) ? '请输入版块名字' : null,
-        ),
+        controller: _controller,
+        decoration: const InputDecoration(labelText: '版块名字'),
+        autofocus: true,
+        validator: (value) =>
+            (value == null || value.isEmpty) ? '请输入版块名字' : null,
       ),
       actions: [
         ElevatedButton(
@@ -185,8 +184,6 @@ class _EditForumNameState extends State<EditForumName> {
         ElevatedButton(
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-
               await forums.setForumName(widget.forum, _controller.text);
               Get.back(result: true);
             }

@@ -70,13 +70,19 @@ class FeedController extends PostListController {
       : _pageIndex = pageIndex.obs,
         super(page);
 
-  String text([int? index]) {
+  String text([bool showCount = false, int? index]) {
     index ??= pageIndex;
 
     switch (index) {
       case _FeedBody._index:
         return '订阅';
       case _TagListBody._index:
+        if (showCount) {
+          final count = TagService.to.tagsCount;
+
+          return '标签・$count';
+        }
+
         return '标签';
       default:
         debugPrint('未知index：$index');
@@ -96,7 +102,9 @@ class FeedAppBarTitle extends StatelessWidget {
   const FeedAppBarTitle(this.controller, {super.key});
 
   @override
-  Widget build(BuildContext context) => Obx(() => Text(controller.text()));
+  Widget build(BuildContext context) => ListenableBuilder(
+      listenable: TagService.to.tagListenable(null),
+      builder: (context, child) => Obx(() => Text(controller.text(true))));
 }
 
 class _FeedDialog extends StatelessWidget {
@@ -386,8 +394,8 @@ class _TagListDialog extends StatelessWidget {
           AddOrEditTag(editedTag: tag),
           DeleteTag(tag),
           ToTaggedPostList(tag.id),
-          NewTabToTaggedPostList(tag.id),
-          NewTabBackgroundToTaggedPostList(tag.id),
+          NewTabToTaggedPostList(tag),
+          NewTabBackgroundToTaggedPostList(tag),
         ],
       );
 }

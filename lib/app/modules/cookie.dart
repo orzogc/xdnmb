@@ -269,11 +269,12 @@ typedef _VerifyCallback = Future<void> Function(
     BuildContext context, String verify);
 
 class _Verify extends StatelessWidget {
+  final GlobalKey<FormFieldState<String>> _formKey =
+      GlobalKey<FormFieldState<String>>();
+
   final _VerifyCallback onPressed;
 
   final String buttonText;
-
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   // ignore: unused_element
   _Verify({super.key, required this.buttonText, required this.onPressed});
@@ -284,22 +285,20 @@ class _Verify extends StatelessWidget {
 
     return LoaderOverlay(
       child: InputDialog(
-        content: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(labelText: '验证码'),
-                autofocus: true,
-                onSaved: (newValue) => verify = newValue,
-                validator: (value) =>
-                    (value == null || value.isEmpty) ? '请输入验证码' : null,
-              ),
-              const SizedBox(height: 10.0),
-              const _VerifyImage(),
-            ],
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              key: _formKey,
+              decoration: const InputDecoration(labelText: '验证码'),
+              autofocus: true,
+              onSaved: (newValue) => verify = newValue,
+              validator: (value) =>
+                  (value == null || value.isEmpty) ? '请输入验证码' : null,
+            ),
+            const SizedBox(height: 10.0),
+            const _VerifyImage(),
+          ],
         ),
         actions: [
           ElevatedButton(

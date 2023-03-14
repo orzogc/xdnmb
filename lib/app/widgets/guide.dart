@@ -239,7 +239,10 @@ class SearchGuide extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SettingsService.shouldShowGuide
       ? Showcase(
-          key: _key, title: '搜索', description: '现在搜索坏了，只有查询串号的功能', child: child)
+          key: _key,
+          title: '查询',
+          description: '现在搜索坏了，只有查询串号和标签的功能',
+          child: child)
       : child;
 }
 

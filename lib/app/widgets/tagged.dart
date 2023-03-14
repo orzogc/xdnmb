@@ -36,7 +36,7 @@ class TaggedPostListController extends PostListController {
 
   final Rxn<TagData> _tag = Rxn(null);
 
-  final RxnInt _postCount = RxnInt(null);
+  final RxnInt _postsCount = RxnInt(null);
 
   final RxDouble _headerHeight = 0.0.obs;
 
@@ -70,14 +70,14 @@ class TaggedPostListController extends PostListController {
     refreshPage();
   }
 
-  int? _getPostCount() => _postCount.value.notNegative;
+  int? _getPostsCount() => _postsCount.value.notNegative;
 
-  void _setPostCount(int? count) => _postCount.value = count.notNegative;
+  void _setPostsCount(int? count) => _postsCount.value = count.notNegative;
 
   void _decreasePostCount() {
-    final count = _getPostCount();
+    final count = _getPostsCount();
 
-    _setPostCount(count != null ? count - 1 : null);
+    _setPostsCount(count != null ? count - 1 : null);
   }
 
   Future<void> _clear() async {
@@ -107,7 +107,7 @@ class TaggedPostListAppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Obx(() {
-        final count = controller._getPostCount();
+        final count = controller._getPostsCount();
 
         return Row(
           mainAxisSize: MainAxisSize.min,
@@ -125,11 +125,16 @@ class TaggedPostListAppBarPopupMenuButton extends StatelessWidget {
   const TaggedPostListAppBarPopupMenuButton(this.controller, {super.key});
 
   @override
-  Widget build(BuildContext context) => PopupMenuButton(
-        itemBuilder: (context) {
-          final count = controller._getPostCount();
+  Widget build(BuildContext context) {
+    final tagService = TagService.to;
 
-          return [
+    return PopupMenuButton(
+      itemBuilder: (context) {
+        final tag = tagService.getTagData(controller.id);
+        final count = controller._getPostsCount();
+
+        return [
+          if (tag != null)
             PopupMenuItem(
               onTap: () => postListDialog(SearchDialog(
                 search: controller.search,
@@ -137,17 +142,18 @@ class TaggedPostListAppBarPopupMenuButton extends StatelessWidget {
               )),
               child: const Text('搜索'),
             ),
-            if (count != null && count > 0)
-              PopupMenuItem(
-                onTap: () => postListDialog(ClearDialog(
-                  text: '',
-                  onClear: controller._clear,
-                )),
-                child: const Text('清空'),
-              ),
-          ];
-        },
-      );
+          if (tag != null && count != null && count > 0)
+            PopupMenuItem(
+              onTap: () => postListDialog(ClearDialog(
+                text: '标签 ${tag.name} ',
+                onClear: controller._clear,
+              )),
+              child: const Text('清空'),
+            ),
+        ];
+      },
+    );
+  }
 }
 
 class _TaggedPostListHeader extends StatelessWidget {
@@ -329,7 +335,7 @@ class TaggedPostListBody extends StatelessWidget {
                         tagId: controller.id, search: controller.search))
                     .map((post) => Visible(post))
                     .toList();
-                controller._setPostCount(list.length);
+                controller._setPostsCount(list.length);
 
                 return list;
               }
