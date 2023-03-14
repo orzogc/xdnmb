@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_expanded_tile/flutter_expanded_tile.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
@@ -719,9 +720,7 @@ class DeletePostTag extends StatelessWidget {
             contentWidget: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(postId.isNormalPost
-                    ? '确定删除串 ${postId.toPostNumber()} 的标签'
-                    : '确定删除串的标签'),
+                const Text('确定删除串的标签'),
                 Flexible(child: Tag.fromTagData(tag: tag)),
                 const Text('？'),
               ].withSpaceBetween(width: 5.0),
@@ -1048,6 +1047,52 @@ class SetCookieColor extends StatelessWidget {
       );
 }
 
+class _SetTagColor extends StatefulWidget {
+  final List<Widget> children;
+
+  // ignore: unused_element
+  const _SetTagColor({super.key, required this.children});
+
+  @override
+  State<_SetTagColor> createState() => _SetTagColorState();
+}
+
+class _SetTagColorState extends State<_SetTagColor> {
+  final ExpandedTileController _controller = ExpandedTileController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ExpandedTile(
+      controller: _controller,
+      contentseparator: 0.0,
+      theme: ExpandedTileThemeData(
+        headerColor: theme.cardColor,
+        headerSplashColor: theme.cardColor,
+        headerPadding: const EdgeInsets.symmetric(vertical: 5.0),
+        headerRadius: 0.0,
+        titlePadding: EdgeInsets.zero,
+        contentBackgroundColor: theme.cardColor,
+        contentPadding: EdgeInsets.zero,
+        contentRadius: 0.0,
+      ),
+      title: Text('设置标签颜色', style: theme.textTheme.titleMedium),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: widget.children,
+      ),
+    );
+  }
+}
+
 class _AddOrEditTagDialog extends StatelessWidget {
   final GlobalKey<FormFieldState<String>> _formKey =
       GlobalKey<FormFieldState<String>>();
@@ -1107,33 +1152,36 @@ class _AddOrEditTagDialog extends StatelessWidget {
                     ? '已存在该标签名字'
                     : null),
           ),
-          Obx(
-            () => TightCheckboxListTile(
-              title: const Text('配色跟随应用主题'),
-              value: _useDefaultColor.value,
-              onChanged: (value) {
-                if (value != null) {
-                  _useDefaultColor.value = value;
-                }
-              },
+          const SizedBox(height: 5.0),
+          _SetTagColor(children: [
+            Obx(
+              () => TightCheckboxListTile(
+                title: const Text('配色跟随应用主题'),
+                value: _useDefaultColor.value,
+                onChanged: (value) {
+                  if (value != null) {
+                    _useDefaultColor.value = value;
+                  }
+                },
+              ),
             ),
-          ),
-          Obx(
-            () => ColorListTile(
-              enabled: !_useDefaultColor.value,
-              title: const Text('文字颜色'),
-              color: _textColor.value ?? theme.colorScheme.onPrimary,
-              onColorChanged: (value) => _textColor.value = value,
+            Obx(
+              () => ColorListTile(
+                enabled: !_useDefaultColor.value,
+                title: const Text('文字颜色'),
+                color: _textColor.value ?? theme.colorScheme.onPrimary,
+                onColorChanged: (value) => _textColor.value = value,
+              ),
             ),
-          ),
-          Obx(
-            () => ColorListTile(
-              enabled: !_useDefaultColor.value,
-              title: const Text('背景颜色'),
-              color: _backgroundColor.value ?? theme.primaryColor,
-              onColorChanged: (value) => _backgroundColor.value = value,
-            ),
-          ),
+            Obx(
+              () => ColorListTile(
+                enabled: !_useDefaultColor.value,
+                title: const Text('背景颜色'),
+                color: _backgroundColor.value ?? theme.primaryColor,
+                onColorChanged: (value) => _backgroundColor.value = value,
+              ),
+            )
+          ]),
         ],
       ),
       actions: [
@@ -1289,34 +1337,37 @@ class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
             validator: (value) =>
                 (value == null || value.isEmpty) ? '请输入标签名字' : null,
           ),
-          Obx(
-            () => TightCheckboxListTile(
-              enabled: !_tagExists,
-              title: const Text('配色跟随应用主题'),
-              value: _useDefaultColor,
-              onChanged: (value) {
-                if (value != null) {
-                  _userUseDefaultColor.value = value;
-                }
-              },
+          const SizedBox(height: 5.0),
+          _SetTagColor(children: [
+            Obx(
+              () => TightCheckboxListTile(
+                enabled: !_tagExists,
+                title: const Text('配色跟随应用主题'),
+                value: _useDefaultColor,
+                onChanged: (value) {
+                  if (value != null) {
+                    _userUseDefaultColor.value = value;
+                  }
+                },
+              ),
             ),
-          ),
-          Obx(
-            () => ColorListTile(
-              enabled: !(_tagExists || _useDefaultColor),
-              title: const Text('文字颜色'),
-              color: _textColor ?? theme.colorScheme.onPrimary,
-              onColorChanged: (value) => _userTextColor.value = value,
+            Obx(
+              () => ColorListTile(
+                enabled: !(_tagExists || _useDefaultColor),
+                title: const Text('文字颜色'),
+                color: _textColor ?? theme.colorScheme.onPrimary,
+                onColorChanged: (value) => _userTextColor.value = value,
+              ),
             ),
-          ),
-          Obx(
-            () => ColorListTile(
-              enabled: !(_tagExists || _useDefaultColor),
-              title: const Text('背景颜色'),
-              color: _backgroundColor ?? theme.primaryColor,
-              onColorChanged: (value) => _userBackgroundColor.value = value,
-            ),
-          ),
+            Obx(
+              () => ColorListTile(
+                enabled: !(_tagExists || _useDefaultColor),
+                title: const Text('背景颜色'),
+                color: _backgroundColor ?? theme.primaryColor,
+                onColorChanged: (value) => _userBackgroundColor.value = value,
+              ),
+            )
+          ]),
           if (data.recentTags.isNotEmpty) const SizedBox(height: 5.0),
           if (data.recentTags.isNotEmpty)
             Row(
@@ -1564,14 +1615,33 @@ class SearchDialog extends StatelessWidget {
 class ClearDialog extends StatelessWidget {
   final String text;
 
+  final String? textWidgetPrefix;
+
+  final Widget? textWidget;
+
   final AsyncCallback? onClear;
 
-  const ClearDialog({super.key, required this.text, this.onClear});
+  const ClearDialog(
+      {super.key,
+      this.text = '',
+      this.textWidgetPrefix = '',
+      this.textWidget,
+      this.onClear});
 
   @override
   Widget build(BuildContext context) => LoaderOverlay(
         child: ConfirmCancelDialog(
-          content: '确定清空$text？',
+          content: textWidget == null ? '确定清空$text？' : null,
+          contentWidget: textWidget != null
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('确定清空$textWidgetPrefix'),
+                    Flexible(child: textWidget!),
+                    const Text('？'),
+                  ].withSpaceBetween(width: 5.0),
+                )
+              : null,
           onConfirm: () async {
             final overlay = context.loaderOverlay;
             try {

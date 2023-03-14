@@ -27,6 +27,7 @@ dependencies:
   flutter_cache_manager: ^3.3.0
   flutter_colorpicker: ^1.0.3
   flutter_easyloading: ^3.0.5
+  flutter_expanded_tile: ^0.3.7
   flutter_keyboard_visibility: ^5.4.0
   flutter_localizations:
     sdk: flutter

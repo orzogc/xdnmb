@@ -28,6 +28,10 @@ abstract class AppTheme {
 
   static const Color headerColor = Colors.grey;
 
+  //static const Color cardColorLight = Colors.white;
+
+  //static const Color cardColorDark = Color(0xff424242);
+
   static const Curve slideCurve = Curves.easeOutQuart;
 
   static const TextStyle boldRed =

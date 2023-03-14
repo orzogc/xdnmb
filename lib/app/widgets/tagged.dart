@@ -146,6 +146,8 @@ class TaggedPostListAppBarPopupMenuButton extends StatelessWidget {
             PopupMenuItem(
               onTap: () => postListDialog(ClearDialog(
                 text: '标签 ${tag.name} ',
+                textWidgetPrefix: '标签',
+                textWidget: Tag.fromTagData(tag: tag),
                 onClear: controller._clear,
               )),
               child: const Text('清空'),
