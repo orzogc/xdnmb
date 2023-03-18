@@ -323,11 +323,11 @@ class PostListControllerData extends HiveObject {
       case PostListType.timeline:
         return TimelineController(id: id!, page: isRetainForumPage ? page : 1);
       case PostListType.feed:
-        return FeedController(page: page, pageIndex: pageIndex ?? 0);
+        return FeedController(page: page, pageIndex: pageIndex);
       case PostListType.history:
         return HistoryController(
             page: page,
-            pageIndex: pageIndex ?? 0,
+            pageIndex: pageIndex,
             dateRange: dateRange,
             search: search);
       case PostListType.taggedPostList:

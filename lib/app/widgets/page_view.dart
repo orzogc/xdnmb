@@ -134,12 +134,9 @@ class SwipeablePageView extends StatelessWidget {
             onPointerDown: (event) {
               final route = ModalRoute.of(context);
               if (route is SwipeablePageRoute) {
-                // iOS上在左边缘向右滑动为返回手势
-                // Android则在第一页才是返回手势，其他是换页手势
-                if ((GetPlatform.isIOS || controller?.page == 0.0) &&
-                    event.position.dx <=
-                        media.size.width *
-                            settings.swipeablePageDragWidthRatio) {
+                // 左边缘向右滑动为返回手势
+                if (event.position.dx <=
+                    media.size.width * settings.swipeablePageDragWidthRatio) {
                   route.canSwipe = true;
                   _isScrollable.value = false;
                 } else {

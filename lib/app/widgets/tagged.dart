@@ -46,6 +46,10 @@ class TaggedPostListController extends PostListController {
 
   TagData? get tag => _tag.value;
 
+  int? get _count => _postsCount.value.notNegative;
+
+  set _count(int? count) => _postsCount.value = count.notNegative;
+
   bool get tagExists => TagService.to.tagIdExists(id);
 
   TaggedPostListController(
@@ -70,14 +74,10 @@ class TaggedPostListController extends PostListController {
     refreshPage();
   }
 
-  int? _getPostsCount() => _postsCount.value.notNegative;
-
-  void _setPostsCount(int? count) => _postsCount.value = count.notNegative;
-
   void _decreasePostCount() {
-    final count = _getPostsCount();
+    final count = _count;
 
-    _setPostsCount(count != null ? count - 1 : null);
+    _count = (count != null ? count - 1 : null);
   }
 
   Future<void> _clear() async {
@@ -107,7 +107,7 @@ class TaggedPostListAppBarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Obx(() {
-        final count = controller._getPostsCount();
+        final count = controller._count;
 
         return Row(
           mainAxisSize: MainAxisSize.min,
@@ -131,7 +131,7 @@ class TaggedPostListAppBarPopupMenuButton extends StatelessWidget {
     return PopupMenuButton(
       itemBuilder: (context) {
         final tag = tagService.getTagData(controller.id);
-        final count = controller._getPostsCount();
+        final count = controller._count;
 
         return [
           if (tag != null)
@@ -337,7 +337,7 @@ class TaggedPostListBody extends StatelessWidget {
                         tagId: controller.id, search: controller.search))
                     .map((post) => Visible(post))
                     .toList();
-                controller._setPostsCount(list.length);
+                controller._count = list.length;
 
                 return list;
               }

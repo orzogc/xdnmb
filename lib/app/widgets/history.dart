@@ -62,6 +62,13 @@ class _HistoryKey {
 }
 
 class HistoryController extends PostListController {
+  static int __index = 0;
+
+  static int get _index => __index.clamp(0, _historyPageCount - 1);
+
+  static set _index(int index) =>
+      __index = index.clamp(0, _historyPageCount - 1);
+
   final RxInt _pageIndex;
 
   final Rx<List<DateTimeRange?>> _dateRange;
@@ -99,11 +106,11 @@ class HistoryController extends PostListController {
 
   HistoryController(
       {required int page,
-      int pageIndex = 0,
+      int? pageIndex,
       List<DateTimeRange?>? dateRange,
       List<Search?>? search})
       : assert(pageIndex.isValid),
-        _pageIndex = pageIndex.obs,
+        _pageIndex = (pageIndex ?? _index).clamp(0, _historyPageCount - 1).obs,
         _dateRange = Rx(dateRange ?? List.filled(_historyPageCount, null)),
         _search = Rx(search ?? List.filled(_historyPageCount, null)),
         super(page);
@@ -245,7 +252,7 @@ class HistoryController extends PostListController {
 HistoryController historyController(Map<String, String?> parameters) =>
     HistoryController(
         page: parameters['page'].tryParseInt() ?? 1,
-        pageIndex: parameters['index'].tryParseInt() ?? 0);
+        pageIndex: parameters['index'].tryParseInt());
 
 class HistoryAppBarTitle extends StatelessWidget {
   final HistoryController controller;
@@ -962,6 +969,11 @@ class _HistoryBodyState extends State<HistoryBody> {
 
   void _trySave(Object object) => _controller.trySave();
 
+  void _onPageIndex(int index) {
+    HistoryController._index = index;
+    _trySave(index);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -970,7 +982,7 @@ class _HistoryBodyState extends State<HistoryBody> {
     _pageController = PageController(initialPage: _initialIndex);
     _pageController.addListener(_updateIndex);
 
-    _pageIndexSubscription = _controller._pageIndex.listen(_trySave);
+    _pageIndexSubscription = _controller._pageIndex.listen(_onPageIndex);
     _dateRangeSubscription = _controller._dateRange.listen(_trySave);
   }
 
@@ -980,7 +992,8 @@ class _HistoryBodyState extends State<HistoryBody> {
 
     if (widget.controller != oldWidget.controller) {
       _pageIndexSubscription.cancel();
-      _pageIndexSubscription = widget.controller._pageIndex.listen(_trySave);
+      _pageIndexSubscription =
+          widget.controller._pageIndex.listen(_onPageIndex);
       _dateRangeSubscription.cancel();
       _dateRangeSubscription = widget.controller._dateRange.listen(_trySave);
     }

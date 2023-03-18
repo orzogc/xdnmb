@@ -29,11 +29,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: xdnmb
-      resolved-ref: "46bd3ccb6ef93a542c50988cc8df01a5349efa64"
+      ref: xdnmb2
+      resolved-ref: "382ee3242476a76fae7f0529791ed17332e339c4"
       url: "https://github.com/orzogc/anchor_scroll_controller.git"
     source: git
-    version: "0.4.1"
+    version: "0.4.3"
   archive:
     dependency: transitive
     description:

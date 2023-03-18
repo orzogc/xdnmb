@@ -12,7 +12,7 @@ dependencies:
   anchor_scroll_controller:
     git:
       url: https://github.com/orzogc/anchor_scroll_controller.git
-      ref: xdnmb
+      ref: xdnmb2
   cached_network_image: ^3.2.3
   crypto: ^3.0.2
   date_format: ^2.0.7

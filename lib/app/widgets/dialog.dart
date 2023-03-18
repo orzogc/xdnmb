@@ -173,6 +173,8 @@ class NoticeDialog extends StatefulWidget {
 class _NoticeDialogState extends State<NoticeDialog> {
   Future<void>? _updateNotice;
 
+  final RxBool isChecked = false.obs;
+
   void _setUpdateNotice() => _updateNotice =
       widget.isAutoUpdate ? PersistentDataService.to.updateNotice() : null;
 
@@ -197,7 +199,6 @@ class _NoticeDialogState extends State<NoticeDialog> {
     final data = PersistentDataService.to;
     final settings = SettingsService.to;
     final textStyle = Theme.of(context).textTheme.titleMedium;
-    final isChecked = false.obs;
 
     return AlertDialog(
       actionsPadding:

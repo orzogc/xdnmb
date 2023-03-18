@@ -120,11 +120,12 @@ abstract class AppRoutes {
           ? '$onlyPoThread?mainPostId=$mainPostId&page=$page&cancelAutoJump=$cancelAutoJump&jumpToId=$jumpToId'
           : '$onlyPoThread?mainPostId=$mainPostId&page=$page&cancelAutoJump=$cancelAutoJump';
 
-  static String feedUrl({int index = 0, int page = 1}) =>
-      '$feed?index=$index&page=$page';
+  static String feedUrl({int? index, int page = 1}) =>
+      index != null ? '$feed?index=$index&page=$page' : '$feed?page=$page';
 
-  static String historyUrl({int index = 0, int page = 1}) =>
-      '$history?index=$index&page=$page';
+  static String historyUrl({int? index, int page = 1}) => index != null
+      ? '$history?index=$index&page=$page'
+      : '$history?page=$page';
 
   static String taggedPostListUrl(int tagId, {int page = 1}) =>
       '$taggedPostList?tagId=$tagId&page=$page';
@@ -165,12 +166,12 @@ abstract class AppRoutes {
           cancelAutoJump: cancelAutoJump,
           jumpToId: jumpToId));
 
-  static void toFeed<T>({int index = 0, int page = 1}) =>
+  static void toFeed<T>({int? index, int page = 1}) =>
       ControllerStacksService.to
           .pushController(FeedController(page: page, pageIndex: index));
 
   static void toHistory<T>(
-          {int index = 0,
+          {int? index,
           int page = 1,
           List<DateTimeRange?>? dateRange,
           List<Search?>? search}) =>

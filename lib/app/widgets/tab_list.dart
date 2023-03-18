@@ -69,8 +69,8 @@ class _TabTitle extends StatelessWidget {
         title = Text(text, style: theme.textTheme.bodyLarge);
         break;
       case PostListType.history:
-        final text = (controller as HistoryController).text();
-        title = Text('$text历史', style: theme.textTheme.bodyLarge);
+        title = Text((controller as HistoryController).text(),
+            style: theme.textTheme.bodyLarge);
         break;
       case PostListType.taggedPostList:
         title = Align(

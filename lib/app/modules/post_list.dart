@@ -193,8 +193,7 @@ abstract class PostListController extends ChangeNotifier {
 
   @override
   void dispose() {
-    //_page.close();
-    //_scrollController.close();
+    save = null;
     _isDisposed = true;
 
     super.dispose();
@@ -1424,10 +1423,8 @@ class _TabAndForumListButton extends StatelessWidget {
 
   final _TabAndForumListButtonType buttonType;
 
-  const _TabAndForumListButton(
-      // ignore: unused_element
-      {super.key,
-      required this.buttonType});
+  // ignore: unused_element
+  const _TabAndForumListButton({super.key, required this.buttonType});
 
   @override
   Widget build(BuildContext context) {
@@ -1435,6 +1432,7 @@ class _TabAndForumListButton extends StatelessWidget {
     final topPadding = MediaQuery.of(context).padding.top;
 
     return IconButton(
+      padding: PostListBottomBar._iconPadding,
       tooltip: buttonType._isTabList
           ? '标签页'
           : (buttonType._isForumList ? '版块' : '标签页/版块'),
@@ -1480,6 +1478,8 @@ void showHidden() {
 class PostListBottomBar extends StatelessWidget {
   static const double height = 48.0;
 
+  static const EdgeInsets _iconPadding = EdgeInsets.all(4.0);
+
   static EditPostBottomSheetController get _editPostController =>
       BottomSheetController.editPostController;
 
@@ -1499,17 +1499,20 @@ class PostListBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
-    final color = Theme.of(context).colorScheme.onPrimary;
+    final theme = Theme.of(context);
+    final buttonColor = theme.colorScheme.onPrimary;
     final hideOffset = (height + getViewPadding().bottom) / height;
 
     final Widget bottomBar = Obx(
       () {
         final Widget searchButton = SearchButton(
-          iconColor: color,
+          iconColor: buttonColor,
+          iconPadding: _iconPadding,
           onTapPrelude: _closeBottomSheet,
         );
         final Widget settingsButton = SettingsButton(
-          iconColor: color,
+          iconColor: buttonColor,
+          iconPadding: _iconPadding,
           onTapPrelude: _closeBottomSheet,
         );
         final Widget? compactListButton =
@@ -1528,14 +1531,17 @@ class PostListBottomBar extends StatelessWidget {
                     buttonType: _TabAndForumListButtonType.forumList)
                 : null;
         final Widget historyButton = HistoryButton(
-          iconColor: color,
+          iconColor: buttonColor,
+          iconPadding: _iconPadding,
           onTapPrelude: _closeBottomSheet,
         );
         final Widget feedButton = FeedButton(
-          iconColor: color,
+          iconColor: buttonColor,
+          iconPadding: _iconPadding,
           onTapPrelude: _closeBottomSheet,
         );
         final Widget editPostButton = IconButton(
+          padding: _iconPadding,
           onPressed: () {
             final controller = PostListController.get();
             if (controller.canPost) {
@@ -1545,41 +1551,49 @@ class PostListBottomBar extends StatelessWidget {
           },
           tooltip: '发串',
           icon: const Icon(Icons.edit),
-          color: color,
+          color: buttonColor,
         );
 
-        final Widget bottomAppBar = Container(
-          color: Theme.of(context).primaryColor,
+        final Widget bottomAppBar = SizedBox(
           height: height,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Flexible(child: SearchGuide(searchButton)),
-              Flexible(child: SettingsGuide(settingsButton)),
-              if (!settings.isBackdropUI &&
-                  settings.isCompactTabAndForumList &&
-                  compactListButton != null)
-                Flexible(child: CompactListButtonGuide(compactListButton)),
-              if (!(settings.isBackdropUI ||
-                      settings.isCompactTabAndForumList) &&
-                  tabListButton != null)
-                Flexible(child: TabListButtonGuide(tabListButton)),
-              if (!(settings.isBackdropUI ||
-                      settings.isCompactTabAndForumList) &&
-                  forumListButton != null)
-                Flexible(child: ForumListButtonGuide(forumListButton)),
-              Flexible(child: FeedGuide(feedButton)),
-              Flexible(child: HistoryGuide(historyButton)),
-              Flexible(child: EditPostGuide(editPostButton)),
-              Flexible(
-                child: SponsorButton(
-                  onlyText: false,
-                  showLabel: false,
-                  iconColor: color,
-                  onTapPrelude: _closeBottomSheet,
-                ),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 5.0, right: 5.0, bottom: 6.0),
+            child: Material(
+              elevation: 4.0,
+              color: theme.primaryColor,
+              borderRadius: BorderRadius.circular(21.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Flexible(child: SearchGuide(searchButton)),
+                  Flexible(child: SettingsGuide(settingsButton)),
+                  if (!settings.isBackdropUI &&
+                      settings.isCompactTabAndForumList &&
+                      compactListButton != null)
+                    Flexible(child: CompactListButtonGuide(compactListButton)),
+                  if (!(settings.isBackdropUI ||
+                          settings.isCompactTabAndForumList) &&
+                      tabListButton != null)
+                    Flexible(child: TabListButtonGuide(tabListButton)),
+                  if (!(settings.isBackdropUI ||
+                          settings.isCompactTabAndForumList) &&
+                      forumListButton != null)
+                    Flexible(child: ForumListButtonGuide(forumListButton)),
+                  Flexible(child: FeedGuide(feedButton)),
+                  Flexible(child: HistoryGuide(historyButton)),
+                  Flexible(child: EditPostGuide(editPostButton)),
+                  Flexible(
+                    child: SponsorButton(
+                      onlyText: false,
+                      showLabel: false,
+                      iconColor: buttonColor,
+                      iconPadding: _iconPadding,
+                      onTapPrelude: _closeBottomSheet,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
 

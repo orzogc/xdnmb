@@ -92,6 +92,8 @@ abstract class ThreadTypeController extends PostListController {
 
   int? browsePostId;
 
+  VoidCallback? _loadMore;
+
   PostBase? get mainPost => _mainPost.value;
 
   set mainPost(PostBase? post) => _mainPost.value = post;
@@ -114,13 +116,13 @@ abstract class ThreadTypeController extends PostListController {
           : ThreadController(id: mainPost.id, page: page, mainPost: mainPost);
 
   ThreadTypeController copyPage([int? jumpToId]);
+
+  void loadMore() => _loadMore?.call();
 }
 
 class ThreadController extends ThreadTypeController {
   @override
   final int? jumpToId;
-
-  VoidCallback? _loadMore;
 
   @override
   PostListType get postListType => PostListType.thread;
@@ -140,8 +142,6 @@ class ThreadController extends ThreadTypeController {
   @override
   ThreadTypeController copyPage([int? jumpToId]) => ThreadController(
       id: id, page: page, mainPost: mainPost, jumpToId: jumpToId);
-
-  void loadMore() => _loadMore?.call();
 }
 
 class OnlyPoThreadController extends ThreadTypeController {
@@ -881,10 +881,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
     _maxPage = controller.mainPost?.maxPage ?? 1;
 
-    if (controller.isThread) {
-      (controller as ThreadController)._loadMore =
-          biListViewController.loadMore;
-    }
+    controller._loadMore = biListViewController.loadMore;
 
     _setGetHistory();
   }
@@ -894,17 +891,12 @@ class _ThreadBodyState extends State<ThreadBody> {
     super.didUpdateWidget(oldWidget);
 
     if (controller != oldWidget.controller) {
-      if (oldWidget.controller.isThread) {
-        (oldWidget.controller as ThreadController)._loadMore = null;
-      }
+      oldWidget.controller._loadMore = null;
       oldWidget.controller.removeListener(_cancelJump);
 
       _pageSubscription.cancel();
       _pageSubscription = controller.listenPage(_trySave);
-      if (controller.isThread) {
-        (controller as ThreadController)._loadMore =
-            biListViewController.loadMore;
-      }
+      controller._loadMore = biListViewController.loadMore;
 
       _setGetHistory();
     }
@@ -912,9 +904,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   @override
   void dispose() {
-    if (controller.isThread) {
-      (controller as ThreadController)._loadMore = null;
-    }
+    controller._loadMore = null;
 
     _isToJump.value = false;
     _anchorController.dispose();

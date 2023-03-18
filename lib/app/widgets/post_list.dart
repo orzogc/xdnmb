@@ -55,7 +55,6 @@ class PostListScrollController extends AnchorScrollController {
       super.onIndexChanged});
 }
 
-// TODO: refresh改成bool
 typedef PostListScrollViewBuilder = Widget Function(BuildContext context,
     PostListScrollController scrollController, int refresh);
 

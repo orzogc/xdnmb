@@ -51,6 +51,12 @@ class _FeedKey {
 }
 
 class FeedController extends PostListController {
+  static int __index = 0;
+
+  static int get _index => __index.clamp(0, _feedPageCount - 1);
+
+  static set _index(int index) => __index = index.clamp(0, _feedPageCount - 1);
+
   final RxInt _pageIndex;
 
   @override
@@ -66,8 +72,8 @@ class FeedController extends PostListController {
 
   bool get isFeedPage => pageIndex == _FeedBody._index;
 
-  FeedController({required int page, int pageIndex = 0})
-      : _pageIndex = pageIndex.obs,
+  FeedController({required int page, int? pageIndex})
+      : _pageIndex = (pageIndex ?? _index).clamp(0, _feedPageCount - 1).obs,
         super(page);
 
   String text([bool showCount = false, int? index]) {
@@ -94,7 +100,7 @@ class FeedController extends PostListController {
 FeedController feedController(Map<String, String?> parameters) =>
     FeedController(
         page: parameters['page'].tryParseInt() ?? 1,
-        pageIndex: parameters['index'].tryParseInt() ?? 0);
+        pageIndex: parameters['index'].tryParseInt());
 
 class FeedAppBarTitle extends StatelessWidget {
   final FeedController controller;
@@ -374,12 +380,15 @@ class _FeedBody extends StatelessWidget {
 class _TagListDialog extends StatelessWidget {
   final TagData tag;
 
+  final int? count;
+
   final VoidCallback onAddedTag;
 
   const _TagListDialog(
       // ignore: unused_element
       {super.key,
       required this.tag,
+      this.count,
       required this.onAddedTag});
 
   @override
@@ -393,9 +402,10 @@ class _TagListDialog extends StatelessWidget {
           AddOrEditTag(onAdded: onAddedTag),
           AddOrEditTag(editedTag: tag),
           DeleteTag(tag),
-          ToTaggedPostList(tag.id),
-          NewTabToTaggedPostList(tag),
-          NewTabBackgroundToTaggedPostList(tag),
+          if (count == null || count! > 0) ToTaggedPostList(tag.id),
+          if (count == null || count! > 0) NewTabToTaggedPostList(tag),
+          if (count == null || count! > 0)
+            NewTabBackgroundToTaggedPostList(tag),
         ],
       );
 }
@@ -487,11 +497,12 @@ class _TagListItemState extends State<_TagListItem> {
                                 style: AppTheme.postContentTextStyle,
                                 strutStyle: AppTheme.postContentStrutStyle)
                             : null,
-                        onTap: (count != null && count > 0)
+                        onTap: (count == null || count > 0)
                             ? () => AppRoutes.toTaggedPostList(tagId: _tagId)
                             : null,
                         onLongPress: () => postListDialog(_TagListDialog(
                           tag: tag,
+                          count: count,
                           onAddedTag: widget.controller.refreshPage,
                         )),
                       ),
@@ -563,7 +574,10 @@ class _FeedBodyState extends State<FeedBody> {
     }
   }
 
-  void _trySave(int value) => widget.controller.trySave();
+  void _onPageIndex(int index) {
+    FeedController._index = index;
+    widget.controller.trySave();
+  }
 
   @override
   void initState() {
@@ -573,7 +587,7 @@ class _FeedBodyState extends State<FeedBody> {
     _pageController = PageController(initialPage: _initialIndex);
     _pageController.addListener(_updateIndex);
 
-    _pageIndexSubscription = _controller._pageIndex.listen(_trySave);
+    _pageIndexSubscription = _controller._pageIndex.listen(_onPageIndex);
   }
 
   @override
@@ -582,7 +596,8 @@ class _FeedBodyState extends State<FeedBody> {
 
     if (widget.controller != oldWidget.controller) {
       _pageIndexSubscription.cancel();
-      _pageIndexSubscription = widget.controller._pageIndex.listen(_trySave);
+      _pageIndexSubscription =
+          widget.controller._pageIndex.listen(_onPageIndex);
     }
   }
 

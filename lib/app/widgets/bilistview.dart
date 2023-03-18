@@ -83,6 +83,13 @@ class BiListViewController {
 
   BiListViewController();
 
+  void _reset(VoidCallback loadMore) {
+    _isLoadingMore = false;
+    if (_loadMore == loadMore) {
+      _loadMore = null;
+    }
+  }
+
   void loadMore() => _loadMore?.call();
 }
 
@@ -438,6 +445,14 @@ class _BiListViewState<T> extends State<BiListView<T>>
         : itemWidget;
   }
 
+  void _setController() {
+    if (widget.controller != null) {
+      widget.controller!._loadMore = _loadMore;
+      _isLoadingMoreSubscription = _isLoadingMore
+          .listen((value) => widget.controller!._isLoadingMore = value);
+    }
+  }
+
   @override
   bool get wantKeepAlive => true;
 
@@ -456,12 +471,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
     _scrollController = widget.scrollController ?? ScrollController();
     _scrollController.addListener(_checkBoundary);
 
-    if (widget.controller != null) {
-      WidgetsBinding.instance.addPostFrameCallback(
-          (timeStamp) => widget.controller!._loadMore = _loadMore);
-      _isLoadingMoreSubscription = _isLoadingMore
-          .listen((value) => widget.controller!._isLoadingMore = value);
-    }
+    _setController();
   }
 
   @override
@@ -482,13 +492,9 @@ class _BiListViewState<T> extends State<BiListView<T>>
     if (widget.controller != oldWidget.controller) {
       _isLoadingMoreSubscription?.cancel();
       _isLoadingMoreSubscription = null;
-      oldWidget.controller?._loadMore = null;
+      oldWidget.controller?._reset(_loadMore);
 
-      if (widget.controller != null) {
-        widget.controller!._loadMore = _loadMore;
-        _isLoadingMoreSubscription = _isLoadingMore
-            .listen((value) => widget.controller!._isLoadingMore = value);
-      }
+      _setController();
     }
   }
 
@@ -496,8 +502,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
   void dispose() {
     _isLoadingMoreSubscription?.cancel();
     _isLoadingMoreSubscription = null;
-    //_isLoadingMore.close();
-    widget.controller?._loadMore = null;
+    widget.controller?._reset(_loadMore);
     _pagingUpController?.removePageRequestListener(_fetchUpPage);
     _pagingUpController?.error = null;
     _pagingUpController?.itemList = null;

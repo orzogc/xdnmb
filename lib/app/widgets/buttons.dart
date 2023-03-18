@@ -6,6 +6,7 @@ import '../data/services/tag.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/icons.dart';
+import '../utils/navigation.dart';
 import '../utils/regex.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -305,6 +306,8 @@ class SearchButton extends StatelessWidget {
 
   final Color? iconColor;
 
+  final EdgeInsetsGeometry? iconPadding;
+
   final VoidCallback? onTapPrelude;
 
   final VoidCallback? afterSearch;
@@ -313,6 +316,7 @@ class SearchButton extends StatelessWidget {
       {super.key,
       this.showLabel = false,
       this.iconColor,
+      this.iconPadding,
       this.onTapPrelude,
       this.afterSearch});
 
@@ -331,7 +335,8 @@ class SearchButton extends StatelessWidget {
 
     return showLabel
         ? _Button(icon: icon, label: '查询', onTap: _onTap)
-        : IconButton(onPressed: _onTap, tooltip: '查询', icon: icon);
+        : IconButton(
+            padding: iconPadding, onPressed: _onTap, tooltip: '查询', icon: icon);
   }
 }
 
@@ -340,10 +345,16 @@ class SettingsButton extends StatelessWidget {
 
   final Color? iconColor;
 
+  final EdgeInsetsGeometry? iconPadding;
+
   final VoidCallback? onTapPrelude;
 
   const SettingsButton(
-      {super.key, this.showLabel = false, this.iconColor, this.onTapPrelude});
+      {super.key,
+      this.showLabel = false,
+      this.iconColor,
+      this.iconPadding,
+      this.onTapPrelude});
 
   void _onTap() {
     onTapPrelude?.call();
@@ -356,7 +367,8 @@ class SettingsButton extends StatelessWidget {
 
     return showLabel
         ? _Button(icon: icon, label: '设置', onTap: _onTap)
-        : IconButton(onPressed: _onTap, tooltip: '设置', icon: icon);
+        : IconButton(
+            padding: iconPadding, onPressed: _onTap, tooltip: '设置', icon: icon);
   }
 }
 
@@ -364,6 +376,8 @@ class HistoryButton extends StatelessWidget {
   final bool showLabel;
 
   final Color? iconColor;
+
+  final EdgeInsetsGeometry? iconPadding;
 
   final VoidCallback? onTapPrelude;
 
@@ -373,13 +387,16 @@ class HistoryButton extends StatelessWidget {
       {super.key,
       this.showLabel = false,
       this.iconColor,
+      this.iconPadding,
       this.onTapPrelude,
       this.onTapEnd});
 
   void _onTap() {
     onTapPrelude?.call();
 
-    if (!PostListController.get().isHistory) {
+    if (PostListController.get().isHistory) {
+      postListBack();
+    } else {
       AppRoutes.toHistory();
     }
 
@@ -392,7 +409,8 @@ class HistoryButton extends StatelessWidget {
 
     return showLabel
         ? _Button(icon: icon, label: '历史', onTap: _onTap)
-        : IconButton(onPressed: _onTap, tooltip: '历史', icon: icon);
+        : IconButton(
+            padding: iconPadding, onPressed: _onTap, tooltip: '历史', icon: icon);
   }
 }
 
@@ -400,6 +418,8 @@ class FeedButton extends StatelessWidget {
   final bool showLabel;
 
   final Color? iconColor;
+
+  final EdgeInsetsGeometry? iconPadding;
 
   final VoidCallback? onTapPrelude;
 
@@ -409,13 +429,16 @@ class FeedButton extends StatelessWidget {
       {super.key,
       this.showLabel = false,
       this.iconColor,
+      this.iconPadding,
       this.onTapPrelude,
       this.onTapEnd});
 
   void _onTap() {
     onTapPrelude?.call();
 
-    if (!PostListController.get().isFeed) {
+    if (PostListController.get().isFeed) {
+      postListBack();
+    } else {
       AppRoutes.toFeed();
     }
 
@@ -428,7 +451,11 @@ class FeedButton extends StatelessWidget {
 
     return showLabel
         ? _Button(icon: icon, label: '订阅', onTap: _onTap)
-        : IconButton(onPressed: _onTap, tooltip: '订阅/标签', icon: icon);
+        : IconButton(
+            padding: iconPadding,
+            onPressed: _onTap,
+            tooltip: '订阅/标签',
+            icon: icon);
   }
 }
 
@@ -466,6 +493,8 @@ class SponsorButton extends StatelessWidget {
 
   final Color? iconColor;
 
+  final EdgeInsetsGeometry? iconPadding;
+
   final VoidCallback? onTapPrelude;
 
   const SponsorButton(
@@ -473,6 +502,7 @@ class SponsorButton extends StatelessWidget {
       this.onlyText = true,
       this.showLabel = false,
       this.iconColor,
+      this.iconPadding,
       this.onTapPrelude});
 
   void _onTap() {
@@ -510,6 +540,10 @@ class SponsorButton extends StatelessWidget {
                 label: '赞助',
                 onTap: _onTap,
               )
-            : IconButton(onPressed: _onTap, tooltip: '赞助', icon: icon));
+            : IconButton(
+                padding: iconPadding,
+                onPressed: _onTap,
+                tooltip: '赞助',
+                icon: icon));
   }
 }
