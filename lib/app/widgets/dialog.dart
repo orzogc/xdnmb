@@ -1373,6 +1373,7 @@ class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
           if (data.recentTags.isNotEmpty)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('最近使用'),
                 const SizedBox(width: 10.0),

@@ -501,6 +501,7 @@ class _PostTagState extends State<_PostTag> {
               return widget.isPinned
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Icon(Icons.push_pin, size: widget.textStyle?.fontSize),
                         const SizedBox(width: 10.0),

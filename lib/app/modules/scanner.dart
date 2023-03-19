@@ -47,7 +47,7 @@ class _QRCodeScannerViewState extends State<QRCodeScannerView> {
             PickImage(onPickImage: (path) async {
               try {
                 if (!await _controller.analyzeImage(path)) {
-                  showToast('无效的饼干二维码');
+                  showToast('扫描不到二维码');
                 }
               } catch (e) {
                 showToast('扫描图片里的饼干二维码失败：$e');
