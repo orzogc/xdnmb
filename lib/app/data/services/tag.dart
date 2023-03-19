@@ -64,7 +64,7 @@ class TagService extends GetxService {
   static Future<int> getTaggedPostCount(int tagId) =>
       _taggedPostData.where().tagsElementEqualTo(tagId).count();
 
-  /// 删除拥有标签[tagId]的串的标签[tagId]
+  /// 删除拥有标签[tagId]的所有的串的标签[tagId]
   ///
   /// 串数据没有任何标签时会被删除
   static Future<void> deleteTagInPosts({required int tagId, Search? search}) =>
@@ -99,26 +99,6 @@ class TagService extends GetxService {
               as QueryBuilder<TaggedPost, TaggedPost, QSortBy>)
           .sortByTaggedTimeDesc()
           .findAll();
-
-  /// 删除串的标签
-  ///
-  /// 串数据没有任何标签时会被删除
-  static Future<void> deletePostTag(int postId, int tagId) =>
-      isar.writeTxn(() async {
-        final data = await _taggedPostData.get(postId);
-        if (data != null) {
-          if (data.deleteTag(tagId)) {
-            await _taggedPostData.put(data
-              ..image = ''
-              ..imageExtension = '');
-          } else {
-            await _taggedPostData.delete(postId);
-            _taggedPostIdSet.remove(postId);
-          }
-        } else {
-          debugPrint('要删除标签的串 ${postId.toPostNumber()} 的数据不存在');
-        }
-      });
 
   static Future<void> updatePosts(Iterable<PostBase> posts,
       [int? forumId]) async {
@@ -201,7 +181,8 @@ class TagService extends GetxService {
               id: tagId,
               name: tagName,
               backgroundColorValue: backgroundColor?.value,
-              textColorValue: textColor?.value));
+              textColorValue: textColor?.value,
+              pinnedPosts: <int>[]));
       _tagsMap[tagName] = tagId;
       _nextTagId++;
       PersistentDataService.to.addRecentTag(tagId);
@@ -277,6 +258,29 @@ class TagService extends GetxService {
     }
   }
 
+  /// 删除串的标签
+  ///
+  /// 串数据没有任何标签时会被删除
+  Future<void> deletePostTag(int postId, int tagId) async {
+    await isar.writeTxn(() async {
+      final data = await _taggedPostData.get(postId);
+      if (data != null) {
+        if (data.deleteTag(tagId)) {
+          await _taggedPostData.put(data
+            ..image = ''
+            ..imageExtension = '');
+        } else {
+          await _taggedPostData.delete(postId);
+          _taggedPostIdSet.remove(postId);
+        }
+      } else {
+        debugPrint('要删除标签的串 ${postId.toPostNumber()} 的数据不存在');
+      }
+    });
+
+    await unpinPost(postId: postId, tagId: tagId);
+  }
+
   Future<void> replacePostTag(
       {required int postId,
       required int oldTagId,
@@ -295,10 +299,18 @@ class TagService extends GetxService {
           debugPrint('要替换标签的串 ${postId.toPostNumber()} 的数据不存在');
         }
       });
+
+      await unpinPost(postId: postId, tagId: oldTagId);
     } else {
       debugPrint('不存在要替换的标签ID： $newTagId');
     }
   }
+
+  Future<void> pinPost({required int postId, required int tagId}) async =>
+      await getTagData(tagId)?.pinPost(postId);
+
+  Future<void> unpinPost({required int postId, required int tagId}) async =>
+      await getTagData(tagId)?.unpinPost(postId);
 
   @override
   void onInit() async {

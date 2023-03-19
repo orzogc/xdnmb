@@ -412,6 +412,8 @@ class _PostTagDialog extends StatelessWidget {
 class _PostTag extends StatefulWidget {
   final PostBase post;
 
+  final bool isPinned;
+
   final TextStyle? textStyle;
 
   final ValueSetter<int>? onDeleteTag;
@@ -420,6 +422,7 @@ class _PostTag extends StatefulWidget {
       // ignore: unused_element
       {super.key,
       required this.post,
+      this.isPinned = false,
       this.textStyle,
       this.onDeleteTag});
 
@@ -471,28 +474,41 @@ class _PostTagState extends State<_PostTag> {
         if (snapshot.hasData) {
           return ListenableBuilder(
             listenable: tagService.tagListenable(snapshot.data!),
-            builder: (context, child) => Wrap(
-              alignment: WrapAlignment.end,
-              spacing: 10.0,
-              runSpacing: 5.0,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                for (final tag in tagService.getTagsData(snapshot.data!))
-                  Tag.fromTagData(
-                    tag: tag,
-                    textStyle:
-                        widget.textStyle ?? AppTheme.postContentTextStyle,
-                    strutStyle: widget.textStyle == null
-                        ? AppTheme.postContentStrutStyle
-                        : null,
-                    onTap: () => postListDialog(_PostTagDialog(
-                      post: _post,
+            builder: (context, child) {
+              final Widget wrap = Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 10.0,
+                runSpacing: 5.0,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  for (final tag in tagService.getTagsData(snapshot.data!))
+                    Tag.fromTagData(
                       tag: tag,
-                      onDeleteTag: widget.onDeleteTag,
-                    )),
-                  ),
-              ],
-            ),
+                      textStyle:
+                          widget.textStyle ?? AppTheme.postContentTextStyle,
+                      strutStyle: widget.textStyle == null
+                          ? AppTheme.postContentStrutStyle
+                          : null,
+                      onTap: () => postListDialog(_PostTagDialog(
+                        post: _post,
+                        tag: tag,
+                        onDeleteTag: widget.onDeleteTag,
+                      )),
+                    ),
+                ],
+              );
+
+              return widget.isPinned
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Icon(Icons.push_pin, size: widget.textStyle?.fontSize),
+                        const SizedBox(width: 10.0),
+                        Flexible(child: wrap),
+                      ],
+                    )
+                  : wrap;
+            },
           );
         }
 
@@ -575,6 +591,8 @@ class PostContent extends StatelessWidget {
 
   final bool showPoTag;
 
+  final bool isPinned;
+
   final double? headerHeight;
 
   final double? contentMaxHeight;
@@ -615,6 +633,7 @@ class PostContent extends StatelessWidget {
       this.showForumName = true,
       this.showReplyCount = true,
       this.showPoTag = false,
+      this.isPinned = false,
       this.headerHeight,
       this.contentMaxHeight,
       this.onTapPostId,
@@ -735,6 +754,7 @@ class PostContent extends StatelessWidget {
           if (!post.isTipType)
             _PostTag(
               post: post,
+              isPinned: isPinned,
               textStyle: contentTextStyle,
               onDeleteTag: onDeleteTag,
             ),
@@ -778,6 +798,7 @@ class PostInkWell extends StatelessWidget {
       bool showForumName = true,
       bool showReplyCount = true,
       bool showPoTag = false,
+      bool isPinned = false,
       double? headerHeight,
       double? contentMaxHeight,
       ValueSetter<int>? onTapPostId,
@@ -806,6 +827,7 @@ class PostInkWell extends StatelessWidget {
             showForumName: showForumName,
             showReplyCount: showReplyCount,
             showPoTag: showPoTag,
+            isPinned: isPinned,
             headerHeight: headerHeight,
             contentMaxHeight: contentMaxHeight,
             onTapPostId: onTapPostId,

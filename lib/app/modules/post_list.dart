@@ -283,7 +283,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
               if (settings.backdropUI) {
                 _backdropController.showBackLayer();
               } else if (settings.showBottomBar &&
-                  !_tabAndForumListController.isShowed) {
+                  !_tabAndForumListController.isShown) {
                 _tabAndForumListController.show();
               } else {
                 Scaffold.of(context).openDrawer();
@@ -324,7 +324,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
             onTap: () {
               if (settings.backdropUI && _backdropController.isShowBackLayer) {
                 _backdropController.hideBackLayer();
-              } else if (!_tabAndForumListController.isShowed) {
+              } else if (!_tabAndForumListController.isShown) {
                 if (controller.isThreadType) {
                   controller.refresh();
                 } else {
@@ -348,18 +348,18 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ? 0.0
                   : null,
               leading: !(_backdropController.isShowBackLayer ||
-                      _tabAndForumListController.isShowed)
+                      _tabAndForumListController.isShown)
                   ? (stacks.controllersCount() > 1
                       ? const BackButton(onPressed: postListPop)
                       : AppBarMenuGuide(menuButton))
                   : IconButton(
                       icon: const Icon(Icons.close),
-                      onPressed: _tabAndForumListController.isShowed
+                      onPressed: _tabAndForumListController.isShown
                           ? _tabAndForumListController.close
                           : _backdropController.hideBackLayer),
               title: AppBarTitleGuide(title),
               actions: !(_backdropController.isShowBackLayer ||
-                      _tabAndForumListController.isShowed)
+                      _tabAndForumListController.isShown)
                   ? [
                       if (controller.isThreadType ||
                           controller.isForumType ||
@@ -560,8 +560,8 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
     _scrollControllerSubscription =
         widget.controller._scrollController.listen(_updateScrollController);
 
-    _backdropSubscription = BackdropController.controller.listen((isShowed) {
-      if (isShowed) {
+    _backdropSubscription = BackdropController.controller.listen((isShown) {
+      if (isShown) {
         _show();
         PostListController.scrollDirection = ScrollDirection.idle;
       }
@@ -904,15 +904,15 @@ class BottomSheetController<T> {
   set _controller(PersistentBottomSheetController<T>? controller) =>
       _bottomSheetController.value = controller;
 
-  bool get isShowed => _bottomSheetController.value != null;
+  bool get isShown => _bottomSheetController.value != null;
 
   Future<T>? get closed =>
-      isShowed ? _bottomSheetController.value!.closed : null;
+      isShown ? _bottomSheetController.value!.closed : null;
 
   BottomSheetController();
 
   void toggle() {
-    if (isShowed) {
+    if (isShown) {
       close();
     } else {
       show();
@@ -920,13 +920,13 @@ class BottomSheetController<T> {
   }
 
   void show() {
-    if (!isShowed && _show != null) {
+    if (!isShown && _show != null) {
       _show!();
     }
   }
 
   void close() {
-    if (isShowed) {
+    if (isShown) {
       _bottomSheetController.value!.close();
     }
   }
@@ -969,7 +969,7 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
   static BottomSheetController get _tabAndForumListController =>
       BottomSheetController._tabAndForumListController;
 
-  static bool get _hasBottomSheet => _editPostController.isShowed;
+  static bool get _hasBottomSheet => _editPostController.isShown;
 
   static EditPostCallback? get _editPost => EditPostCallback.bottomSheet;
 
@@ -981,7 +981,7 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
   void _toggleEditPostBottomSheet([EditPostController? controller]) {
     if (mounted) {
       if (!_hasBottomSheet) {
-        if (_tabAndForumListController.isShowed) {
+        if (_tabAndForumListController.isShown) {
           _tabAndForumListController.close();
         }
 
@@ -1213,14 +1213,14 @@ class _TabAndForumListController {
 
   int? _lastIndex;
 
-  bool get _isShowed => _tabController != null;
+  bool get _isShown => _tabController != null;
 
-  int? get _index => _isShowed ? _tabController!.index : null;
+  int? get _index => _isShown ? _tabController!.index : null;
 
   _TabAndForumListController();
 
   void _animateTo(int index) {
-    if (_isShowed) {
+    if (_isShown) {
       _tabController!.animateTo(index);
     }
   }
@@ -1378,7 +1378,7 @@ class _TabAndForumListButton extends StatelessWidget {
     final state = PostListView._scaffoldKey.currentState;
 
     if (state != null) {
-      if (_editPostBottomSheetController.isShowed) {
+      if (_editPostBottomSheetController.isShown) {
         _editPostBottomSheetController.close();
       }
 
@@ -1437,10 +1437,10 @@ class _TabAndForumListButton extends StatelessWidget {
           ? '标签页'
           : (buttonType._isForumList ? '版块' : '标签页/版块'),
       onPressed: () {
-        if (!_bottomSheetController.isShowed) {
+        if (!_bottomSheetController.isShown) {
           _showTabAndForumList(buttonType: buttonType, topPadding: topPadding);
         } else {
-          if (!buttonType._isCompact && _tabAndForumListController._isShowed) {
+          if (!buttonType._isCompact && _tabAndForumListController._isShown) {
             if (buttonType._isTabList) {
               if (_tabAndForumListController._index != 0) {
                 _tabAndForumListController._animateTo(0);
@@ -1486,9 +1486,9 @@ class PostListBottomBar extends StatelessWidget {
   static BottomSheetController get _tabAndForumListController =>
       BottomSheetController._tabAndForumListController;
 
-  static bool get isShowed =>
-      !(_editPostController.isShowed ||
-          (!_tabAndForumListController.isShowed &&
+  static bool get isShown =>
+      !(_editPostController.isShown ||
+          (!_tabAndForumListController.isShown &&
               PostListController.isScrollingDown)) &&
       SettingsService.to.isAutoHideBottomBar;
 
@@ -1601,8 +1601,8 @@ class PostListBottomBar extends StatelessWidget {
             ? AnimatedSlide(
                 offset: Offset(
                     0,
-                    (_editPostController.isShowed ||
-                            (!_tabAndForumListController.isShowed &&
+                    (_editPostController.isShown ||
+                            (!_tabAndForumListController.isShown &&
                                 PostListController.isScrollingDown))
                         ? hideOffset
                         : 0),
@@ -1610,7 +1610,7 @@ class PostListBottomBar extends StatelessWidget {
                 duration: _animationDuration,
                 child: bottomAppBar,
               )
-            : (!_editPostController.isShowed
+            : (!_editPostController.isShown
                 ? bottomAppBar
                 : const SizedBox.shrink());
       },
@@ -1766,7 +1766,7 @@ class _PostListViewState extends State<PostListView>
 
         if (mounted) {
           if (!SettingsService.to.compactTabAndForumList &&
-              _tabAndForumListController._isShowed) {
+              _tabAndForumListController._isShown) {
             if (_tabAndForumListController._index != 0) {
               _tabAndForumListController._animateTo(0);
               await Future.delayed(_delayDuration);
@@ -1781,7 +1781,7 @@ class _PostListViewState extends State<PostListView>
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
         if (mounted) {
           if (!SettingsService.to.compactTabAndForumList &&
-              _tabAndForumListController._isShowed) {
+              _tabAndForumListController._isShown) {
             if (_tabAndForumListController._index != 1) {
               _tabAndForumListController._animateTo(1);
               await Future.delayed(_delayDuration);
@@ -1916,7 +1916,7 @@ class _PostListViewState extends State<PostListView>
               Widget body = Column(
                 children: [
                   Expanded(child: PostListPage(key: PostListPage.pageKey)),
-                  if (_editPostBSController.isShowed)
+                  if (_editPostBSController.isShown)
                     SizedBox(height: bottomSheetHeight),
                 ],
               );

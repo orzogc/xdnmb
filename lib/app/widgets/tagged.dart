@@ -10,8 +10,10 @@ import '../data/services/tag.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
+import '../utils/hash.dart';
 import '../utils/history.dart';
 import '../utils/image.dart';
+import '../utils/navigation.dart';
 import '../utils/post.dart';
 import '../utils/reference.dart';
 import '../utils/regex.dart';
@@ -41,6 +43,8 @@ class TaggedPostListController extends PostListController {
   final RxDouble _headerHeight = 0.0.obs;
 
   final ValueListenable<Box<TagData>> _listenable;
+
+  int _pinnedCount = 0;
 
   Search? get search => _search.value;
 
@@ -183,11 +187,14 @@ class _TaggedPostListItem extends StatefulWidget {
 
   final Visible<TaggedPost> post;
 
+  final bool isPinned;
+
   const _TaggedPostListItem(
       // ignore: unused_element
       {super.key,
       required this.controller,
-      required this.post});
+      required this.post,
+      this.isPinned = false});
 
   @override
   State<_TaggedPostListItem> createState() => _TaggedPostListItemState();
@@ -251,65 +258,92 @@ class _TaggedPostListItemState extends State<_TaggedPostListItem> {
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<void>(
-        future: _getData,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done &&
-              snapshot.hasError) {
-            debugPrint('获取串 ${_post.toPostNumber()} 的数据出错：${snapshot.error}');
-          }
+  Widget build(BuildContext context) {
+    final tagService = TagService.to;
+    final textStyle = Theme.of(context).textTheme.titleMedium;
 
-          return Obx(() => widget.post.isVisible
-              ? PostCard(
-                  key: ValueKey<int>(_post.id),
-                  child: PostInkWell(
-                    post: _post,
-                    contentMaxLines: 8,
-                    onText: !(_search?.useWildcard ?? true)
-                        ? (context, text) =>
-                            Regex.onSearchText(text: text, search: _search!)
-                        : null,
-                    showFullTime: false,
-                    showPostId: _post.isNormalPost,
-                    showReplyCount: false,
-                    onDeleteTag: (value) {
-                      if (value == _tagId) {
-                        _controller._decreasePostCount();
-                        widget.post.isVisible = false;
-                      }
-                    },
-                    onTap: !_post.isPostHistory
-                        ? (post) async {
-                            if (_mainPostId != null) {
-                              AppRoutes.toThread(
-                                  mainPostId: _mainPostId!,
-                                  page: _page ?? 1,
-                                  jumpToId: (_post.isNormalPost &&
-                                          !_isMainPost &&
-                                          _page != null)
-                                      ? _post.id
-                                      : null);
-                            }
+    return FutureBuilder<void>(
+      future: _getData,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasError) {
+          debugPrint('获取串 ${_post.toPostNumber()} 的数据出错：${snapshot.error}');
+        }
+
+        return Obx(() => widget.post.isVisible
+            ? PostCard(
+                key: ValueKey<int>(_post.id),
+                child: PostInkWell(
+                  post: _post,
+                  contentMaxLines: 8,
+                  onText: !(_search?.useWildcard ?? true)
+                      ? (context, text) =>
+                          Regex.onSearchText(text: text, search: _search!)
+                      : null,
+                  showFullTime: false,
+                  showPostId: _post.isNormalPost,
+                  showReplyCount: false,
+                  isPinned: widget.isPinned,
+                  onDeleteTag: (value) {
+                    if (value == _tagId) {
+                      _controller._decreasePostCount();
+                      widget.post.isVisible = false;
+                    }
+                  },
+                  onTap: !_post.isPostHistory
+                      ? (post) async {
+                          if (_mainPostId != null) {
+                            AppRoutes.toThread(
+                                mainPostId: _mainPostId!,
+                                page: _page ?? 1,
+                                jumpToId: (_post.isNormalPost &&
+                                        !_isMainPost &&
+                                        _page != null)
+                                    ? _post.id
+                                    : null);
                           }
-                        : null,
-                    onLongPress: (post) => postListDialog(SavedPostDialog(
-                      post: post,
-                      mainPostId: _mainPostId,
-                      page: _page,
-                      onDelete: () async {
-                        await TagService.deletePostTag(post.id, _tagId);
-                        _controller._decreasePostCount();
-                        showToast(post.isNormalPost
-                            ? '删除串 ${post.toPostNumber()}'
-                            : '删除串');
-                        widget.post.isVisible = false;
-                      },
-                    )),
-                  ),
-                )
-              : const SizedBox.shrink());
-        },
-      );
+                        }
+                      : null,
+                  onLongPress: (post) => postListDialog(SavedPostDialog(
+                    post: post,
+                    mainPostId: _mainPostId,
+                    page: _page,
+                    onDelete: () async {
+                      await TagService.to.deletePostTag(post.id, _tagId);
+                      _controller._decreasePostCount();
+                      showToast(post.isNormalPost
+                          ? '删除串 ${post.toPostNumber()}'
+                          : '删除串');
+                      widget.post.isVisible = false;
+                    },
+                    children: [
+                      SimpleDialogOption(
+                        onPressed: () async {
+                          await tagService.pinPost(
+                              postId: _post.id, tagId: _tagId);
+                          _controller.refreshPage();
+                          postListBack();
+                        },
+                        child: Text('置顶', style: textStyle),
+                      ),
+                      if (widget.isPinned)
+                        SimpleDialogOption(
+                          onPressed: () async {
+                            await tagService.unpinPost(
+                                postId: _post.id, tagId: _tagId);
+                            _controller.refreshPage();
+                            postListBack();
+                          },
+                          child: Text('取消置顶', style: textStyle),
+                        ),
+                    ],
+                  )),
+                ),
+              )
+            : const SizedBox.shrink());
+      },
+    );
+  }
 }
 
 class TaggedPostListBody extends StatelessWidget {
@@ -333,19 +367,38 @@ class TaggedPostListBody extends StatelessWidget {
             canLoadMoreAtBottom: false,
             fetch: (page) async {
               if (page == 1) {
-                final list = (await TagService.taggedPostList(
-                        tagId: controller.id, search: controller.search))
-                    .map((post) => Visible(post))
-                    .toList();
-                controller._count = list.length;
+                controller._pinnedCount = 0;
+                final postMap =
+                    intLinkedHashMapFromEntries<Visible<TaggedPost>?>(
+                        (controller.tag?.pinnedPosts ?? <int>[])
+                            .map((postId) => MapEntry(postId, null)));
 
-                return list;
+                final posts = await TagService.taggedPostList(
+                    tagId: controller.id, search: controller.search);
+                controller._count = posts.length;
+                posts.removeWhere((post) {
+                  if (postMap.containsKey(post.id)) {
+                    postMap[post.id] = Visible(post);
+                    controller._pinnedCount++;
+
+                    return true;
+                  } else {
+                    return false;
+                  }
+                });
+
+                return (postMap.values
+                    .whereType<Visible<TaggedPost>>()
+                    .followedBy(posts.map((post) => Visible(post)))).toList();
               }
 
               return <Visible<TaggedPost>>[];
             },
-            itemBuilder: (context, post, index) =>
-                _TaggedPostListItem(controller: controller, post: post),
+            itemBuilder: (context, post, index) => _TaggedPostListItem(
+              controller: controller,
+              post: post,
+              isPinned: index < controller._pinnedCount,
+            ),
             noItemsFoundBuilder: (context) => Center(
               child: Text(
                 '没有串',

@@ -18,3 +18,15 @@ HashMap<int, V> intHashMapOf<V>(Map<int, V> other) =>
 
 HashMap<int, V> intHashMapFromEntries<V>(Iterable<MapEntry<int, V>> entries) =>
     intHashMap<V>()..addEntries(entries);
+
+LinkedHashMap<int, V> intLinkedHashMap<V>() => LinkedHashMap<int, V>(
+      equals: (key1, key2) => key1 == key2,
+      hashCode: (key) => key,
+    );
+
+LinkedHashMap<int, V> intLinkedHashMapOf<V>(Map<int, V> other) =>
+    intLinkedHashMap<V>()..addAll(other);
+
+LinkedHashMap<int, V> intLinkedHashMapFromEntries<V>(
+        Iterable<MapEntry<int, V>> entries) =>
+    intLinkedHashMap<V>()..addEntries(entries);

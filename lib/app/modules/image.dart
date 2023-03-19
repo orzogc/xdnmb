@@ -32,7 +32,7 @@ class _TopOverlay extends StatelessWidget {
 
   final String? poUserHash;
 
-  final RxBool _isShowed = false.obs;
+  final RxBool _isShown = false.obs;
 
   _TopOverlay(
       // ignore: unused_element
@@ -40,7 +40,7 @@ class _TopOverlay extends StatelessWidget {
       required this.post,
       this.poUserHash});
 
-  void _toggle() => _isShowed.value = !_isShowed.value;
+  void _toggle() => _isShown.value = !_isShown.value;
 
   @override
   Widget build(BuildContext context) => ChildSizeNotifier(
@@ -48,7 +48,7 @@ class _TopOverlay extends StatelessWidget {
           () => AnimatedPositioned(
             left: 0,
             right: 0,
-            top: _isShowed.value
+            top: _isShown.value
                 ? 0
                 : size.height == 0
                     ? -10000
@@ -97,7 +97,7 @@ class _BottomOverlay extends StatelessWidget {
 
   final Size size;
 
-  final RxBool _isShowed = false.obs;
+  final RxBool _isShown = false.obs;
 
   _BottomOverlay(
       // ignore: unused_element
@@ -111,7 +111,7 @@ class _BottomOverlay extends StatelessWidget {
       required this.saveImage,
       required this.size});
 
-  void _toggle() => _isShowed.value = !_isShowed.value;
+  void _toggle() => _isShown.value = !_isShown.value;
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +122,7 @@ class _BottomOverlay extends StatelessWidget {
         () => AnimatedPositioned(
           left: 0,
           right: 0,
-          bottom: _isShowed.value
+          bottom: _isShown.value
               ? 0
               : size.height == 0
                   ? -10000

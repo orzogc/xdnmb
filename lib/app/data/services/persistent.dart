@@ -184,12 +184,16 @@ class PersistentDataService extends GetxService {
   void addRecentTag(int tagId) {
     final tags = _recentTags;
     if (tags.contains(tagId)) {
-      _recentTags = [...tags.where((element) => element != tagId), tagId];
+      _recentTags = tags
+        ..removeWhere((element) => element == tagId)
+        ..add(tagId);
     } else {
       if (tags.length >= _maxRecentTags) {
-        _recentTags = [...tags.skip(1), tagId];
+        _recentTags = tags
+          ..removeAt(0)
+          ..add(tagId);
       } else {
-        _recentTags = [...tags, tagId];
+        _recentTags = tags..add(tagId);
       }
     }
   }
@@ -197,7 +201,7 @@ class PersistentDataService extends GetxService {
   void deleteRecentTag(int tagId) {
     final tags = _recentTags;
     if (tags.contains(tagId)) {
-      _recentTags = [...tags.where((element) => element != tagId)];
+      _recentTags = tags..removeWhere((element) => element == tagId);
     }
   }
 

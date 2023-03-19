@@ -344,7 +344,7 @@ class _ForumBodyState extends State<ForumBody> {
         itemBuilder: (context, thread, index) {
           final mainPost = thread.thread.mainPost;
 
-          bool isShowed() =>
+          bool isShown() =>
               !((settings.forbidDuplicatedPosts && thread.isDuplicated) ||
                   (controller.isTimeline &&
                       !mainPost.isAdmin &&
@@ -358,7 +358,7 @@ class _ForumBodyState extends State<ForumBody> {
               if (controller.isTimeline) blacklist.forumBlacklistNotifier,
               blacklist.postAndUserBlacklistNotifier,
             ]),
-            builder: (context, child) => isShowed()
+            builder: (context, child) => isShown()
                 ? AnchorItemWrapper(
                     key: thread.toValueKey(),
                     controller: scrollController,

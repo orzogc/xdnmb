@@ -19,6 +19,10 @@ class TagData extends HiveObject {
   @HiveField(3, defaultValue: null)
   final int? textColorValue;
 
+  /// 新的在最前面
+  @HiveField(4, defaultValue: <int>[])
+  final List<int> pinnedPosts;
+
   bool get useDefaultColor =>
       backgroundColorValue == null && textColorValue == null;
 
@@ -34,26 +38,37 @@ class TagData extends HiveObject {
       {required this.id,
       required this.name,
       this.backgroundColorValue,
-      this.textColorValue})
+      this.textColorValue,
+      required this.pinnedPosts})
       : assert(name.isNotEmpty);
 
-  TagData copyWith({String? name, Color? backgroundColor, Color? textColor}) =>
+  TagData copyWith(
+          {String? name,
+          Color? backgroundColor,
+          Color? textColor,
+          List<int>? pinnedPosts}) =>
       TagData(
           id: id,
           name: name ?? this.name,
           backgroundColorValue: backgroundColor?.value ?? backgroundColorValue,
-          textColorValue: textColor?.value ?? textColorValue);
+          textColorValue: textColor?.value ?? textColorValue,
+          pinnedPosts: pinnedPosts ?? this.pinnedPosts);
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is TagData &&
-          id == other.id &&
-          name == other.name &&
-          backgroundColorValue == other.backgroundColorValue &&
-          textColorValue == other.textColorValue);
+  Future<void> pinPost(int postId) async {
+    if (pinnedPosts.contains(postId)) {
+      pinnedPosts
+        ..removeWhere((element) => element == postId)
+        ..insert(0, postId);
+    } else {
+      pinnedPosts.insert(0, postId);
+    }
 
-  @override
-  int get hashCode =>
-      Object.hash(id, name, backgroundColorValue, textColorValue);
+    await save();
+  }
+
+  Future<void> unpinPost(int postId) async {
+    pinnedPosts.removeWhere((element) => element == postId);
+
+    await save();
+  }
 }

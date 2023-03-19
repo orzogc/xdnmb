@@ -278,9 +278,9 @@ class SettingsService extends GetxService {
       : _settingsBox.get(Settings.showBottomBar, defaultValue: true);
 
   set showBottomBar(bool showBottomBar) {
-    final isShowed = GetPlatform.isIOS ? true : showBottomBar;
-    _settingsBox.put(Settings.showBottomBar, isShowed);
-    _isShowBottomBar.value = isShowed;
+    final isShown = GetPlatform.isIOS ? true : showBottomBar;
+    _settingsBox.put(Settings.showBottomBar, isShown);
+    _isShowBottomBar.value = isShown;
   }
 
   bool get isShowBottomBar => _isShowBottomBar.value;
@@ -418,13 +418,11 @@ class SettingsService extends GetxService {
     _isShowLatestPostTimeInFeed.value = mode;
   }
 
-  bool get isNotShowedLatestPostTimeInFeed => showLatestPostTimeInFeed == 0;
+  bool get isNotShowLatestPostTimeInFeed => showLatestPostTimeInFeed == 0;
 
-  bool get isShowedLatestAbsolutePostTimeInFeed =>
-      showLatestPostTimeInFeed == 1;
+  bool get isShowLatestAbsolutePostTimeInFeed => showLatestPostTimeInFeed == 1;
 
-  bool get isShowedLatestRelativePostTimeInFeed =>
-      showLatestPostTimeInFeed == 2;
+  bool get isShowLatestRelativePostTimeInFeed => showLatestPostTimeInFeed == 2;
 
   int get isShowLatestPostTimeInFeed => _isShowLatestPostTimeInFeed.value;
 

@@ -49,7 +49,7 @@ Future<T?> postListDialog<T>(Widget widget, {int? index}) {
 
   return Get.dialog<T>(Obx(() {
     final isAutoHideAppBar = settings.isAutoHideAppBar;
-    final isShowBottomBar = PostListBottomBar.isShowed;
+    final isShowBottomBar = PostListBottomBar.isShown;
 
     return (isAutoHideAppBar || isShowBottomBar)
         ? Container(
@@ -727,7 +727,7 @@ class DeletePostTag extends StatelessWidget {
               ].withSpaceBetween(width: 5.0),
             ),
             onConfirm: () async {
-              await TagService.deletePostTag(postId, tag.id);
+              await TagService.to.deletePostTag(postId, tag.id);
               onDelete?.call(tag.id);
 
               showToast(postId.isNormalPost
@@ -1446,13 +1446,16 @@ class SavedPostDialog extends StatelessWidget {
 
   final VoidCallback? onDelete;
 
+  final List<Widget>? children;
+
   const SavedPostDialog(
       {super.key,
       required this.post,
       this.mainPostId,
       this.page,
       this.confirmDelete = true,
-      this.onDelete});
+      this.onDelete,
+      this.children});
 
   bool get _hasPostId => post.isNormalPost;
 
@@ -1492,6 +1495,7 @@ class SavedPostDialog extends StatelessWidget {
               page: page,
               postId: _hasNonMainPostId ? post.id : null,
             ),
+          if (children != null) ...children!,
           AddOrReplacePostTag(post: post),
           if (_hasPostId) CopyPostReference(post.id),
           CopyPostContent(post),

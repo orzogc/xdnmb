@@ -941,7 +941,7 @@ void _replyPost(ThreadTypeController controller, int postId) {
   final text = '${postId.toPostReference()}\n';
 
   final editPostController = BottomSheetController.editPostController;
-  if (editPostController.isShowed) {
+  if (editPostController.isShown) {
     EditPostCallback.bottomSheet?.insertText(text);
   } else {
     editPostController.showEditPost(EditPostController(
@@ -955,7 +955,7 @@ void _replyPost(ThreadTypeController controller, int postId) {
 
 void _replyWithImage(ThreadTypeController controller, Uint8List imageData) {
   final editPostController = BottomSheetController.editPostController;
-  if (editPostController.isShowed) {
+  if (editPostController.isShown) {
     EditPostCallback.bottomSheet?.insertImage(imageData);
   } else {
     editPostController.showEditPost(EditPostController(

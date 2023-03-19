@@ -21,13 +21,14 @@ class TagDataAdapter extends TypeAdapter<TagData> {
       name: fields[1] as String,
       backgroundColorValue: fields[2] as int?,
       textColorValue: fields[3] as int?,
+      pinnedPosts: fields[4] == null ? [] : (fields[4] as List).cast<int>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, TagData obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -35,7 +36,9 @@ class TagDataAdapter extends TypeAdapter<TagData> {
       ..writeByte(2)
       ..write(obj.backgroundColorValue)
       ..writeByte(3)
-      ..write(obj.textColorValue);
+      ..write(obj.textColorValue)
+      ..writeByte(4)
+      ..write(obj.pinnedPosts);
   }
 
   @override

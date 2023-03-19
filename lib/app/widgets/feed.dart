@@ -210,7 +210,7 @@ class _FeedItemState extends State<_FeedItem> {
     final client = XdnmbClientService.to;
     final time = TimeService.to;
 
-    _getLatestPostTime = !settings.isNotShowedLatestPostTimeInFeed
+    _getLatestPostTime = !settings.isNotShowLatestPostTimeInFeed
         ? Future(() async {
             for (final postId in _feed.recentReplies.reversed) {
               try {
@@ -225,7 +225,7 @@ class _FeedItemState extends State<_FeedItem> {
                   postTime = reference.postTime;
                 }
 
-                if (settings.isShowedLatestRelativePostTimeInFeed &&
+                if (settings.isShowLatestRelativePostTimeInFeed &&
                     postTime.isAfter(time.now)) {
                   time.updateTime();
                 }
@@ -281,12 +281,12 @@ class _FeedItemState extends State<_FeedItem> {
             contentMaxLines: 8,
             showFullTime: false,
             showPostId: false,
-            footer: (!settings.isNotShowedLatestPostTimeInFeed &&
+            footer: (!settings.isNotShowLatestPostTimeInFeed &&
                     snapshot.connectionState == ConnectionState.done &&
                     replyTime != null)
                 ? (textStyle) => Align(
                       alignment: Alignment.centerRight,
-                      child: (settings.isShowedLatestAbsolutePostTimeInFeed
+                      child: (settings.isShowLatestAbsolutePostTimeInFeed
                           ? Text(
                               '最新回复 ${formatTime(replyTime)}',
                               style: textStyle ?? AppTheme.postHeaderTextStyle,
