@@ -26,6 +26,22 @@ import 'post.dart';
 import 'post_list.dart';
 import 'tag.dart';
 
+class _Tagged {
+  final Visible<TaggedPost> post;
+
+  final bool isPinned;
+
+  const _Tagged(this.post, [this.isPinned = false]);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is _Tagged && post == other.post && isPinned == other.isPinned);
+
+  @override
+  int get hashCode => Object.hash(post, isPinned);
+}
+
 class TaggedPostListController extends PostListController {
   @override
   PostListType get postListType => PostListType.taggedPostList;
@@ -43,8 +59,6 @@ class TaggedPostListController extends PostListController {
   final RxDouble _headerHeight = 0.0.obs;
 
   final ValueListenable<Box<TagData>> _listenable;
-
-  int _pinnedCount = 0;
 
   Search? get search => _search.value;
 
@@ -309,7 +323,8 @@ class _TaggedPostListItemState extends State<_TaggedPostListItem> {
                     mainPostId: _mainPostId,
                     page: _page,
                     onDelete: () async {
-                      await TagService.to.deletePostTag(post.id, _tagId);
+                      await TagService.to
+                          .deletePostTag(postId: post.id, tagId: _tagId);
                       _controller._decreasePostCount();
                       showToast(post.isNormalPost
                           ? '删除串 ${post.toPostNumber()}'
@@ -358,8 +373,7 @@ class TaggedPostListBody extends StatelessWidget {
         controller: controller,
         postList: PostListScrollView(
           controller: controller,
-          builder: (context, scrollController, refresh) =>
-              BiListView<Visible<TaggedPost>>(
+          builder: (context, scrollController, refresh) => BiListView<_Tagged>(
             key: ValueKey<int>(refresh),
             scrollController: scrollController,
             postListController: controller,
@@ -367,19 +381,16 @@ class TaggedPostListBody extends StatelessWidget {
             canLoadMoreAtBottom: false,
             fetch: (page) async {
               if (page == 1) {
-                controller._pinnedCount = 0;
-                final postMap =
-                    intLinkedHashMapFromEntries<Visible<TaggedPost>?>(
-                        (controller.tag?.pinnedPosts ?? <int>[])
-                            .map((postId) => MapEntry(postId, null)));
+                final postMap = intLinkedHashMapFromEntries<_Tagged?>(
+                    (controller.tag?.pinnedPosts ?? <int>[])
+                        .map((postId) => MapEntry(postId, null)));
 
                 final posts = await TagService.taggedPostList(
                     tagId: controller.id, search: controller.search);
                 controller._count = posts.length;
                 posts.removeWhere((post) {
                   if (postMap.containsKey(post.id)) {
-                    postMap[post.id] = Visible(post);
-                    controller._pinnedCount++;
+                    postMap[post.id] = _Tagged(Visible(post), true);
 
                     return true;
                   } else {
@@ -387,17 +398,16 @@ class TaggedPostListBody extends StatelessWidget {
                   }
                 });
 
-                return (postMap.values
-                    .whereType<Visible<TaggedPost>>()
-                    .followedBy(posts.map((post) => Visible(post)))).toList();
+                return (postMap.values.whereType<_Tagged>().followedBy(
+                    posts.map((post) => _Tagged(Visible(post))))).toList();
               }
 
-              return <Visible<TaggedPost>>[];
+              return <_Tagged>[];
             },
             itemBuilder: (context, post, index) => _TaggedPostListItem(
               controller: controller,
-              post: post,
-              isPinned: index < controller._pinnedCount,
+              post: post.post,
+              isPinned: post.isPinned,
             ),
             noItemsFoundBuilder: (context) => Center(
               child: Text(

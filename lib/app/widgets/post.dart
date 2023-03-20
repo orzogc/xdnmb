@@ -400,7 +400,8 @@ class _PostTagDialog extends StatelessWidget {
         children: [
           AddOrReplacePostTag(post: post),
           AddOrEditTag(editedTag: tag),
-          AddOrReplacePostTag(post: post, replacedTag: tag),
+          AddOrReplacePostTag(
+              post: post, replacedTag: tag, onDeleteTag: onDeleteTag),
           DeletePostTag(postId: post.id, tag: tag, onDelete: onDeleteTag),
           ToTaggedPostList(tag.id),
           NewTabToTaggedPostList(tag),

@@ -685,13 +685,16 @@ class AddOrReplacePostTag extends StatelessWidget {
 
   final TagData? replacedTag;
 
-  const AddOrReplacePostTag({super.key, required this.post, this.replacedTag});
+  final ValueSetter<int>? onDeleteTag;
+
+  const AddOrReplacePostTag(
+      {super.key, required this.post, this.replacedTag, this.onDeleteTag});
 
   @override
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () async {
-          final result = await postListDialog<bool>(
-              AddOrReplacePostTagDialog(post: post, repacedTag: replacedTag));
+          final result = await postListDialog<bool>(AddOrReplacePostTagDialog(
+              post: post, repacedTag: replacedTag, onDeleteTag: onDeleteTag));
 
           if (result ?? false) {
             postListBack();
@@ -727,7 +730,7 @@ class DeletePostTag extends StatelessWidget {
               ].withSpaceBetween(width: 5.0),
             ),
             onConfirm: () async {
-              await TagService.to.deletePostTag(postId, tag.id);
+              await TagService.to.deletePostTag(postId: postId, tagId: tag.id);
               onDelete?.call(tag.id);
 
               showToast(postId.isNormalPost
@@ -1106,9 +1109,17 @@ class _AddOrEditTagDialog extends StatelessWidget {
 
   final RxBool _useDefaultColor;
 
-  final Rxn<Color> _backgroundColor;
+  final Rxn<Color> _userBackgroundColor;
 
-  final Rxn<Color> _textColor;
+  final Rxn<Color> _userTextColor;
+
+  Color? get _backgroundColor => !_useDefaultColor.value
+      ? (_userBackgroundColor.value ?? Get.theme.primaryColor)
+      : null;
+
+  Color? get _textColor => !_useDefaultColor.value
+      ? (_userTextColor.value ?? Get.theme.colorScheme.onPrimary)
+      : null;
 
   String get _text => editedTag == null ? '添加' : '修改';
 
@@ -1118,8 +1129,8 @@ class _AddOrEditTagDialog extends StatelessWidget {
   _AddOrEditTagDialog({super.key, this.editedTag, this.onAdded})
       : _tagName = RxnString(editedTag?.name),
         _useDefaultColor = (editedTag?.useDefaultColor ?? true).obs,
-        _backgroundColor = Rxn(editedTag?.backgroundColor),
-        _textColor = Rxn(editedTag?.textColor);
+        _userBackgroundColor = Rxn(editedTag?.backgroundColor),
+        _userTextColor = Rxn(editedTag?.textColor);
 
   @override
   Widget build(BuildContext context) {
@@ -1135,8 +1146,8 @@ class _AddOrEditTagDialog extends StatelessWidget {
                   text: _tagName.value!,
                   textStyle: AppTheme.postContentTextStyle,
                   strutStyle: AppTheme.postContentStrutStyle,
-                  backgroundColor: _backgroundColor.value,
-                  textColor: _textColor.value)
+                  backgroundColor: _backgroundColor,
+                  textColor: _textColor)
               : const SizedBox.shrink()),
           TextFormField(
             key: _formKey,
@@ -1170,16 +1181,16 @@ class _AddOrEditTagDialog extends StatelessWidget {
               () => ColorListTile(
                 enabled: !_useDefaultColor.value,
                 title: const Text('文字颜色'),
-                color: _textColor.value ?? theme.colorScheme.onPrimary,
-                onColorChanged: (value) => _textColor.value = value,
+                color: _textColor ?? theme.colorScheme.onPrimary,
+                onColorChanged: (value) => _userTextColor.value = value,
               ),
             ),
             Obx(
               () => ColorListTile(
                 enabled: !_useDefaultColor.value,
                 title: const Text('背景颜色'),
-                color: _backgroundColor.value ?? theme.primaryColor,
-                onColorChanged: (value) => _backgroundColor.value = value,
+                color: _backgroundColor ?? theme.primaryColor,
+                onColorChanged: (value) => _userBackgroundColor.value = value,
               ),
             )
           ]),
@@ -1196,15 +1207,15 @@ class _AddOrEditTagDialog extends StatelessWidget {
                   if (editedTag == null) {
                     await tagService.getTagIdOrAddNewTag(
                         tagName: _tagName.value!,
-                        backgroundColor: _backgroundColor.value,
-                        textColor: _textColor.value);
+                        backgroundColor: _backgroundColor,
+                        textColor: _textColor);
 
                     onAdded?.call();
                   } else {
                     if (!await tagService.editTag(editedTag!.copyWith(
                         name: _tagName.value,
-                        backgroundColor: _backgroundColor.value,
-                        textColor: _textColor.value))) {
+                        backgroundColor: _backgroundColor,
+                        textColor: _textColor))) {
                       showToast('修改标签 ${editedTag?.name} 失败');
 
                       return;
@@ -1231,8 +1242,10 @@ class AddOrReplacePostTagDialog extends StatefulWidget {
 
   final TagData? repacedTag;
 
+  final ValueSetter<int>? onDeleteTag;
+
   const AddOrReplacePostTagDialog(
-      {super.key, required this.post, this.repacedTag});
+      {super.key, required this.post, this.repacedTag, this.onDeleteTag});
 
   @override
   State<AddOrReplacePostTagDialog> createState() =>
@@ -1251,9 +1264,9 @@ class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
 
   final RxBool _userUseDefaultColor = true.obs;
 
-  final Rxn<Color> _userBackgroundColor = Rxn();
+  final Rxn<Color> _userBackgroundColor = Rxn(null);
 
-  final Rxn<Color> _userTextColor = Rxn();
+  final Rxn<Color> _userTextColor = Rxn(null);
 
   PostBase get _post => widget.post;
 
@@ -1265,16 +1278,20 @@ class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
       _existingTag.value?.useDefaultColor ?? _userUseDefaultColor.value;
 
   Color? get _backgroundColor => !_useDefaultColor
-      ? (_existingTag.value?.backgroundColor ?? _userBackgroundColor.value)
+      ? (_existingTag.value?.backgroundColor ??
+          _userBackgroundColor.value ??
+          Get.theme.primaryColor)
       : null;
 
   Color? get _textColor => !_useDefaultColor
-      ? (_existingTag.value?.textColor ?? _userTextColor.value)
+      ? (_existingTag.value?.textColor ??
+          _userTextColor.value ??
+          Get.theme.colorScheme.onPrimary)
       : null;
 
-  String get _text => _replacedTag == null ? '添加' : '替换';
-
-  String get _name => _replacedTag?.name ?? _controller.text;
+  String get _text => _replacedTag == null
+      ? '添加标签 ${_controller.text} '
+      : '替换标签 ${_replacedTag?.name} 为 ${_controller.text} ';
 
   void _onTextChanged({String? text, TagData? tag}) {
     assert((text != null && tag == null) || (text == null && tag != null));
@@ -1335,8 +1352,12 @@ class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
             controller: _controller,
             decoration: const InputDecoration(labelText: '标签'),
             onChanged: (value) => _onTextChanged(text: value),
-            validator: (value) =>
-                (value == null || value.isEmpty) ? '请输入标签名字' : null,
+            validator: (value) => (value == null || value.isEmpty)
+                ? '请输入标签名字'
+                : ((_replacedTag != null &&
+                        _replacedTag!.name == _controller.text)
+                    ? '同一个标签'
+                    : null),
           ),
           const SizedBox(height: 5.0),
           _SetTagColor(children: [
@@ -1411,25 +1432,26 @@ class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
 
                 if (_replacedTag == null) {
                   await tagService.addPostTag(_post, tagId);
-                } else {
+                } else if (_replacedTag!.id != tagId) {
                   await tagService.replacePostTag(
                       postId: _post.id,
                       oldTagId: _replacedTag!.id,
                       newTagId: tagId);
+                  widget.onDeleteTag?.call(_replacedTag!.id);
                 }
 
                 showToast(_post.isNormalPost
-                    ? '给串 ${_post.toPostNumber()} $_text标签 $_name 成功'
-                    : '给串$_text标签 $_name 成功');
+                    ? '给串 ${_post.toPostNumber()} $_text成功'
+                    : '给串$_text成功');
                 postListBack<bool>(result: true);
               } catch (e) {
                 showToast(_post.isNormalPost
-                    ? '给串 ${_post.toPostNumber()} $_text标签 $_name 失败：$e'
-                    : '给串$_text标签 $_name 失败：$e');
+                    ? '给串 ${_post.toPostNumber()} $_text失败：$e'
+                    : '给串$_text失败：$e');
               }
             }
           },
-          child: Text(_text),
+          child: Text(_replacedTag == null ? '添加' : '替换'),
         ),
       ],
     );
