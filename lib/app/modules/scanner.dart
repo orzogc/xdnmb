@@ -8,7 +8,37 @@ import '../data/services/user.dart';
 import '../utils/toast.dart';
 import '../utils/theme.dart';
 import '../widgets/color.dart';
+import '../widgets/dialog.dart';
 import '../widgets/image.dart';
+
+class _ScanImage extends StatelessWidget {
+  /// 选取图片后调用，参数为图片路径
+  final ValueSetter<String> onPickImage;
+
+  // ignore: unused_element
+  const _ScanImage({super.key, required this.onPickImage});
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+        tooltip: '加载图片',
+        onPressed: () async {
+          if (GetPlatform.isIOS) {
+            await Get.dialog(ConfirmCancelDialog(
+              content: '扫描图片需要图片里只有二维码',
+              confirmText: '加载图片',
+              onConfirm: () {
+                Get.back();
+                pickImage(onPickImage);
+              },
+              onCancel: Get.back,
+            ));
+          } else {
+            await pickImage(onPickImage);
+          }
+        },
+        icon: const Icon(Icons.image),
+      );
+}
 
 class QRCodeScannerView extends StatefulWidget {
   const QRCodeScannerView({super.key});
@@ -44,7 +74,7 @@ class _QRCodeScannerViewState extends State<QRCodeScannerView> {
         appBar: AppBar(
           title: const Text('扫描饼干二维码'),
           actions: [
-            PickImage(onPickImage: (path) async {
+            _ScanImage(onPickImage: (path) async {
               try {
                 if (!await _controller.analyzeImage(path)) {
                   showToast('扫描不到二维码');

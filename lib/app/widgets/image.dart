@@ -107,6 +107,40 @@ class _ThumbImageState extends State<ThumbImage> {
       : const SizedBox.shrink();
 }
 
+Future<void> pickImage(ValueSetter<String> onPickImage) async {
+  final data = PersistentDataService.to;
+  final image = ImageService.to;
+
+  if (image.hasStoragePermission && image.hasPhotoLibraryPermission) {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        dialogTitle: 'xdnmb',
+        initialDirectory: GetPlatform.isDesktop ? data.pictureDirectory : null,
+        type: GetPlatform.isIOS ? FileType.image : FileType.custom,
+        allowedExtensions:
+            GetPlatform.isIOS ? null : ['jif', 'jpeg', 'jpg', 'png'],
+        lockParentWindow: true,
+      );
+
+      if (result != null) {
+        final path = result.files.single.path;
+        if (path != null) {
+          if (GetPlatform.isDesktop) {
+            data.pictureDirectory = dirname(path);
+          }
+          onPickImage(path);
+        } else {
+          showToast('无法获取图片具体路径');
+        }
+      }
+    } catch (e) {
+      showToast('选取图片失败：$e');
+    }
+  } else {
+    showToast('没有权限读取图片');
+  }
+}
+
 class PickImage extends StatelessWidget {
   /// 选取图片后调用，参数为图片路径
   final ValueSetter<String> onPickImage;
@@ -114,44 +148,9 @@ class PickImage extends StatelessWidget {
   const PickImage({super.key, required this.onPickImage});
 
   @override
-  Widget build(BuildContext context) {
-    final data = PersistentDataService.to;
-    final image = ImageService.to;
-
-    return IconButton(
-      tooltip: '加载图片',
-      onPressed: () async {
-        if (image.hasStoragePermission && image.hasPhotoLibraryPermission) {
-          try {
-            final result = await FilePicker.platform.pickFiles(
-              dialogTitle: 'xdnmb',
-              initialDirectory:
-                  GetPlatform.isDesktop ? data.pictureDirectory : null,
-              type: GetPlatform.isIOS ? FileType.image : FileType.custom,
-              allowedExtensions:
-                  GetPlatform.isIOS ? null : ['jif', 'jpeg', 'jpg', 'png'],
-              lockParentWindow: true,
-            );
-
-            if (result != null) {
-              final path = result.files.single.path;
-              if (path != null) {
-                if (GetPlatform.isDesktop) {
-                  data.pictureDirectory = dirname(path);
-                }
-                onPickImage(path);
-              } else {
-                showToast('无法获取图片具体路径');
-              }
-            }
-          } catch (e) {
-            showToast('选取图片失败：$e');
-          }
-        } else {
-          showToast('没有权限读取图片');
-        }
-      },
-      icon: const Icon(Icons.image),
-    );
-  }
+  Widget build(BuildContext context) => IconButton(
+        tooltip: '加载图片',
+        onPressed: () => pickImage(onPickImage),
+        icon: const Icon(Icons.image),
+      );
 }
