@@ -223,17 +223,18 @@ class _AddCookieForm extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
-              decoration: const InputDecoration(labelText: '名字'),
+              decoration: const InputDecoration(labelText: 'name'),
               autofocus: true,
               onSaved: (newValue) => name = newValue,
               validator: (value) =>
-                  (value == null || value.isEmpty) ? '请输入饼干名字' : null,
+                  (value == null || value.isEmpty) ? '请输入name' : null,
             ),
             TextFormField(
-              decoration: const InputDecoration(labelText: 'userhash'),
+              decoration: const InputDecoration(labelText: 'userhash/cookie'),
               onSaved: (newValue) => userHash = newValue,
-              validator: (value) =>
-                  (value == null || value.isEmpty) ? '请输入饼干userhash' : null,
+              validator: (value) => (value == null || value.isEmpty)
+                  ? '请输入userhash/cookie'
+                  : null,
             ),
             TextFormField(
               decoration: const InputDecoration(labelText: '备注（可不填）'),

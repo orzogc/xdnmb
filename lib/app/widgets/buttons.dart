@@ -225,7 +225,6 @@ class _SearchDialog extends StatelessWidget {
                     key: _formKey,
                     controller: textEditingController,
                     focusNode: focusNode,
-                    autofocus: true,
                     onChanged: (value) => content = value,
                     onFieldSubmitted: (value) => onFieldSubmitted(),
                     onSaved: (newValue) => content = newValue,

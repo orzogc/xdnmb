@@ -967,7 +967,7 @@ class EditCookieDialog extends StatelessWidget {
         children: [
           TextFormField(
             decoration: const InputDecoration(labelText: '备注'),
-            autofocus: true,
+            autofocus: !setColor,
             initialValue: cookie.note,
             onChanged: (value) => note = value,
           ),

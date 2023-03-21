@@ -20,11 +20,11 @@ class _ScanImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IconButton(
-        tooltip: '加载图片',
+        tooltip: '扫描图片',
         onPressed: () async {
           if (GetPlatform.isIOS) {
             await Get.dialog(ConfirmCancelDialog(
-              content: '扫描图片需要图片里只有二维码',
+              content: '扫描图片需要图片里只包含二维码且图片长宽与二维码基本相同',
               confirmText: '加载图片',
               onConfirm: () {
                 Get.back();
