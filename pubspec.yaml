@@ -39,8 +39,6 @@ dependencies:
   html_to_text:
     git: https://github.com/orzogc/html_to_text.git
   http: ^0.13.6
-  image_gallery_saver:
-    git: https://github.com/hui-z/image_gallery_saver.git
   image_painter: ^0.5.0
   infinite_scroll_pagination: ^3.2.0
   isar: ^3.1.0+1
@@ -54,6 +52,7 @@ dependencies:
   path_provider: ^2.0.15
   permission_handler: ^10.2.0
   responsive_grid_list: ^1.3.2
+  saver_gallery: ^2.0.1
   screenshot: ^1.3.0
   showcaseview: ^2.0.3
   swipeable_page_route: ^0.3.0

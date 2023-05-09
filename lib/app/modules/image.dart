@@ -5,9 +5,9 @@ import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:media_scanner/media_scanner.dart';
 import 'package:path/path.dart';
+import 'package:saver_gallery/saver_gallery.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/services/image.dart';
@@ -994,12 +994,14 @@ class ImageView extends StatelessWidget {
             debugPrint('缓存图片路径：${info.file.path}');
             if (GetPlatform.isIOS) {
               if (image.hasPhotoLibraryPermission) {
-                final result = await ImageGallerySaver.saveFile(info.file.path,
-                    name: fileName);
-                if (result['isSuccess']) {
+                final result = await SaverGallery.saveFile(
+                    file: info.file.path,
+                    name: fileName,
+                    androidExistNotSave: true);
+                if (result.isSuccess) {
                   showToast('图片保存到相册成功');
                 } else {
-                  showToast('图片保存到相册失败：${result['errorMessage']}');
+                  showToast('图片保存到相册失败：${result.errorMessage}');
                 }
               } else {
                 showToast('没有图库权限无法保存图片');

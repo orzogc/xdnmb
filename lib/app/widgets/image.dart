@@ -15,6 +15,7 @@ import '../utils/extensions.dart';
 import '../utils/image.dart';
 import '../utils/toast.dart';
 
+// TODO: 在本页面打开大图
 class ThumbImage extends StatefulWidget {
   static const double minWidth = 70.0;
 

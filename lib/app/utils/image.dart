@@ -4,11 +4,11 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart' hide Image;
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:get/get.dart';
 import 'package:media_scanner/media_scanner.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart';
-import 'package:get/get.dart';
+import 'package:saver_gallery/saver_gallery.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/services/image.dart';
@@ -171,13 +171,13 @@ Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
           await file.writeAsBytes(imageData);
 
           try {
-            final result =
-                await ImageGallerySaver.saveFile(file.path, name: filename);
-            if (result['isSuccess']) {
+            final result = await SaverGallery.saveFile(
+                file: file.path, name: filename, androidExistNotSave: true);
+            if (result.isSuccess) {
               showToast('图片保存到相册成功');
               return true;
             } else {
-              showToast('图片保存到相册失败：${result['errorMessage']}');
+              showToast('图片保存到相册失败：${result.errorMessage}');
               return false;
             }
           } catch (e) {
@@ -187,13 +187,13 @@ Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
             await file.delete();
           }
         } else {
-          final result = await ImageGallerySaver.saveImage(imageData,
-              quality: 100, name: filename);
-          if (result['isSuccess']) {
+          final result = await SaverGallery.saveImage(imageData,
+              quality: 100, name: filename, androidExistNotSave: true);
+          if (result.isSuccess) {
             showToast('图片保存到相册成功');
             return true;
           } else {
-            showToast('图片保存到相册失败：${result['errorMessage']}');
+            showToast('图片保存到相册失败：${result.errorMessage}');
             return false;
           }
         }

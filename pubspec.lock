@@ -679,15 +679,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.17"
-  image_gallery_saver:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: HEAD
-      resolved-ref: e319bc600a8c3e5ab4d414b890dc7844f6f9d6d9
-      url: "https://github.com/hui-z/image_gallery_saver.git"
-    source: git
-    version: "2.0.0"
   image_painter:
     dependency: "direct main"
     description:
@@ -1088,6 +1079,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.27.7"
+  saver_gallery:
+    dependency: "direct main"
+    description:
+      name: saver_gallery
+      sha256: "3131bba4257f69901437c0f1ebd692201ca5f34512d42667513a3802f1c171d1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   screenshot:
     dependency: "direct main"
     description:

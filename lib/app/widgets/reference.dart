@@ -47,6 +47,7 @@ class _ReferenceDialog extends StatelessWidget {
   }
 }
 
+// TODO: 缓存打开过的引用
 class ReferenceCard extends StatefulWidget {
   final int postId;
 

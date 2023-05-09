@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'dialog.dart';
 
+// TODO: 透明背景
 class ColoredSafeArea extends StatelessWidget {
   final Color? color;
 
