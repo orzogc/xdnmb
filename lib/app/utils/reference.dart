@@ -4,7 +4,6 @@ import 'package:isar/isar.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/reference.dart';
-import 'hash.dart';
 import 'isar.dart';
 
 abstract class ReferenceDatabase {
@@ -19,7 +18,7 @@ abstract class ReferenceDatabase {
         .anyOf(postIds, (query, postId) => query.idEqualTo(postId))
         .findAll();
 
-    return intHashMapFromEntries(posts.map((post) => MapEntry(post.id, post)));
+    return HashMap.fromEntries(posts.map((post) => MapEntry(post.id, post)));
   }
 
   static Future<void> _addReferences(Iterable<ReferenceData> references) async {

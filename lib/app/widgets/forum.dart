@@ -18,7 +18,6 @@ import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/exception.dart';
 import '../utils/extensions.dart';
-import '../utils/hash.dart';
 import '../utils/navigation.dart';
 import '../utils/post.dart';
 import '../utils/text.dart';
@@ -260,7 +259,7 @@ class ForumBody extends StatefulWidget {
 class _ForumBodyState extends State<ForumBody> {
   late StreamSubscription<int> _pageSubscription;
 
-  final HashSet<int> _postIds = intHashSet();
+  final HashSet<int> _postIds = HashSet();
 
   void _showGuide() {
     if (mounted && SettingsService.shouldShowGuide) {

@@ -9,7 +9,6 @@ import 'package:isar/isar.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../../utils/extensions.dart';
-import '../../utils/hash.dart';
 import '../../utils/isar.dart';
 import '../../utils/post.dart';
 import '../models/controller.dart';
@@ -102,7 +101,7 @@ class TagService extends GetxService {
 
   static Future<void> updatePosts(Iterable<PostBase> posts,
       [int? forumId]) async {
-    final postMap = intHashMapFromEntries(posts
+    final postMap = HashMap<int, PostBase>.fromEntries(posts
         .where((post) => _taggedPostIdSet.contains(post.id))
         .map((post) => MapEntry(post.id, post)));
 
@@ -324,7 +323,7 @@ class TagService extends GetxService {
         : 0;
     _tagsMap = HashMap.fromEntries(
         _tagsBox.values.map((tag) => MapEntry(tag.name, tag.id)));
-    _taggedPostIdSet = intHashSetOf(
+    _taggedPostIdSet = HashSet.of(
         await _taggedPostData.where().anyId().idProperty().findAll());
 
     isReady.value = true;

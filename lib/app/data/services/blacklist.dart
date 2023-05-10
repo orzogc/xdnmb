@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
-import '../../utils/hash.dart';
 import '../../widgets/listenable.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
@@ -117,7 +116,7 @@ class BlacklistService extends GetxService {
     _userBlacklistBox = await Hive.openBox<String>(HiveBoxName.userBlacklist);
 
     _forumBlacklist = HashSet.of(_forumBlacklistBox.values);
-    _postBlacklist = intHashSetOf(_postBlacklistBox.values);
+    _postBlacklist = HashSet.of(_postBlacklistBox.values);
     _userBlacklist = HashSet.of(_userBlacklistBox.values);
 
     isReady.value = true;

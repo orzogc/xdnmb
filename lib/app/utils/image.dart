@@ -18,7 +18,6 @@ import '../data/services/xdnmb_client.dart';
 import 'crypto.dart';
 import 'exception.dart';
 import 'extensions.dart';
-import 'hash.dart';
 import 'http_client.dart';
 import 'theme.dart';
 import 'time.dart';
@@ -66,7 +65,7 @@ class XdnmbImageCacheManager extends CacheManager with ImageCacheManager {
 
 class ReferenceImageCache {
   static final HashMap<int, ReferenceImageCache?> _images =
-      intHashMap<ReferenceImageCache?>();
+      HashMap<int, ReferenceImageCache?>();
 
   static Future<ReferenceImageCache?> getImage(
       int postId, int? mainPostId) async {

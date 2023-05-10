@@ -10,7 +10,6 @@ import '../data/services/tag.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
-import '../utils/hash.dart';
 import '../utils/history.dart';
 import '../utils/image.dart';
 import '../utils/navigation.dart';
@@ -381,7 +380,7 @@ class TaggedPostListBody extends StatelessWidget {
             canLoadMoreAtBottom: false,
             fetch: (page) async {
               if (page == 1) {
-                final postMap = intLinkedHashMapFromEntries<_Tagged?>(
+                final postMap = Map<int, _Tagged?>.fromEntries(
                     (controller.tag?.pinnedPosts ?? <int>[])
                         .map((postId) => MapEntry(postId, null)));
 

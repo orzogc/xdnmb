@@ -164,8 +164,8 @@ class ForumList extends StatelessWidget {
                     forumId: forum.id,
                     isTimeline: forum.isTimeline,
                     isDeprecated: forum.isDeprecated,
-                    textStyle: theme.textTheme.bodyLarge,
                     maxLines: 1,
+                    isBodyLargeStyle: true,
                   ),
                 );
 

@@ -28,14 +28,14 @@ late final Isar isar;
 /// 注意iOS设备可能内存不足
 Future<void> initIsar() async {
   final databaseFile = File(join(databasePath, '$_databaseName.isar'));
-  // 保留至少200MB左右的空间
-  final maxSizeGiB = await databaseFile.exists()
-      ? ((await databaseFile.length() / (1024 * 1024 * 1024) + 0.2).floor() + 1)
-      : 1;
+  // 默认256MB大小，保留至少100MB左右的空间
+  final maxSizeMiB = await databaseFile.exists()
+      ? ((await databaseFile.length() / (1024 * 1024)).floor() + 100)
+      : 256;
 
   isar = await Isar.open(_isarSchemas,
       directory: databasePath,
       name: _databaseName,
-      maxSizeMiB: max(maxSizeGiB, 1) * 1024,
+      maxSizeMiB: max(maxSizeMiB, 256),
       inspector: false);
 }
