@@ -154,6 +154,71 @@ Image? getImage(Uint8List imageData) {
   return null;
 }
 
+Future<Uint8List?> loadImage(PostBase post) async {
+  final manager = XdnmbImageCacheManager();
+  try {
+    final info = await manager.getFileFromCache(post.imageKey!);
+    if (info != null) {
+      debugPrint('缓存图片路径：${info.file.path}');
+      return await info.file.readAsBytes();
+    } else {
+      showToast('读取缓存图片数据失败');
+    }
+  } catch (e) {
+    showToast('读取缓存图片数据失败：$e');
+  }
+
+  return null;
+}
+
+Future<void> savePostImage(PostBase post) async {
+  final image = ImageService.to;
+  final savePath = ImageService.savePath;
+  final manager = XdnmbImageCacheManager();
+
+  try {
+    final fileName = post.imageHashFileName()!;
+    final info = await manager.getFileFromCache(post.imageKey!);
+    if (info != null) {
+      debugPrint('缓存图片路径：${info.file.path}');
+      if (GetPlatform.isIOS) {
+        if (image.hasPhotoLibraryPermission) {
+          final result = await SaverGallery.saveFile(
+              file: info.file.path, name: fileName, androidExistNotSave: true);
+          if (result.isSuccess) {
+            showToast('图片保存到相册成功');
+          } else {
+            showToast('图片保存到相册失败：${result.errorMessage}');
+          }
+        } else {
+          showToast('没有图库权限无法保存图片');
+        }
+      } else if (image.hasStoragePermission && savePath != null) {
+        final path = join(savePath, fileName);
+        final file = io.File(path);
+        if (await file.exists() &&
+            await file.length() == await info.file.length()) {
+          showToast('该图片已经保存在 $savePath');
+          return;
+        }
+
+        await info.file.copy(path);
+        if (GetPlatform.isAndroid) {
+          await MediaScanner.loadMedia(path: path);
+        }
+
+        showToast('图片保存在 $savePath');
+      } else {
+        showToast('没有存储权限无法保存图片');
+      }
+    } else {
+      showToast('读取缓存图片数据失败');
+    }
+  } catch (e) {
+    showToast('保存图片失败：$e');
+  }
+}
+
 // 保存成功返回`true`，失败返回`false`
 Future<bool> saveImageData(Uint8List imageData, [String? imageName]) async {
   final image = ImageService.to;

@@ -1,16 +1,11 @@
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:media_scanner/media_scanner.dart';
-import 'package:path/path.dart';
-import 'package:saver_gallery/saver_gallery.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
-import '../data/services/image.dart';
 import '../data/services/settings.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
@@ -947,18 +942,7 @@ class ImageView extends StatelessWidget {
       final post = _controller.post.value;
 
       if (post != null) {
-        final manager = XdnmbImageCacheManager();
-        try {
-          final info = await manager.getFileFromCache(post.imageKey!);
-          if (info != null) {
-            debugPrint('缓存图片路径：${info.file.path}');
-            return await info.file.readAsBytes();
-          } else {
-            showToast('读取缓存图片数据失败');
-          }
-        } catch (e) {
-          showToast('读取缓存图片数据失败：$e');
-        }
+        return loadImage(post);
       } else {
         return _controller.imageData.value!;
       }
@@ -983,56 +967,10 @@ class ImageView extends StatelessWidget {
     if (_imageKey.currentState != null) {
       final post = _controller.post.value;
 
-      try {
-        if (post != null) {
-          final image = ImageService.to;
-          final savePath = ImageService.savePath;
-          final fileName = post.imageHashFileName()!;
-          final manager = XdnmbImageCacheManager();
-
-          final info = await manager.getFileFromCache(post.imageKey!);
-          if (info != null) {
-            debugPrint('缓存图片路径：${info.file.path}');
-            if (GetPlatform.isIOS) {
-              if (image.hasPhotoLibraryPermission) {
-                final result = await SaverGallery.saveFile(
-                    file: info.file.path,
-                    name: fileName,
-                    androidExistNotSave: true);
-                if (result.isSuccess) {
-                  showToast('图片保存到相册成功');
-                } else {
-                  showToast('图片保存到相册失败：${result.errorMessage}');
-                }
-              } else {
-                showToast('没有图库权限无法保存图片');
-              }
-            } else if (image.hasStoragePermission && savePath != null) {
-              final path = join(savePath, fileName);
-              final file = File(path);
-              if (await file.exists() &&
-                  await file.length() == await info.file.length()) {
-                showToast('该图片已经保存在 $savePath');
-                return;
-              }
-
-              await info.file.copy(path);
-              if (GetPlatform.isAndroid) {
-                await MediaScanner.loadMedia(path: path);
-              }
-
-              showToast('图片保存在 $savePath');
-            } else {
-              showToast('没有存储权限无法保存图片');
-            }
-          } else {
-            showToast('读取缓存图片数据失败');
-          }
-        } else {
-          saveImageData(_controller.imageData.value!);
-        }
-      } catch (e) {
-        showToast('保存图片失败：$e');
+      if (post != null) {
+        savePostImage(post);
+      } else {
+        saveImageData(_controller.imageData.value!);
       }
     } else {
       showToast('图片正在加载或者加载失败，无法保存');

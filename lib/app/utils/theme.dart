@@ -81,6 +81,7 @@ abstract class AppTheme {
   );
 
   static final ThemeData theme = ThemeData(
+    useMaterial3: false,
     brightness: Brightness.light,
     primaryColor: primaryColorLight,
     colorScheme: ColorScheme.light(
@@ -134,6 +135,7 @@ abstract class AppTheme {
   );
 
   static final ThemeData darkTheme = ThemeData(
+    useMaterial3: false,
     brightness: Brightness.dark,
     primaryColor: primaryColorDark,
     colorScheme: ColorScheme.dark(

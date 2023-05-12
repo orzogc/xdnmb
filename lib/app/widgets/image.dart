@@ -12,10 +12,13 @@ import '../data/services/image.dart';
 import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../modules/image.dart';
+import '../modules/paint.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/image.dart';
+import '../utils/navigation.dart';
 import '../utils/toast.dart';
+import 'dialog.dart';
 
 class _RawThumbImage extends StatelessWidget {
   final String imageUrl;
@@ -67,7 +70,15 @@ class _RawThumbImage extends StatelessWidget {
 }
 
 class _LargeImageDialog extends StatelessWidget {
-  const _LargeImageDialog({super.key});
+  final PostBase post;
+
+  final VoidCallback toImage;
+
+  const _LargeImageDialog(
+      // ignore: unused_element
+      {super.key,
+      required this.post,
+      required this.toImage});
 
   @override
   Widget build(BuildContext context) {
@@ -76,15 +87,27 @@ class _LargeImageDialog extends StatelessWidget {
     return SimpleDialog(
       children: [
         SimpleDialogOption(
-          onPressed: () {},
+          onPressed: () {
+            postListBack();
+            toImage();
+          },
           child: Text('查看', style: textStyle),
         ),
         SimpleDialogOption(
-          onPressed: () {},
+          onPressed: () async {
+            postListBack();
+            await savePostImage(post);
+          },
           child: Text('保存', style: textStyle),
         ),
         SimpleDialogOption(
-          onPressed: () {},
+          onPressed: () async {
+            postListBack();
+            final data = await loadImage(post);
+            if (data != null) {
+              await AppRoutes.toPaint(PaintController(data, false));
+            }
+          },
           child: Text('涂鸦', style: textStyle),
         ),
       ],
@@ -95,7 +118,11 @@ class _LargeImageDialog extends StatelessWidget {
 class _LargeImage extends StatelessWidget {
   final PostBase post;
 
-  _LargeImage({super.key, required this.post}) : assert(post.hasImage);
+  final VoidCallback toImage;
+
+  // ignore: unused_element
+  _LargeImage({super.key, required this.post, required this.toImage})
+      : assert(post.hasImage);
 
   @override
   Widget build(BuildContext context) => CachedNetworkImage(
@@ -118,7 +145,11 @@ class _LargeImage extends StatelessWidget {
             width: double.infinity,
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Image(image: imageProvider, fit: BoxFit.scaleDown),
+              child: GestureDetector(
+                onLongPress: () => postListDialog(
+                    _LargeImageDialog(post: post, toImage: toImage)),
+                child: Image(image: imageProvider, fit: BoxFit.scaleDown),
+              ),
             ),
           ),
         ),
@@ -196,7 +227,7 @@ class _ThumbImageState extends State<ThumbImage> {
         tag: _heroTag,
         transitionOnUserGestures: true,
         child: _showLargeImage
-            ? _LargeImage(post: _post)
+            ? _LargeImage(post: _post, toImage: _toImage)
             : _RawThumbImage(
                 imageUrl: _hasError ? _post.imageUrl! : _post.thumbImageUrl!,
                 cacheKey: _hasError ? _post.imageKey! : _post.thumbImageKey!,

@@ -59,22 +59,14 @@ class _Text implements TextDelegate {
 }
 
 class _SaveImage extends StatelessWidget {
-  /// 导出涂鸦，返回图片数据
-  final AsyncValueGetter<Uint8List?> exportImage;
+  final VoidCallback saveImage;
 
   // ignore: unused_element
-  const _SaveImage({super.key, required this.exportImage});
+  const _SaveImage({super.key, required this.saveImage});
 
   @override
   Widget build(BuildContext context) => IconButton(
-        onPressed: () async {
-          final data = await exportImage();
-          if (data != null) {
-            await saveImageData(data);
-          } else {
-            showToast('导出图片数据失败');
-          }
-        },
+        onPressed: saveImage,
         icon: const Icon(Icons.save),
       );
 }
@@ -170,9 +162,12 @@ class _CanvasState extends State<_Canvas> {
 class PaintController extends GetxController {
   final Rxn<Uint8List> image;
 
+  final bool canReturnData;
+
   late GlobalKey<ImagePainterState> _painterKey;
 
-  PaintController([Uint8List? image]) : image = Rxn(image);
+  PaintController([Uint8List? image, this.canReturnData = true])
+      : image = Rxn(image);
 }
 
 class PaintBinding implements Bindings {
@@ -190,6 +185,15 @@ class PaintView extends GetView<PaintController> {
   Future<Uint8List?> _exportImage() async =>
       await controller._painterKey.currentState?.exportImage();
 
+  Future<void> _saveImage() async {
+    final data = await _exportImage();
+    if (data != null) {
+      await saveImageData(data);
+    } else {
+      showToast('导出图片数据失败');
+    }
+  }
+
   Widget _painter(Uint8List image) => ImagePainter.memory(image,
       key: controller._painterKey, textDelegate: const _Text());
 
@@ -204,14 +208,22 @@ class PaintView extends GetView<PaintController> {
         onWillPop: () async {
           if (controller._painterKey.currentState?.isEdited ?? false) {
             final result = await Get.dialog(ApplyImageDialog(
-              onApply: () async {
-                final data = await _exportImage();
-                if (data != null) {
-                  Get.back(result: data);
-                } else {
-                  showToast('导出图片数据失败');
-                }
-              },
+              onApply: controller.canReturnData
+                  ? () async {
+                      final data = await _exportImage();
+                      if (data != null) {
+                        Get.back(result: data);
+                      } else {
+                        showToast('导出图片数据失败');
+                      }
+                    }
+                  : null,
+              onSave: !controller.canReturnData
+                  ? () async {
+                      Get.back(result: true);
+                      await _saveImage();
+                    }
+                  : null,
               onCancel: () => Get.back(result: false),
               onNotSave: () => Get.back(result: true),
             ));
@@ -241,8 +253,9 @@ class PaintView extends GetView<PaintController> {
                     showToast('读取图片出错：$e');
                   }
                 }),
-                _SaveImage(exportImage: _exportImage),
-                _Confirm(exportImage: _exportImage),
+                _SaveImage(saveImage: _saveImage),
+                if (controller.canReturnData)
+                  _Confirm(exportImage: _exportImage),
               ],
             ),
             body: Obx(
