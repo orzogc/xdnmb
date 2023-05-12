@@ -19,7 +19,7 @@ class _DarkMode extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.isDarkModeListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('黑夜模式'),

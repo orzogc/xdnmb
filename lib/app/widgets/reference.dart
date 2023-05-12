@@ -106,7 +106,7 @@ class _ReferenceCardState extends State<ReferenceCard> {
                   final data = referenceData.data;
                   final mainPostId = data.mainPostId;
 
-                  return ListenableBuilder(
+                  return ListenBuilder(
                     listenable:
                         BlacklistService.to.postAndUserBlacklistNotifier,
                     builder: (context, child) {

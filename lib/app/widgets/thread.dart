@@ -717,7 +717,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     );
 
     return !post.isTipType
-        ? ListenableBuilder(
+        ? ListenBuilder(
             listenable: BlacklistService.to.postAndUserBlacklistNotifier,
             builder: (context, child) => !post.isBlocked()
                 ? _itemWithDivider(

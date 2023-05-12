@@ -108,7 +108,7 @@ class FeedAppBarTitle extends StatelessWidget {
   const FeedAppBarTitle(this.controller, {super.key});
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
+  Widget build(BuildContext context) => ListenBuilder(
       listenable: TagService.to.tagListenable(null),
       builder: (context, child) => Obx(() => Text(controller.text(true))));
 }
@@ -335,7 +335,7 @@ class _FeedBody extends StatelessWidget {
     final client = XdnmbClientService.to;
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.feedIdListenable,
       builder: (context, child) => PostListScrollView(
         controller: controller,
@@ -473,7 +473,7 @@ class _TagListItemState extends State<_TagListItem> {
           count = snapshot.data;
         }
 
-        return ListenableBuilder(
+        return ListenBuilder(
           listenable: _listenable,
           builder: (context, child) {
             final tag = tagService.getTagData(_tagId);

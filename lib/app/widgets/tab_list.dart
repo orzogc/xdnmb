@@ -114,7 +114,7 @@ class TabList extends StatelessWidget {
           shrinkWrap: true,
           padding: EdgeInsets.zero,
           itemCount: stacks.length,
-          itemBuilder: (context, index) => ListenableBuilder(
+          itemBuilder: (context, index) => ListenBuilder(
             listenable: Listenable.merge(
                 [stacks.notifier, settings.dismissibleTabListenable]),
             builder: (context, child) {

@@ -118,6 +118,12 @@ class SettingsService extends GetxService {
   set showImage(bool showImage) =>
       _settingsBox.put(Settings.showImage, showImage);
 
+  bool get showLargeImageInPost =>
+      _settingsBox.get(Settings.showLargeImageInPost, defaultValue: false);
+
+  set showLargeImageInPost(bool showLargeImageInPost) =>
+      _settingsBox.put(Settings.showLargeImageInPost, showLargeImageInPost);
+
   bool get isWatermark =>
       _settingsBox.get(Settings.isWatermark, defaultValue: false);
 
@@ -513,6 +519,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> showImageListenable;
 
+  late final ValueListenable<Box> showLargeImageInPostListenable;
+
   late final ValueListenable<Box> isWatermarkListenable;
 
   late final ValueListenable<Box> isJumpToLastBrowsePageListenable;
@@ -700,6 +708,8 @@ class SettingsService extends GetxService {
     feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
     saveImagePathListenable =
         _settingsBox.listenable(keys: [Settings.saveImagePath]);
+    showLargeImageInPostListenable =
+        _settingsBox.listenable(keys: [Settings.showLargeImageInPost]);
     cacheImageCountListenable =
         _settingsBox.listenable(keys: [Settings.cacheImageCount]);
     followPlatformBrightnessListenable =

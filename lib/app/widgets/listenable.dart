@@ -28,21 +28,21 @@ class ListenableNotifier extends ChangeNotifier
 typedef ListenableWidgetBuilder = Widget Function(
     BuildContext context, Widget? child);
 
-class ListenableBuilder extends StatefulWidget {
+class ListenBuilder extends StatefulWidget {
   final Listenable listenable;
 
   final ListenableWidgetBuilder builder;
 
   final Widget? child;
 
-  const ListenableBuilder(
+  const ListenBuilder(
       {super.key, required this.listenable, required this.builder, this.child});
 
   @override
-  State<ListenableBuilder> createState() => _ListenableBuilderState();
+  State<ListenBuilder> createState() => _ListenBuilderState();
 }
 
-class _ListenableBuilderState extends State<ListenableBuilder> {
+class _ListenBuilderState extends State<ListenBuilder> {
   void _notify() {
     if (mounted) {
       setState(() {});
@@ -57,7 +57,7 @@ class _ListenableBuilderState extends State<ListenableBuilder> {
   }
 
   @override
-  void didUpdateWidget(covariant ListenableBuilder oldWidget) {
+  void didUpdateWidget(covariant ListenBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.listenable != oldWidget.listenable) {

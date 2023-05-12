@@ -69,7 +69,7 @@ class _ForumName extends StatelessWidget {
   Widget build(BuildContext context) {
     final forums = ForumListService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: forums.updateForumNameNotifier,
       builder: (context, child) {
         String? forumName;
@@ -710,7 +710,7 @@ class _CookieListState extends State<_CookieList> {
         final now = DateTime.now();
         final map = snapshot.data;
 
-        return ListenableBuilder(
+        return ListenBuilder(
           listenable: user.cookiesListenable,
           builder: (context, child) => SimpleDialog(
             children: [
@@ -788,7 +788,7 @@ class _Cookie extends StatelessWidget {
     final size = getTextSize(context, '啊啊啊啊啊啊啊', theme.textTheme.bodyMedium);
 
     return user.hasPostCookie
-        ? ListenableBuilder(
+        ? ListenBuilder(
             listenable: user.postCookieListenable,
             builder: (context, child) => TextButton(
               onPressed: () => Get.dialog(
@@ -1397,7 +1397,7 @@ class _EmoticonState extends State<_Emoticon> {
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
 
-    return ValueListenableBuilder(
+    return ValueListenableBuilder<double>(
       valueListenable: data.bottomHeight,
       builder: (context, value, child) => Obx(
         () {
@@ -1416,7 +1416,7 @@ class _EmoticonState extends State<_Emoticon> {
                     child: Scrollbar(
                       controller: _controller,
                       thumbVisibility: true,
-                      child: ListenableBuilder(
+                      child: ListenBuilder(
                         listenable: emoticons.emoticonsListenable,
                         // 这里可能有性能问题
                         builder: (context, child) => ResponsiveGridList(
@@ -1985,7 +1985,7 @@ class _EditPostState extends State<EditPost> {
 
     final data = PersistentDataService.to;
     final media = MediaQuery.of(context);
-    final padding = getViewPadding();
+    final padding = getViewPadding(context);
     final fullHeight = media.size.height -
         padding.top -
         PostListAppBar.height -

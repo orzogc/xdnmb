@@ -180,7 +180,7 @@ class _BackdropState extends State<Backdrop>
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
     final theme = Theme.of(context);
-    final bottomPadding = getViewPadding().bottom;
+    final bottomPadding = getViewPadding(context).bottom;
 
     return Stack(
       children: [
@@ -200,7 +200,7 @@ class _BackdropState extends State<Backdrop>
                   onVerticalDragStart: _onVerticalDragStart,
                   onVerticalDragUpdate: _onVerticalDragUpdate,
                   onVerticalDragEnd: _onVerticalDragEnd,
-                  child: ListenableBuilder(
+                  child: ListenBuilder(
                     listenable: settings.backLayerDragHeightRatioListenable,
                     builder: (context, child) => SizedBox(
                       width: double.infinity,
@@ -223,7 +223,7 @@ class _BackdropState extends State<Backdrop>
                 onVerticalDragStart: _onVerticalDragStart,
                 onVerticalDragUpdate: _onVerticalDragUpdate,
                 onVerticalDragEnd: _onVerticalDragEnd,
-                child: ListenableBuilder(
+                child: ListenBuilder(
                   listenable: settings.frontLayerDragHeightRatioListenable,
                   builder: (context, child) => SizedBox(
                     width: double.infinity,

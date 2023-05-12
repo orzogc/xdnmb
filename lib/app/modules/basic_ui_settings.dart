@@ -22,7 +22,7 @@ class _ShowBottomBar extends StatelessWidget {
       subtitle: !GetPlatform.isIOS
           ? const Text('底边栏会取代侧边栏，如要使用侧边栏需要取消显示底边栏')
           : const SizedBox.shrink(),
-      trailing: ListenableBuilder(
+      trailing: ListenBuilder(
         listenable: Listenable.merge([
           settings.showBottomBarListenable,
           settings.autoHideBottomBarListenable,
@@ -95,7 +95,7 @@ class _BackdropUI extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.backdropUIListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('启用幕布界面'),
@@ -114,7 +114,7 @@ class _FrontLayerDragHeightRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: Listenable.merge([
         settings.backdropUIListenable,
         settings.frontLayerDragHeightRatioListenable
@@ -154,7 +154,7 @@ class _BackLayerDragHeightRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: Listenable.merge([
         settings.backdropUIListenable,
         settings.backLayerDragHeightRatioListenable
@@ -194,7 +194,7 @@ class _AutoHideAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.autoHideAppBarListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('向下滑动时自动隐藏标题栏'),
@@ -214,7 +214,7 @@ class _FloatingButton extends StatelessWidget {
     final settings = SettingsService.to;
     final textStyle = Theme.of(context).textTheme.bodyMedium;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: Listenable.merge([
         settings.showBottomBarListenable,
         settings.hideFloatingButtonListenable,
@@ -309,7 +309,7 @@ class _DrawerDragRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.drawerEdgeDragWidthRatioListenable,
       builder: (context, child) {
         final textStyle = TextStyle(
@@ -347,7 +347,7 @@ class _PageDragWidthRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.swipeablePageDragWidthRatioListenable,
       builder: (context, child) {
         final textStyle = TextStyle(
@@ -386,7 +386,7 @@ class _CompactTabAndForumList extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: Listenable.merge([
         settings.showBottomBarListenable,
         settings.backdropUIListenable,
@@ -418,7 +418,7 @@ class _ShowPoCookieTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.showPoCookieTagListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('串内Po饼干左边显示Po标识'),
@@ -437,7 +437,7 @@ class _PoCookieColor extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.poCookieColorListenable,
       builder: (context, child) => ListTile(
         title: const Text('Po饼干颜色'),
@@ -478,7 +478,7 @@ class _ShowUserCookieNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.showUserCookieNoteListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('串饼干下方显示用户饼干的备注'),
@@ -497,7 +497,7 @@ class _ShowUserCookieColor extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.showUserCookieColorListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('串饼干使用用户饼干的自定义颜色显示'),
@@ -516,7 +516,7 @@ class _ShowRelativeTime extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.showRelativeTimeListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('串时间使用相对时间'),
@@ -539,7 +539,7 @@ class _ShowLatestPostTimeInFeed extends StatelessWidget {
 
     return ListTile(
       title: const Text('订阅界面里的串显示最后回复时间'),
-      trailing: ListenableBuilder(
+      trailing: ListenBuilder(
         listenable: settings.showLatestPostTimeInFeedListenable,
         builder: (context, child) => DropdownButton<int>(
           value: settings.showLatestPostTimeInFeed,

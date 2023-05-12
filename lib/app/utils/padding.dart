@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-EdgeInsets getViewPadding() => EdgeInsets.fromWindowPadding(
-    WidgetsBinding.instance.window.viewPadding,
-    WidgetsBinding.instance.window.devicePixelRatio);
+EdgeInsets getViewPadding(BuildContext context) => EdgeInsets.fromViewPadding(
+    View.of(context).viewPadding, View.of(context).devicePixelRatio);
 
-EdgeInsets getViewInsets() => EdgeInsets.fromWindowPadding(
-    WidgetsBinding.instance.window.viewInsets,
-    WidgetsBinding.instance.window.devicePixelRatio);
+EdgeInsets getViewInsets() => EdgeInsets.fromViewPadding(
+    View.of(Get.context!).viewInsets, View.of(Get.context!).devicePixelRatio);

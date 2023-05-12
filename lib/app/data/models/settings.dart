@@ -9,6 +9,8 @@ abstract class Settings {
 
   static const String showImage = 'showImage';
 
+  static const String showLargeImageInPost = 'showLargeImageInPost';
+
   static const String isWatermark = 'isWatermark';
 
   static const String isJumpToLastBrowsePage = 'isJumpToLastBrowsePage';

@@ -380,9 +380,10 @@ class TaggedPostListBody extends StatelessWidget {
             canLoadMoreAtBottom: false,
             fetch: (page) async {
               if (page == 1) {
-                final postMap = Map<int, _Tagged?>.fromEntries(
-                    (controller.tag?.pinnedPosts ?? <int>[])
-                        .map((postId) => MapEntry(postId, null)));
+                final postMap = <int, _Tagged?>{
+                  for (final postId in controller.tag?.pinnedPosts ?? <int>[])
+                    postId: null
+                };
 
                 final posts = await TagService.taggedPostList(
                     tagId: controller.id, search: controller.search);

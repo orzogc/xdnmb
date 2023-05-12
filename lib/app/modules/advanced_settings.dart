@@ -21,7 +21,7 @@ class _SaveImagePath extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    final Widget widget = ListenableBuilder(
+    final Widget widget = ListenBuilder(
       listenable: settings.saveImagePathListenable,
       builder: (context, child) => ListTile(
         title: const Text('图片保存位置'),
@@ -81,7 +81,7 @@ class _CacheImageCount extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.cacheImageCountListenable,
       builder: (context, child) => ListTile(
         title: const Text('缓存图片存储数量'),
@@ -111,7 +111,7 @@ class _FollowPlatformBrightness extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.followPlatformBrightnessListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('白天/黑夜模式跟随系统设置'),
@@ -131,7 +131,7 @@ class _AddBlueIslandEmoticons extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.addBlueIslandEmoticonsListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('添加蓝岛颜文字'),
@@ -150,7 +150,7 @@ class _RestoreForumPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.restoreForumPageListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('恢复标签页时恢复时间线和版块的页数'),
@@ -169,7 +169,7 @@ class _ImageDisposeDistance extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.imageDisposeDistanceListenable,
       builder: (context, child) => ListTile(
         title: const Text('非适应模式下移动未放大的图片导致返回的最小距离'),
@@ -198,7 +198,7 @@ class _FixedImageDisposeRatio extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.fixedImageDisposeRatioListenable,
       builder: (context, child) => ListTile(
         title: const Text('适应模式下移动未缩放的大图导致返回的最小距离占屏幕高度或宽度的比例'),
@@ -227,7 +227,7 @@ class _SystemNavigationBarByTheme extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.systemNavigationBarByThemeListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('系统底部导航栏颜色跟随应用主题'),
@@ -247,7 +247,7 @@ class _FixMissingFont extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.fixMissingFontListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('修复字体显示'),
@@ -267,7 +267,7 @@ class _ShowGuide extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.showGuideListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('下一次启动应用时显示用户指导'),

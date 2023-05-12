@@ -50,7 +50,7 @@ class _PostUser extends StatelessWidget {
     final user = UserService.to;
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: Listenable.merge([
         if (showPoTag && isPo) settings.showPoCookieTagListenable,
         if (!isAdmin && isPo) settings.poCookieColorListenable,
@@ -163,7 +163,7 @@ class _PostTimeState extends State<_PostTime> {
         ? StrutStyle.fromTextStyle(widget.textStyle!)
         : AppTheme.postHeaderStrutStyle;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.showRelativeTimeListenable,
       builder: (context, child) => settings.showRelativeTime
           ? TimerRefresher(
@@ -473,7 +473,7 @@ class _PostTagState extends State<_PostTag> {
         }
 
         if (snapshot.hasData) {
-          return ListenableBuilder(
+          return ListenBuilder(
             listenable: tagService.tagListenable(snapshot.data!),
             builder: (context, child) {
               final Widget wrap = Wrap(
@@ -593,6 +593,8 @@ class PostContent extends StatelessWidget {
 
   final bool showPoTag;
 
+  final bool showPostTags;
+
   final bool isPinned;
 
   final double? headerHeight;
@@ -635,6 +637,7 @@ class PostContent extends StatelessWidget {
       this.showForumName = true,
       this.showReplyCount = true,
       this.showPoTag = false,
+      this.showPostTags = true,
       this.isPinned = false,
       this.headerHeight,
       this.contentMaxHeight,
@@ -753,7 +756,7 @@ class PostContent extends StatelessWidget {
             )
           else
             content,
-          if (!post.isTipType)
+          if (showPostTags && !post.isTipType)
             _PostTag(
               post: post,
               isPinned: isPinned,
@@ -800,6 +803,7 @@ class PostInkWell extends StatelessWidget {
       bool showForumName = true,
       bool showReplyCount = true,
       bool showPoTag = false,
+      bool showPostTags = true,
       bool isPinned = false,
       double? headerHeight,
       double? contentMaxHeight,
@@ -829,6 +833,7 @@ class PostInkWell extends StatelessWidget {
             showForumName: showForumName,
             showReplyCount: showReplyCount,
             showPoTag: showPoTag,
+            showPostTags: showPostTags,
             isPinned: isPinned,
             headerHeight: headerHeight,
             contentMaxHeight: contentMaxHeight,

@@ -355,7 +355,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
         }
       },
       child: _MinHeightIndicator(
-        child: ListenableBuilder(
+        child: ListenBuilder(
           listenable: user.browseCookieListenable,
           builder: (context, child) {
             final Widget text =

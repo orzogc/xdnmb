@@ -92,7 +92,7 @@ class _QRCodeScannerViewState extends State<QRCodeScannerView> {
                   showToast('切换闪光灯失败：$e');
                 }
               },
-              icon: ValueListenableBuilder(
+              icon: ValueListenableBuilder<TorchState>(
                 valueListenable: _controller.torchState,
                 builder: (context, state, child) {
                   switch (state) {

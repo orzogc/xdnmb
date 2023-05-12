@@ -160,7 +160,7 @@ class _PostListScrollViewState extends State<PostListScrollView> {
   }
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
+  Widget build(BuildContext context) => ListenBuilder(
       listenable: widget.controller,
       builder: (context, child) =>
           widget.builder(context, _scrollController, _refresh));

@@ -28,8 +28,8 @@ class QuotationLoadingIndicator extends StatelessWidget {
   const QuotationLoadingIndicator({super.key});
 
   @override
-  Widget build(BuildContext context) => Column(
-        children: const [
+  Widget build(BuildContext context) => const Column(
+        children: [
           Quotation(),
           Expanded(child: Center(child: CircularProgressIndicator()))
         ],

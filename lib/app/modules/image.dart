@@ -73,6 +73,7 @@ class _TopOverlay extends StatelessWidget {
                 showForumName: false,
                 showReplyCount: false,
                 showPoTag: true,
+                showPostTags: false,
               ),
             ),
           ),
@@ -115,7 +116,7 @@ class _BottomOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = getViewPadding().bottom;
+    final bottomPadding = getViewPadding(context).bottom;
 
     return ChildSizeNotifier(
       builder: (context, size, child) => Obx(

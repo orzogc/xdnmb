@@ -207,7 +207,7 @@ class _NoticeDialogState extends State<NoticeDialog> {
           ? MainAxisAlignment.spaceBetween
           : MainAxisAlignment.end,
       contentPadding: const EdgeInsets.fromLTRB(24.0, 10.0, 24.0, 5.0),
-      title: ListenableBuilder(
+      title: ListenBuilder(
           listenable: data.noticeDateListenable,
           builder: (context, child) => data.noticeDate != null
               ? Text('公告 ${formatDay(data.noticeDate!)}')

@@ -120,14 +120,15 @@ class ForumList extends StatelessWidget {
     final forums = ForumListService.to;
     final theme = Theme.of(context);
 
-    return ListenableBuilder(
+    // TODO: 合并ListenBuilder
+    return ListenBuilder(
       listenable: ControllerStacksService.to.notifier,
       builder: (context, child) {
         final controller = PostListController.get();
         final forumId = controller.forumOrTimelineId;
         final isTimeline = controller.isTimeline;
 
-        return ListenableBuilder(
+        return ListenBuilder(
           listenable: forums.displayedForumIndexNotifier,
           builder: (context, child) => ListView.builder(
             key: const PageStorageKey<String>('forumList'),

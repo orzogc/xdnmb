@@ -226,6 +226,13 @@ Widget loadingThumbImageIndicatorBuilder(
         ? CircularProgressIndicator(value: progress.progress)
         : const SizedBox.shrink();
 
+Widget loadingLargeImageIndicatorBuilder(DownloadProgress progress) =>
+    progress.progress != null
+        ? Center(
+            child: CircularProgressIndicator(value: progress.progress),
+          )
+        : const SizedBox.shrink();
+
 Widget loadingImageErrorBuilder(
     BuildContext context, String? url, dynamic error,
     {bool showError = true}) {

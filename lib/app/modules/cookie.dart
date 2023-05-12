@@ -479,7 +479,7 @@ class _CookieViewState extends State<CookieView> {
         appBar: AppBar(
           title: const Text('饼干'),
         ),
-        body: ListenableBuilder(
+        body: ListenBuilder(
           listenable: user.userCookieListenable,
           builder: (context, child) => ListView(
             children: [
@@ -505,7 +505,7 @@ class _CookieViewState extends State<CookieView> {
                     showToast('更新饼干列表出错: ${exceptionMessage(snapshot.error!)}');
                   }
 
-                  return ListenableBuilder(
+                  return ListenBuilder(
                     listenable: Listenable.merge(
                         [user.cookiesListenable, user.browseCookieListenable]),
                     builder: (context, child) => Column(

@@ -242,7 +242,7 @@ class _ContentState extends State<Content> {
       strutStyle: strutStyleFromHeight(widget.textStyle),
     );
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.showImageListenable,
       builder: (context, child) =>
           (settings.showImage && widget.displayImage && widget.post.hasImage)

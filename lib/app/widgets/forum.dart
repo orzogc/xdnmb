@@ -351,7 +351,7 @@ class _ForumBodyState extends State<ForumBody> {
                           forumId: mainPost.forumId, timelineId: id)) ||
                   mainPost.isBlocked());
 
-          final Widget item = ListenableBuilder(
+          final Widget item = ListenBuilder(
             listenable: Listenable.merge([
               settings.forbidDuplicatedPostsListenable,
               if (controller.isTimeline) blacklist.forumBlacklistNotifier,

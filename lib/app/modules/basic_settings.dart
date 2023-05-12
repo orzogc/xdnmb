@@ -17,7 +17,7 @@ class _RestoreTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.isRestoreTabsListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('应用启动后恢复标签页'),
@@ -36,7 +36,7 @@ class _InitialForum extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.initialForumListenable,
       builder: (context, child) => ListTile(
         title: Text(
@@ -83,13 +83,31 @@ class _ShowImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.showImageListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('显示图片'),
         value: settings.showImage,
         onChanged: (value) => settings.showImage = value,
       ),
+    );
+  }
+}
+
+class _ShowLargeImageInPost extends StatelessWidget {
+  // ignore: unused_element
+  const _ShowLargeImageInPost({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenBuilder(
+      listenable: settings.showLargeImageInPostListenable,
+      builder: (context, child) => SwitchListTile(
+          title: const Text("点击略缩图直接在串内展示大图"),
+          value: settings.showLargeImageInPost,
+          onChanged: (value) => settings.showLargeImageInPost = value),
     );
   }
 }
@@ -102,7 +120,7 @@ class _Watermark extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.isWatermarkListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('发送图片默认附带水印'),
@@ -124,7 +142,7 @@ class _AutoJump extends StatelessWidget {
 
     return ListTile(
       title: const Text('打开串时自动跳转到最近浏览的页数和位置'),
-      trailing: ListenableBuilder(
+      trailing: ListenBuilder(
         listenable: Listenable.merge([
           settings.isJumpToLastBrowsePageListenable,
           settings.isJumpToLastBrowsePositionListenable,
@@ -191,7 +209,7 @@ class _AfterPostRefresh extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.isAfterPostRefreshListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('发表新串后自动刷新页面'),
@@ -210,7 +228,7 @@ class _DismissibleTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.dismissibleTabListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('在标签页列表中滑动标签可以关闭标签页'),
@@ -229,7 +247,7 @@ class _SelectCookieBeforePost extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.selectCookieBeforePostListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('发串时选择饼干'),
@@ -248,7 +266,7 @@ class _ForbidDuplicatedPosts extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.forbidDuplicatedPostsListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('时间线和版块过滤重复的串'),
@@ -314,7 +332,7 @@ class _FeedId extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.feedIdListenable,
       builder: (context, child) => ListTile(
         title: const Text('订阅ID'),
@@ -342,6 +360,7 @@ class BasicSettingsView extends StatelessWidget {
               _RestoreTabs(),
               _InitialForum(),
               _ShowImage(),
+              _ShowLargeImageInPost(),
               _Watermark(),
               _AutoJump(),
               _AfterPostRefresh(),

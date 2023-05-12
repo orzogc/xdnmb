@@ -84,7 +84,7 @@ class _DraftList extends StatelessWidget {
   Widget build(BuildContext context) {
     final drafts = PostDraftListService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: drafts.draftListListenable,
       builder: (context, child) => drafts.length > 0
           ? LoaderOverlay(

@@ -381,7 +381,7 @@ class AppPageTransitionsBuilder extends SwipeablePageTransitionsBuilder {
       Widget child) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: settings.swipeablePageDragWidthRatioListenable,
       builder: (context, child_) => SwipeablePageRoute.buildPageTransitions<T>(
         route,

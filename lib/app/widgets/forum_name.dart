@@ -128,7 +128,7 @@ class ForumName extends StatelessWidget {
   Widget build(BuildContext context) {
     final forums = ForumListService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: forums.updateForumNameNotifier,
       builder: (context, child) {
         final name = forums.forumName(forumId,

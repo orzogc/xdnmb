@@ -271,7 +271,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
     final stacks = ControllerStacksService.to;
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: stacks.notifier,
       builder: (context, child) {
         final controller = PostListController.get();
@@ -368,7 +368,7 @@ class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
                         AppBarPageButtonGuide(
                             PageButton(controller: controller)),
                       if (controller.isThreadType)
-                        ListenableBuilder(
+                        ListenBuilder(
                           listenable: controller,
                           builder: (context, child) => AppBarPopupMenuGuide(
                             ThreadAppBarPopupMenuButton(
@@ -729,7 +729,7 @@ class PostListPageState extends State<PostListPage> {
           (timeStamp) => PersistentDataService.isNavigatorReady = true);
     }
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: stacks.getStackNotifier(index),
       builder: (context, child) => Navigator(
         key: Get.nestedKey(stacks.getKeyId(index)),
@@ -1081,7 +1081,7 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return ListenableBuilder(
+    return ListenBuilder(
       listenable: Listenable.merge([
         ControllerStacksService.to.notifier,
         settings.hideFloatingButtonListenable,
@@ -1138,9 +1138,9 @@ class _CompactTabAndForumListTabBar extends StatelessWidget {
                 ? theme.textTheme.bodyLarge
                 : theme.textTheme.titleLarge)
             ?.apply(color: theme.colorScheme.onPrimary),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [Text('标签'), SizedBox.shrink(), Text('版块')],
+          children: [Text('标签'), SizedBox.shrink(), Text('版块')],
         ),
       ),
     );
@@ -1501,7 +1501,7 @@ class PostListBottomBar extends StatelessWidget {
     final settings = SettingsService.to;
     final theme = Theme.of(context);
     final buttonColor = theme.colorScheme.onPrimary;
-    final hideOffset = (height + getViewPadding().bottom) / height;
+    final hideOffset = (height + getViewPadding(context).bottom) / height;
 
     final Widget bottomBar = Obx(
       () {
@@ -1617,7 +1617,7 @@ class PostListBottomBar extends StatelessWidget {
     );
 
     return settings.autoHideBottomBar
-        ? ListenableBuilder(
+        ? ListenBuilder(
             listenable: ControllerStacksService.to.notifier,
             builder: (context, child) => bottomBar,
           )
