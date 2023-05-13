@@ -162,11 +162,11 @@ class _CanvasState extends State<_Canvas> {
 class PaintController extends GetxController {
   final Rxn<Uint8List> image;
 
-  final bool canReturnData;
+  final bool canReturnImageData;
 
   late GlobalKey<ImagePainterState> _painterKey;
 
-  PaintController([Uint8List? image, this.canReturnData = true])
+  PaintController([Uint8List? image, this.canReturnImageData = true])
       : image = Rxn(image);
 }
 
@@ -208,7 +208,7 @@ class PaintView extends GetView<PaintController> {
         onWillPop: () async {
           if (controller._painterKey.currentState?.isEdited ?? false) {
             final result = await Get.dialog(ApplyImageDialog(
-              onApply: controller.canReturnData
+              onApply: controller.canReturnImageData
                   ? () async {
                       final data = await _exportImage();
                       if (data != null) {
@@ -218,7 +218,7 @@ class PaintView extends GetView<PaintController> {
                       }
                     }
                   : null,
-              onSave: !controller.canReturnData
+              onSave: !controller.canReturnImageData
                   ? () async {
                       Get.back(result: true);
                       await _saveImage();
@@ -254,7 +254,7 @@ class PaintView extends GetView<PaintController> {
                   }
                 }),
                 _SaveImage(saveImage: _saveImage),
-                if (controller.canReturnData)
+                if (controller.canReturnImageData)
                   _Confirm(exportImage: _exportImage),
               ],
             ),

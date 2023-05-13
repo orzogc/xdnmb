@@ -25,13 +25,13 @@ class ListenableNotifier extends ChangeNotifier
   }
 }
 
-typedef ListenableWidgetBuilder = Widget Function(
+typedef ListenWidgetBuilder = Widget Function(
     BuildContext context, Widget? child);
 
 class ListenBuilder extends StatefulWidget {
   final Listenable listenable;
 
-  final ListenableWidgetBuilder builder;
+  final ListenWidgetBuilder builder;
 
   final Widget? child;
 

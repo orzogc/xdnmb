@@ -86,6 +86,8 @@ class Content extends StatefulWidget {
 
   final bool canTapHiddenText;
 
+  final bool allowShowLargeImageInPlace;
+
   final Color? hiddenTextColor;
 
   final TextStyle? textStyle;
@@ -102,6 +104,7 @@ class Content extends StatefulWidget {
       this.displayImage = true,
       this.canReturnImageData = false,
       this.canTapHiddenText = false,
+      this.allowShowLargeImageInPlace = true,
       this.hiddenTextColor,
       this.textStyle,
       this.onText})
@@ -256,6 +259,8 @@ class _ContentState extends State<Content> {
                         poUserHash: widget.poUserHash,
                         onPaintImage: widget.onPaintImage,
                         canReturnImageData: widget.canReturnImageData,
+                        allowShowLargeImageInPlace:
+                            widget.allowShowLargeImageInPlace,
                       ),
                     ),
                     richText,

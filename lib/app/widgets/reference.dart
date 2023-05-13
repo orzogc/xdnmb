@@ -127,6 +127,7 @@ class _ReferenceCardState extends State<ReferenceCard> {
                                             mainPostId: widget.mainPostId,
                                             poUserHash: widget.poUserHash),
                                     canTapHiddenText: true,
+                                    allowShowLargeImageInPlace: false,
                                     showForumName: false,
                                     showReplyCount: false,
                                     showPoTag: true,

@@ -629,6 +629,7 @@ class PostContent extends StatelessWidget {
       bool displayImage = true,
       bool canReturnImageData = false,
       bool canTapHiddenText = false,
+      bool allowShowLargeImageInPlace = true,
       Color? hiddenTextColor,
       TextStyle? contentTextStyle,
       OnTextCallback? onText,
@@ -663,6 +664,7 @@ class PostContent extends StatelessWidget {
         displayImage: displayImage,
         canReturnImageData: canReturnImageData,
         canTapHiddenText: canTapHiddenText,
+        allowShowLargeImageInPlace: allowShowLargeImageInPlace,
         hiddenTextColor: hiddenTextColor,
         textStyle: contentTextStyle != null
             ? settings.postContentTextStyle(contentTextStyle)
@@ -795,6 +797,7 @@ class PostInkWell extends StatelessWidget {
       bool displayImage = true,
       bool canReturnImageData = false,
       bool canTapHiddenText = false,
+      bool allowShowLargeImageInPlace = true,
       Color? hiddenTextColor,
       TextStyle? contentTextStyle,
       OnTextCallback? onText,
@@ -825,6 +828,7 @@ class PostInkWell extends StatelessWidget {
             displayImage: displayImage,
             canReturnImageData: canReturnImageData,
             canTapHiddenText: canTapHiddenText,
+            allowShowLargeImageInPlace: allowShowLargeImageInPlace,
             hiddenTextColor: hiddenTextColor,
             contentTextStyle: contentTextStyle,
             onText: onText,

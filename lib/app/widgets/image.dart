@@ -4,8 +4,9 @@ import 'package:align_positioned/align_positioned.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/services/image.dart';
@@ -13,6 +14,7 @@ import '../data/services/persistent.dart';
 import '../data/services/settings.dart';
 import '../modules/image.dart';
 import '../modules/paint.dart';
+import '../modules/post_list.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/image.dart';
@@ -29,44 +31,34 @@ class _RawThumbImage extends StatelessWidget {
 
   final LoadingErrorWidgetBuilder? errorWidget;
 
-  final Widget? overlay;
-
   const _RawThumbImage(
       // ignore: unused_element
       {super.key,
       required this.imageUrl,
       required this.cacheKey,
       this.progressIndicatorBuilder,
-      this.errorWidget,
-      this.overlay});
+      this.errorWidget});
 
   @override
-  Widget build(BuildContext context) {
-    final image = CachedNetworkImage(
-      imageUrl: imageUrl,
-      cacheKey: cacheKey,
-      cacheManager: XdnmbImageCacheManager(),
-      fit: BoxFit.contain,
-      progressIndicatorBuilder: progressIndicatorBuilder,
-      errorWidget: errorWidget,
-    );
-
-    return LayoutBuilder(
-      builder: (context, constraints) => ConstrainedBox(
-        constraints: BoxConstraints(
-          minWidth: ThumbImage.minWidth,
-          maxWidth: (constraints.maxWidth / 3.0)
-              .clamp(ThumbImage.minWidth, ThumbImage.maxWidth),
-          minHeight: ThumbImage.minHeight,
-          maxHeight: ThumbImage.maxHeight,
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, constraints) => ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: ThumbImage.minWidth,
+            maxWidth: (constraints.maxWidth / 3.0)
+                .clamp(ThumbImage.minWidth, ThumbImage.maxWidth),
+            minHeight: ThumbImage.minHeight,
+            maxHeight: ThumbImage.maxHeight,
+          ),
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            cacheKey: cacheKey,
+            cacheManager: XdnmbImageCacheManager(),
+            fit: BoxFit.contain,
+            progressIndicatorBuilder: progressIndicatorBuilder,
+            errorWidget: errorWidget,
+          ),
         ),
-        child: overlay != null
-            ? AlignPositioned.relative(
-                alignment: Alignment.center, container: image, child: overlay!)
-            : image,
-      ),
-    );
-  }
+      );
 }
 
 class _LargeImageDialog extends StatelessWidget {
@@ -130,10 +122,12 @@ class _LargeImage extends StatelessWidget {
         cacheKey: post.imageKey!,
         cacheManager: XdnmbImageCacheManager(),
         //fit: BoxFit.scaleDown,
-        progressIndicatorBuilder: (context, url, progress) => _RawThumbImage(
-          imageUrl: post.thumbImageUrl!,
-          cacheKey: post.thumbImageKey!,
-          overlay: progress.progress != null
+        progressIndicatorBuilder: (context, url, progress) =>
+            AlignPositioned.relative(
+          alignment: Alignment.center,
+          container: _RawThumbImage(
+              imageUrl: post.thumbImageUrl!, cacheKey: post.thumbImageKey!),
+          child: progress.progress != null
               ? CircularProgressIndicator(value: progress.progress)
               : const SizedBox.shrink(),
         ),
@@ -174,12 +168,15 @@ class ThumbImage extends StatefulWidget {
 
   final bool canReturnImageData;
 
+  final bool allowShowLargeImageInPlace;
+
   ThumbImage(
       {super.key,
       required this.post,
       this.poUserHash,
       this.onPaintImage,
-      this.canReturnImageData = false})
+      this.canReturnImageData = false,
+      this.allowShowLargeImageInPlace = true})
       : assert(post.hasImage);
 
   @override
@@ -191,7 +188,11 @@ class _ThumbImageState extends State<ThumbImage> {
 
   bool _hasError = false;
 
-  bool _showLargeImage = false;
+  bool _isShowingLargeImage = false;
+
+  double? _onTapAppBarHeight;
+
+  double? _onTapScrollPosition;
 
   PostBase get _post => widget.post;
 
@@ -206,6 +207,63 @@ class _ThumbImageState extends State<ThumbImage> {
     }
   }
 
+  void _setScrollPosition() {
+    final controller = PostListController.get();
+    final scrollController = controller.scrollController;
+    if (scrollController != null) {
+      _onTapAppBarHeight = controller.appBarHeight;
+      _onTapScrollPosition = scrollController.position.pixels;
+    }
+  }
+
+  double? _getOffset() {
+    final renderBox = context.findRenderObject();
+    if (renderBox != null) {
+      final viewport = RenderAbstractViewport.of(renderBox);
+      final offset = viewport.getOffsetToReveal(renderBox, 0.0);
+
+      return offset.offset;
+    }
+
+    return null;
+  }
+
+  void _jumpToTopEdge() {
+    final settings = SettingsService.to;
+
+    var offset = _getOffset();
+    if (offset != null) {
+      final controller = PostListController.get();
+      if (settings.autoHideAppBar) {
+        offset -= controller.appBarHeight;
+      }
+
+      final scrollController = controller.scrollController;
+      if (scrollController != null) {
+        final position = scrollController.position;
+        final pixels = position.pixels;
+        var onTapPosition =
+            (_onTapAppBarHeight != null && _onTapScrollPosition != null)
+                ? (settings.autoHideAppBar
+                    ? _onTapScrollPosition! + _onTapAppBarHeight!
+                    : _onTapScrollPosition!)
+                : null;
+        if (onTapPosition != null &&
+            onTapPosition > offset &&
+            offset < pixels) {
+          if (settings.autoHideAppBar) {
+            onTapPosition -= controller.appBarHeight;
+          }
+          scrollController.jumpTo(onTapPosition.clamp(
+              position.minScrollExtent, position.maxScrollExtent));
+        } else if (offset < pixels) {
+          scrollController.jumpTo(
+              offset.clamp(position.minScrollExtent, position.maxScrollExtent));
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
@@ -213,11 +271,16 @@ class _ThumbImageState extends State<ThumbImage> {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () async {
-        if (_showLargeImage) {
-          setState(() => _showLargeImage = false);
-        } else if (settings.showLargeImageInPost) {
+        if (_isShowingLargeImage) {
           if (mounted) {
-            setState(() => _showLargeImage = true);
+            _jumpToTopEdge();
+            setState(() => _isShowingLargeImage = false);
+          }
+        } else if (widget.allowShowLargeImageInPlace &&
+            settings.showLargeImageInPost) {
+          if (mounted) {
+            _setScrollPosition();
+            setState(() => _isShowingLargeImage = true);
           }
         } else {
           await _toImage();
@@ -226,7 +289,7 @@ class _ThumbImageState extends State<ThumbImage> {
       child: Hero(
         tag: _heroTag,
         transitionOnUserGestures: true,
-        child: _showLargeImage
+        child: _isShowingLargeImage
             ? _LargeImage(post: _post, toImage: _toImage)
             : _RawThumbImage(
                 imageUrl: _hasError ? _post.imageUrl! : _post.thumbImageUrl!,
@@ -272,7 +335,7 @@ Future<void> pickImage(ValueSetter<String> onPickImage) async {
         final path = result.files.single.path;
         if (path != null) {
           if (GetPlatform.isDesktop) {
-            data.pictureDirectory = dirname(path);
+            data.pictureDirectory = p.dirname(path);
           }
           onPickImage(path);
         } else {
