@@ -104,6 +104,20 @@ abstract class PostListController extends ChangeNotifier {
 
   static void showAppBar() => _showAppBar?.call();
 
+  static double? getScrollPosition() {
+    final controller = PostListController.get();
+    final scrollController = controller.scrollController;
+    if (scrollController != null) {
+      final pixels = scrollController.position.pixels;
+
+      return SettingsService.to.autoHideAppBar
+          ? (pixels + controller.appBarHeight)
+          : pixels;
+    }
+
+    return null;
+  }
+
   final RxInt _page;
 
   VoidCallback? save;

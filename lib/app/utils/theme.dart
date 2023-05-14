@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -31,6 +32,14 @@ abstract class AppTheme {
   //static const Color cardColorLight = Colors.white;
 
   //static const Color cardColorDark = Color(0xff424242);
+
+  static final TextTheme textTheme =
+      Typography.material2018(platform: defaultTargetPlatform).black;
+
+  static final TextTheme textThemeLight = textTheme;
+
+  static final TextTheme textThemeDark =
+      textTheme.apply(displayColor: colorDark, bodyColor: colorDark);
 
   static const Curve slideCurve = Curves.easeOutQuart;
 
@@ -132,6 +141,13 @@ abstract class AppTheme {
       TargetPlatform.iOS: AppPageTransitionsBuilder(),
       TargetPlatform.macOS: AppPageTransitionsBuilder(),
     }),
+    /* dialogTheme: DialogTheme(
+        contentTextStyle: textThemeLight.titleMedium?.copyWith(
+            fontSize: 16.0,
+            fontWeight: FontWeight.normal,
+            letterSpacing: 0.15,
+            height: 1.5)), */
+    textTheme: textThemeLight,
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -185,23 +201,13 @@ abstract class AppTheme {
       TargetPlatform.iOS: AppPageTransitionsBuilder(),
       TargetPlatform.macOS: AppPageTransitionsBuilder(),
     }),
-    textTheme: const TextTheme(
-      displayLarge: TextStyle(),
-      displayMedium: TextStyle(),
-      displaySmall: TextStyle(),
-      headlineLarge: TextStyle(),
-      headlineMedium: TextStyle(),
-      headlineSmall: TextStyle(),
-      titleLarge: TextStyle(),
-      titleMedium: TextStyle(),
-      titleSmall: TextStyle(),
-      bodyLarge: TextStyle(),
-      bodyMedium: TextStyle(),
-      bodySmall: TextStyle(),
-      labelLarge: TextStyle(),
-      labelMedium: TextStyle(),
-      labelSmall: TextStyle(),
-    ).apply(displayColor: colorDark, bodyColor: colorDark),
+    /* dialogTheme: DialogTheme(
+        contentTextStyle: textThemeDark.titleMedium?.copyWith(
+            fontSize: 16.0,
+            fontWeight: FontWeight.normal,
+            letterSpacing: 0.15,
+            height: 1.5)), */
+    textTheme: textThemeDark,
   );
 
   static Color get specialTextColor =>

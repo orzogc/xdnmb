@@ -514,6 +514,7 @@ class _PostTagState extends State<_PostTag> {
           );
         }
 
+        // TODO: 占用一行空间
         return const SizedBox.shrink();
       },
     );

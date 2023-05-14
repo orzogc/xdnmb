@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:align_positioned/align_positioned.dart';
@@ -21,6 +22,21 @@ import '../utils/image.dart';
 import '../utils/navigation.dart';
 import '../utils/toast.dart';
 import 'dialog.dart';
+
+double? _getWidgetOffset(BuildContext context) {
+  final renderBox = context.findRenderObject();
+  if (renderBox != null) {
+    final viewport = RenderAbstractViewport.of(renderBox);
+    var offset = viewport.getOffsetToReveal(renderBox, 0.0).offset;
+    if (SettingsService.to.autoHideAppBar) {
+      offset -= PostListController.get().appBarHeight;
+    }
+
+    return offset;
+  }
+
+  return null;
+}
 
 class _RawThumbImage extends StatelessWidget {
   final String imageUrl;
@@ -66,11 +82,17 @@ class _LargeImageDialog extends StatelessWidget {
 
   final VoidCallback toImage;
 
+  final VoidCallback rotate;
+
+  final VoidCallback mirror;
+
   const _LargeImageDialog(
       // ignore: unused_element
       {super.key,
       required this.post,
-      required this.toImage});
+      required this.toImage,
+      required this.rotate,
+      required this.mirror});
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +124,20 @@ class _LargeImageDialog extends StatelessWidget {
           },
           child: Text('涂鸦', style: textStyle),
         ),
+        SimpleDialogOption(
+          onPressed: () {
+            postListBack();
+            rotate();
+          },
+          child: Text('旋转', style: textStyle),
+        ),
+        SimpleDialogOption(
+          onPressed: () {
+            postListBack();
+            mirror();
+          },
+          child: Text('镜像', style: textStyle),
+        ),
       ],
     );
   }
@@ -112,16 +148,33 @@ class _LargeImage extends StatelessWidget {
 
   final VoidCallback toImage;
 
+  final RxInt _quarterTurns = 0.obs;
+
+  final Rx<Matrix4> _matrix = Rx(Matrix4.identity());
+
   // ignore: unused_element
   _LargeImage({super.key, required this.post, required this.toImage})
       : assert(post.hasImage);
+
+  void _jumpToPosition(BuildContext context) {
+    final offset = _getWidgetOffset(context);
+    if (offset != null) {
+      final scrollController = PostListController.get().scrollController;
+      if (scrollController != null) {
+        final position = scrollController.position;
+        if (offset < position.pixels) {
+          scrollController.jumpTo(
+              offset.clamp(position.minScrollExtent, position.maxScrollExtent));
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) => CachedNetworkImage(
         imageUrl: post.imageUrl!,
         cacheKey: post.imageKey!,
         cacheManager: XdnmbImageCacheManager(),
-        //fit: BoxFit.scaleDown,
         progressIndicatorBuilder: (context, url, progress) =>
             AlignPositioned.relative(
           alignment: Alignment.center,
@@ -140,9 +193,25 @@ class _LargeImage extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerLeft,
               child: GestureDetector(
-                onLongPress: () => postListDialog(
-                    _LargeImageDialog(post: post, toImage: toImage)),
-                child: Image(image: imageProvider, fit: BoxFit.scaleDown),
+                onLongPress: () => postListDialog(_LargeImageDialog(
+                  post: post,
+                  toImage: toImage,
+                  rotate: () {
+                    _quarterTurns.value += 1;
+                    _jumpToPosition(context);
+                  },
+                  mirror: () => _matrix.trigger(_matrix.value..rotateY(pi)),
+                )),
+                child: Obx(
+                  () => RotatedBox(
+                    quarterTurns: _quarterTurns.value,
+                    child: Transform(
+                      transform: _matrix.value,
+                      alignment: Alignment.center,
+                      child: Image(image: imageProvider, fit: BoxFit.scaleDown),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -190,8 +259,6 @@ class _ThumbImageState extends State<ThumbImage> {
 
   bool _isShowingLargeImage = false;
 
-  double? _onTapAppBarHeight;
-
   double? _onTapScrollPosition;
 
   PostBase get _post => widget.post;
@@ -207,55 +274,24 @@ class _ThumbImageState extends State<ThumbImage> {
     }
   }
 
-  void _setScrollPosition() {
-    final controller = PostListController.get();
-    final scrollController = controller.scrollController;
-    if (scrollController != null) {
-      _onTapAppBarHeight = controller.appBarHeight;
-      _onTapScrollPosition = scrollController.position.pixels;
-    }
-  }
+  void _setScrollPosition() =>
+      _onTapScrollPosition = PostListController.getScrollPosition();
 
-  double? _getOffset() {
-    final renderBox = context.findRenderObject();
-    if (renderBox != null) {
-      final viewport = RenderAbstractViewport.of(renderBox);
-      final offset = viewport.getOffsetToReveal(renderBox, 0.0);
-
-      return offset.offset;
-    }
-
-    return null;
-  }
-
-  void _jumpToTopEdge() {
-    final settings = SettingsService.to;
-
-    var offset = _getOffset();
+  void _jumpToPosition() {
+    final offset = _getWidgetOffset(context);
     if (offset != null) {
       final controller = PostListController.get();
-      if (settings.autoHideAppBar) {
-        offset -= controller.appBarHeight;
-      }
-
       final scrollController = controller.scrollController;
       if (scrollController != null) {
         final position = scrollController.position;
         final pixels = position.pixels;
-        var onTapPosition =
-            (_onTapAppBarHeight != null && _onTapScrollPosition != null)
-                ? (settings.autoHideAppBar
-                    ? _onTapScrollPosition! + _onTapAppBarHeight!
-                    : _onTapScrollPosition!)
-                : null;
-        if (onTapPosition != null &&
-            onTapPosition > offset &&
-            offset < pixels) {
-          if (settings.autoHideAppBar) {
-            onTapPosition -= controller.appBarHeight;
+        var pos = _onTapScrollPosition;
+        if (pos != null && pos > offset && offset < pixels) {
+          if (SettingsService.to.autoHideAppBar) {
+            pos -= controller.appBarHeight;
           }
-          scrollController.jumpTo(onTapPosition.clamp(
-              position.minScrollExtent, position.maxScrollExtent));
+          scrollController.jumpTo(
+              pos.clamp(position.minScrollExtent, position.maxScrollExtent));
         } else if (offset < pixels) {
           scrollController.jumpTo(
               offset.clamp(position.minScrollExtent, position.maxScrollExtent));
@@ -273,7 +309,7 @@ class _ThumbImageState extends State<ThumbImage> {
       onTap: () async {
         if (_isShowingLargeImage) {
           if (mounted) {
-            _jumpToTopEdge();
+            _jumpToPosition();
             setState(() => _isShowingLargeImage = false);
           }
         } else if (widget.allowShowLargeImageInPlace &&

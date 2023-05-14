@@ -120,64 +120,62 @@ class ForumList extends StatelessWidget {
     final forums = ForumListService.to;
     final theme = Theme.of(context);
 
-    // TODO: 合并ListenBuilder
     return ListenBuilder(
-      listenable: ControllerStacksService.to.notifier,
+      listenable: Listenable.merge([
+        ControllerStacksService.to.notifier,
+        forums.displayedForumIndexNotifier
+      ]),
       builder: (context, child) {
         final controller = PostListController.get();
         final forumId = controller.forumOrTimelineId;
         final isTimeline = controller.isTimeline;
 
-        return ListenBuilder(
-          listenable: forums.displayedForumIndexNotifier,
-          builder: (context, child) => ListView.builder(
-            key: const PageStorageKey<String>('forumList'),
-            padding: EdgeInsets.zero,
-            itemCount: forums.displayedForumsCount,
-            itemBuilder: (context, index) {
-              final forum = forums.displayedForum(index);
+        return ListView.builder(
+          key: const PageStorageKey<String>('forumList'),
+          padding: EdgeInsets.zero,
+          itemCount: forums.displayedForumsCount,
+          itemBuilder: (context, index) {
+            final forum = forums.displayedForum(index);
 
-              if (forum != null) {
-                final Widget forumWidget = ListTile(
-                  key: ValueKey<PostList>(PostList.fromForumData(forum)),
-                  onTap: () {
-                    if (!controller.isForumType || forumId != forum.id) {
-                      if (forum.isTimeline) {
-                        AppRoutes.toTimeline(timelineId: forum.id);
-                      } else {
-                        AppRoutes.toForum(forumId: forum.id);
-                      }
+            if (forum != null) {
+              final Widget forumWidget = ListTile(
+                key: ValueKey<PostList>(PostList.fromForumData(forum)),
+                onTap: () {
+                  if (!controller.isForumType || forumId != forum.id) {
+                    if (forum.isTimeline) {
+                      AppRoutes.toTimeline(timelineId: forum.id);
+                    } else {
+                      AppRoutes.toForum(forumId: forum.id);
                     }
+                  }
 
+                  onTapEnd();
+                },
+                onLongPress: () async {
+                  if (await Get.dialog<bool>(_Dialog(forum: forum)) ?? false) {
                     onTapEnd();
-                  },
-                  onLongPress: () async {
-                    if (await Get.dialog<bool>(_Dialog(forum: forum)) ??
-                        false) {
-                      onTapEnd();
-                    }
-                  },
-                  tileColor:
-                      (forumId == forum.id && isTimeline == forum.isTimeline)
-                          ? theme.focusColor
-                          : null,
-                  title: ForumName(
-                    forumId: forum.id,
-                    isTimeline: forum.isTimeline,
-                    isDeprecated: forum.isDeprecated,
-                    maxLines: 1,
-                    isBodyLargeStyle: true,
-                  ),
-                );
+                  }
+                },
+                tileColor:
+                    (forumId == forum.id && isTimeline == forum.isTimeline)
+                        ? theme.focusColor
+                        : null,
+                title: ForumName(
+                  forumId: forum.id,
+                  isTimeline: forum.isTimeline,
+                  isDeprecated: forum.isDeprecated,
+                  maxLines: 1,
+                  isBodyLargeStyle: true,
+                ),
+              );
 
-                return (index == 0 && SettingsService.shouldShowGuide)
-                    ? ForumListGuide(forumWidget)
-                    : forumWidget;
-              } else {
-                return const SizedBox.shrink();
-              }
-            },
-          ),
+              return (index == 0 && SettingsService.shouldShowGuide)
+                  ? ForumListGuide(forumWidget)
+                  : forumWidget;
+            } else {
+              return const SizedBox.shrink();
+            }
+          },
         );
       },
     );

@@ -322,6 +322,7 @@ class _Image<T extends Object> extends StatefulWidget {
   State<_Image> createState() => _ImageState();
 }
 
+// TODO: 镜像
 class _ImageState extends State<_Image>
     with SingleTickerProviderStateMixin<_Image> {
   static const double _disposeScale = 1.1;
