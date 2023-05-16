@@ -47,24 +47,13 @@ abstract class Settings {
 
   static const String showGuide = 'showGuide';
 
-  static const String showBackdropGuide = 'showBackdropGuide';
-
   static const String showGuideWithoutBottomBar = 'showGuideWithoutBottomBar';
-
-  static const String showBackdropGuideWithoutBottomBar =
-      'showBackdropGuideWithoutBottomBar';
 
   static const String showBottomBarGuide = 'showBottomBarGuide';
 
   static const String showBottomBar = 'showBottomBar';
 
   static const String autoHideBottomBar = 'autoHideBottomBar';
-
-  static const String backdropUI = 'backdropUI';
-
-  static const String frontLayerDragHeightRatio = 'frontLayerDragHeightRatio';
-
-  static const String backLayerDragHeightRatio = 'backLayerDragHeightRatio';
 
   static const String autoHideAppBar = 'autoHideAppBar';
 

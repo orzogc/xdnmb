@@ -24,7 +24,6 @@ import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
-import 'backdrop.dart';
 import 'bilistview.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
@@ -268,7 +267,6 @@ class _ForumBodyState extends State<ForumBody> {
 
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
         if (mounted) {
-          BackdropController.controller.hideBackLayer();
           showHidden();
           scaffold.closeDrawer();
           scaffold.closeEndDrawer();

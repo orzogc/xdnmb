@@ -51,29 +51,18 @@ abstract class Guide {
   static final List<GlobalKey> bottomBarGuides = [
     if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
     if (SettingsGuide._key.currentState?.mounted ?? false) SettingsGuide._key,
-    if (!SettingsService.to.backdropUI &&
-        SettingsService.to.compactTabAndForumList &&
+    if (SettingsService.to.compactTabAndForumList &&
         (CompactListButtonGuide._key.currentState?.mounted ?? false))
       CompactListButtonGuide._key,
-    if (!SettingsService.to.backdropUI &&
-        !SettingsService.to.compactTabAndForumList &&
+    if (!SettingsService.to.compactTabAndForumList &&
         (TabListButtonGuide._key.currentState?.mounted ?? false))
       TabListButtonGuide._key,
-    if (!SettingsService.to.backdropUI &&
-        !SettingsService.to.compactTabAndForumList &&
+    if (!SettingsService.to.compactTabAndForumList &&
         (ForumListButtonGuide._key.currentState?.mounted ?? false))
       ForumListButtonGuide._key,
     if (FeedGuide._key.currentState?.mounted ?? false) FeedGuide._key,
     if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
     if (EditPostGuide._key.currentState?.mounted ?? false) EditPostGuide._key,
-  ];
-
-  static final List<GlobalKey> backdropEndDrawerGuides = [
-    if (DarkModeGuide._key.currentState?.mounted ?? false) DarkModeGuide._key,
-    if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
-    if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
-    if (FeedGuide._key.currentState?.mounted ?? false) FeedGuide._key,
-    if (SettingsGuide._key.currentState?.mounted ?? false) SettingsGuide._key,
   ];
 
   static final List<GlobalKey> backLayerTabListGuides = [

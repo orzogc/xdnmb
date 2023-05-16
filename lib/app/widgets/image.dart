@@ -143,18 +143,25 @@ class _LargeImageDialog extends StatelessWidget {
   }
 }
 
-class _LargeImage extends StatelessWidget {
+class _LargeImage extends StatefulWidget {
   final PostBase post;
 
   final VoidCallback toImage;
 
+  // ignore: unused_element
+  _LargeImage({super.key, required this.post, required this.toImage})
+      : assert(post.hasImage);
+
+  @override
+  State<_LargeImage> createState() => _LargeImageState();
+}
+
+class _LargeImageState extends State<_LargeImage> {
   final RxInt _quarterTurns = 0.obs;
 
   final Rx<Matrix4> _matrix = Rx(Matrix4.identity());
 
-  // ignore: unused_element
-  _LargeImage({super.key, required this.post, required this.toImage})
-      : assert(post.hasImage);
+  PostBase get _post => widget.post;
 
   void _jumpToPosition(BuildContext context) {
     final offset = _getWidgetOffset(context);
@@ -172,14 +179,14 @@ class _LargeImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CachedNetworkImage(
-        imageUrl: post.imageUrl!,
-        cacheKey: post.imageKey!,
+        imageUrl: _post.imageUrl!,
+        cacheKey: _post.imageKey!,
         cacheManager: XdnmbImageCacheManager(),
         progressIndicatorBuilder: (context, url, progress) =>
             AlignPositioned.relative(
           alignment: Alignment.center,
           container: _RawThumbImage(
-              imageUrl: post.thumbImageUrl!, cacheKey: post.thumbImageKey!),
+              imageUrl: _post.thumbImageUrl!, cacheKey: _post.thumbImageKey!),
           child: progress.progress != null
               ? CircularProgressIndicator(value: progress.progress)
               : const SizedBox.shrink(),
@@ -194,8 +201,8 @@ class _LargeImage extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: GestureDetector(
                 onLongPress: () => postListDialog(_LargeImageDialog(
-                  post: post,
-                  toImage: toImage,
+                  post: _post,
+                  toImage: widget.toImage,
                   rotate: () {
                     _quarterTurns.value += 1;
                     _jumpToPosition(context);

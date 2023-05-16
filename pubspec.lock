@@ -338,14 +338,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.3.0"
-  file_utils:
-    dependency: transitive
-    description:
-      name: file_utils
-      sha256: d1e64389a22649095c8405c9e177272caf05139255931c9ff30d53b5c9bcaa34
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.1"
   fixnum:
     dependency: transitive
     description:
@@ -963,10 +955,10 @@ packages:
     dependency: transitive
     description:
       name: permission_handler_android
-      sha256: "8028362b40c4a45298f1cbfccd227c8dd6caf0e27088a69f2ba2ab15464159e2"
+      sha256: d8cc6a62ded6d0f49c6eac337e080b066ee3bce4d405bd9439a61e1f1927bfe8
       url: "https://pub.dev"
     source: hosted
-    version: "10.2.0"
+    version: "10.2.1"
   permission_handler_apple:
     dependency: transitive
     description:
@@ -1091,10 +1083,10 @@ packages:
     dependency: "direct main"
     description:
       name: screenshot
-      sha256: "65d4050f542ecccd985b73fadab25730448a00bc6eb9dc40dd164f655ad8efb2"
+      sha256: "455284ff1f5b911d94a43c25e1385485cf6b4f288293eba68f15dad711c7b81c"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.0"
+    version: "2.1.0"
   shelf:
     dependency: transitive
     description:
@@ -1160,10 +1152,10 @@ packages:
     dependency: transitive
     description:
       name: sqflite
-      sha256: "3a82c9a216b46b88617e3714dd74227eaca20c501c4abcc213e56db26b9caa00"
+      sha256: "41498eed139e9daadc18877cbd4c877fc184f29f08bf9fb04565c4afc6609f27"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.8+2"
+    version: "2.2.8+3"
   sqflite_common:
     dependency: transitive
     description:
@@ -1208,10 +1200,10 @@ packages:
     dependency: "direct main"
     description:
       name: swipeable_page_route
-      sha256: "99dfe162cb486981297cef71660b811bfb274ab9b76ee3537010d9e82b4dfe42"
+      sha256: "270e4518d2bc396488895795bc0aebc158cc5f2e0fb672cddf4e8d62850342ce"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.0"
+    version: "0.3.1"
   synchronized:
     dependency: transitive
     description:
@@ -1224,10 +1216,10 @@ packages:
     dependency: "direct main"
     description:
       name: system_info2
-      sha256: af2f948e3f31a3367a049932a8ad59faf0063ecf836a020d975b9f41566d8bc9
+      sha256: "65206bbef475217008b5827374767550a5420ce70a04d2d7e94d1d2253f3efc9"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.2"
+    version: "4.0.0"
   term_glyph:
     dependency: transitive
     description:

@@ -76,8 +76,6 @@ class SettingsService extends GetxService {
 
   late final RxBool _isAutoHideBottomBar;
 
-  late final RxBool _isBackdropUI;
-
   late final RxBool _isAutoHideAppBar;
 
   late final RxDouble _drawerDragRatio;
@@ -234,11 +232,9 @@ class SettingsService extends GetxService {
       _settingsBox.get(Settings.showGuide, defaultValue: true);
 
   bool get showGuide =>
-      !backdropUI &&
-      (rawShowGuide || showBottomBarGuide || showGuideWithoutBottomBar);
+      rawShowGuide || showBottomBarGuide || showGuideWithoutBottomBar;
 
   bool get showGuideWithoutBottomBar =>
-      !backdropUI &&
       !showBottomBar &&
       _settingsBox.get(Settings.showGuideWithoutBottomBar, defaultValue: true);
 
@@ -247,29 +243,6 @@ class SettingsService extends GetxService {
 
   set showGuide(bool showGuide) =>
       _settingsBox.put(Settings.showGuide, showGuide);
-
-  bool get rawShowBackdropGuide =>
-      _settingsBox.get(Settings.showBackdropGuide, defaultValue: true);
-
-  bool get showBackdropGuide =>
-      backdropUI &&
-      (rawShowBackdropGuide ||
-          showBottomBarGuide ||
-          showBackdropGuideWithoutBottomBar);
-
-  bool get showBackdropGuideWithoutBottomBar =>
-      backdropUI &&
-      !showBottomBar &&
-      _settingsBox.get(Settings.showBackdropGuideWithoutBottomBar,
-          defaultValue: true);
-
-  set showBackdropGuideWithoutBottomBar(
-          bool showBackdropGuideWithoutBottomBar) =>
-      _settingsBox.put(Settings.showBackdropGuideWithoutBottomBar,
-          showBackdropGuideWithoutBottomBar);
-
-  set showBackdropGuide(bool showBackdropGuide) =>
-      _settingsBox.put(Settings.showBackdropGuide, showBackdropGuide);
 
   bool get showBottomBarGuide =>
       showBottomBar &&
@@ -301,33 +274,7 @@ class SettingsService extends GetxService {
 
   bool get isAutoHideBottomBar => _isAutoHideBottomBar.value;
 
-  bool get backdropUI =>
-      _settingsBox.get(Settings.backdropUI, defaultValue: false);
-
-  set backdropUI(bool backdropUI) {
-    _settingsBox.put(Settings.backdropUI, backdropUI);
-    _isBackdropUI.value = backdropUI;
-  }
-
-  bool get isBackdropUI => _isBackdropUI.value;
-
-  bool get isSwipeablePage => isShowBottomBar || isBackdropUI;
-
-  double get frontLayerDragHeightRatio =>
-      (_settingsBox.get(Settings.frontLayerDragHeightRatio, defaultValue: 0.20)
-              as double)
-          .clamp(0.0, 1.0);
-
-  set frontLayerDragHeightRatio(double ratio) => _settingsBox.put(
-      Settings.frontLayerDragHeightRatio, ratio.clamp(0.0, 1.0));
-
-  double get backLayerDragHeightRatio =>
-      (_settingsBox.get(Settings.backLayerDragHeightRatio, defaultValue: 0.10)
-              as double)
-          .clamp(0.0, 1.0);
-
-  set backLayerDragHeightRatio(double ratio) => _settingsBox.put(
-      Settings.backLayerDragHeightRatio, ratio.clamp(0.0, 1.0));
+  bool get isSwipeablePage => isShowBottomBar;
 
   bool get autoHideAppBar =>
       _settingsBox.get(Settings.autoHideAppBar, defaultValue: false);
@@ -561,12 +508,6 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> autoHideBottomBarListenable;
 
-  late final ValueListenable<Box> backdropUIListenable;
-
-  late final ValueListenable<Box> frontLayerDragHeightRatioListenable;
-
-  late final ValueListenable<Box> backLayerDragHeightRatioListenable;
-
   late final ValueListenable<Box> autoHideAppBarListenable;
 
   late final ValueListenable<Box> hideFloatingButtonListenable;
@@ -726,20 +667,11 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.systemNavigationBarByTheme]);
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
-    showGuideListenable = _settingsBox.listenable(keys: [
-      Settings.backdropUI,
-      Settings.showGuide,
-      Settings.showBackdropGuide,
-    ]);
+    showGuideListenable = _settingsBox.listenable(keys: [Settings.showGuide]);
     showBottomBarListenable =
         _settingsBox.listenable(keys: [Settings.showBottomBar]);
     autoHideBottomBarListenable =
         _settingsBox.listenable(keys: [Settings.autoHideBottomBar]);
-    backdropUIListenable = _settingsBox.listenable(keys: [Settings.backdropUI]);
-    frontLayerDragHeightRatioListenable =
-        _settingsBox.listenable(keys: [Settings.frontLayerDragHeightRatio]);
-    backLayerDragHeightRatioListenable =
-        _settingsBox.listenable(keys: [Settings.backLayerDragHeightRatio]);
     autoHideAppBarListenable =
         _settingsBox.listenable(keys: [Settings.autoHideAppBar]);
     hideFloatingButtonListenable =
@@ -748,11 +680,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.autoHideFloatingButton]);
     drawerEdgeDragWidthRatioListenable = _settingsBox.listenable(
         keys: [Settings.showBottomBar, Settings.drawerEdgeDragWidthRatio]);
-    swipeablePageDragWidthRatioListenable = _settingsBox.listenable(keys: [
-      Settings.showBottomBar,
-      Settings.backdropUI,
-      Settings.swipeablePageDragWidthRatio,
-    ]);
+    swipeablePageDragWidthRatioListenable = _settingsBox.listenable(
+        keys: [Settings.showBottomBar, Settings.swipeablePageDragWidthRatio]);
     compactTabAndForumListListenable =
         _settingsBox.listenable(keys: [Settings.compactTabAndForumList]);
     showPoCookieTagListenable =
@@ -770,12 +699,11 @@ class SettingsService extends GetxService {
 
     _isShowBottomBar = showBottomBar.obs;
     _isAutoHideBottomBar = autoHideBottomBar.obs;
-    _isBackdropUI = backdropUI.obs;
     _isAutoHideAppBar = autoHideAppBar.obs;
     _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
     _isCompactTabAndForumList = compactTabAndForumList.obs;
     _isShowLatestPostTimeInFeed = showLatestPostTimeInFeed.obs;
-    shouldShowGuide = showGuide || showBackdropGuide;
+    shouldShowGuide = showGuide;
     isShowGuide = shouldShowGuide;
 
     await PersistentDataService.clearCacheImage();

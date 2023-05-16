@@ -51,7 +51,7 @@ class _XdnmbApp extends StatelessWidget {
         initialRoute: AppRoutes.home,
         onGenerateInitialRoutes: (initialRoute) =>
             [SwipeablePageRoute(builder: (context) => const PostListView())],
-        onGenerateRoute: backdropOnGenerateRoute,
+        onGenerateRoute: onGenerateRoute,
         theme: AppTheme.theme,
         darkTheme: AppTheme.darkTheme,
         builder: EasyLoading.init(),

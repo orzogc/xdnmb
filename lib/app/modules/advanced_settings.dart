@@ -272,16 +272,8 @@ class _ShowGuide extends StatelessWidget {
       builder: (context, child) => SwitchListTile(
         title: const Text('下一次启动应用时显示用户指导'),
         subtitle: const Text('更改后需要重启应用'),
-        value: settings.backdropUI
-            ? settings.rawShowBackdropGuide
-            : settings.rawShowGuide,
-        onChanged: (value) {
-          if (settings.backdropUI) {
-            settings.showBackdropGuide = value;
-          } else {
-            settings.showGuide = value;
-          }
-        },
+        value: settings.rawShowGuide,
+        onChanged: (value) => settings.showGuide = value,
       ),
     );
   }

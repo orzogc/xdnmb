@@ -399,8 +399,8 @@ class AppPageTransitionsBuilder extends SwipeablePageTransitionsBuilder {
   }
 }
 
-/// Backdrop UI下生成[Route]
-Route? backdropOnGenerateRoute(RouteSettings settings) {
+/// 生成[Route]
+Route? onGenerateRoute(RouteSettings settings) {
   if (settings.name != null) {
     final uri = Uri.parse(settings.name!);
     Get.parameters = uri.queryParameters;
