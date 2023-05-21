@@ -25,7 +25,8 @@ class _MinHeightIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: _minHeight),
+        constraints: BoxConstraints(
+            minHeight: _minHeight + MediaQuery.paddingOf(context).bottom),
         child: child,
       );
 }
@@ -324,7 +325,6 @@ class _BiListViewState<T> extends State<BiListView<T>>
         showToast('加载出现错误：${exceptionMessage(e)}');
       } finally {
         _isLoadingMore.value = false;
-        //_toRefresh.value = !_toRefresh.value;
       }
     }
   }
@@ -556,65 +556,60 @@ class _BiListViewState<T> extends State<BiListView<T>>
                 }
               }
             : null,
-        noMoreRefresh: true,
-        noMoreLoad: widget.lastPage == null ? true : false,
+        canRefreshAfterNoMore: true,
+        canLoadAfterNoMore: widget.lastPage == null ? true : false,
         childBuilder: (context, physics) => Obx(
-          () {
-            // 加载更多后需要刷新，否则某些Widget可能不会更新（不确定能否修复）
-            //_toRefresh.value;
-
-            return Scrollable(
-              controller: _scrollController,
-              physics: _isOutOfBoundary.value
-                  ? physics
-                  : const ClampingScrollPhysics(
-                      parent: RangeMaintainingScrollPhysics()),
-              viewportBuilder: (context, position) => Viewport(
-                offset: position,
-                center: _downKey,
-                slivers: [
-                  const SliverToBoxAdapter(child: _BiListViewHeader()),
-                  if (_initialPage > 1)
-                    PagedSliverList(
-                      key: _upKey,
-                      pagingController: _pagingUpController!,
-                      builderDelegate: PagedChildBuilderDelegate<T>(
-                        itemBuilder: _itemBuilder,
-                        firstPageErrorIndicatorBuilder: (context) =>
-                            _errorWidgetBuilder(
-                                isPagingUp: true, isAtCenter: true),
-                        newPageErrorIndicatorBuilder: (context) =>
-                            _errorWidgetBuilder(isPagingUp: true),
-                        firstPageProgressIndicatorBuilder: (context) =>
-                            const QuotationLoadingIndicator(),
-                        newPageProgressIndicatorBuilder: (context) =>
-                            const _MinHeightIndicator(child: Quotation()),
-                        noItemsFoundIndicatorBuilder: (context) =>
-                            const SizedBox.shrink(),
-                      ),
-                    ),
+          () => Scrollable(
+            controller: _scrollController,
+            physics: _isOutOfBoundary.value
+                ? physics
+                : const ClampingScrollPhysics(
+                    parent: RangeMaintainingScrollPhysics()),
+            viewportBuilder: (context, position) => Viewport(
+              offset: position,
+              center: _downKey,
+              slivers: [
+                const SliverToBoxAdapter(child: _BiListViewHeader()),
+                if (_initialPage > 1)
                   PagedSliverList(
-                    key: _downKey,
-                    pagingController: _pagingDownController!,
+                    key: _upKey,
+                    pagingController: _pagingUpController!,
                     builderDelegate: PagedChildBuilderDelegate<T>(
                       itemBuilder: _itemBuilder,
                       firstPageErrorIndicatorBuilder: (context) =>
                           _errorWidgetBuilder(
-                              isPagingUp: false, isAtCenter: true),
+                              isPagingUp: true, isAtCenter: true),
                       newPageErrorIndicatorBuilder: (context) =>
-                          _errorWidgetBuilder(isPagingUp: false),
+                          _errorWidgetBuilder(isPagingUp: true),
                       firstPageProgressIndicatorBuilder: (context) =>
                           const QuotationLoadingIndicator(),
                       newPageProgressIndicatorBuilder: (context) =>
                           const _MinHeightIndicator(child: Quotation()),
-                      noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
-                      noMoreItemsIndicatorBuilder: _noMoreItems,
+                      noItemsFoundIndicatorBuilder: (context) =>
+                          const SizedBox.shrink(),
                     ),
                   ),
-                ],
-              ),
-            );
-          },
+                PagedSliverList(
+                  key: _downKey,
+                  pagingController: _pagingDownController!,
+                  builderDelegate: PagedChildBuilderDelegate<T>(
+                    itemBuilder: _itemBuilder,
+                    firstPageErrorIndicatorBuilder: (context) =>
+                        _errorWidgetBuilder(
+                            isPagingUp: false, isAtCenter: true),
+                    newPageErrorIndicatorBuilder: (context) =>
+                        _errorWidgetBuilder(isPagingUp: false),
+                    firstPageProgressIndicatorBuilder: (context) =>
+                        const QuotationLoadingIndicator(),
+                    newPageProgressIndicatorBuilder: (context) =>
+                        const _MinHeightIndicator(child: Quotation()),
+                    noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
+                    noMoreItemsIndicatorBuilder: _noMoreItems,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

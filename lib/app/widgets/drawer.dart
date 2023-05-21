@@ -22,7 +22,7 @@ class _DrawerHeader extends StatelessWidget {
         SettingsButton(iconColor: color, onTapPrelude: Get.back);
 
     return SizedBox(
-      height: appBarHeight + MediaQuery.of(context).padding.top,
+      height: appBarHeight + MediaQuery.paddingOf(context).top,
       child: DrawerHeader(
         decoration: BoxDecoration(
           color: theme.appBarTheme.backgroundColor ?? theme.colorScheme.primary,
@@ -79,14 +79,19 @@ class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key, required this.appBarHeight});
 
   @override
-  Widget build(BuildContext context) => Drawer(
-        child: Column(
-          children: [
-            _DrawerHeader(appBarHeight: appBarHeight),
-            Expanded(child: TabList(onTapEnd: Get.back)),
-            const Divider(height: 10.0, thickness: 1.0),
-            const _DrawerBottom(),
-          ],
-        ),
-      );
+  Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+
+    return Drawer(
+      child: Column(
+        children: [
+          _DrawerHeader(appBarHeight: appBarHeight),
+          Expanded(child: TabList(onTapEnd: Get.back)),
+          const Divider(height: 10.0, thickness: 1.0),
+          const _DrawerBottom(),
+          if (bottomPadding > 0.0) SizedBox(height: bottomPadding)
+        ],
+      ),
+    );
+  }
 }

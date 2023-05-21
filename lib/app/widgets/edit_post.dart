@@ -36,7 +36,6 @@ import '../utils/extensions.dart';
 import '../utils/history.dart';
 import '../utils/image.dart';
 import '../utils/icons.dart';
-import '../utils/padding.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -1336,10 +1335,12 @@ class _EmoticonDialog extends StatelessWidget {
 }
 
 class _Emoticon extends StatefulWidget {
+  final bool isAtBottom;
+
   final InsertTextCallback onTap;
 
   // ignore: unused_element
-  const _Emoticon({super.key, required this.onTap});
+  const _Emoticon({super.key, this.isAtBottom = false, required this.onTap});
 
   @override
   State<_Emoticon> createState() => _EmoticonState();
@@ -1401,13 +1402,17 @@ class _EmoticonState extends State<_Emoticon> {
       valueListenable: data.bottomHeight,
       builder: (context, value, child) => Obx(
         () {
+          final media = MediaQuery.of(context);
+          final double? bottomPadding =
+              widget.isAtBottom ? PostListView.viewPadding.value.bottom : null;
+          final keyboardHeight = data.keyboardHeight;
           final height = max(
-              (data.keyboardHeight != null && data.keyboardHeight! > 0)
-                  ? data.keyboardHeight! - value
+              (keyboardHeight != null && keyboardHeight > 0.0)
+                  ? keyboardHeight - value
                   : _defaultHeight - value,
               0.0);
 
-          return !data.isKeyboardVisible
+          final Widget box = !data.isKeyboardVisible
               ? SizedBox(
                   height: height,
                   child: Padding(
@@ -1466,6 +1471,16 @@ class _EmoticonState extends State<_Emoticon> {
                   ),
                 )
               : SizedBox(height: height);
+
+          return (bottomPadding != null && bottomPadding > 0.0)
+              ? MediaQuery(
+                  data: media.copyWith(
+                    padding: media.padding.copyWith(bottom: bottomPadding),
+                    viewPadding:
+                        media.viewPadding.copyWith(bottom: bottomPadding),
+                  ),
+                  child: box)
+              : box;
         },
       ),
     );
@@ -1984,39 +1999,52 @@ class _EditPostState extends State<EditPost> {
     debugPrint('build edit');
 
     final data = PersistentDataService.to;
-    final media = MediaQuery.of(context);
-    final padding = getViewPadding(context);
-    final fullHeight = media.size.height -
-        padding.top -
-        PostListAppBar.height -
-        padding.bottom;
+    final size = MediaQuery.sizeOf(context);
 
     return ValueListenableBuilder<double>(
       valueListenable: data.bottomHeight,
-      builder: (context, value, child) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_isAtBottom)
-            _inputArea(
-                context, max(min(widget.height!, fullHeight - value), 0.0))
-          else
-            Obx(
-              () {
-                final dynamicHeight = fullHeight - value;
-                final lessHeight = fullHeight - (data.keyboardHeight ?? value);
+      builder: (context, value, child) => Obx(() {
+        // 为了通知`viewPadding`和`padding`的变化
+        var _ = PostListView.viewPadding.value;
+        _ = PostListView.padding.value;
 
-                return (data.isKeyboardVisible || _showEmoticon.value)
-                    ? _inputArea(context, max(lessHeight, 0.0))
-                    : _inputArea(context, max(dynamicHeight, 0.0));
-              },
-            ),
-          Obx(
-            () => _showEmoticon.value
-                ? _Emoticon(onTap: _insertText)
-                : const SizedBox.shrink(),
-          ),
-        ],
-      ),
+        // 为了防止`viewPadding.top`和`padding.top`为0
+        final viewPadding = EdgeInsets.fromViewPadding(
+            View.of(context).viewPadding, View.of(context).devicePixelRatio);
+        final padding = EdgeInsets.fromViewPadding(
+            View.of(context).padding, View.of(context).devicePixelRatio);
+        final fullHeight = _isAtBottom
+            ? (size.height - viewPadding.top - padding.bottom)
+            : (size.height -
+                viewPadding.top -
+                PostListAppBar.height -
+                viewPadding.bottom);
+        final extraBottomPadding = _isAtBottom ? 0.0 : viewPadding.bottom;
+        final dynamicHeight = value > 0.0
+            ? (fullHeight + extraBottomPadding - value)
+            : fullHeight;
+        final lessHeight =
+            fullHeight + extraBottomPadding - (data.keyboardHeight ?? value);
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_isAtBottom)
+              _inputArea(context, max(min(widget.height!, dynamicHeight), 0.0))
+            else
+              (data.isKeyboardVisible || _showEmoticon.value)
+                  ? _inputArea(context, max(lessHeight, 0.0))
+                  : _inputArea(context, max(dynamicHeight, 0.0)),
+            if (_showEmoticon.value)
+              _Emoticon(isAtBottom: _isAtBottom, onTap: _insertText),
+            if (_isAtBottom &&
+                !_showEmoticon.value &&
+                !data.isKeyboardVisible &&
+                padding.bottom > 0.0)
+              SizedBox(height: padding.bottom),
+          ],
+        );
+      }),
     );
   }
 }

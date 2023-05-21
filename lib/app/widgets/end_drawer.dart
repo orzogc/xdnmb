@@ -25,7 +25,7 @@ class _DrawerHeader extends StatelessWidget {
     );
 
     return SizedBox(
-      height: appBarHeight + MediaQuery.of(context).padding.top,
+      height: appBarHeight + MediaQuery.paddingOf(context).top,
       child: DrawerHeader(
         decoration: BoxDecoration(
           color: theme.appBarTheme.backgroundColor ?? theme.colorScheme.primary,
@@ -66,22 +66,19 @@ class AppEndDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    /* final settings = SettingsService.to;
-
-    final Widget searchButton =
-        SearchButton(showLabel: true, afterSearch: Get.back);
-    final Widget historyButton =
-        HistoryButton(showLabel: true, onTapEnd: Get.back);
-    final Widget feedButton = FeedButton(showLabel: true, onTapEnd: Get.back);
-    final Widget settingsButton =
-        SettingsButton(showLabel: true, onTapPrelude: Get.back); */
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return Drawer(
       width: min(width * 0.5, 304),
       child: Column(
         children: [
           _DrawerHeader(appBarHeight: appBarHeight),
-          Expanded(child: ForumList(onTapEnd: Get.back)),
+          Expanded(
+            child: ForumList(
+              bottomPadding: bottomPadding > 0.0 ? bottomPadding : null,
+              onTapEnd: Get.back,
+            ),
+          ),
         ],
       ),
     );

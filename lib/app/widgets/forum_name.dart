@@ -12,6 +12,24 @@ import 'dialog.dart';
 import 'listenable.dart';
 import 'tag.dart';
 
+class _ForumName {
+  final String forumName;
+
+  final bool isDarkMode;
+
+  const _ForumName(this.forumName, this.isDarkMode);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is _ForumName &&
+          forumName == other.forumName &&
+          isDarkMode == other.isDarkMode);
+
+  @override
+  int get hashCode => Object.hash(forumName, isDarkMode);
+}
+
 class _ForumNameTextSpan {
   final TextSpan bodyLargeStyle;
 
@@ -20,15 +38,16 @@ class _ForumNameTextSpan {
             textStyle: Theme.of(context).textTheme.bodyLarge);
 }
 
-final HashMap<String, _ForumNameTextSpan> _forumNameMap = HashMap();
+final HashMap<_ForumName, _ForumNameTextSpan> _forumNameMap = HashMap();
 
 TextSpan _getBodyLargeForumName(BuildContext context, String forumName) {
-  final text = _forumNameMap[forumName];
+  final key = _ForumName(forumName, Get.isDarkMode);
+  final text = _forumNameMap[key];
   if (text != null) {
     return text.bodyLargeStyle;
   } else {
     final span = _ForumNameTextSpan(context, forumName);
-    _forumNameMap[forumName] = span;
+    _forumNameMap[key] = span;
 
     return span.bodyLargeStyle;
   }

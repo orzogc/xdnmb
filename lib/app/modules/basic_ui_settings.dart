@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
 import '../utils/theme.dart';
-import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
 
@@ -308,6 +307,25 @@ class _CompactTabAndForumList extends StatelessWidget {
   }
 }
 
+class _TransparentSystemNavigationBar extends StatelessWidget {
+  // ignore: unused_element
+  const _TransparentSystemNavigationBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenBuilder(
+      listenable: settings.transparentSystemNavigationBarListListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('系统底部导航栏透明化'),
+        value: settings.transparentSystemNavigationBar,
+        onChanged: (value) => settings.transparentSystemNavigationBar = value,
+      ),
+    );
+  }
+}
+
 class _ShowPoCookieTag extends StatelessWidget {
   // ignore: unused_element
   const _ShowPoCookieTag({super.key});
@@ -477,28 +495,27 @@ class BasicUISettingsView extends StatelessWidget {
   const BasicUISettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => ColoredSafeArea(
-        child: Scaffold(
-          appBar: AppBar(title: const Text('界面基本设置')),
-          body: ListView(
-            children: [
-              const _ShowBottomBar(),
-              const Divider(height: 10.0, thickness: 1.0),
-              const _AutoHideAppBar(),
-              const _FloatingButton(),
-              if (GetPlatform.isMobile) const _DrawerDragRatio(),
-              const _PageDragWidthRatio(),
-              const _CompactTabAndForumList(),
-              const Divider(height: 10.0, thickness: 1.0),
-              const _ShowPoCookieTag(),
-              const _PoCookieColor(),
-              const _ShowUserCookieNote(),
-              const _ShowUserCookieColor(),
-              const Divider(height: 10.0, thickness: 1.0),
-              const _ShowRelativeTime(),
-              const _ShowLatestPostTimeInFeed(),
-            ],
-          ),
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('界面基本设置')),
+        body: ListView(
+          children: [
+            const _ShowBottomBar(),
+            const Divider(height: 10.0, thickness: 1.0),
+            const _AutoHideAppBar(),
+            const _FloatingButton(),
+            if (GetPlatform.isMobile) const _DrawerDragRatio(),
+            const _PageDragWidthRatio(),
+            const _CompactTabAndForumList(),
+            if (GetPlatform.isAndroid) const _TransparentSystemNavigationBar(),
+            const Divider(height: 10.0, thickness: 1.0),
+            const _ShowPoCookieTag(),
+            const _PoCookieColor(),
+            const _ShowUserCookieNote(),
+            const _ShowUserCookieColor(),
+            const Divider(height: 10.0, thickness: 1.0),
+            const _ShowRelativeTime(),
+            const _ShowLatestPostTimeInFeed(),
+          ],
         ),
       );
 }

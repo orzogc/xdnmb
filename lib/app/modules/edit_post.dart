@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../data/models/controller.dart';
-import '../widgets/color.dart';
 import '../widgets/edit_post.dart';
 
 class EditPostController extends GetxController {
@@ -75,13 +74,11 @@ class EditPostView extends GetView<EditPostController> {
 
           return false;
         },
-        child: ColoredSafeArea(
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text(controller.postListType.isForumType ? '发表新串' : '回串'),
-            ),
-            body: EditPost.fromController(controller: controller),
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(controller.postListType.isForumType ? '发表新串' : '回串'),
           ),
+          body: EditPost.fromController(controller: controller),
         ),
       );
 }

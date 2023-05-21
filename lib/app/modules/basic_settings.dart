@@ -4,7 +4,6 @@ import 'package:uuid/uuid.dart';
 
 import '../data/services/settings.dart';
 import '../utils/theme.dart';
-import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
 import '../widgets/listenable.dart';
@@ -352,24 +351,22 @@ class BasicSettingsView extends StatelessWidget {
   const BasicSettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => ColoredSafeArea(
-        child: Scaffold(
-          appBar: AppBar(title: const Text('基本设置')),
-          body: ListView(
-            children: const [
-              _RestoreTabs(),
-              _InitialForum(),
-              _ShowImage(),
-              _ShowLargeImageInPost(),
-              _Watermark(),
-              _AutoJump(),
-              _AfterPostRefresh(),
-              _DismissibleTab(),
-              _SelectCookieBeforePost(),
-              _ForbidDuplicatedPosts(),
-              _FeedId(),
-            ],
-          ),
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('基本设置')),
+        body: ListView(
+          children: const [
+            _RestoreTabs(),
+            _InitialForum(),
+            _ShowImage(),
+            _ShowLargeImageInPost(),
+            _Watermark(),
+            _AutoJump(),
+            _AfterPostRefresh(),
+            _DismissibleTab(),
+            _SelectCookieBeforePost(),
+            _ForbidDuplicatedPosts(),
+            _FeedId(),
+          ],
         ),
       );
 }

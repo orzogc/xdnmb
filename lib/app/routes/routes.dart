@@ -391,8 +391,8 @@ class AppPageTransitionsBuilder extends SwipeablePageTransitionsBuilder {
         child,
         canSwipe: () => settings.isSwipeablePage,
         canOnlySwipeFromEdge: true,
-        backGestureDetectionWidth:
-            Get.mediaQuery.size.width * settings.swipeablePageDragWidthRatio,
+        backGestureDetectionWidth: MediaQuery.sizeOf(context).width *
+            settings.swipeablePageDragWidthRatio,
         transitionBuilder: transitionBuilder,
       ),
     );

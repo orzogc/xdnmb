@@ -111,9 +111,12 @@ class _Dialog extends StatelessWidget {
 }
 
 class ForumList extends StatelessWidget {
+  final double? bottomPadding;
+
   final VoidCallback onTapEnd;
 
-  const ForumList({super.key, required this.onTapEnd});
+  const ForumList({super.key, this.bottomPadding, required this.onTapEnd})
+      : assert(bottomPadding == null || bottomPadding >= 0.0);
 
   @override
   Widget build(BuildContext context) {
@@ -129,14 +132,20 @@ class ForumList extends StatelessWidget {
         final controller = PostListController.get();
         final forumId = controller.forumOrTimelineId;
         final isTimeline = controller.isTimeline;
+        final count = forums.displayedForumsCount;
 
         return ListView.builder(
           key: const PageStorageKey<String>('forumList'),
           padding: EdgeInsets.zero,
-          itemCount: forums.displayedForumsCount,
+          itemCount: bottomPadding != null ? count + 1 : count,
           itemBuilder: (context, index) {
-            final forum = forums.displayedForum(index);
+            if (bottomPadding != null &&
+                bottomPadding! > 0.0 &&
+                index == count) {
+              return SizedBox(height: bottomPadding);
+            }
 
+            final forum = forums.displayedForum(index);
             if (forum != null) {
               final Widget forumWidget = ListTile(
                 key: ValueKey<PostList>(PostList.fromForumData(forum)),

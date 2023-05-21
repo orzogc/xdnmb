@@ -10,10 +10,8 @@ import '../data/services/settings.dart';
 import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/image.dart';
-import '../utils/padding.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
-import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/loading.dart';
 import '../widgets/post.dart';
@@ -38,42 +36,46 @@ class _TopOverlay extends StatelessWidget {
   void _toggle() => _isShown.value = !_isShown.value;
 
   @override
-  Widget build(BuildContext context) => ChildSizeNotifier(
-        builder: (context, size, child) => Obx(
-          () => AnimatedPositioned(
-            left: 0,
-            right: 0,
-            top: _isShown.value
-                ? 0
-                : size.height == 0
-                    ? -10000
-                    : -size.height,
-            curve: AppTheme.slideCurve,
-            duration: _overlayDuration,
-            child: child!,
-          ),
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.paddingOf(context).top;
+
+    return ChildSizeNotifier(
+      builder: (context, size, child) => Obx(
+        () => AnimatedPositioned(
+          left: 0.0,
+          right: 0.0,
+          top: _isShown.value
+              ? 0.0
+              : size.height <= 0.0
+                  ? -10000.0
+                  : -size.height,
+          curve: AppTheme.slideCurve,
+          duration: _overlayDuration,
+          child: child!,
         ),
-        child: ColoredBox(
-          color: AppTheme.overlayBackgroundColor,
-          child: Padding(
-            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-            child: DefaultTextStyle.merge(
-              style: TextStyle(color: AppTheme.colorDark),
-              child: PostContent(
-                post: post,
-                poUserHash: poUserHash,
-                contentMaxLines: 5,
-                displayImage: false,
-                hiddenTextColor: AppTheme.colorDark,
-                showForumName: false,
-                showReplyCount: false,
-                showPoTag: true,
-                showPostTags: false,
-              ),
+      ),
+      child: ColoredBox(
+        color: AppTheme.overlayBackgroundColor,
+        child: Padding(
+          padding: EdgeInsets.only(top: topPadding),
+          child: DefaultTextStyle.merge(
+            style: TextStyle(color: AppTheme.colorDark),
+            child: PostContent(
+              post: post,
+              poUserHash: poUserHash,
+              contentMaxLines: 5,
+              displayImage: false,
+              hiddenTextColor: AppTheme.colorDark,
+              showForumName: false,
+              showReplyCount: false,
+              showPoTag: true,
+              showPostTags: false,
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _BottomOverlay extends StatelessWidget {
@@ -111,18 +113,80 @@ class _BottomOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = getViewPadding(context).bottom;
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+
+    final Widget row = Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Flexible(
+          child: BackButton(
+            onPressed: () {
+              hideOverlay();
+              Get.maybePop();
+            },
+            color: AppTheme.colorDark,
+          ),
+        ),
+        Flexible(
+          child: IconButton(
+            onPressed: () {
+              final halfSize = size * 0.5;
+              imageKey.currentState
+                  ?._animateScaleUp(halfSize.width, halfSize.height);
+            },
+            icon: Icon(Icons.zoom_in, color: AppTheme.colorDark),
+          ),
+        ),
+        Flexible(
+          child: IconButton(
+            onPressed: () {
+              final halfSize = size * 0.5;
+              imageKey.currentState
+                  ?._animateScaleDown(halfSize.width, halfSize.height);
+            },
+            icon: Icon(Icons.zoom_out, color: AppTheme.colorDark),
+          ),
+        ),
+        Flexible(
+          child: IconButton(
+            onPressed: () => imageKey.currentState?._rotate(size),
+            icon: Icon(Icons.rotate_right, color: AppTheme.colorDark),
+          ),
+        ),
+        Flexible(
+          child: IconButton(
+            onPressed: paint,
+            icon: Icon(Icons.brush, color: AppTheme.colorDark),
+          ),
+        ),
+        Flexible(
+          child: IconButton(
+            onPressed: saveImage,
+            icon: Icon(Icons.save_alt, color: AppTheme.colorDark),
+          ),
+        ),
+        if (isPainted && canReturnImageData && imageData != null)
+          Flexible(
+            child: IconButton(
+              onPressed: () {
+                Get.back<Uint8List>(result: imageData);
+              },
+              icon: Icon(Icons.check, color: AppTheme.colorDark),
+            ),
+          ),
+      ],
+    );
 
     return ChildSizeNotifier(
       builder: (context, size, child) => Obx(
         () => AnimatedPositioned(
-          left: 0,
-          right: 0,
+          left: 0.0,
+          right: 0.0,
           bottom: _isShown.value
-              ? 0
-              : size.height == 0
-                  ? -10000
-                  : -(size.height + bottomPadding),
+              ? 0.0
+              : size.height <= 0.0
+                  ? -10000.0
+                  : -size.height,
           curve: AppTheme.slideCurve,
           duration: _overlayDuration,
           child: child!,
@@ -130,67 +194,10 @@ class _BottomOverlay extends StatelessWidget {
       ),
       child: ColoredBox(
         color: AppTheme.overlayBackgroundColor,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Flexible(
-              child: BackButton(
-                onPressed: () {
-                  hideOverlay();
-                  Get.maybePop();
-                },
-                color: AppTheme.colorDark,
-              ),
-            ),
-            Flexible(
-              child: IconButton(
-                onPressed: () {
-                  final halfSize = size * 0.5;
-                  imageKey.currentState
-                      ?._animateScaleUp(halfSize.width, halfSize.height);
-                },
-                icon: Icon(Icons.zoom_in, color: AppTheme.colorDark),
-              ),
-            ),
-            Flexible(
-              child: IconButton(
-                onPressed: () {
-                  final halfSize = size * 0.5;
-                  imageKey.currentState
-                      ?._animateScaleDown(halfSize.width, halfSize.height);
-                },
-                icon: Icon(Icons.zoom_out, color: AppTheme.colorDark),
-              ),
-            ),
-            Flexible(
-              child: IconButton(
-                onPressed: () => imageKey.currentState?._rotate(size),
-                icon: Icon(Icons.rotate_right, color: AppTheme.colorDark),
-              ),
-            ),
-            Flexible(
-              child: IconButton(
-                onPressed: paint,
-                icon: Icon(Icons.brush, color: AppTheme.colorDark),
-              ),
-            ),
-            Flexible(
-              child: IconButton(
-                onPressed: saveImage,
-                icon: Icon(Icons.save_alt, color: AppTheme.colorDark),
-              ),
-            ),
-            if (isPainted && canReturnImageData && imageData != null)
-              Flexible(
-                child: IconButton(
-                  onPressed: () {
-                    Get.back<Uint8List>(result: imageData);
-                  },
-                  icon: Icon(Icons.check, color: AppTheme.colorDark),
-                ),
-              ),
-          ],
-        ),
+        child: bottomPadding > 0.0
+            ? Padding(
+                padding: EdgeInsets.only(bottom: bottomPadding), child: row)
+            : row,
       ),
     );
   }
@@ -851,7 +858,7 @@ class _ImageState extends State<_Image>
     return SizedBox.expand(
       child: GestureDetector(
         onDoubleTapDown: (details) =>
-            _onDoubleTapDown(details, MediaQuery.of(context).padding.top),
+            _onDoubleTapDown(details, MediaQuery.paddingOf(context).top),
         onDoubleTap: _onDoubleTap,
         onLongPress: widget.canShowDialog
             ? () {
@@ -996,7 +1003,7 @@ class ImageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
+    final topPadding = MediaQuery.paddingOf(context).top;
     final isLoaded = (_controller.imageData.value != null).obs;
 
     return WillPopScope(
@@ -1029,11 +1036,11 @@ class ImageView extends StatelessWidget {
         return true;
       },
       child: Obx(
-        () => ColoredSafeArea(
+        () => ColoredBox(
           color: Colors.black.withOpacity(_opacity.value),
           child: LayoutBuilder(builder: (context, constraints) {
-            final size = Size(constraints.maxWidth,
-                constraints.maxHeight - media.padding.top);
+            final size =
+                Size(constraints.maxWidth, constraints.maxHeight - topPadding);
 
             return Obx(() {
               _controller._isShowOverlay = false;
@@ -1079,7 +1086,7 @@ class ImageView extends StatelessWidget {
                 body: Stack(
                   children: [
                     Padding(
-                      padding: EdgeInsets.only(top: media.padding.top),
+                      padding: EdgeInsets.only(top: topPadding),
                       child: GestureDetector(
                         behavior: HitTestBehavior.translucent,
                         onTap: _toggleOverlay,

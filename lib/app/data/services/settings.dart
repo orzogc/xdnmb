@@ -60,8 +60,6 @@ class SettingsService extends GetxService {
 
   static late final bool isRestoreForumPage;
 
-  static late final bool isSystemNavigationBarByTheme;
-
   static late final bool isFixMissingFont;
 
   static bool shouldShowGuide = false;
@@ -215,13 +213,6 @@ class SettingsService extends GetxService {
   set fixedImageDisposeRatio(double ratio) =>
       _settingsBox.put(Settings.fixedImageDisposeRatio, ratio.clamp(0.0, 1.0));
 
-  bool get systemNavigationBarByTheme => _settingsBox
-      .get(Settings.systemNavigationBarByTheme, defaultValue: false);
-
-  set systemNavigationBarByTheme(bool systemNavigationBarByTheme) =>
-      _settingsBox.put(
-          Settings.systemNavigationBarByTheme, systemNavigationBarByTheme);
-
   bool get fixMissingFont => _settingsBox.get(Settings.fixMissingFont,
       defaultValue: GetPlatform.isIOS);
 
@@ -327,6 +318,13 @@ class SettingsService extends GetxService {
     _settingsBox.put(Settings.compactTabAndForumList, isCompact);
     _isCompactTabAndForumList.value = isCompact;
   }
+
+  bool get transparentSystemNavigationBar => _settingsBox
+      .get(Settings.transparentSystemNavigationBar, defaultValue: true);
+
+  set transparentSystemNavigationBar(bool transparentSystemNavigationBar) =>
+      _settingsBox.put(Settings.transparentSystemNavigationBar,
+          transparentSystemNavigationBar);
 
   bool get isCompactTabAndForumList => _isCompactTabAndForumList.value;
 
@@ -498,8 +496,6 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> fixedImageDisposeRatioListenable;
 
-  late final ValueListenable<Box> systemNavigationBarByThemeListenable;
-
   late final ValueListenable<Box> fixMissingFontListenable;
 
   late final ValueListenable<Box> showGuideListenable;
@@ -520,6 +516,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> compactTabAndForumListListenable;
 
+  late final ValueListenable<Box> transparentSystemNavigationBarListListenable;
+
   late final ValueListenable<Box> showPoCookieTagListenable;
 
   late final ValueListenable<Box> poCookieColorListenable;
@@ -534,40 +532,55 @@ class SettingsService extends GetxService {
 
   late final StreamSubscription<BoxEvent> _darkModeSubscription;
 
+  late final StreamSubscription<BoxEvent>
+      _transparentSystemNavigationBarSubscription;
+
   static Future<void> getSettings() async {
     final box = await Hive.openBox(HiveBoxName.settings);
 
     ImageService.savePath = box.get(Settings.saveImagePath, defaultValue: null);
     isRestoreForumPage =
         box.get(Settings.restoreForumPage, defaultValue: false);
-    isSystemNavigationBarByTheme =
-        box.get(Settings.systemNavigationBarByTheme, defaultValue: false);
     // 是否修复字体
     isFixMissingFont =
         box.get(Settings.fixMissingFont, defaultValue: GetPlatform.isIOS);
   }
 
-  static void setSystemUIOverlayStyle(bool isDark) {
-    isDark
-        ? SystemChrome.setSystemUIOverlayStyle(isSystemNavigationBarByTheme
-            ? SystemUiOverlayStyle.light.copyWith(
-                systemNavigationBarColor: AppTheme.primaryColorDark,
-                systemNavigationBarDividerColor: AppTheme.primaryColorDark,
-                systemNavigationBarIconBrightness: Brightness.light,
-              )
-            : SystemUiOverlayStyle.light)
-        : SystemChrome.setSystemUIOverlayStyle(isSystemNavigationBarByTheme
-            ? SystemUiOverlayStyle.dark.copyWith(
-                systemNavigationBarColor: AppTheme.primaryColorLight,
-                systemNavigationBarDividerColor: AppTheme.primaryColorLight,
-                systemNavigationBarIconBrightness: Brightness.light,
-              )
-            : SystemUiOverlayStyle.dark);
-  }
-
   void _setDarkModeWithPlatformBrightness() => isDarkMode =
       WidgetsBinding.instance.platformDispatcher.platformBrightness ==
           Brightness.dark;
+
+  void _setSystemUIOverlayStyle() => hasBeenDarkMode.value
+      ? SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+          systemNavigationBarColor: transparentSystemNavigationBar
+              ? Colors.transparent
+              : AppTheme.primaryColorDark,
+          systemNavigationBarDividerColor: transparentSystemNavigationBar
+              ? Colors.transparent
+              : AppTheme.primaryColorDark,
+          systemNavigationBarIconBrightness: Brightness.light,
+          systemNavigationBarContrastEnforced:
+              transparentSystemNavigationBar ? false : true,
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          systemStatusBarContrastEnforced: false,
+        ))
+      : SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+          systemNavigationBarColor: transparentSystemNavigationBar
+              ? Colors.transparent
+              : AppTheme.primaryColorLight,
+          systemNavigationBarDividerColor: transparentSystemNavigationBar
+              ? Colors.transparent
+              : AppTheme.primaryColorLight,
+          systemNavigationBarIconBrightness: transparentSystemNavigationBar
+              ? Brightness.dark
+              : Brightness.light,
+          systemNavigationBarContrastEnforced:
+              transparentSystemNavigationBar ? false : true,
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          systemStatusBarContrastEnforced: false,
+        ));
 
   void updateSaveImagePath() {
     if (saveImagePath != ImageService.savePath) {
@@ -583,7 +596,7 @@ class SettingsService extends GetxService {
     }
 
     hasBeenDarkMode.value = Get.isDarkMode;
-    setSystemUIOverlayStyle(hasBeenDarkMode.value);
+    _setSystemUIOverlayStyle();
   }
 
   TextStyle postHeaderTextStyle([TextStyle? textStyle]) => TextStyle(
@@ -663,8 +676,6 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.imageDisposeDistance]);
     fixedImageDisposeRatioListenable =
         _settingsBox.listenable(keys: [Settings.fixedImageDisposeRatio]);
-    systemNavigationBarByThemeListenable =
-        _settingsBox.listenable(keys: [Settings.systemNavigationBarByTheme]);
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
     showGuideListenable = _settingsBox.listenable(keys: [Settings.showGuide]);
@@ -684,6 +695,8 @@ class SettingsService extends GetxService {
         keys: [Settings.showBottomBar, Settings.swipeablePageDragWidthRatio]);
     compactTabAndForumListListenable =
         _settingsBox.listenable(keys: [Settings.compactTabAndForumList]);
+    transparentSystemNavigationBarListListenable = _settingsBox
+        .listenable(keys: [Settings.transparentSystemNavigationBar]);
     showPoCookieTagListenable =
         _settingsBox.listenable(keys: [Settings.showPoCookieTag]);
     poCookieColorListenable =
@@ -706,6 +719,10 @@ class SettingsService extends GetxService {
     shouldShowGuide = showGuide;
     isShowGuide = shouldShowGuide;
 
+    _transparentSystemNavigationBarSubscription = _settingsBox
+        .watch(key: Settings.transparentSystemNavigationBar)
+        .listen((event) => _setSystemUIOverlayStyle());
+
     await PersistentDataService.clearCacheImage();
 
     isReady.value = true;
@@ -717,6 +734,7 @@ class SettingsService extends GetxService {
   @override
   void onClose() async {
     await _darkModeSubscription.cancel();
+    await _transparentSystemNavigationBarSubscription.cancel();
     await _settingsBox.close();
     isReady.value = false;
 

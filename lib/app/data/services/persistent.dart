@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -9,7 +10,6 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../../utils/crypto.dart';
 import '../../utils/image.dart';
-import '../../utils/padding.dart';
 import '../../widgets/dialog.dart';
 import '../models/hive.dart';
 import '../models/persistent.dart';
@@ -125,7 +125,10 @@ class PersistentDataService extends GetxService {
     }
   }
 
-  static double get _bottomHeight => getViewInsets().bottom;
+  static double get _bottomHeight => EdgeInsets.fromViewPadding(
+          View.of(Get.context!).viewInsets,
+          View.of(Get.context!).devicePixelRatio)
+      .bottom;
 
   void saveNotice(Notice notice) {
     if (notice.isValid &&

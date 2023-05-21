@@ -9,7 +9,6 @@ import '../data/models/draft.dart';
 import '../data/services/draft.dart';
 import '../utils/toast.dart';
 import '../utils/theme.dart';
-import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
 import '../widgets/post.dart';
@@ -144,13 +143,11 @@ class PostDraftsView extends StatelessWidget {
   const PostDraftsView({super.key});
 
   @override
-  Widget build(BuildContext context) => ColoredSafeArea(
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('草稿'),
-            actions: const [_PopupMenuButton()],
-          ),
-          body: const _DraftList(),
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: const Text('草稿'),
+          actions: const [_PopupMenuButton()],
         ),
+        body: const _DraftList(),
       );
 }

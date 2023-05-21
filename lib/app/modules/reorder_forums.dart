@@ -10,7 +10,6 @@ import '../utils/exception.dart';
 import '../utils/extensions.dart';
 import '../utils/text.dart';
 import '../utils/toast.dart';
-import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
 
@@ -117,6 +116,7 @@ class _ForumsState extends State<_Forums> {
   Widget build(BuildContext context) {
     final forums = ForumListService.to;
     final theme = Theme.of(context);
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return ReorderableListView.builder(
       buildDefaultDragHandles: false,
@@ -163,7 +163,8 @@ class _ForumsState extends State<_Forums> {
                 ),
               );
             },
-          )
+          ),
+          if (bottomPadding > 0.0) SizedBox(height: bottomPadding),
         ],
       ),
       itemCount: _displayedForums.length,
@@ -233,18 +234,16 @@ class ReorderForumsView extends StatelessWidget {
   const ReorderForumsView({super.key});
 
   @override
-  Widget build(BuildContext context) => ColoredSafeArea(
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('版块管理'),
-            actions: [
-              IconButton(
-                  onPressed: () =>
-                      Get.dialog(_AddForum(forumListKey: _forumListKey)),
-                  icon: const Icon(Icons.add)),
-            ],
-          ),
-          body: _Forums(key: _forumListKey),
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: const Text('版块管理'),
+          actions: [
+            IconButton(
+                onPressed: () =>
+                    Get.dialog(_AddForum(forumListKey: _forumListKey)),
+                icon: const Icon(Icons.add)),
+          ],
         ),
+        body: _Forums(key: _forumListKey),
       );
 }

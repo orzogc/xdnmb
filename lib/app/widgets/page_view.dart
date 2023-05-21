@@ -125,8 +125,8 @@ class SwipeablePageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
     final settings = SettingsService.to;
+    final width = MediaQuery.sizeOf(context).width;
 
     // 手机上PageView能左右滑动换页
     return Obx(() => (settings.isSwipeablePage && GetPlatform.isMobile)
@@ -136,7 +136,7 @@ class SwipeablePageView extends StatelessWidget {
               if (route is SwipeablePageRoute) {
                 // 左边缘向右滑动为返回手势
                 if (event.position.dx <=
-                    media.size.width * settings.swipeablePageDragWidthRatio) {
+                    width * settings.swipeablePageDragWidthRatio) {
                   route.canSwipe = true;
                   _isScrollable.value = false;
                 } else {

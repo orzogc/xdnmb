@@ -86,7 +86,7 @@ Size getTextSize(BuildContext context, String text, TextStyle? style) {
   final TextPainter textPainter = TextPainter(
       text: TextSpan(text: text, style: style),
       maxLines: 1,
-      textScaleFactor: MediaQuery.of(context).textScaleFactor,
+      textScaleFactor: MediaQuery.textScaleFactorOf(context),
       textDirection: TextDirection.ltr)
     ..layout();
 
@@ -97,7 +97,7 @@ double getLineHeight(BuildContext context, String text, TextStyle? style) {
   final TextPainter textPainter = TextPainter(
       text: TextSpan(text: text, style: style),
       maxLines: 1,
-      textScaleFactor: MediaQuery.of(context).textScaleFactor,
+      textScaleFactor: MediaQuery.textScaleFactorOf(context),
       textDirection: TextDirection.ltr);
 
   return textPainter.preferredLineHeight;

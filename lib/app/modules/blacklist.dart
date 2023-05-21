@@ -9,7 +9,6 @@ import '../utils/extensions.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
-import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
 import '../widgets/page_view.dart';
@@ -335,35 +334,33 @@ class _BlacklistViewState extends State<BlacklistView> {
   }
 
   @override
-  Widget build(BuildContext context) => ColoredSafeArea(
-        child: Obx(
-          () => Scaffold(
-            appBar: AppBar(
-              title: _AppBarTitle(index: _index.value),
-              actions: [
-                _AppBarPopupMenuButton(index: _index.value, refresh: _refresh),
-              ],
-              bottom: PageViewTabBar(
-                pageController: _pageController,
-                initialIndex: 0,
-                onIndex: (index) {
-                  if (_index.value != index) {
-                    _pageController.animateToPage(
-                      index,
-                      duration: PageViewTabBar.animationDuration,
-                      curve: Curves.easeIn,
-                    );
-                  }
-                },
-                tabs: const [Tab(text: '版块'), Tab(text: '串号'), Tab(text: '饼干')],
-              ),
+  Widget build(BuildContext context) => Obx(
+        () => Scaffold(
+          appBar: AppBar(
+            title: _AppBarTitle(index: _index.value),
+            actions: [
+              _AppBarPopupMenuButton(index: _index.value, refresh: _refresh),
+            ],
+            bottom: PageViewTabBar(
+              pageController: _pageController,
+              initialIndex: 0,
+              onIndex: (index) {
+                if (_index.value != index) {
+                  _pageController.animateToPage(
+                    index,
+                    duration: PageViewTabBar.animationDuration,
+                    curve: Curves.easeIn,
+                  );
+                }
+              },
+              tabs: const [Tab(text: '版块'), Tab(text: '串号'), Tab(text: '饼干')],
             ),
-            body: SwipeablePageView(
-              controller: _pageController,
-              itemCount: 3,
-              itemBuilder: (context, index) =>
-                  _Body(index: index, refresh: _refresh),
-            ),
+          ),
+          body: SwipeablePageView(
+            controller: _pageController,
+            itemCount: 3,
+            itemBuilder: (context, index) =>
+                _Body(index: index, refresh: _refresh),
           ),
         ),
       );

@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import '../data/services/image.dart';
 import '../data/services/settings.dart';
 import '../utils/toast.dart';
-import '../widgets/color.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
 
@@ -219,26 +218,6 @@ class _FixedImageDisposeRatio extends StatelessWidget {
   }
 }
 
-class _SystemNavigationBarByTheme extends StatelessWidget {
-  // ignore: unused_element
-  const _SystemNavigationBarByTheme({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-
-    return ListenBuilder(
-      listenable: settings.systemNavigationBarByThemeListenable,
-      builder: (context, child) => SwitchListTile(
-        title: const Text('系统底部导航栏颜色跟随应用主题'),
-        subtitle: const Text('更改后需要重启应用'),
-        value: settings.systemNavigationBarByTheme,
-        onChanged: (value) => settings.systemNavigationBarByTheme = value,
-      ),
-    );
-  }
-}
-
 class _FixMissingFont extends StatelessWidget {
   // ignore: unused_element
   const _FixMissingFont({super.key});
@@ -279,32 +258,29 @@ class _ShowGuide extends StatelessWidget {
   }
 }
 
+// TODO: 增加清除图片缓存
 class AdvancedSettingsView extends StatelessWidget {
   const AdvancedSettingsView({super.key});
 
   @override
-  Widget build(BuildContext context) => ColoredSafeArea(
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('高级设置'),
-          ),
-          body: ListView(
-            children: [
-              if (!GetPlatform.isIOS && ImageService.to.hasStoragePermission)
-                _SaveImagePath(),
-              const _CacheImageCount(),
-              if (GetPlatform.isMobile || GetPlatform.isMacOS)
-                const _FollowPlatformBrightness(),
-              const _AddBlueIslandEmoticons(),
-              const _RestoreForumPage(),
-              const _ImageDisposeDistance(),
-              const _FixedImageDisposeRatio(),
-              if (GetPlatform.isAndroid) const _SystemNavigationBarByTheme(),
-              const _FixMissingFont(),
-              const _ShowGuide(),
-              const Divider(height: 10.0, thickness: 1.0),
-            ],
-          ),
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: const Text('高级设置'),
+        ),
+        body: ListView(
+          children: [
+            if (!GetPlatform.isIOS && ImageService.to.hasStoragePermission)
+              _SaveImagePath(),
+            const _CacheImageCount(),
+            if (GetPlatform.isMobile || GetPlatform.isMacOS)
+              const _FollowPlatformBrightness(),
+            const _AddBlueIslandEmoticons(),
+            const _RestoreForumPage(),
+            const _ImageDisposeDistance(),
+            const _FixedImageDisposeRatio(),
+            const _FixMissingFont(),
+            const _ShowGuide(),
+          ],
         ),
       );
 }
