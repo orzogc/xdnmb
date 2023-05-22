@@ -36,6 +36,7 @@ import '../utils/extensions.dart';
 import '../utils/history.dart';
 import '../utils/image.dart';
 import '../utils/icons.dart';
+import '../utils/padding.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
@@ -1402,9 +1403,8 @@ class _EmoticonState extends State<_Emoticon> {
       valueListenable: data.bottomHeight,
       builder: (context, value, child) => Obx(
         () {
-          final media = MediaQuery.of(context);
-          final double? bottomPadding =
-              widget.isAtBottom ? PostListView.viewPadding.value.bottom : null;
+          final double? bottomViewPadding =
+              widget.isAtBottom ? getViewPadding(context).bottom : null;
           final keyboardHeight = data.keyboardHeight;
           final height = max(
               (keyboardHeight != null && keyboardHeight > 0.0)
@@ -1472,15 +1472,19 @@ class _EmoticonState extends State<_Emoticon> {
                 )
               : SizedBox(height: height);
 
-          return (bottomPadding != null && bottomPadding > 0.0)
-              ? MediaQuery(
-                  data: media.copyWith(
-                    padding: media.padding.copyWith(bottom: bottomPadding),
-                    viewPadding:
-                        media.viewPadding.copyWith(bottom: bottomPadding),
-                  ),
-                  child: box)
-              : box;
+          if (bottomViewPadding != null && bottomViewPadding > 0.0) {
+            final media = MediaQuery.of(context);
+
+            return MediaQuery(
+                data: media.copyWith(
+                  padding: media.padding.copyWith(bottom: bottomViewPadding),
+                  viewPadding:
+                      media.viewPadding.copyWith(bottom: bottomViewPadding),
+                ),
+                child: box);
+          } else {
+            return box;
+          }
         },
       ),
     );
@@ -2004,15 +2008,9 @@ class _EditPostState extends State<EditPost> {
     return ValueListenableBuilder<double>(
       valueListenable: data.bottomHeight,
       builder: (context, value, child) => Obx(() {
-        // 为了通知`viewPadding`和`padding`的变化
-        var _ = PostListView.viewPadding.value;
-        _ = PostListView.padding.value;
+        final viewPadding = getViewPadding(context);
+        final padding = getPadding(context);
 
-        // 为了防止`viewPadding.top`和`padding.top`为0
-        final viewPadding = EdgeInsets.fromViewPadding(
-            View.of(context).viewPadding, View.of(context).devicePixelRatio);
-        final padding = EdgeInsets.fromViewPadding(
-            View.of(context).padding, View.of(context).devicePixelRatio);
         final fullHeight = _isAtBottom
             ? (size.height - viewPadding.top - padding.bottom)
             : (size.height -

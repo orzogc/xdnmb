@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,7 +10,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../utils/extensions.dart';
-import '../../utils/theme.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
 import '../models/settings.dart';
@@ -57,6 +57,8 @@ class SettingsService extends GetxService {
   static const double defaultLetterSpacing = 0.25;
 
   static final SettingsService to = Get.find<SettingsService>();
+
+  static late final bool isAllowTransparentSystemNavigationBar;
 
   static late final bool isRestoreForumPage;
 
@@ -546,41 +548,40 @@ class SettingsService extends GetxService {
         box.get(Settings.fixMissingFont, defaultValue: GetPlatform.isIOS);
   }
 
+  Future<void> _updateTransparentSystemNavigationBar() async {
+    if (GetPlatform.isAndroid &&
+        (await DeviceInfoPlugin().androidInfo).version.sdkInt >= 30) {
+      isAllowTransparentSystemNavigationBar = true;
+    } else {
+      transparentSystemNavigationBar = false;
+      isAllowTransparentSystemNavigationBar = false;
+    }
+  }
+
   void _setDarkModeWithPlatformBrightness() => isDarkMode =
       WidgetsBinding.instance.platformDispatcher.platformBrightness ==
           Brightness.dark;
 
-  void _setSystemUIOverlayStyle() => hasBeenDarkMode.value
-      ? SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-          systemNavigationBarColor: transparentSystemNavigationBar
-              ? Colors.transparent
-              : AppTheme.primaryColorDark,
-          systemNavigationBarDividerColor: transparentSystemNavigationBar
-              ? Colors.transparent
-              : AppTheme.primaryColorDark,
-          systemNavigationBarIconBrightness: Brightness.light,
-          systemNavigationBarContrastEnforced:
-              transparentSystemNavigationBar ? false : true,
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-          systemStatusBarContrastEnforced: false,
-        ))
-      : SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-          systemNavigationBarColor: transparentSystemNavigationBar
-              ? Colors.transparent
-              : AppTheme.primaryColorLight,
-          systemNavigationBarDividerColor: transparentSystemNavigationBar
-              ? Colors.transparent
-              : AppTheme.primaryColorLight,
-          systemNavigationBarIconBrightness: transparentSystemNavigationBar
-              ? Brightness.dark
-              : Brightness.light,
-          systemNavigationBarContrastEnforced:
-              transparentSystemNavigationBar ? false : true,
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-          systemStatusBarContrastEnforced: false,
-        ));
+  void _setSystemUIOverlayStyle() =>
+      SystemChrome.setSystemUIOverlayStyle((hasBeenDarkMode.value
+              ? (transparentSystemNavigationBar
+                  ? const SystemUiOverlayStyle(
+                      systemNavigationBarColor: Colors.transparent,
+                      systemNavigationBarDividerColor: Colors.transparent,
+                      systemNavigationBarIconBrightness: Brightness.light,
+                      systemNavigationBarContrastEnforced: false)
+                  : SystemUiOverlayStyle.light)
+              : (transparentSystemNavigationBar
+                  ? const SystemUiOverlayStyle(
+                      systemNavigationBarColor: Colors.transparent,
+                      systemNavigationBarDividerColor: Colors.transparent,
+                      systemNavigationBarIconBrightness: Brightness.dark,
+                      systemNavigationBarContrastEnforced: false)
+                  : SystemUiOverlayStyle.dark))
+          .copyWith(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.light,
+              systemStatusBarContrastEnforced: false));
 
   void updateSaveImagePath() {
     if (saveImagePath != ImageService.savePath) {
@@ -618,6 +619,8 @@ class SettingsService extends GetxService {
     super.onInit();
 
     _settingsBox = await Hive.openBox(HiveBoxName.settings);
+
+    await _updateTransparentSystemNavigationBar();
 
     if (followPlatformBrightness) {
       _setDarkModeWithPlatformBrightness();

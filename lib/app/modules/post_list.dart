@@ -27,6 +27,7 @@ import '../routes/routes.dart';
 import '../utils/extensions.dart';
 import '../utils/image.dart';
 import '../utils/navigation.dart';
+import '../utils/padding.dart';
 import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/buttons.dart';
@@ -1131,7 +1132,7 @@ class _CompactTabAndForumList extends StatelessWidget {
     final Widget column = LayoutBuilder(
       builder: (context, constraints) => Obx(
         () {
-          final topPadding = _TabAndForumListButton._topPadding();
+          final topPadding = _TabAndForumListButton._topPadding(context);
 
           return SizedBox(
             height: (settings.isAutoHideAppBar && topPadding != null)
@@ -1167,7 +1168,7 @@ class _CompactTabAndForumList extends StatelessWidget {
 
     return Material(
       child: Obx(() {
-        final bottomPadding = _TabAndForumListButton._bottomPadding();
+        final bottomPadding = _TabAndForumListButton._bottomPadding(context);
 
         return (bottomPadding != null && bottomPadding > 0.0)
             ? Padding(
@@ -1248,7 +1249,7 @@ class _TabAndForumListState extends State<_TabAndForumList>
     final Widget column = LayoutBuilder(
       builder: (context, constraints) => Obx(
         () {
-          final topPadding = _TabAndForumListButton._topPadding();
+          final topPadding = _TabAndForumListButton._topPadding(context);
 
           return SizedBox(
             height: (settings.isAutoHideAppBar && topPadding != null)
@@ -1288,7 +1289,7 @@ class _TabAndForumListState extends State<_TabAndForumList>
 
     return Material(
       child: Obx(() {
-        final bottomPadding = _TabAndForumListButton._bottomPadding();
+        final bottomPadding = _TabAndForumListButton._bottomPadding(context);
 
         return (bottomPadding != null && bottomPadding > 0.0)
             ? Padding(
@@ -1323,13 +1324,15 @@ class _TabAndForumListButton extends StatelessWidget {
 
   static void _closeBottomSheet() => _bottomSheetController.close();
 
-  static double? _topPadding() => SettingsService.to.isAutoHideAppBar
-      ? PostListView.padding.value.top
-      : null;
+  // 可能需要在Obx里调用
+  static double? _topPadding(BuildContext context) =>
+      SettingsService.to.isAutoHideAppBar ? getPadding(context).top : null;
 
-  static double? _bottomPadding() => SettingsService.to.isAutoHideBottomBar
-      ? (PostListBottomBar.height + PostListView.padding.value.bottom)
-      : null;
+  // 可能需要在Obx里调用
+  static double? _bottomPadding(BuildContext context) =>
+      SettingsService.to.isAutoHideBottomBar
+          ? (PostListBottomBar.height + getPadding(context).bottom)
+          : null;
 
   static void _showTabAndForumList({_TabAndForumListButtonType? buttonType}) {
     final state = PostListView._scaffoldKey.currentState;
@@ -1545,26 +1548,28 @@ class PostListBottomBar extends StatelessWidget {
     final theme = Theme.of(context);
     final bottomViewPadding = MediaQuery.viewPaddingOf(context).bottom;
 
-    return bottomViewPadding > 0.0
-        ? Obx(() {
-            if (!settings.isAutoHideBottomBar && _editPostController.isShown) {
-              return const SizedBox.shrink();
-            }
+    return Obx(() {
+      if (bottomViewPadding > 0.0) {
+        if (!settings.isAutoHideBottomBar && _editPostController.isShown) {
+          return const SizedBox.shrink();
+        }
 
-            final bottomBar = Padding(
-                padding: EdgeInsets.only(bottom: bottomViewPadding),
-                child: _buildBottomBar(theme, bottomViewPadding));
+        final bottomBar = Padding(
+            padding: EdgeInsets.only(bottom: bottomViewPadding),
+            child: _buildBottomBar(theme, bottomViewPadding));
 
-            return (!settings.isAutoHideBottomBar &&
-                    _tabAndForumListController.isShown)
-                ? ColoredBox(
-                    color: Get.isDarkMode
-                        ? theme.cardColor
-                        : theme.scaffoldBackgroundColor,
-                    child: bottomBar)
-                : bottomBar;
-          })
-        : Obx(() => _buildBottomBar(theme, bottomViewPadding));
+        return (!settings.isAutoHideBottomBar &&
+                _tabAndForumListController.isShown)
+            ? ColoredBox(
+                color: Get.isDarkMode
+                    ? theme.cardColor
+                    : theme.scaffoldBackgroundColor,
+                child: bottomBar)
+            : bottomBar;
+      } else {
+        return _buildBottomBar(theme, bottomViewPadding);
+      }
+    });
   }
 }
 

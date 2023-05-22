@@ -319,6 +319,7 @@ class _TransparentSystemNavigationBar extends StatelessWidget {
       listenable: settings.transparentSystemNavigationBarListListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('系统底部导航栏透明化'),
+        subtitle: const Text('更改后需要重启应用'),
         value: settings.transparentSystemNavigationBar,
         onChanged: (value) => settings.transparentSystemNavigationBar = value,
       ),
@@ -506,7 +507,8 @@ class BasicUISettingsView extends StatelessWidget {
             if (GetPlatform.isMobile) const _DrawerDragRatio(),
             const _PageDragWidthRatio(),
             const _CompactTabAndForumList(),
-            if (GetPlatform.isAndroid) const _TransparentSystemNavigationBar(),
+            if (SettingsService.isAllowTransparentSystemNavigationBar)
+              const _TransparentSystemNavigationBar(),
             const Divider(height: 10.0, thickness: 1.0),
             const _ShowPoCookieTag(),
             const _PoCookieColor(),
