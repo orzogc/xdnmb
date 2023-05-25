@@ -76,12 +76,8 @@ class _PostUser extends StatelessWidget {
           style = style.merge(const TextStyle(fontWeight: FontWeight.bold));
         }
 
-        Widget cookie = htmlToRichText(
-          context,
-          userHash,
-          textStyle: style,
-          strutStyle: strutStyleFromHeight(style),
-        );
+        Widget cookie = htmlToRichText(context, userHash,
+            textStyle: style, strutStyle: strutStyleFromHeight(style));
 
         if (showPoTag && isPo && settings.showPoCookieTag) {
           final tagStyle =

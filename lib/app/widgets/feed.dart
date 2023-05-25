@@ -12,6 +12,7 @@ import '../data/models/tag.dart';
 import '../data/services/settings.dart';
 import '../data/services/tag.dart';
 import '../data/services/time.dart';
+import '../data/services/user.dart';
 import '../data/services/xdnmb_client.dart';
 import '../modules/post_list.dart';
 import '../routes/routes.dart';
@@ -37,17 +38,25 @@ const int _feedPageCount = 2;
 class _FeedKey {
   final int refresh;
 
-  final String feedId;
+  final String? feedId;
 
-  _FeedKey(this.refresh) : feedId = SettingsService.to.feedId;
+  final String? userHash;
+
+  _FeedKey(this.refresh)
+      : feedId =
+            UserService.to.hasFeedCookie ? null : SettingsService.to.feedId,
+        userHash = UserService.to.feedCookie?.userHash;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is _FeedKey && refresh == other.refresh && feedId == other.feedId);
+      (other is _FeedKey &&
+          refresh == other.refresh &&
+          feedId == other.feedId &&
+          userHash == other.userHash);
 
   @override
-  int get hashCode => Object.hash(refresh, feedId);
+  int get hashCode => Object.hash(refresh, feedId, userHash);
 }
 
 class FeedController extends PostListController {
@@ -59,6 +68,8 @@ class FeedController extends PostListController {
 
   final RxInt _pageIndex;
 
+  int? _maxPage;
+
   @override
   PostListType get postListType => PostListType.feed;
 
@@ -69,6 +80,8 @@ class FeedController extends PostListController {
 
   set pageIndex(int index) =>
       _pageIndex.value = index.clamp(0, _feedPageCount - 1);
+
+  int? get maxPage => _maxPage;
 
   bool get isFeedPage => pageIndex == _FeedBody._index;
 
@@ -129,8 +142,7 @@ class _FeedDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-    final client = XdnmbClientService.to.client;
+    final client = XdnmbClientService.to;
     final textStyle = Theme.of(context).textTheme.titleMedium;
 
     return SimpleDialog(
@@ -144,7 +156,7 @@ class _FeedDialog extends StatelessWidget {
             postListBack();
 
             try {
-              await client.deleteFeed(settings.feedId, post.id);
+              await client.deleteFeed(post.id);
 
               showToast('取消订阅 ${post.toPostNumber()} 成功');
               onDelete();
@@ -162,8 +174,8 @@ class _FeedDialog extends StatelessWidget {
             postListBack();
 
             try {
-              await client.deleteFeed(settings.feedId, post.id);
-              await client.addFeed(settings.feedId, post.id);
+              await client.deleteFeed(post.id);
+              await client.addFeed(post.id);
 
               showToast('提升 ${post.toPostNumber()} 至订阅最上方成功');
               controller.refreshPage();
@@ -172,7 +184,7 @@ class _FeedDialog extends StatelessWidget {
                   '提升至订阅最上方失败，请手动重新订阅 ${post.toPostNumber()} ：${exceptionMessage(e)}');
 
               try {
-                await client.addFeed(settings.feedId, post.id);
+                await client.addFeed(post.id);
               } catch (e) {
                 debugPrint(
                     '订阅 ${post.toPostNumber()} 失败：${exceptionMessage(e)}');
@@ -191,7 +203,7 @@ class _FeedDialog extends StatelessWidget {
 class _FeedItem extends StatefulWidget {
   final FeedController controller;
 
-  final Visible<PostWithPage<Feed>> feed;
+  final Visible<PostWithPage<FeedBase>> feed;
 
   // ignore: unused_element
   const _FeedItem({super.key, required this.controller, required this.feed});
@@ -203,16 +215,17 @@ class _FeedItem extends StatefulWidget {
 class _FeedItemState extends State<_FeedItem> {
   Future<DateTime?>? _getLatestPostTime;
 
-  Feed get _feed => widget.feed.item.post;
+  FeedBase get _feed => widget.feed.item.post;
 
   void _setGetLatestPostTime() {
     final settings = SettingsService.to;
     final client = XdnmbClientService.to;
     final time = TimeService.to;
 
-    _getLatestPostTime = !settings.isNotShowLatestPostTimeInFeed
+    _getLatestPostTime = (_feed is Feed &&
+            !settings.isNotShowLatestPostTimeInFeed)
         ? Future(() async {
-            for (final postId in _feed.recentReplies.reversed) {
+            for (final postId in (_feed as Feed).recentReplies.reversed) {
               try {
                 DateTime? postTime =
                     (await ReferenceDatabase.getReference(postId))?.postTime;
@@ -254,7 +267,8 @@ class _FeedItemState extends State<_FeedItem> {
   void didUpdateWidget(covariant _FeedItem oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.feed != oldWidget.feed) {
+    if (widget.feed.runtimeType != oldWidget.feed.runtimeType ||
+        widget.feed != oldWidget.feed) {
       _setGetLatestPostTime();
     }
   }
@@ -334,22 +348,37 @@ class _FeedBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final client = XdnmbClientService.to;
     final settings = SettingsService.to;
+    final user = UserService.to;
 
     return ListenBuilder(
-      listenable: settings.feedIdListenable,
+      listenable: Listenable.merge(
+          [settings.feedIdListenable, user.feedCookieListenable]),
       builder: (context, child) => PostListScrollView(
         controller: controller,
         builder: (context, scrollController, refresh) =>
-            BiListView<Visible<PostWithPage<Feed>>>(
+            BiListView<Visible<PostWithPage<FeedBase>>>(
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
           scrollController: scrollController,
           postListController: controller,
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
-          fetch: (page) async =>
-              (await client.getFeed(settings.feedId, page: page))
-                  .map((feed) => Visible(PostWithPage<Feed>(feed, page)))
-                  .toList(),
+          fetch: (page) async {
+            if (user.hasFeedCookie) {
+              final (feeds, maxPage) = await client.getHtmlFeed(
+                  page: page, cookie: user.feedCookie!.cookie());
+              controller._maxPage = maxPage;
+
+              return feeds
+                  .map((feed) => Visible(PostWithPage<FeedBase>(feed, page)))
+                  .toList();
+            } else {
+              controller._maxPage = null;
+
+              return (await client.getFeed(settings.feedId, page: page))
+                  .map((feed) => Visible(PostWithPage<FeedBase>(feed, page)))
+                  .toList();
+            }
+          },
           itemBuilder: (context, feed, index) => Obx(
             () => feed.isVisible
                 ? AnchorItemWrapper(

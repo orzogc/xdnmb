@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../../utils/toast.dart';
 import '../../widgets/listenable.dart';
 import '../models/cookie.dart';
 import '../models/hive.dart';
@@ -35,6 +36,7 @@ class UserService extends GetxService {
 
   late final Box<CookieData> _cookiesBox;
 
+  /// 存放被删除的饼干
   late final Box<CookieData> _deletedCookiesBox;
 
   final RxBool isReady = false.obs;
@@ -73,6 +75,11 @@ class UserService extends GetxService {
   set postCookie(CookieData? postCookie) =>
       _userBox.put(User.postCookie, postCookie);
 
+  CookieData? get feedCookie => _userBox.get(User.feedCookie);
+
+  set feedCookie(CookieData? feedCookie) =>
+      _userBox.put(User.feedCookie, feedCookie);
+
   bool get isLogin => userCookie != null;
 
   bool? get isUserCookieExpired => userCookieExpireDate != null
@@ -85,6 +92,8 @@ class UserService extends GetxService {
 
   bool get hasPostCookie => postCookie != null;
 
+  bool get hasFeedCookie => feedCookie != null;
+
   Iterable<CookieData> get xdnmbCookies => _cookiesBox.values;
 
   bool get hasXdnmbCookie => _cookiesBox.isNotEmpty;
@@ -94,6 +103,8 @@ class UserService extends GetxService {
   late final ValueListenable<Box> browseCookieListenable;
 
   late final ValueListenable<Box> postCookieListenable;
+
+  late final ValueListenable<Box> feedCookieListenable;
 
   late final ValueListenable<Box<CookieData>> cookiesListenable;
 
@@ -134,6 +145,17 @@ class UserService extends GetxService {
       }
     } else {
       postCookie = null;
+    }
+  }
+
+  void _updateFeedCookie() {
+    if (hasFeedCookie && hasXdnmbCookie) {
+      for (final cookie in xdnmbCookies) {
+        if (cookie.userHash == feedCookie!.userHash) {
+          feedCookie = cookie.copy();
+          break;
+        }
+      }
     }
   }
 
@@ -266,8 +288,15 @@ class UserService extends GetxService {
 
   Future<void> deleteCookie(CookieData cookie) async {
     await cookie.delete();
-    await _deletedCookiesBox.put(cookie.name, cookie.deleted());
+
+    try {
+      await _deletedCookiesBox.put(cookie.name, cookie.deleted());
+    } catch (e) {
+      showToast('存储被删除的饼干失败：$e');
+    }
   }
+
+  Future<void> deleteFeedCookie() => _userBox.delete(User.feedCookie);
 
   Future<void> updateLastPostTime() async {
     for (final cookie in xdnmbCookies) {
@@ -342,15 +371,18 @@ class UserService extends GetxService {
 
     _updateBrowseCookie();
     _updatePostCookie();
+    _updateFeedCookie();
     _cookiesBoxSubscription = _cookiesBox.watch().listen((event) {
       debugPrint('_cookiesBox change');
       _updateBrowseCookie();
       _updatePostCookie();
+      _updateFeedCookie();
     });
 
     userCookieListenable = _userBox.listenable(keys: [User.userCookie]);
     browseCookieListenable = _userBox.listenable(keys: [User.browseCookie]);
     postCookieListenable = _userBox.listenable(keys: [User.postCookie]);
+    feedCookieListenable = _userBox.listenable(keys: [User.feedCookie]);
     cookiesListenable = _cookiesBox.listenable();
 
     isReady.value = true;

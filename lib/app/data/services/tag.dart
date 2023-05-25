@@ -140,7 +140,7 @@ class TagService extends GetxService {
               : thread.replies,
           thread.mainPost.forumId);
 
-  static Future<void> addFeeds(Iterable<Feed> feeds) => updatePosts(feeds);
+  static Future<void> addFeeds(Iterable<FeedBase> feeds) => updatePosts(feeds);
 
   Iterable<int> get allTagsId => _tagsBox.keys.cast<int>();
 

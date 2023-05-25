@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/services/settings.dart';
+import '../data/services/user.dart';
 import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
@@ -57,7 +58,7 @@ class _InitialForum extends StatelessWidget {
                     ),
                   ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 150),
+            constraints: const BoxConstraints(maxWidth: 150.0),
             child: ForumName(
               forumId: settings.initialForum.id,
               isTimeline: settings.initialForum.isTimeline,
@@ -330,18 +331,99 @@ class _FeedId extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
+    final user = UserService.to;
 
     return ListenBuilder(
-      listenable: settings.feedIdListenable,
-      builder: (context, child) => ListTile(
-        title: const Text('订阅ID'),
-        subtitle: Text(settings.feedId),
-        trailing: child,
-        onTap: () => Get.dialog(_EditFeedId()),
+      listenable: Listenable.merge(
+          [settings.feedIdListenable, user.feedCookieListenable]),
+      builder: (context, child) {
+        final textStyle = TextStyle(
+            color: user.hasFeedCookie ? AppTheme.inactiveSettingColor : null);
+
+        return ListTile(
+          title: Text('订阅ID', style: textStyle),
+          subtitle: Text(settings.feedId, style: textStyle),
+          onTap: !user.hasFeedCookie ? () => Get.dialog(_EditFeedId()) : null,
+        );
+      },
+    );
+  }
+}
+
+class _CookieList extends StatelessWidget {
+  // ignore: unused_element
+  const _CookieList({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = UserService.to;
+    final theme = Theme.of(context);
+
+    return ListenBuilder(
+      listenable: user.cookiesListenable,
+      builder: (context, child) => SimpleDialog(
+        children: [
+          ListTile(
+            title: const Text('不使用'),
+            onTap: () async {
+              Get.back();
+              await user.deleteFeedCookie();
+            },
+          ),
+          for (final cookie in user.xdnmbCookies)
+            ListTile(
+              tileColor: cookie.userHash == user.feedCookie?.userHash
+                  ? theme.focusColor
+                  : null,
+              title: Text(
+                cookie.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: cookie.color),
+              ),
+              subtitle: cookie.note != null
+                  ? Text(cookie.note!,
+                      maxLines: 1, overflow: TextOverflow.ellipsis)
+                  : null,
+              onTap: () {
+                user.feedCookie = cookie.copy();
+                Get.back();
+              },
+              onLongPress: () => Get.dialog(SimpleDialog(
+                children: [EditCookieNote(cookie), SetCookieColor(cookie)],
+              )),
+            ),
+        ],
       ),
-      child: TextButton(
-        onPressed: () => Get.dialog(_EditFeedId()),
-        child: const Text('编辑'),
+    );
+  }
+}
+
+class _FeedCookie extends StatelessWidget {
+  // ignore: unused_element
+  const _FeedCookie({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = UserService.to;
+
+    return ListenBuilder(
+      listenable: user.feedCookieListenable,
+      builder: (context, child) => ListTile(
+        title: const Text('使用跟饼干绑定的网页版订阅'),
+        subtitle: const Text('使用网页版订阅会导致无法显示最后回复时间'),
+        trailing: user.hasFeedCookie
+            ? ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 150.0),
+                child: Text(
+                  user.feedCookie!.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: user.feedCookie!.color),
+                ),
+              )
+            : const Text('不使用'),
+        onTap: () => Get.dialog(const _CookieList()),
       ),
     );
   }
@@ -366,6 +448,7 @@ class BasicSettingsView extends StatelessWidget {
             _SelectCookieBeforePost(),
             _ForbidDuplicatedPosts(),
             _FeedId(),
+            _FeedCookie(),
           ],
         ),
       );

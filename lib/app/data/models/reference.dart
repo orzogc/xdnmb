@@ -52,6 +52,12 @@ class ReferenceData {
       : id = post.id,
         postTime = post.postTime.toUtc();
 
+  ReferenceData.fromMainPost(PostBase post)
+      : id = post.id,
+        postTime = post.postTime.toUtc(),
+        mainPostId = post.id,
+        accuratePage = 1;
+
   static List<ReferenceData> fromForumThreads(Iterable<ForumThread> threads) =>
       threads.fold(<ReferenceData>[], (list, thread) {
         int replyCount =
@@ -59,12 +65,7 @@ class ReferenceData {
 
         return list
           ..addAll(thread.recentReplies.fold<List<ReferenceData>>(
-              [
-                ReferenceData.fromPost(
-                    post: thread.mainPost,
-                    mainPostId: thread.mainPost.id,
-                    accuratePage: 1)
-              ],
+              [ReferenceData.fromMainPost(thread.mainPost)],
               (list, post) => list
                 ..add(ReferenceData.fromPost(
                     post: post,
@@ -74,12 +75,7 @@ class ReferenceData {
 
   static List<ReferenceData> fromThread(Thread thread, int page) =>
       thread.replies.fold(
-          <ReferenceData>[
-            ReferenceData.fromPost(
-                post: thread.mainPost,
-                mainPostId: thread.mainPost.id,
-                accuratePage: 1)
-          ],
+          <ReferenceData>[ReferenceData.fromMainPost(thread.mainPost)],
           (list, post) => list
             ..add(ReferenceData.fromPost(
                 post: post,
@@ -92,16 +88,16 @@ class ReferenceData {
 
         return list
           ..addAll(feed.recentReplies.fold<List<ReferenceData>>(
-              [
-                ReferenceData.fromPost(
-                    post: feed, mainPostId: feed.id, accuratePage: 1)
-              ],
+              [ReferenceData.fromMainPost(feed)],
               (list, postId) => list
                 ..add(ReferenceData(
                     id: postId,
                     mainPostId: feed.id,
                     fuzzyPage: (++replyCount).postMaxPage))));
       });
+
+  static Iterable<ReferenceData> fromHtmlFeeds(Iterable<HtmlFeed> feeds) =>
+      feeds.map((feed) => ReferenceData.fromMainPost(feed));
 
   void update(ReferenceData other) {
     assert(id == other.id);

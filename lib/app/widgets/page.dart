@@ -6,6 +6,7 @@ import '../modules/post_list.dart';
 import '../utils/extensions.dart';
 import '../utils/navigation.dart';
 import 'dialog.dart';
+import 'feed.dart';
 import 'thread.dart';
 
 class _JumpPageDialog extends StatefulWidget {
@@ -122,6 +123,8 @@ class _PageButtonState extends State<PageButton> {
             if (widget.controller is ThreadTypeController) {
               maxPage =
                   (widget.controller as ThreadTypeController).mainPost?.maxPage;
+            } else if (widget.controller is FeedController) {
+              maxPage = (widget.controller as FeedController).maxPage;
             }
 
             final page = await postListDialog<int>(_JumpPageDialog(

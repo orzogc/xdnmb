@@ -83,4 +83,7 @@ abstract class ReferenceDatabase {
 
   static Future<void> addFeeds(Iterable<Feed> feeds) =>
       _addReferences(ReferenceData.fromFeeds(feeds));
+
+  static Future<void> addHtmlFeeds(Iterable<HtmlFeed> feeds) =>
+      _addReferences(ReferenceData.fromHtmlFeeds(feeds));
 }

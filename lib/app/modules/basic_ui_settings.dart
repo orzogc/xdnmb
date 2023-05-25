@@ -3,6 +3,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
+import '../data/services/user.dart';
 import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
@@ -452,23 +453,32 @@ class _ShowLatestPostTimeInFeed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
-    final textStyle = Theme.of(context).textTheme.bodyMedium;
+    final user = UserService.to;
+    final style = Theme.of(context).textTheme.bodyMedium;
 
-    return ListTile(
-      title: const Text('订阅界面里的串显示最后回复时间'),
-      trailing: ListenBuilder(
-        listenable: settings.showLatestPostTimeInFeedListenable,
-        builder: (context, child) => DropdownButton<int>(
+    return ListenBuilder(
+      listenable: Listenable.merge([
+        settings.showLatestPostTimeInFeedListenable,
+        user.feedCookieListenable,
+      ]),
+      builder: (context, child) => ListTile(
+        title: Text('订阅界面里的串显示最后回复时间',
+            style: TextStyle(
+                color:
+                    user.hasFeedCookie ? AppTheme.inactiveSettingColor : null)),
+        trailing: DropdownButton<int>(
           value: settings.showLatestPostTimeInFeed,
           alignment: Alignment.centerRight,
           underline: const SizedBox.shrink(),
           icon: const SizedBox.shrink(),
-          style: textStyle,
-          onChanged: (value) {
-            if (value != null) {
-              settings.showLatestPostTimeInFeed = value.clamp(0, 2);
-            }
-          },
+          style: style,
+          onChanged: !user.hasFeedCookie
+              ? (value) {
+                  if (value != null) {
+                    settings.showLatestPostTimeInFeed = value.clamp(0, 2);
+                  }
+                }
+              : null,
           items: const [
             DropdownMenuItem<int>(
               value: 0,

@@ -716,10 +716,6 @@ class _CookieListState extends State<_CookieList> {
             children: [
               for (final cookie in user.xdnmbCookies)
                 ListTile(
-                  onTap: () {
-                    user.postCookie = cookie.copy();
-                    Get.back<bool>(result: true);
-                  },
                   tileColor: cookie.userHash == user.postCookie?.userHash
                       ? theme.focusColor
                       : null,
@@ -761,6 +757,10 @@ class _CookieListState extends State<_CookieList> {
                       ? Text(cookie.note!,
                           maxLines: 1, overflow: TextOverflow.ellipsis)
                       : null,
+                  onTap: () {
+                    user.postCookie = cookie.copy();
+                    Get.back<bool>(result: true);
+                  },
                   onLongPress: () => Get.dialog(SimpleDialog(
                     children: [EditCookieNote(cookie), SetCookieColor(cookie)],
                   )),

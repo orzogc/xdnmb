@@ -303,8 +303,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = SettingsService.to;
-    final client = XdnmbClientService.to.client;
+    final client = XdnmbClientService.to;
     final blacklist = BlacklistService.to;
     final postId = controller.id;
 
@@ -327,7 +326,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
           PopupMenuItem(
             onTap: () async {
               try {
-                await client.addFeed(settings.feedId, postId);
+                await client.addFeed(postId);
                 showToast('订阅 ${postId.toPostNumber()} 成功');
               } catch (e) {
                 showToast(
@@ -370,7 +369,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
                 postListBack();
 
                 try {
-                  await client.deleteFeed(settings.feedId, postId);
+                  await client.deleteFeed(postId);
                   showToast('取消订阅 ${postId.toPostNumber()} 成功');
                 } catch (e) {
                   showToast(
