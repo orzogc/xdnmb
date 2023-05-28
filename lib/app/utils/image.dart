@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:io' as io;
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart' hide Image;
@@ -311,3 +312,9 @@ Widget loadingImageErrorBuilder(
     child: Text('图片加载失败', style: AppTheme.boldRed),
   );
 }
+
+final Matrix4 identityMatrix = Matrix4.identity();
+
+final Matrix4 _mirrorMatrix = Matrix4.identity()..rotateY(pi);
+
+Matrix4 mirrorTransform(bool mirror) => mirror ? _mirrorMatrix : identityMatrix;

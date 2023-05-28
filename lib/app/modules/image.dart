@@ -149,7 +149,7 @@ class _BottomOverlay extends StatelessWidget {
         ),
         Flexible(
           child: IconButton(
-            onPressed: () => imageKey.currentState?._rotate(size),
+            onPressed: imageKey.currentState?._rotate,
             icon: Icon(Icons.rotate_right, color: AppTheme.colorDark),
           ),
         ),
@@ -208,26 +208,29 @@ class _ImageDialog extends StatelessWidget {
 
   final bool fixHeight;
 
+  final VoidCallback saveImage;
+
+  final VoidCallback paint;
+
+  final VoidCallback mirror;
+
   final VoidCallback setFixWidth;
 
   final VoidCallback setFixHeight;
 
   final VoidCallback cancelFixWidthOrHeight;
 
-  final VoidCallback paint;
-
-  final VoidCallback saveImage;
-
   const _ImageDialog(
       // ignore: unused_element
       {super.key,
       required this.fixWidth,
       required this.fixHeight,
+      required this.saveImage,
+      required this.paint,
+      required this.mirror,
       required this.setFixWidth,
       required this.setFixHeight,
-      required this.cancelFixWidthOrHeight,
-      required this.paint,
-      required this.saveImage})
+      required this.cancelFixWidthOrHeight})
       : assert(!(fixWidth && fixHeight));
 
   @override
@@ -249,6 +252,13 @@ class _ImageDialog extends StatelessWidget {
             Get.back();
           },
           child: Text('涂鸦', style: textStyle),
+        ),
+        SimpleDialogOption(
+          onPressed: () {
+            mirror();
+            Get.back();
+          },
+          child: Text('镜像', style: textStyle),
         ),
         if (!fixWidth)
           SimpleDialogOption(
@@ -313,6 +323,10 @@ class _Image<T extends Object> extends StatefulWidget {
 
   final Size size;
 
+  final int quarterTurns;
+
+  final bool mirror;
+
   const _Image(
       {super.key,
       required this.heroTag,
@@ -322,14 +336,16 @@ class _Image<T extends Object> extends StatefulWidget {
       this.canShowDialog = false,
       this.paint,
       this.saveImage,
-      required this.size})
-      : assert(!canShowDialog || (paint != null && saveImage != null));
+      required this.size,
+      int quarterTurns = 0,
+      this.mirror = false})
+      : assert(!canShowDialog || (paint != null && saveImage != null)),
+        quarterTurns = quarterTurns % 4;
 
   @override
   State<_Image> createState() => _ImageState();
 }
 
-// TODO: 镜像
 class _ImageState extends State<_Image>
     with SingleTickerProviderStateMixin<_Image> {
   static const double _disposeScale = 1.1;
@@ -353,7 +369,9 @@ class _ImageState extends State<_Image>
 
   late final double _disposeDistanceFactor;
 
-  int _rotationCount = 0;
+  int _quarterTurns = 0;
+
+  late final RxBool _mirror;
 
   Offset? _doubleTapPosition;
 
@@ -402,11 +420,11 @@ class _ImageState extends State<_Image>
       _animation = Matrix4Tween(
         begin: _transformationController.value,
         end: _transformationController.value.clone()
-          ..rotateZ(-pi * 0.5 * _rotationCount)
+          ..rotateZ(-pi * 0.5 * _quarterTurns)
           ..translate(
               (-x + translation.x) / scale, (-y + translation.y) / scale)
           ..scale(2.0, 2.0)
-          ..rotateZ(pi * 0.5 * _rotationCount),
+          ..rotateZ(pi * 0.5 * _quarterTurns),
       ).animate(_animationController);
       _animation!.addListener(_onAnimate);
       _animationController.forward();
@@ -424,11 +442,11 @@ class _ImageState extends State<_Image>
       _animation = Matrix4Tween(
         begin: _transformationController.value,
         end: _transformationController.value.clone()
-          ..rotateZ(-pi * 0.5 * _rotationCount)
+          ..rotateZ(-pi * 0.5 * _quarterTurns)
           ..translate((x - translation.x) / (scale * 2.0),
               (y - translation.y) / (scale * 2.0))
           ..scale(0.5, 0.5)
-          ..rotateZ(pi * 0.5 * _rotationCount),
+          ..rotateZ(pi * 0.5 * _quarterTurns),
       ).animate(_animationController);
       _animation!.addListener(_onAnimate);
       _animationController.forward();
@@ -444,22 +462,22 @@ class _ImageState extends State<_Image>
     _animationController.reset();
   }
 
-  void _rotate(Size bodySize) {
+  void _rotate() {
     if (!_animationController.isAnimating) {
       _animationController.reset();
-      final size = bodySize * 0.5;
+      final size = widget.size * 0.5;
       final translation = _transformationController.value.getTranslation();
       final scale = _transformationController.value.getMaxScaleOnAxis();
 
       _transformationController.value = _transformationController.value.clone()
-        ..rotateZ(-pi * 0.5 * _rotationCount)
+        ..rotateZ(-pi * 0.5 * _quarterTurns)
         ..translate((size.width - translation.x) / scale,
             (size.height - translation.y) / scale)
         ..rotateZ(pi * 0.5)
         ..translate((-size.width + translation.x) / scale,
             (-size.height + translation.y) / scale)
-        ..rotateZ(pi * 0.5 * _rotationCount);
-      _rotationCount++;
+        ..rotateZ(pi * 0.5 * _quarterTurns);
+      _quarterTurns++;
 
       _isLimitMovement = false;
     }
@@ -523,7 +541,7 @@ class _ImageState extends State<_Image>
       final vertical = max((bodySize.height - height) * 0.5, 0.0);
 
       // 本质是围绕屏幕左上角顺时针旋转
-      switch (_rotationCount % 4) {
+      switch (_quarterTurns % 4) {
         case 0:
           translation.x = min(translation.x,
               bodySize.width - horizontal * scale - _translationLimit);
@@ -613,14 +631,16 @@ class _ImageState extends State<_Image>
       _currentPosition = _initialPosition;
 
       if (_scale! > _fixedMinScale && _scale! < _fixedMaxScale) {
-        if (_fixWidth && !_isLimitMovement) {
-          _isLimitMovement = true;
-          _transformationController.value.setTranslation(
-              _transformationController.value.getTranslation()..x = 0);
-        } else if (_fixHeight && !_isLimitMovement) {
-          _isLimitMovement = true;
-          _transformationController.value.setTranslation(
-              _transformationController.value.getTranslation()..y = 0);
+        if (_quarterTurns % 4 == 0) {
+          if (_fixWidth && !_isLimitMovement) {
+            _isLimitMovement = true;
+            _transformationController.value.setTranslation(
+                _transformationController.value.getTranslation()..x = 0);
+          } else if (_fixHeight && !_isLimitMovement) {
+            _isLimitMovement = true;
+            _transformationController.value.setTranslation(
+                _transformationController.value.getTranslation()..y = 0);
+          }
         }
       } else {
         _isLimitMovement = false;
@@ -647,7 +667,7 @@ class _ImageState extends State<_Image>
       double dy =
           ((_isLimitMovement && _fixHeight) ? 0.0 : positionDelta.dy) / _scale!;
 
-      switch (_rotationCount % 4) {
+      switch (_quarterTurns % 4) {
         case 1:
           final x = dx;
           dx = dy;
@@ -723,8 +743,13 @@ class _ImageState extends State<_Image>
   void _updateImage(ImageInfo image, bool synchronousCall) {
     if (mounted) {
       setState(() {
-        _width = image.image.width;
-        _height = image.image.height;
+        if (widget.quarterTurns % 2 == 0) {
+          _width = image.image.width;
+          _height = image.image.height;
+        } else {
+          _width = image.image.height;
+          _height = image.image.width;
+        }
 
         // 过长的图片自动设置适应宽度
         if (_height! > widget.size.height &&
@@ -741,8 +766,8 @@ class _ImageState extends State<_Image>
     if (_animationController.isAnimating) {
       _stopAnimate();
     }
-    _transformationController.value = Matrix4.identity();
-    _rotationCount = 0;
+    _transformationController.value = identityMatrix;
+    _quarterTurns = 0;
     _toScaleUp = true;
     _resetPosition();
     _setOpacity(opacity: 1.0);
@@ -787,6 +812,8 @@ class _ImageState extends State<_Image>
   @override
   void initState() {
     super.initState();
+
+    _mirror = widget.mirror.obs;
 
     final settings = SettingsService.to;
 
@@ -867,11 +894,12 @@ class _ImageState extends State<_Image>
                   _ImageDialog(
                     fixWidth: _fixWidth,
                     fixHeight: _fixHeight,
+                    saveImage: widget.saveImage!,
+                    paint: widget.paint!,
+                    mirror: () => _mirror.value = !_mirror.value,
                     setFixWidth: _setFixWidth,
                     setFixHeight: _setFixHeight,
                     cancelFixWidthOrHeight: _cancelFixWidthOrHeight,
-                    paint: widget.paint!,
-                    saveImage: widget.saveImage!,
                   ),
                 );
               }
@@ -891,11 +919,27 @@ class _ImageState extends State<_Image>
           child: Hero(
             tag: widget.heroTag,
             transitionOnUserGestures: true,
-            child: Image(
-              image: widget.provider,
-              fit: (imageSize != null) ? BoxFit.contain : BoxFit.scaleDown,
-              width: imageSize?.width,
-              height: imageSize?.height,
+            child: Obx(
+              () {
+                final Widget image = Transform(
+                  transform: mirrorTransform(_mirror.value),
+                  alignment: Alignment.center,
+                  child: Image(
+                    image: widget.provider,
+                    fit:
+                        (imageSize != null) ? BoxFit.contain : BoxFit.scaleDown,
+                    width: imageSize?.width,
+                    height: imageSize?.height,
+                  ),
+                );
+
+                return widget.quarterTurns != 0
+                    ? RotatedBox(
+                        quarterTurns: widget.quarterTurns,
+                        child: image,
+                      )
+                    : image;
+              },
             ),
           ),
         ),
@@ -915,6 +959,10 @@ class ImageController {
 
   final bool canReturnImageData;
 
+  final int quarterTurns;
+
+  final bool mirror;
+
   bool _isPainted = false;
 
   _TopOverlay? _topOverlay;
@@ -928,7 +976,9 @@ class ImageController {
       PostBase? post,
       this.poUserHash,
       Uint8List? imageData,
-      this.canReturnImageData = false})
+      this.canReturnImageData = false,
+      this.quarterTurns = 0,
+      this.mirror = false})
       : assert(post == null || post.hasImage),
         assert((post != null && imageData == null) ||
             (post == null && imageData != null)),
@@ -1077,6 +1127,8 @@ class ImageView extends StatelessWidget {
                         onOpacity: _setOpacity,
                         hideOverlay: _hideOverlay,
                         size: size,
+                        quarterTurns: _controller.quarterTurns,
+                        mirror: _controller.mirror,
                       ),
                     )
                   : null;
@@ -1108,10 +1160,7 @@ class ImageView extends StatelessWidget {
                                           ? thumbImage
                                           : const SizedBox.shrink(),
                                     ),
-                                    const Align(
-                                      alignment: Alignment.topCenter,
-                                      child: Quotation(),
-                                    ),
+                                    const TopCenterLoadingText(),
                                     if (progress.progress != null)
                                       Center(
                                         child: CircularProgressIndicator(
@@ -1149,6 +1198,8 @@ class ImageView extends StatelessWidget {
                                     paint: _paint,
                                     saveImage: _saveImage,
                                     size: size,
+                                    quarterTurns: _controller.quarterTurns,
+                                    mirror: _controller.mirror,
                                   );
                                 },
                               )
@@ -1164,6 +1215,8 @@ class ImageView extends StatelessWidget {
                                     paint: _paint,
                                     saveImage: _saveImage,
                                     size: size,
+                                    quarterTurns: _controller.quarterTurns,
+                                    mirror: _controller.mirror,
                                   )
                                 : const SizedBox.shrink()),
                       ),

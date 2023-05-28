@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:align_positioned/align_positioned.dart';
@@ -22,6 +21,7 @@ import '../utils/image.dart';
 import '../utils/navigation.dart';
 import '../utils/toast.dart';
 import 'dialog.dart';
+import 'loading.dart';
 
 double? _getWidgetOffset(BuildContext context) {
   final renderBox = context.findRenderObject();
@@ -80,6 +80,11 @@ class _RawThumbImage extends StatelessWidget {
 class _LargeImageDialog extends StatelessWidget {
   final PostBase post;
 
+  /// 涂鸦后调用，参数是图片数据
+  final ValueSetter<Uint8List>? onPaintImage;
+
+  final bool canReturnImageData;
+
   final VoidCallback toImage;
 
   final VoidCallback rotate;
@@ -90,6 +95,8 @@ class _LargeImageDialog extends StatelessWidget {
       // ignore: unused_element
       {super.key,
       required this.post,
+      this.onPaintImage,
+      this.canReturnImageData = false,
       required this.toImage,
       required this.rotate,
       required this.mirror});
@@ -119,7 +126,11 @@ class _LargeImageDialog extends StatelessWidget {
             postListBack();
             final data = await loadImage(post);
             if (data != null) {
-              await AppRoutes.toPaint(PaintController(data, false));
+              final result = await AppRoutes.toPaint(
+                  PaintController(data, canReturnImageData));
+              if (onPaintImage != null && result is Uint8List) {
+                onPaintImage!(result);
+              }
             }
           },
           child: Text('涂鸦', style: textStyle),
@@ -146,10 +157,19 @@ class _LargeImageDialog extends StatelessWidget {
 class _LargeImage extends StatefulWidget {
   final PostBase post;
 
+  /// 涂鸦后调用，参数是图片数据
+  final ValueSetter<Uint8List>? onPaintImage;
+
+  final bool canReturnImageData;
+
   final VoidCallback toImage;
 
-  // ignore: unused_element
-  _LargeImage({super.key, required this.post, required this.toImage})
+  _LargeImage(
+      {super.key,
+      required this.post,
+      this.onPaintImage,
+      this.canReturnImageData = false,
+      required this.toImage})
       : assert(post.hasImage);
 
   @override
@@ -159,7 +179,7 @@ class _LargeImage extends StatefulWidget {
 class _LargeImageState extends State<_LargeImage> {
   final RxInt _quarterTurns = 0.obs;
 
-  final Rx<Matrix4> _matrix = Rx(Matrix4.identity());
+  final RxBool _mirror = false.obs;
 
   PostBase get _post => widget.post;
 
@@ -187,9 +207,16 @@ class _LargeImageState extends State<_LargeImage> {
           alignment: Alignment.center,
           container: _RawThumbImage(
               imageUrl: _post.thumbImageUrl!, cacheKey: _post.thumbImageKey!),
-          child: progress.progress != null
-              ? CircularProgressIndicator(value: progress.progress)
-              : const SizedBox.shrink(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const LoadingText(),
+              const SizedBox(height: 5.0),
+              Visibility.maintain(
+                  visible: progress.progress != null,
+                  child: CircularProgressIndicator(value: progress.progress)),
+            ],
+          ),
         ),
         errorWidget: (context, url, error) =>
             loadingImageErrorBuilder(context, url, error, showError: false),
@@ -199,23 +226,30 @@ class _LargeImageState extends State<_LargeImage> {
             width: double.infinity,
             child: Align(
               alignment: Alignment.centerLeft,
-              child: GestureDetector(
-                onLongPress: () => postListDialog(_LargeImageDialog(
-                  post: _post,
-                  toImage: widget.toImage,
-                  rotate: () {
-                    _quarterTurns.value += 1;
-                    _jumpToPosition(context);
-                  },
-                  mirror: () => _matrix.trigger(_matrix.value..rotateY(pi)),
-                )),
-                child: Obx(
-                  () => RotatedBox(
-                    quarterTurns: _quarterTurns.value,
-                    child: Transform(
-                      transform: _matrix.value,
-                      alignment: Alignment.center,
-                      child: Image(image: imageProvider, fit: BoxFit.scaleDown),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                    minWidth: ThumbImage.minWidth,
+                    minHeight: ThumbImage.minHeight),
+                child: GestureDetector(
+                  onLongPress: () => postListDialog(_LargeImageDialog(
+                    post: _post,
+                    onPaintImage: widget.onPaintImage,
+                    canReturnImageData: widget.canReturnImageData,
+                    toImage: widget.toImage,
+                    rotate: () {
+                      _quarterTurns.value += 1;
+                      _jumpToPosition(context);
+                    },
+                    mirror: () => _mirror.value = !_mirror.value,
+                  )),
+                  child: Obx(
+                    () => RotatedBox(
+                      quarterTurns: _quarterTurns.value,
+                      child: Transform(
+                        transform: mirrorTransform(_mirror.value),
+                        alignment: Alignment.center,
+                        child: Image(image: imageProvider, fit: BoxFit.contain),
+                      ),
                     ),
                   ),
                 ),
@@ -262,6 +296,9 @@ class ThumbImage extends StatefulWidget {
 class _ThumbImageState extends State<ThumbImage> {
   final UniqueKey _heroTag = UniqueKey();
 
+  final GlobalKey<_LargeImageState> _largeImageKey =
+      GlobalKey<_LargeImageState>();
+
   bool _hasError = false;
 
   bool _isShowingLargeImage = false;
@@ -275,7 +312,9 @@ class _ThumbImageState extends State<ThumbImage> {
         heroTag: _heroTag,
         post: _post,
         poUserHash: widget.poUserHash,
-        canReturnImageData: widget.canReturnImageData));
+        canReturnImageData: widget.canReturnImageData,
+        quarterTurns: _largeImageKey.currentState?._quarterTurns.value ?? 0,
+        mirror: _largeImageKey.currentState?._mirror.value ?? false));
     if (widget.onPaintImage != null && result is Uint8List) {
       widget.onPaintImage!(result);
     }
@@ -333,7 +372,12 @@ class _ThumbImageState extends State<ThumbImage> {
         tag: _heroTag,
         transitionOnUserGestures: true,
         child: _isShowingLargeImage
-            ? _LargeImage(post: _post, toImage: _toImage)
+            ? _LargeImage(
+                key: _largeImageKey,
+                post: _post,
+                onPaintImage: widget.onPaintImage,
+                canReturnImageData: widget.canReturnImageData,
+                toImage: _toImage)
             : _RawThumbImage(
                 imageUrl: _hasError ? _post.imageUrl! : _post.thumbImageUrl!,
                 cacheKey: _hasError ? _post.imageKey! : _post.thumbImageKey!,

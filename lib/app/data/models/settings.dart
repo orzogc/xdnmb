@@ -37,6 +37,8 @@ abstract class Settings {
 
   static const String restoreForumPage = 'restoreForumPage';
 
+  static const String addDeleteFeedInThread = 'addDeleteFeedInThread';
+
   static const String imageDisposeDistance = 'imageDisposeDistance';
 
   static const String fixedImageDisposeRatio = 'fixedImageDisposeRatio';

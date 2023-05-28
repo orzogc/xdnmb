@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import '../data/services/image.dart';
 import '../data/services/settings.dart';
+import '../utils/image.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
@@ -102,6 +103,20 @@ class _CacheImageCount extends StatelessWidget {
   }
 }
 
+class _ClearImageCache extends StatelessWidget {
+  // ignore: unused_element
+  const _ClearImageCache({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        title: const Text('清除图片缓存'),
+        onTap: () async {
+          await XdnmbImageCacheManager().emptyCache();
+          showToast('清除图片缓存成功');
+        },
+      );
+}
+
 class _FollowPlatformBrightness extends StatelessWidget {
   // ignore: unused_element
   const _FollowPlatformBrightness({super.key});
@@ -155,6 +170,25 @@ class _RestoreForumPage extends StatelessWidget {
         title: const Text('恢复标签页时恢复时间线和版块的页数'),
         value: settings.restoreForumPage,
         onChanged: (value) => settings.restoreForumPage = value,
+      ),
+    );
+  }
+}
+
+class _AddDeleteFeedInThread extends StatelessWidget {
+  // ignore: unused_element
+  const _AddDeleteFeedInThread({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenBuilder(
+      listenable: settings.addDeleteFeedInThreadListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('串页面右上角菜单增加取消订阅选项'),
+        value: settings.addDeleteFeedInThread,
+        onChanged: (value) => settings.addDeleteFeedInThread = value,
       ),
     );
   }
@@ -258,7 +292,6 @@ class _ShowGuide extends StatelessWidget {
   }
 }
 
-// TODO: 增加清除图片缓存
 class AdvancedSettingsView extends StatelessWidget {
   const AdvancedSettingsView({super.key});
 
@@ -272,10 +305,12 @@ class AdvancedSettingsView extends StatelessWidget {
             if (!GetPlatform.isIOS && ImageService.to.hasStoragePermission)
               _SaveImagePath(),
             const _CacheImageCount(),
+            const _ClearImageCache(),
             if (GetPlatform.isMobile || GetPlatform.isMacOS)
               const _FollowPlatformBrightness(),
             const _AddBlueIslandEmoticons(),
             const _RestoreForumPage(),
+            const _AddDeleteFeedInThread(),
             const _ImageDisposeDistance(),
             const _FixedImageDisposeRatio(),
             const _FixMissingFont(),

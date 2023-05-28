@@ -1,8 +1,6 @@
 abstract class PersistentData {
   static const String firstLaunched = 'firstLaunched';
 
-  static const String clearImageCache = 'clearImageCache';
-
   static const String notice = 'notice';
 
   static const String noticeDate = 'noticeDate';

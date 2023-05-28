@@ -108,6 +108,23 @@ class _AppLicense extends StatelessWidget {
       );
 }
 
+class _AppChangelog extends StatelessWidget {
+  // ignore: unused_element
+  const _AppChangelog({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        title: const Text('更新记录'),
+        onTap: () async => Get.dialog(
+          ConfirmCancelDialog(
+            content:
+                await DefaultAssetBundle.of(context).loadString('CHANGELOG.md'),
+            onConfirm: () => Get.back(),
+          ),
+        ),
+      );
+}
+
 class _AppVersion extends StatelessWidget {
   final Future<String> _getVersion =
       PackageInfo.fromPlatform().then((info) => info.version);
@@ -138,7 +155,6 @@ class _AppVersion extends StatelessWidget {
       );
 }
 
-// TODO: 添加更新日志
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
 
@@ -162,6 +178,7 @@ class SettingsView extends StatelessWidget {
             const _XdnmbUrlSponsor(),
             const _AppSource(),
             const _AppLicense(),
+            const _AppChangelog(),
             _AppVersion(),
           ],
         ),

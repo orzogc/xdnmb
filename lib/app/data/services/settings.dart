@@ -14,7 +14,6 @@ import '../models/forum.dart';
 import '../models/hive.dart';
 import '../models/settings.dart';
 import 'image.dart';
-import 'persistent.dart';
 
 final ForumData defaultForum = ForumData(
     id: 1,
@@ -200,6 +199,12 @@ class SettingsService extends GetxService {
 
   set restoreForumPage(bool restoreForumPage) =>
       _settingsBox.put(Settings.restoreForumPage, restoreForumPage);
+
+  bool get addDeleteFeedInThread =>
+      _settingsBox.get(Settings.addDeleteFeedInThread, defaultValue: false);
+
+  set addDeleteFeedInThread(bool addDeleteFeedInThread) =>
+      _settingsBox.put(Settings.addDeleteFeedInThread, addDeleteFeedInThread);
 
   int get imageDisposeDistance => max(
       _settingsBox.get(Settings.imageDisposeDistance, defaultValue: 120), 0);
@@ -494,6 +499,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> restoreForumPageListenable;
 
+  late final ValueListenable<Box> addDeleteFeedInThreadListenable;
+
   late final ValueListenable<Box> imageDisposeDistanceListenable;
 
   late final ValueListenable<Box> fixedImageDisposeRatioListenable;
@@ -675,6 +682,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.addBlueIslandEmoticons]);
     restoreForumPageListenable =
         _settingsBox.listenable(keys: [Settings.restoreForumPage]);
+    addDeleteFeedInThreadListenable =
+        _settingsBox.listenable(keys: [Settings.addDeleteFeedInThread]);
     imageDisposeDistanceListenable =
         _settingsBox.listenable(keys: [Settings.imageDisposeDistance]);
     fixedImageDisposeRatioListenable =
@@ -725,8 +734,6 @@ class SettingsService extends GetxService {
     _transparentSystemNavigationBarSubscription = _settingsBox
         .watch(key: Settings.transparentSystemNavigationBar)
         .listen((event) => _setSystemUIOverlayStyle());
-
-    await PersistentDataService.clearCacheImage();
 
     isReady.value = true;
     await checkDarkMode();

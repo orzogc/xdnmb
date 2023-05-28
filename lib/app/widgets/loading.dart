@@ -2,9 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../utils/theme.dart';
 
+class TopCenterLoadingText extends StatelessWidget {
+  const TopCenterLoadingText({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Align(
+        alignment: Alignment.topCenter,
+        child: LoadingText(),
+      );
+}
+
 // TODO: 加载语录
-class Quotation extends StatelessWidget {
-  const Quotation({super.key});
+class LoadingText extends StatelessWidget {
+  const LoadingText({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,24 +23,18 @@ class Quotation extends StatelessWidget {
       fontWeight: FontWeight.bold,
     ));
 
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Text(
-        '加载中',
-        style: textStyle,
-        strutStyle: StrutStyle.fromTextStyle(textStyle),
-      ),
-    );
+    return Text('加载中',
+        style: textStyle, strutStyle: StrutStyle.fromTextStyle(textStyle));
   }
 }
 
-class QuotationLoadingIndicator extends StatelessWidget {
-  const QuotationLoadingIndicator({super.key});
+class LoadingIndicator extends StatelessWidget {
+  const LoadingIndicator({super.key});
 
   @override
   Widget build(BuildContext context) => const Column(
         children: [
-          Quotation(),
+          TopCenterLoadingText(),
           Expanded(child: Center(child: CircularProgressIndicator()))
         ],
       );

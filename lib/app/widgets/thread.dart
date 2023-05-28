@@ -303,6 +303,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = SettingsService.to;
     final client = XdnmbClientService.to;
     final blacklist = BlacklistService.to;
     final postId = controller.id;
@@ -362,24 +363,25 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
                   mainPostId: postId, mainPost: mainPost),
               child: const Text('只看Po'),
             ),
-          PopupMenuItem(
-            onTap: () => postListDialog(ConfirmCancelDialog(
-              content: '确定取消订阅 ${postId.toPostNumber()} ？',
-              onConfirm: () async {
-                postListBack();
+          if (settings.addDeleteFeedInThread)
+            PopupMenuItem(
+              onTap: () => postListDialog(ConfirmCancelDialog(
+                content: '确定取消订阅 ${postId.toPostNumber()} ？',
+                onConfirm: () async {
+                  postListBack();
 
-                try {
-                  await client.deleteFeed(postId);
-                  showToast('取消订阅 ${postId.toPostNumber()} 成功');
-                } catch (e) {
-                  showToast(
-                      '取消订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');
-                }
-              },
-              onCancel: postListBack,
-            )),
-            child: const Text('取消订阅'),
-          ),
+                  try {
+                    await client.deleteFeed(postId);
+                    showToast('取消订阅 ${postId.toPostNumber()} 成功');
+                  } catch (e) {
+                    showToast(
+                        '取消订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');
+                  }
+                },
+                onCancel: postListBack,
+              )),
+              child: const Text('取消订阅'),
+            ),
           if (((mainPost != null && !mainPost.isAdmin) || mainPost == null) &&
               !isBlockedPost)
             PopupMenuItem(
@@ -759,7 +761,7 @@ class _ThreadBodyState extends State<ThreadBody> {
             ? Obx(
                 () => Stack(
                   children: [
-                    if (_isToJump.value) const QuotationLoadingIndicator(),
+                    if (_isToJump.value) const LoadingIndicator(),
                     Visibility(
                       visible: !_isToJump.value,
                       maintainState: true,

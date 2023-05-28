@@ -4,8 +4,8 @@ publish_to: 'none'
 version: 0.3.2-alpha+8
 
 environment:
-  sdk: '>=3.0.1 <4.0.0'
-  flutter: '>=3.10.1'
+  sdk: '>=3.0.2 <4.0.0'
+  flutter: '>=3.10.2'
 
 dependencies:
   align_positioned: ^3.0.0
@@ -21,7 +21,7 @@ dependencies:
   expandable_text: ^2.3.0
   external_path: ^1.0.3
   file_picker: ^5.3.1
-  float_column: 1.3.3
+  float_column: ^2.0.1
   flutter:
     sdk: flutter
   flutter_cache_manager: ^3.3.0
@@ -83,6 +83,8 @@ flutter:
 
   assets:
     - LICENSE
+    
+    - CHANGELOG.md
 
     # https://letsencrypt.org/certs/lets-encrypt-r3.pem
     - assets/ca/lets-encrypt-r3.pem

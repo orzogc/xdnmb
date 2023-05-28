@@ -395,7 +395,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
           ? (widget.canLoadMoreAtBottom
               ? Obx(
                   () => _isLoadingMore.value
-                      ? const Quotation()
+                      ? const TopCenterLoadingText()
                       : TextButton(
                           style: TextButton.styleFrom(
                             alignment: Alignment.topCenter,
@@ -582,9 +582,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
                       newPageErrorIndicatorBuilder: (context) =>
                           _errorWidgetBuilder(isPagingUp: true),
                       firstPageProgressIndicatorBuilder: (context) =>
-                          const QuotationLoadingIndicator(),
+                          const LoadingIndicator(),
                       newPageProgressIndicatorBuilder: (context) =>
-                          const _MinHeightIndicator(child: Quotation()),
+                          const _MinHeightIndicator(
+                              child: TopCenterLoadingText()),
                       noItemsFoundIndicatorBuilder: (context) =>
                           const SizedBox.shrink(),
                     ),
@@ -600,9 +601,10 @@ class _BiListViewState<T> extends State<BiListView<T>>
                     newPageErrorIndicatorBuilder: (context) =>
                         _errorWidgetBuilder(isPagingUp: false),
                     firstPageProgressIndicatorBuilder: (context) =>
-                        const QuotationLoadingIndicator(),
+                        const LoadingIndicator(),
                     newPageProgressIndicatorBuilder: (context) =>
-                        const _MinHeightIndicator(child: Quotation()),
+                        const _MinHeightIndicator(
+                            child: TopCenterLoadingText()),
                     noItemsFoundIndicatorBuilder: widget.noItemsFoundBuilder,
                     noMoreItemsIndicatorBuilder: _noMoreItems,
                   ),
