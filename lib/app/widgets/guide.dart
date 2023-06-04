@@ -89,10 +89,10 @@ class AppBarMenuGuide extends StatelessWidget {
         ? Obx(
             () => Showcase(
               key: _key,
-              title: (!settings.isShowBottomBar && settings.showGuide)
+              title: (!settings.showBottomBarRx && settings.showGuide)
                   ? '标签页菜单'
                   : '标签页和版块列表菜单',
-              description: (!settings.isShowBottomBar && settings.showGuide)
+              description: (!settings.showBottomBarRx && settings.showGuide)
                   ? '点击打开标签页'
                   : '点击打开标签页和版块列表',
               child: child,

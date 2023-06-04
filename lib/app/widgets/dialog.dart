@@ -48,8 +48,8 @@ Future<T?> postListDialog<T>(Widget widget, {int? index}) {
   final controller = PostListController.get();
 
   return Get.dialog<T>(Obx(() {
-    final isAutoHideAppBar = settings.isAutoHideAppBar;
-    final isShowBottomBar = PostListBottomBar.isShown;
+    final isAutoHideAppBar = settings.autoHideAppBarRx;
+    final isShowBottomBar = PostListBottomBar.isShownRx;
 
     return (isAutoHideAppBar || isShowBottomBar)
         ? Container(

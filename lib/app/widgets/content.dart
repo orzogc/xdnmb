@@ -7,6 +7,7 @@ import 'package:html_to_text/html_to_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
 import '../data/services/settings.dart';
+import '../utils/extensions.dart';
 import '../utils/regex.dart';
 import '../utils/text.dart';
 import 'image.dart';
@@ -63,11 +64,11 @@ class _TextContentState extends State<TextContent> {
   Widget build(BuildContext context) => RichText(
         text: _htmlText.toTextSpan(),
         maxLines: widget.maxLines,
-        overflow:
-            widget.maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip,
+        overflow: widget.maxLines.textOverflow,
       );
 }
 
+// TODO: 支持选择文字
 class Content extends StatefulWidget {
   final PostBase post;
 
@@ -237,13 +238,7 @@ class _ContentState extends State<Content> {
 
     _setHiddenText();
 
-    final richText = RichText(
-      text: _htmlText!.toTextSpan(),
-      maxLines: widget.maxLines,
-      overflow:
-          widget.maxLines == null ? TextOverflow.clip : TextOverflow.ellipsis,
-      strutStyle: strutStyleFromHeight(widget.textStyle),
-    );
+    final text = _htmlText!.toTextSpan();
 
     return ListenBuilder(
       listenable: settings.showImageListenable,
@@ -263,10 +258,20 @@ class _ContentState extends State<Content> {
                             widget.allowShowLargeImageInPlace,
                       ),
                     ),
-                    richText,
+                    WrappableText(
+                      text: text,
+                      maxLines: widget.maxLines,
+                      overflow: widget.maxLines.textOverflow,
+                      strutStyle: widget.textStyle.sameHeightStrutStyle,
+                    ),
                   ],
                 )
-              : richText,
+              : RichText(
+                  text: text,
+                  maxLines: widget.maxLines,
+                  overflow: widget.maxLines.textOverflow,
+                  strutStyle: widget.textStyle.sameHeightStrutStyle,
+                ),
     );
   }
 }

@@ -228,7 +228,7 @@ class PostListWithTabBarOrHeader extends StatelessWidget {
           Obx(
             () => Positioned(
               left: 0.0,
-              top: (settings.isAutoHideAppBar ? controller.appBarHeight : 0.0) +
+              top: (settings.autoHideAppBarRx ? controller.appBarHeight : 0.0) +
                   (tabBarHeight?.call() ?? 0.0),
               right: 0.0,
               child: header!,
@@ -236,7 +236,7 @@ class PostListWithTabBarOrHeader extends StatelessWidget {
           ),
         if (tabBarWidget != null)
           Obx(
-            () => settings.isAutoHideAppBar
+            () => settings.autoHideAppBarRx
                 ? Positioned(
                     left: 0.0,
                     top: controller.appBarHeight,

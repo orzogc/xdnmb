@@ -8,31 +8,11 @@ import '../routes/routes.dart';
 import '../utils/icons.dart';
 import '../utils/navigation.dart';
 import '../utils/regex.dart';
-import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'dialog.dart';
 import 'reference.dart';
 import 'size.dart';
-
-class _Button extends StatelessWidget {
-  final Widget icon;
-
-  final String label;
-
-  final VoidCallback onTap;
-
-  const _Button(
-      // ignore: unused_element
-      {super.key,
-      required this.icon,
-      required this.label,
-      required this.onTap});
-
-  @override
-  Widget build(BuildContext context) =>
-      ListTile(leading: icon, title: Text(label), onTap: onTap);
-}
 
 class DarkModeButton extends StatelessWidget {
   static const Widget _whiteIcon = Icon(Icons.sunny, color: Colors.white);
@@ -40,9 +20,7 @@ class DarkModeButton extends StatelessWidget {
   static const Widget _blackIcon =
       Icon(Icons.brightness_3, color: Colors.black);
 
-  final bool showLabel;
-
-  const DarkModeButton({super.key, this.showLabel = false});
+  const DarkModeButton({super.key});
 
   void _onTap() {
     final settings = SettingsService.to;
@@ -56,19 +34,13 @@ class DarkModeButton extends StatelessWidget {
 
     return Obx(() {
       // 确保模式完全改变后再重建
-      settings.hasBeenDarkMode.value;
+      settings.isDarkModeRx.value;
 
-      return showLabel
-          ? _Button(
-              icon: Get.isDarkMode ? _whiteIcon : _blackIcon,
-              label: Get.isDarkMode ? '光来' : '暗来',
-              onTap: _onTap,
-            )
-          : IconButton(
-              onPressed: _onTap,
-              tooltip: Get.isDarkMode ? '光来！' : '暗来！',
-              icon: Get.isDarkMode ? _whiteIcon : _blackIcon,
-            );
+      return IconButton(
+        onPressed: _onTap,
+        tooltip: Get.isDarkMode ? '光来！' : '暗来！',
+        icon: Get.isDarkMode ? _whiteIcon : _blackIcon,
+      );
     });
   }
 }
@@ -301,8 +273,6 @@ class _SearchDialog extends StatelessWidget {
 }
 
 class SearchButton extends StatelessWidget {
-  final bool showLabel;
-
   final Color? iconColor;
 
   final EdgeInsetsGeometry? iconPadding;
@@ -313,7 +283,6 @@ class SearchButton extends StatelessWidget {
 
   const SearchButton(
       {super.key,
-      this.showLabel = false,
       this.iconColor,
       this.iconPadding,
       this.onTapPrelude,
@@ -329,19 +298,14 @@ class SearchButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final Widget icon = Icon(Icons.search, color: iconColor);
-
-    return showLabel
-        ? _Button(icon: icon, label: '查询', onTap: _onTap)
-        : IconButton(
-            padding: iconPadding, onPressed: _onTap, tooltip: '查询', icon: icon);
-  }
+  Widget build(BuildContext context) => IconButton(
+      padding: iconPadding,
+      onPressed: _onTap,
+      tooltip: '查询',
+      icon: Icon(Icons.search, color: iconColor));
 }
 
 class SettingsButton extends StatelessWidget {
-  final bool showLabel;
-
   final Color? iconColor;
 
   final EdgeInsetsGeometry? iconPadding;
@@ -349,11 +313,7 @@ class SettingsButton extends StatelessWidget {
   final VoidCallback? onTapPrelude;
 
   const SettingsButton(
-      {super.key,
-      this.showLabel = false,
-      this.iconColor,
-      this.iconPadding,
-      this.onTapPrelude});
+      {super.key, this.iconColor, this.iconPadding, this.onTapPrelude});
 
   void _onTap() {
     onTapPrelude?.call();
@@ -361,19 +321,14 @@ class SettingsButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final Widget icon = Icon(Icons.settings, color: iconColor);
-
-    return showLabel
-        ? _Button(icon: icon, label: '设置', onTap: _onTap)
-        : IconButton(
-            padding: iconPadding, onPressed: _onTap, tooltip: '设置', icon: icon);
-  }
+  Widget build(BuildContext context) => IconButton(
+      padding: iconPadding,
+      onPressed: _onTap,
+      tooltip: '设置',
+      icon: Icon(Icons.settings, color: iconColor));
 }
 
 class HistoryButton extends StatelessWidget {
-  final bool showLabel;
-
   final Color? iconColor;
 
   final EdgeInsetsGeometry? iconPadding;
@@ -384,7 +339,6 @@ class HistoryButton extends StatelessWidget {
 
   const HistoryButton(
       {super.key,
-      this.showLabel = false,
       this.iconColor,
       this.iconPadding,
       this.onTapPrelude,
@@ -403,19 +357,14 @@ class HistoryButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final Widget icon = Icon(Icons.history, color: iconColor);
-
-    return showLabel
-        ? _Button(icon: icon, label: '历史', onTap: _onTap)
-        : IconButton(
-            padding: iconPadding, onPressed: _onTap, tooltip: '历史', icon: icon);
-  }
+  Widget build(BuildContext context) => IconButton(
+      padding: iconPadding,
+      onPressed: _onTap,
+      tooltip: '历史',
+      icon: Icon(Icons.history, color: iconColor));
 }
 
 class FeedButton extends StatelessWidget {
-  final bool showLabel;
-
   final Color? iconColor;
 
   final EdgeInsetsGeometry? iconPadding;
@@ -426,7 +375,6 @@ class FeedButton extends StatelessWidget {
 
   const FeedButton(
       {super.key,
-      this.showLabel = false,
       this.iconColor,
       this.iconPadding,
       this.onTapPrelude,
@@ -445,17 +393,11 @@ class FeedButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final Widget icon = Icon(Icons.rss_feed, color: iconColor);
-
-    return showLabel
-        ? _Button(icon: icon, label: '订阅', onTap: _onTap)
-        : IconButton(
-            padding: iconPadding,
-            onPressed: _onTap,
-            tooltip: '订阅/标签',
-            icon: icon);
-  }
+  Widget build(BuildContext context) => IconButton(
+      padding: iconPadding,
+      onPressed: _onTap,
+      tooltip: '订阅/标签',
+      icon: Icon(Icons.rss_feed, color: iconColor));
 }
 
 class _SponsorDialog extends StatelessWidget {
@@ -486,10 +428,6 @@ class _SponsorDialog extends StatelessWidget {
 }
 
 class SponsorButton extends StatelessWidget {
-  final bool onlyText;
-
-  final bool showLabel;
-
   final Color? iconColor;
 
   final EdgeInsetsGeometry? iconPadding;
@@ -497,12 +435,7 @@ class SponsorButton extends StatelessWidget {
   final VoidCallback? onTapPrelude;
 
   const SponsorButton(
-      {super.key,
-      this.onlyText = true,
-      this.showLabel = false,
-      this.iconColor,
-      this.iconPadding,
-      this.onTapPrelude});
+      {super.key, this.iconColor, this.iconPadding, this.onTapPrelude});
 
   void _onTap() {
     onTapPrelude?.call();
@@ -511,38 +444,9 @@ class SponsorButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final Widget icon = Icon(AppIcons.heart, color: iconColor, size: 18.0);
-
-    return onlyText
-        ? TextButton(
-            onPressed: _onTap,
-            child: Text(
-              '赞助',
-              style: (theme.appBarTheme.titleTextStyle ??
-                      theme.textTheme.titleLarge)
-                  ?.merge(
-                TextStyle(
-                  color: AppTheme.highlightColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          )
-        : (showLabel
-            ? _Button(
-                icon: Padding(
-                  padding: const EdgeInsets.only(left: 3.0, top: 3.0),
-                  child: icon,
-                ),
-                label: '赞助',
-                onTap: _onTap,
-              )
-            : IconButton(
-                padding: iconPadding,
-                onPressed: _onTap,
-                tooltip: '赞助',
-                icon: icon));
-  }
+  Widget build(BuildContext context) => IconButton(
+      padding: iconPadding,
+      onPressed: _onTap,
+      tooltip: '赞助',
+      icon: Icon(AppIcons.heart, color: iconColor, size: 18.0));
 }

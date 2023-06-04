@@ -51,9 +51,13 @@ abstract class Settings {
 
   static const String showBottomBarGuide = 'showBottomBarGuide';
 
+  static const String useDrawerAndEndDrawer = 'useDrawerAndEndDrawer';
+
   static const String showBottomBar = 'showBottomBar';
 
   static const String autoHideBottomBar = 'autoHideBottomBar';
+
+  static const String endDrawerContent = 'endDrawerContent';
 
   static const String autoHideAppBar = 'autoHideAppBar';
 

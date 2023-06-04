@@ -303,8 +303,9 @@ class AppSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
   bool get maintainState => _maintainState;
 
   @override
-  bool get canSwipe => SettingsService.to.isSwipeablePage;
+  bool get canSwipe => SettingsService.to.isSwipeablePageRx;
 
+  // TODO: 修改这里
   @override
   double get backGestureDetectionWidth => _backGestureDetectionWidth;
 
@@ -360,10 +361,10 @@ class AppSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
       animation,
       secondaryAnimation,
       child,
-      canSwipe: () => settings.isSwipeablePage,
-      canOnlySwipeFromEdge: canOnlySwipeFromEdge,
-      backGestureDetectionWidth: backGestureDetectionWidth,
-      backGestureDetectionStartOffset: backGestureDetectionStartOffset,
+      canSwipe: () => settings.isSwipeablePageRx,
+      canOnlySwipeFromEdge: () => canOnlySwipeFromEdge,
+      backGestureDetectionWidth: () => backGestureDetectionWidth,
+      backGestureDetectionStartOffset: () => backGestureDetectionStartOffset,
       transitionBuilder: transitionBuilder,
     );
   }
@@ -389,9 +390,10 @@ class AppPageTransitionsBuilder extends SwipeablePageTransitionsBuilder {
         animation,
         secondaryAnimation,
         child,
-        canSwipe: () => settings.isSwipeablePage,
-        canOnlySwipeFromEdge: true,
-        backGestureDetectionWidth: MediaQuery.sizeOf(context).width *
+        canSwipe: () => settings.isSwipeablePageRx,
+        canOnlySwipeFromEdge: () => true,
+        backGestureDetectionWidth: () =>
+            MediaQuery.sizeOf(context).width *
             settings.swipeablePageDragWidthRatio,
         transitionBuilder: transitionBuilder,
       ),

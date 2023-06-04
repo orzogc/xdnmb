@@ -8,6 +8,25 @@ import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
 
+class _UseDrawerAndEndDrawer extends StatelessWidget {
+  // ignore: unused_element
+  const _UseDrawerAndEndDrawer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenBuilder(
+      listenable: settings.useDrawerAndEndDrawerListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('使用左右侧边栏'),
+        value: settings.useDrawerAndEndDrawer,
+        onChanged: (value) => settings.useDrawerAndEndDrawer = value,
+      ),
+    );
+  }
+}
+
 class _ShowBottomBar extends StatelessWidget {
   // ignore: unused_element
   const _ShowBottomBar({super.key});
@@ -17,71 +36,111 @@ class _ShowBottomBar extends StatelessWidget {
     final settings = SettingsService.to;
     final textStyle = Theme.of(context).textTheme.bodyMedium;
 
-    return ListTile(
-      title: const Text('底边栏'),
-      subtitle: !GetPlatform.isIOS
-          ? const Text('底边栏会取代侧边栏，如要使用侧边栏需要取消显示底边栏')
-          : const SizedBox.shrink(),
-      trailing: ListenBuilder(
-        listenable: Listenable.merge([
-          settings.showBottomBarListenable,
-          settings.autoHideBottomBarListenable,
-        ]),
-        builder: (context, child) {
-          int n =
-              settings.showBottomBar ? (settings.autoHideBottomBar ? 0 : 1) : 2;
-          // iOS强制使用底边栏
-          if (GetPlatform.isIOS) {
-            n = n.clamp(0, 1);
-          }
-
-          return DropdownButton<int>(
-            value: n,
-            alignment: Alignment.centerRight,
-            underline: const SizedBox.shrink(),
-            icon: const SizedBox.shrink(),
-            style: textStyle,
-            onChanged: (value) {
-              if (value != null) {
-                value = value.clamp(0, GetPlatform.isIOS ? 1 : 2);
-                switch (value) {
-                  case 0:
-                    settings.showBottomBar = true;
-                    settings.autoHideBottomBar = true;
-                    break;
-                  case 1:
-                    settings.showBottomBar = true;
-                    settings.autoHideBottomBar = false;
-                    break;
-                  case 2:
-                    if (!GetPlatform.isIOS) {
-                      settings.showBottomBar = false;
-                      settings.autoHideBottomBar = false;
-                    }
-                    break;
+    return ListenBuilder(
+      listenable: settings.bottomBarSettingListenable,
+      builder: (context, child) => ListTile(
+        title: Text(
+          '底边栏',
+          style: TextStyle(
+            color: settings.useDrawerAndEndDrawer
+                ? AppTheme.inactiveSettingColor
+                : null,
+          ),
+        ),
+        trailing: DropdownButton<int>(
+          value: settings.bottomBarSetting,
+          alignment: Alignment.centerRight,
+          underline: const SizedBox.shrink(),
+          icon: const SizedBox.shrink(),
+          style: textStyle,
+          onChanged: !settings.useDrawerAndEndDrawer
+              ? (value) {
+                  if (value != null) {
+                    settings.bottomBarSetting = value;
+                  }
                 }
-              }
-            },
-            items: [
+              : null,
+          items: const [
+            DropdownMenuItem<int>(
+              value: 0,
+              alignment: Alignment.centerRight,
+              child: Text('向下滑动时隐藏'),
+            ),
+            DropdownMenuItem<int>(
+              value: 1,
+              alignment: Alignment.centerRight,
+              child: Text('始终显示'),
+            ),
+            DropdownMenuItem<int>(
+              value: 2,
+              alignment: Alignment.centerRight,
+              child: Text('不显示'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EndDrawerContent extends StatelessWidget {
+  // ignore: unused_element
+  const _EndDrawerContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+    final textStyle = Theme.of(context).textTheme.bodyMedium;
+
+    return ListenBuilder(
+      listenable: settings.endDrawerSettingListenable,
+      builder: (context, child) => ListTile(
+        title: Text(
+          '右边侧边栏',
+          style: TextStyle(
+            color: settings.endDrawerHasOnlyTabAndForumList
+                ? AppTheme.inactiveSettingColor
+                : null,
+          ),
+        ),
+        trailing: DropdownButton<int>(
+          value: settings.endDrawerSetting,
+          alignment: Alignment.centerRight,
+          underline: const SizedBox.shrink(),
+          icon: const SizedBox.shrink(),
+          style: textStyle,
+          onChanged: !settings.endDrawerHasOnlyTabAndForumList
+              ? (value) {
+                  if (value != null) {
+                    settings.endDrawerSetting = value;
+                  }
+                }
+              : null,
+          items: [
+            if (!settings.useDrawerAndEndDrawer)
               const DropdownMenuItem<int>(
                 value: 0,
                 alignment: Alignment.centerRight,
-                child: Text('向下滑动时隐藏'),
+                child: Text('不使用'),
               ),
+            const DropdownMenuItem<int>(
+              value: 1,
+              alignment: Alignment.centerRight,
+              child: Text('版块'),
+            ),
+            const DropdownMenuItem<int>(
+              value: 2,
+              alignment: Alignment.centerRight,
+              child: Text('标签页'),
+            ),
+            if (!settings.useDrawerAndEndDrawer)
               const DropdownMenuItem<int>(
-                value: 1,
+                value: 3,
                 alignment: Alignment.centerRight,
-                child: Text('始终显示'),
+                child: Text('标签页和版块'),
               ),
-              if (!GetPlatform.isIOS)
-                const DropdownMenuItem<int>(
-                  value: 2,
-                  alignment: Alignment.centerRight,
-                  child: Text('不显示'),
-                ),
-            ],
-          );
-        },
+          ],
+        ),
       ),
     );
   }
@@ -116,88 +175,48 @@ class _FloatingButton extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme.bodyMedium;
 
     return ListenBuilder(
-      listenable: Listenable.merge([
-        settings.showBottomBarListenable,
-        settings.hideFloatingButtonListenable,
-        settings.autoHideFloatingButtonListenable,
-      ]),
-      builder: (context, child) {
-        final int n = settings.hideFloatingButton
-            ? 1
-            : (settings.autoHideFloatingButton ? 2 : 0);
-
-        late final Widget trailing;
-        if (settings.showBottomBar) {
-          final style = textStyle?.apply(color: AppTheme.inactiveSettingColor);
-
-          switch (n) {
-            case 0:
-              trailing = Text('始终显示', style: style);
-              break;
-            case 1:
-              trailing = Text('隐藏', style: style);
-              break;
-            case 2:
-              trailing = Text('向下滑动时隐藏', style: style);
-              break;
-          }
-        } else {
-          trailing = DropdownButton<int>(
-            value: n,
-            alignment: Alignment.centerRight,
-            underline: const SizedBox.shrink(),
-            icon: const SizedBox.shrink(),
-            style: textStyle,
-            onChanged: (value) {
-              if (value != null) {
-                value = value.clamp(0, 2);
-                switch (value) {
-                  case 0:
-                    settings.hideFloatingButton = false;
-                    settings.autoHideFloatingButton = false;
-                    break;
-                  case 1:
-                    settings.hideFloatingButton = true;
-                    settings.autoHideFloatingButton = false;
-                    break;
-                  case 2:
-                    settings.hideFloatingButton = false;
-                    settings.autoHideFloatingButton = true;
-                    break;
-                }
-              }
-            },
-            items: const [
-              DropdownMenuItem<int>(
-                value: 0,
-                alignment: Alignment.centerRight,
-                child: Text('始终显示'),
-              ),
-              DropdownMenuItem<int>(
-                value: 1,
-                alignment: Alignment.centerRight,
-                child: Text('隐藏'),
-              ),
-              DropdownMenuItem<int>(
-                value: 2,
-                alignment: Alignment.centerRight,
-                child: Text('向下滑动时隐藏'),
-              ),
-            ],
-          );
-        }
-
-        return ListTile(
-          title: Text(
-            '右下角的悬浮球',
-            style: TextStyle(
-              color:
-                  settings.showBottomBar ? AppTheme.inactiveSettingColor : null,
-            ),
+      listenable: settings.floatingButtonSettingListenable,
+      builder: (context, child) => ListTile(
+        title: Text(
+          '右下角的悬浮球',
+          style: TextStyle(
+            color: !settings.hasFloatingButton
+                ? AppTheme.inactiveSettingColor
+                : null,
           ),
-          trailing: trailing,
-        );
-      },
+        ),
+        trailing: DropdownButton<int>(
+          value: settings.floatingButtonSetting,
+          alignment: Alignment.centerRight,
+          underline: const SizedBox.shrink(),
+          icon: const SizedBox.shrink(),
+          style: textStyle,
+          onChanged: settings.hasFloatingButton
+              ? (value) {
+                  if (value != null) {
+                    settings.floatingButtonSetting = value;
+                  }
+                }
+              : null,
+          items: const [
+            DropdownMenuItem<int>(
+              value: 0,
+              alignment: Alignment.centerRight,
+              child: Text('始终显示'),
+            ),
+            DropdownMenuItem<int>(
+              value: 1,
+              alignment: Alignment.centerRight,
+              child: Text('隐藏'),
+            ),
+            DropdownMenuItem<int>(
+              value: 2,
+              alignment: Alignment.centerRight,
+              child: Text('向下滑动时隐藏'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -214,14 +233,15 @@ class _DrawerDragRatio extends StatelessWidget {
       listenable: settings.drawerEdgeDragWidthRatioListenable,
       builder: (context, child) {
         final textStyle = TextStyle(
-            color:
-                settings.showBottomBar ? AppTheme.inactiveSettingColor : null);
+            color: !settings.hasDrawerOrEndDrawerRx
+                ? AppTheme.inactiveSettingColor
+                : null);
 
         return ListTile(
           title: Text('划开侧边栏的范围占屏幕宽度的比例', style: textStyle),
           trailing:
               Text('${settings.drawerEdgeDragWidthRatio}', style: textStyle),
-          onTap: !settings.showBottomBar
+          onTap: settings.hasDrawerOrEndDrawerRx
               ? () async {
                   final ratio = await Get.dialog<double>(NumRangeDialog<double>(
                       text: '比例',
@@ -252,14 +272,15 @@ class _PageDragWidthRatio extends StatelessWidget {
       listenable: settings.swipeablePageDragWidthRatioListenable,
       builder: (context, child) {
         final textStyle = TextStyle(
-            color:
-                !settings.showBottomBar ? AppTheme.inactiveSettingColor : null);
+            color: !settings.isSwipeablePageRx
+                ? AppTheme.inactiveSettingColor
+                : null);
 
         return ListTile(
           title: Text('左侧边缘滑动返回上一页的范围占屏幕宽度的比例', style: textStyle),
           trailing:
               Text('${settings.swipeablePageDragWidthRatio}', style: textStyle),
-          onTap: settings.showBottomBar
+          onTap: settings.isSwipeablePageRx
               ? () async {
                   final ratio = await Get.dialog<double>(NumRangeDialog<double>(
                       text: '比例',
@@ -288,19 +309,20 @@ class _CompactTabAndForumList extends StatelessWidget {
 
     return ListenBuilder(
       listenable: Listenable.merge([
-        settings.showBottomBarListenable,
+        settings.endDrawerSettingListenable,
         settings.compactTabAndForumListListenable,
       ]),
       builder: (context, child) => SwitchListTile(
         title: Text(
           '合并显示标签页列表和版块列表',
           style: TextStyle(
-            color:
-                !settings.showBottomBar ? AppTheme.inactiveSettingColor : null,
+            color: settings.hasDrawerOrEndDrawerRx
+                ? AppTheme.inactiveSettingColor
+                : null,
           ),
         ),
         value: settings.compactTabAndForumList,
-        onChanged: settings.showBottomBar
+        onChanged: !settings.hasDrawerOrEndDrawerRx
             ? (value) => settings.compactTabAndForumList = value
             : null,
       ),
@@ -454,12 +476,12 @@ class _ShowLatestPostTimeInFeed extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
     final user = UserService.to;
-    final style = Theme.of(context).textTheme.bodyMedium;
+    final textStyle = Theme.of(context).textTheme.bodyMedium;
 
     return ListenBuilder(
       listenable: Listenable.merge([
-        settings.showLatestPostTimeInFeedListenable,
         user.feedCookieListenable,
+        settings.showLatestPostTimeInFeedListenable,
       ]),
       builder: (context, child) => ListTile(
         title: Text('订阅界面里的串显示最后回复时间',
@@ -467,15 +489,15 @@ class _ShowLatestPostTimeInFeed extends StatelessWidget {
                 color:
                     user.hasFeedCookie ? AppTheme.inactiveSettingColor : null)),
         trailing: DropdownButton<int>(
-          value: settings.showLatestPostTimeInFeed,
+          value: !user.hasFeedCookie ? settings.showLatestPostTimeInFeed : 0,
           alignment: Alignment.centerRight,
           underline: const SizedBox.shrink(),
           icon: const SizedBox.shrink(),
-          style: style,
+          style: textStyle,
           onChanged: !user.hasFeedCookie
               ? (value) {
                   if (value != null) {
-                    settings.showLatestPostTimeInFeed = value.clamp(0, 2);
+                    settings.showLatestPostTimeInFeed = value;
                   }
                 }
               : null,
@@ -510,7 +532,9 @@ class BasicUISettingsView extends StatelessWidget {
         appBar: AppBar(title: const Text('界面基本设置')),
         body: ListView(
           children: [
+            if (!GetPlatform.isIOS) const _UseDrawerAndEndDrawer(),
             const _ShowBottomBar(),
+            const _EndDrawerContent(),
             const Divider(height: 10.0, thickness: 1.0),
             const _AutoHideAppBar(),
             const _FloatingButton(),

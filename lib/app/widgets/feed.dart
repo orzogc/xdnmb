@@ -386,7 +386,7 @@ class _FeedBody extends StatelessWidget {
                     controller: scrollController,
                     index: feed.item.toIndex(),
                     child: _FeedItem(
-                      key: ValueKey<int>(settings.isShowLatestPostTimeInFeed),
+                      key: ValueKey<int>(settings.showLatestPostTimeInFeedRx),
                       controller: controller,
                       feed: feed,
                     ),

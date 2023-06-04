@@ -7,7 +7,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/forum.dart';
 import '../data/services/forum.dart';
-import '../utils/text.dart';
+import '../utils/extensions.dart';
 import 'dialog.dart';
 import 'listenable.dart';
 import 'tag.dart';
@@ -94,16 +94,14 @@ class ForumNameText extends StatelessWidget {
               style: textStyle,
             ),
             maxLines: maxLines,
-            overflow:
-                maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip,
-            strutStyle: strutStyleFromHeight(textStyle),
+            overflow: maxLines.textOverflow,
+            strutStyle: textStyle.sameHeightStrutStyle,
           )
         : RichText(
             text: span,
             maxLines: maxLines,
-            overflow:
-                maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip,
-            strutStyle: strutStyleFromHeight(textStyle),
+            overflow: maxLines.textOverflow,
+            strutStyle: textStyle.sameHeightStrutStyle,
           );
   }
 }
@@ -167,9 +165,7 @@ class ForumName extends StatelessWidget {
                         ? StrutStyle.fromTextStyle(textStyle!)
                         : null,
                     maxLines: maxLines,
-                    overflow: maxLines != null
-                        ? TextOverflow.ellipsis
-                        : TextOverflow.clip)
+                    overflow: maxLines.textOverflow)
                 : const SizedBox.shrink());
 
         return (isDeprecated ?? false)

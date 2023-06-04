@@ -16,7 +16,7 @@ dependencies:
   cached_network_image: ^3.2.3
   crypto: ^3.0.3
   date_format: ^2.0.7
-  device_info_plus: ^9.0.1
+  device_info_plus: ^9.0.2
   easy_refresh: ^3.3.2+1
   expandable_text: ^2.3.0
   external_path: ^1.0.3
@@ -47,7 +47,7 @@ dependencies:
   media_scanner: ^2.1.0
   mime: ^1.0.4
   mobile_scanner: ^3.2.0
-  package_info_plus: ^4.0.1
+  package_info_plus: ^4.0.2
   path: ^1.8.2
   path_provider: ^2.0.15
   permission_handler: ^10.2.0
@@ -55,7 +55,7 @@ dependencies:
   saver_gallery: ^2.0.1
   screenshot: ^2.1.0
   showcaseview: ^2.0.3
-  swipeable_page_route: ^0.3.1
+  swipeable_page_route: ^0.4.0
   system_info2: ^4.0.0
   timeago_flutter: ^3.4.0
   url_launcher: ^6.1.11
@@ -75,7 +75,7 @@ dev_dependencies:
   isar_generator: ^3.1.0+1
 
 dependency_overrides:
-  # https://github.com/fluttercommunity/plus_plugins/issues/1840
+  # https://github.com/Baseflow/flutter_cache_manager/pull/414
   http: ^1.0.0
 
 flutter:

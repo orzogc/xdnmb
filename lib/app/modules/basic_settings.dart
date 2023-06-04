@@ -143,59 +143,36 @@ class _AutoJump extends StatelessWidget {
     return ListTile(
       title: const Text('打开串时自动跳转到最近浏览的页数和位置'),
       trailing: ListenBuilder(
-        listenable: Listenable.merge([
-          settings.isJumpToLastBrowsePageListenable,
-          settings.isJumpToLastBrowsePositionListenable,
-        ]),
-        builder: (context, child) {
-          final int n = settings.isJumpToLastBrowsePage
-              ? (settings.isJumpToLastBrowsePosition ? 0 : 1)
-              : 2;
-
-          return DropdownButton<int>(
-            value: n,
-            alignment: Alignment.centerRight,
-            underline: const SizedBox.shrink(),
-            icon: const SizedBox.shrink(),
-            style: textStyle,
-            onChanged: (value) {
-              if (value != null) {
-                value = value.clamp(0, 2);
-                switch (value) {
-                  case 0:
-                    settings.isJumpToLastBrowsePage = true;
-                    settings.isJumpToLastBrowsePosition = true;
-                    break;
-                  case 1:
-                    settings.isJumpToLastBrowsePage = true;
-                    settings.isJumpToLastBrowsePosition = false;
-                    break;
-                  case 2:
-                    settings.isJumpToLastBrowsePage = false;
-                    settings.isJumpToLastBrowsePosition = false;
-                    break;
-                }
-              }
-            },
-            items: const [
-              DropdownMenuItem<int>(
-                value: 0,
-                alignment: Alignment.centerRight,
-                child: Text('跳转位置'),
-              ),
-              DropdownMenuItem<int>(
-                value: 1,
-                alignment: Alignment.centerRight,
-                child: Text('只跳转页数'),
-              ),
-              DropdownMenuItem<int>(
-                value: 2,
-                alignment: Alignment.centerRight,
-                child: Text('不跳转'),
-              ),
-            ],
-          );
-        },
+        listenable: settings.jumpToLastBrowseSettingListenable,
+        builder: (context, child) => DropdownButton<int>(
+          value: settings.jumpToLastBrowseSetting,
+          alignment: Alignment.centerRight,
+          underline: const SizedBox.shrink(),
+          icon: const SizedBox.shrink(),
+          style: textStyle,
+          onChanged: (value) {
+            if (value != null) {
+              settings.jumpToLastBrowseSetting = value;
+            }
+          },
+          items: const [
+            DropdownMenuItem<int>(
+              value: 0,
+              alignment: Alignment.centerRight,
+              child: Text('跳转位置'),
+            ),
+            DropdownMenuItem<int>(
+              value: 1,
+              alignment: Alignment.centerRight,
+              child: Text('只跳转页数'),
+            ),
+            DropdownMenuItem<int>(
+              value: 2,
+              alignment: Alignment.centerRight,
+              child: Text('不跳转'),
+            ),
+          ],
+        ),
       ),
     );
   }

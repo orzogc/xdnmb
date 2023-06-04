@@ -71,6 +71,9 @@ extension IntExtension on int {
 
 extension IntNullExtension on int? {
   int? get notNegative => this != null ? max(this!, 0) : null;
+
+  TextOverflow get textOverflow =>
+      this != null ? TextOverflow.ellipsis : TextOverflow.clip;
 }
 
 extension PostExtension on PostBase {
@@ -202,4 +205,10 @@ extension FontWeightExtension on FontWeight {
 
     return FontWeight.values[n - 1];
   }
+}
+
+extension TextStyleNullExtension on TextStyle? {
+  /// 主要是在富文本中使用
+  StrutStyle? get sameHeightStrutStyle =>
+      this?.height != null ? StrutStyle(height: this!.height) : null;
 }

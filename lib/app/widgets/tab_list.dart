@@ -88,9 +88,12 @@ class _TabTitle extends StatelessWidget {
 }
 
 class TabList extends StatelessWidget {
+  final double? bottomPadding;
+
   final VoidCallback onTapEnd;
 
-  const TabList({super.key, required this.onTapEnd});
+  const TabList({super.key, this.bottomPadding, required this.onTapEnd})
+      : assert(bottomPadding == null || bottomPadding >= 0.0);
 
   void _closeTab(int index) {
     final stacks = ControllerStacksService.to;
@@ -109,101 +112,118 @@ class TabList extends StatelessWidget {
 
     return Center(
       child: Obx(
-        () => ListView.separated(
-          key: const PageStorageKey<String>('tabList'),
-          shrinkWrap: true,
-          padding: EdgeInsets.zero,
-          itemCount: stacks.length,
-          itemBuilder: (context, index) => ListenBuilder(
-            listenable: Listenable.merge(
-                [stacks.notifier, settings.dismissibleTabListenable]),
-            builder: (context, child) {
-              final controller = PostListController.get(index);
+        () {
+          final count = stacks.length;
 
-              Widget tab = ListTile(
-                key: !(settings.dismissibleTab && stacks.length > 1)
-                    ? ValueKey<int>(stacks.getKeyId(index))
-                    : null,
-                onTap: () {
-                  PostListPage.pageKey.currentState!.jumpToPage(index);
+          return ListView.separated(
+            key: const PageStorageKey<String>('tabList'),
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            itemCount: bottomPadding != null ? count + 1 : count,
+            itemBuilder: (context, index) => ListenBuilder(
+              listenable: Listenable.merge(
+                  [stacks.notifier, settings.dismissibleTabListenable]),
+              builder: (context, child) {
+                if (bottomPadding != null &&
+                    bottomPadding! > 0.0 &&
+                    index == count) {
+                  return SizedBox(height: bottomPadding);
+                }
 
-                  onTapEnd();
-                },
-                tileColor: index == stacks.index ? theme.focusColor : null,
-                title: _TabTitle(controller),
-                subtitle: controller.isThreadType
-                    ? Obx(() {
-                        final post =
-                            (controller as ThreadTypeController).mainPost;
+                final controller = PostListController.get(index);
 
-                        return post != null
-                            ? Content(
-                                key: ValueKey<bool>(Get.isDarkMode),
-                                post: post,
-                                maxLines: 2,
-                                displayImage: false,
-                                textStyle: textStyle,
-                              )
-                            : const SizedBox.shrink();
-                      })
-                    : null,
-                trailing: (!settings.dismissibleTab && stacks.length > 1)
-                    ? IconButton(
-                        onPressed: () => _closeTab(index),
-                        icon: const Icon(Icons.close))
-                    : null,
-              );
+                Widget tab = ListTile(
+                  key: !(settings.dismissibleTab && count > 1)
+                      ? ValueKey<int>(stacks.getKeyId(index))
+                      : null,
+                  onTap: () {
+                    PostListPage.pageKey.currentState!.jumpToPage(index);
 
-              if (settings.dismissibleTab && stacks.length > 1) {
-                final isIconOnLeft = true.obs;
-
-                tab = Dismissible(
-                  key: ValueKey<int>(stacks.getKeyId(index)),
-                  background: ColoredBox(
-                    color: theme.primaryColor,
-                    child: Obx(() => isIconOnLeft.value
-                        ? Padding(
-                            padding: const EdgeInsets.only(left: 20.0),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Icon(
-                                Icons.delete_outline,
-                                color: theme.colorScheme.onPrimary,
-                              ),
-                            ),
-                          )
-                        : Padding(
-                            padding: const EdgeInsets.only(right: 20.0),
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: Icon(
-                                Icons.delete_outline,
-                                color: theme.colorScheme.onPrimary,
-                              ),
-                            ),
-                          )),
-                  ),
-                  onUpdate: (details) {
-                    if (details.direction == DismissDirection.startToEnd) {
-                      isIconOnLeft.value = true;
-                    } else if (details.direction ==
-                        DismissDirection.endToStart) {
-                      isIconOnLeft.value = false;
-                    }
+                    onTapEnd();
                   },
-                  onDismissed: (direction) => _closeTab(index),
-                  child: tab,
+                  tileColor: index == stacks.index ? theme.focusColor : null,
+                  title: _TabTitle(controller),
+                  subtitle: controller.isThreadType
+                      ? Obx(() {
+                          final post =
+                              (controller as ThreadTypeController).mainPost;
+
+                          return post != null
+                              ? Content(
+                                  key: ValueKey<bool>(Get.isDarkMode),
+                                  post: post,
+                                  maxLines: 2,
+                                  displayImage: false,
+                                  textStyle: textStyle,
+                                )
+                              : const SizedBox.shrink();
+                        })
+                      : null,
+                  trailing: (!settings.dismissibleTab && count > 1)
+                      ? IconButton(
+                          onPressed: () => _closeTab(index),
+                          icon: const Icon(Icons.close))
+                      : null,
                 );
+
+                if (settings.dismissibleTab && count > 1) {
+                  final isIconOnLeft = true.obs;
+
+                  tab = Dismissible(
+                    key: ValueKey<int>(stacks.getKeyId(index)),
+                    background: ColoredBox(
+                      color: theme.primaryColor,
+                      child: Obx(() => isIconOnLeft.value
+                          ? Padding(
+                              padding: const EdgeInsets.only(left: 20.0),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Icon(
+                                  Icons.delete_outline,
+                                  color: theme.colorScheme.onPrimary,
+                                ),
+                              ),
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.only(right: 20.0),
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: Icon(
+                                  Icons.delete_outline,
+                                  color: theme.colorScheme.onPrimary,
+                                ),
+                              ),
+                            )),
+                    ),
+                    onUpdate: (details) {
+                      if (details.direction == DismissDirection.startToEnd) {
+                        isIconOnLeft.value = true;
+                      } else if (details.direction ==
+                          DismissDirection.endToStart) {
+                        isIconOnLeft.value = false;
+                      }
+                    },
+                    onDismissed: (direction) => _closeTab(index),
+                    child: tab,
+                  );
+                }
+
+                return (SettingsService.shouldShowGuide && index == 0)
+                    ? TabListGuide(tab)
+                    : tab;
+              },
+            ),
+            separatorBuilder: (BuildContext context, int index) {
+              if (bottomPadding != null &&
+                  bottomPadding! > 0.0 &&
+                  index == count - 1) {
+                return const SizedBox.shrink();
               }
 
-              return (SettingsService.shouldShowGuide && index == 0)
-                  ? TabListGuide(tab)
-                  : tab;
+              return const Divider(height: 10.0, thickness: 1.0);
             },
-          ),
-          separatorBuilder: (BuildContext context, int index) =>
-              const Divider(height: 10, thickness: 1),
-        ),
+          );
+        },
       ),
     );
   }

@@ -9,15 +9,17 @@ import '../data/services/settings.dart';
 class PageViewTabBar extends StatefulWidget implements PreferredSizeWidget {
   static const animationDuration = kTabScrollDuration;
 
-  static const double height = _height + _indicatorWeight;
+  static const double height = _height + indicatorWeight;
+
+  static const double indicatorWeight = 2.0;
 
   static const double _height = 46.0;
-
-  static const double _indicatorWeight = 2.0;
 
   final PageController pageController;
 
   final int initialIndex;
+
+  final Color? indicatorColor;
 
   /// [PageViewTabBar]的index变化时调用，参数是index
   final ValueChanged<int> onIndex;
@@ -33,13 +35,14 @@ class PageViewTabBar extends StatefulWidget implements PreferredSizeWidget {
       }
     }
 
-    return Size.fromHeight(maxHeight + _indicatorWeight);
+    return Size.fromHeight(maxHeight + indicatorWeight);
   }
 
   const PageViewTabBar(
       {super.key,
       required this.pageController,
       required this.initialIndex,
+      this.indicatorColor,
       required this.onIndex,
       required this.tabs});
 
@@ -107,7 +110,8 @@ class _PageViewTabBarState extends State<PageViewTabBar>
   @override
   Widget build(BuildContext context) => TabBar(
       controller: _controller,
-      indicatorWeight: PageViewTabBar._indicatorWeight,
+      indicatorColor: widget.indicatorColor,
+      indicatorWeight: PageViewTabBar.indicatorWeight,
       tabs: widget.tabs);
 }
 
@@ -129,7 +133,7 @@ class SwipeablePageView extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
 
     // 手机上PageView能左右滑动换页
-    return Obx(() => (settings.isSwipeablePage && GetPlatform.isMobile)
+    return Obx(() => (settings.isSwipeablePageRx && GetPlatform.isMobile)
         ? Listener(
             onPointerDown: (event) {
               final route = ModalRoute.of(context);
@@ -160,4 +164,67 @@ class SwipeablePageView extends StatelessWidget {
             itemBuilder: itemBuilder,
           ));
   }
+}
+
+class InfinitePageView extends StatefulWidget {
+  final PageController controller;
+
+  final ScrollPhysics? physics;
+
+  final List<Widget> children;
+
+  const InfinitePageView(
+      {super.key,
+      required this.controller,
+      this.physics,
+      required this.children})
+      : assert(children.length > 1);
+
+  @override
+  State<InfinitePageView> createState() => _InfinitePageViewState();
+}
+
+class _InfinitePageViewState extends State<InfinitePageView> {
+  PageController get _controller => widget.controller;
+
+  List<Widget> get _children => widget.children;
+
+  void _onPageChanged() {
+    if (_controller.page == _children.length) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((timeStamp) => _controller.jumpToPage(0));
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller.addListener(_onPageChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant InfinitePageView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller.removeListener(_onPageChanged);
+      widget.controller.addListener(_onPageChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onPageChanged);
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => PageView(
+        controller: _controller,
+        physics: widget.physics,
+        allowImplicitScrolling: true,
+        children: [..._children, _children.first],
+      );
 }

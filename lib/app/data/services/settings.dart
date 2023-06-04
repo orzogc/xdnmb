@@ -69,19 +69,23 @@ class SettingsService extends GetxService {
 
   late final Box _settingsBox;
 
-  final RxBool hasBeenDarkMode = false.obs;
+  final RxBool isDarkModeRx = false.obs;
 
-  late final RxBool _isShowBottomBar;
+  late final RxBool _useDrawerAndEndDrawer;
 
-  late final RxBool _isAutoHideBottomBar;
+  late final RxBool _showBottomBar;
 
-  late final RxBool _isAutoHideAppBar;
+  late final RxBool _autoHideBottomBar;
 
-  late final RxDouble _drawerDragRatio;
+  late final RxInt _endDrawerContent;
 
-  late final RxBool _isCompactTabAndForumList;
+  late final RxBool _autoHideAppBar;
 
-  late final RxInt _isShowLatestPostTimeInFeed;
+  late final RxDouble _drawerEdgeDragWidthRatio;
+
+  late final RxBool _compactTabAndForumList;
+
+  late final RxInt _showLatestPostTimeInFeed;
 
   final RxBool isReady = false.obs;
 
@@ -139,6 +143,27 @@ class SettingsService extends GetxService {
   set isJumpToLastBrowsePosition(bool isJumpToLastBrowsePosition) =>
       _settingsBox.put(
           Settings.isJumpToLastBrowsePosition, isJumpToLastBrowsePosition);
+
+  /// 0是跳转位置，1是只跳转页数，2是不跳转
+  int get jumpToLastBrowseSetting =>
+      isJumpToLastBrowsePage ? (isJumpToLastBrowsePosition ? 0 : 1) : 2;
+
+  set jumpToLastBrowseSetting(int jumpToLastBrowseSetting) {
+    switch (jumpToLastBrowseSetting.clamp(0, 2)) {
+      case 0:
+        isJumpToLastBrowsePage = true;
+        isJumpToLastBrowsePosition = true;
+        break;
+      case 1:
+        isJumpToLastBrowsePage = true;
+        isJumpToLastBrowsePosition = false;
+        break;
+      case 2:
+        isJumpToLastBrowsePage = false;
+        isJumpToLastBrowsePosition = false;
+        break;
+    }
+  }
 
   bool get isAfterPostRefresh =>
       _settingsBox.get(Settings.isAfterPostRefresh, defaultValue: true);
@@ -249,40 +274,128 @@ class SettingsService extends GetxService {
   set showBottomBarGuide(bool showBottomBarGuide) =>
       _settingsBox.put(Settings.showBottomBarGuide, showBottomBarGuide);
 
-  // iOS强制使用底边栏
-  bool get showBottomBar => GetPlatform.isIOS
-      ? true
-      : _settingsBox.get(Settings.showBottomBar, defaultValue: true);
+  bool get useDrawerAndEndDrawer => !GetPlatform.isIOS
+      ? _settingsBox.get(Settings.useDrawerAndEndDrawer, defaultValue: false)
+      : false;
 
-  set showBottomBar(bool showBottomBar) {
-    final isShown = GetPlatform.isIOS ? true : showBottomBar;
-    _settingsBox.put(Settings.showBottomBar, isShown);
-    _isShowBottomBar.value = isShown;
+  set useDrawerAndEndDrawer(bool useDrawerAndEndDrawer) {
+    if (!GetPlatform.isIOS) {
+      _settingsBox.put(Settings.useDrawerAndEndDrawer, useDrawerAndEndDrawer);
+      _useDrawerAndEndDrawer.value = useDrawerAndEndDrawer;
+    }
   }
 
-  bool get isShowBottomBar => _isShowBottomBar.value;
+  bool get useDrawerAndEndDrawerRx => _useDrawerAndEndDrawer.value;
+
+  bool get isSwipeablePageRx => !useDrawerAndEndDrawerRx;
+
+  // TODO: guide
+  bool get showBottomBar =>
+      _settingsBox.get(Settings.showBottomBar, defaultValue: true);
+
+  set showBottomBar(bool showBottomBar) {
+    _settingsBox.put(Settings.showBottomBar, showBottomBar);
+    _showBottomBar.value = showBottomBar;
+  }
+
+  bool get showBottomBarRx => _showBottomBar.value;
 
   bool get autoHideBottomBar =>
       _settingsBox.get(Settings.autoHideBottomBar, defaultValue: true);
 
   set autoHideBottomBar(bool autoHideBottomBar) {
     _settingsBox.put(Settings.autoHideBottomBar, autoHideBottomBar);
-    _isAutoHideBottomBar.value = autoHideBottomBar;
+    _autoHideBottomBar.value = autoHideBottomBar;
   }
 
-  bool get isAutoHideBottomBar => _isAutoHideBottomBar.value;
+  bool get autoHideBottomBarRx => _autoHideBottomBar.value;
 
-  bool get isSwipeablePage => isShowBottomBar;
+  /// 0是向下滑动时隐藏底边栏，1是始终显示底边栏，2是不显示底边栏
+  int get bottomBarSetting => !useDrawerAndEndDrawer
+      ? (showBottomBar ? (autoHideBottomBar ? 0 : 1) : 2)
+      : 2;
+
+  set bottomBarSetting(int bottomBarSetting) {
+    if (!useDrawerAndEndDrawer) {
+      switch (bottomBarSetting.clamp(0, 2)) {
+        case 0:
+          showBottomBar = true;
+          autoHideBottomBar = true;
+          break;
+        case 1:
+          showBottomBar = true;
+          autoHideBottomBar = false;
+          break;
+        case 2:
+          showBottomBar = false;
+          autoHideBottomBar = false;
+          break;
+      }
+    }
+  }
+
+  /// 0是向下滑动时隐藏底边栏，1是始终显示底边栏，2是不显示底边栏
+  int get bottomBarSettingRx => !useDrawerAndEndDrawerRx
+      ? (showBottomBarRx ? (autoHideBottomBarRx ? 0 : 1) : 2)
+      : 2;
+
+  bool get hasBottomBar => bottomBarSetting < 2;
+
+  bool get hasBottomBarRx => bottomBarSettingRx < 2;
+
+  bool get bottomBarHasTabOrForumListButtonRx =>
+      hasBottomBarRx && endDrawerSettingRx < 3;
+
+  bool get bottomBarHasSingleTabOrForumListButtonRx =>
+      hasBottomBarRx && (endDrawerSettingRx == 1 || endDrawerSettingRx == 2);
+
+  bool get bottomBarAllowCompactTanAndForumListButtonRx =>
+      hasBottomBarRx && (endDrawerSettingRx == 0);
+
+  /// 0是不用侧边栏，1是版块侧边栏，2是标签页侧边栏，3是版块/标签页侧边栏
+  int get endDrawerContent =>
+      (_settingsBox.get(Settings.endDrawerContent, defaultValue: 0) as int)
+          .clamp(0, 3);
+
+  set endDrawerContent(int endDrawerContent) {
+    final value = endDrawerContent.clamp(0, 3);
+    _settingsBox.put(Settings.endDrawerContent, value);
+    _endDrawerContent.value = value;
+  }
+
+  /// 0是不用侧边栏，1是版块侧边栏，2是标签页侧边栏，3是版块/标签页侧边栏
+  int get endDrawerSetting => useDrawerAndEndDrawer
+      ? endDrawerContent.clamp(1, 2)
+      : (bottomBarSetting < 2 ? endDrawerContent : 3);
+
+  set endDrawerSetting(int endDrawerSetting) =>
+      endDrawerContent = useDrawerAndEndDrawer
+          ? endDrawerSetting.clamp(1, 2)
+          : (bottomBarSetting < 2 ? endDrawerSetting : 3);
+
+  /// 0是不用侧边栏，1是版块侧边栏，2是标签页侧边栏，3是标签页/版块侧边栏
+  int get endDrawerSettingRx => useDrawerAndEndDrawerRx
+      ? _endDrawerContent.value.clamp(1, 2)
+      : (bottomBarSettingRx < 2 ? _endDrawerContent.value.clamp(0, 3) : 3);
+
+  bool get endDrawerHasOnlyTabAndForumList =>
+      !useDrawerAndEndDrawer && bottomBarSetting == 2;
+
+  bool get hasDrawerRx => useDrawerAndEndDrawerRx;
+
+  bool get hasEndDrawerRx => endDrawerSettingRx > 0;
+
+  bool get hasDrawerOrEndDrawerRx => hasDrawerRx || hasEndDrawerRx;
 
   bool get autoHideAppBar =>
       _settingsBox.get(Settings.autoHideAppBar, defaultValue: false);
 
   set autoHideAppBar(bool autoHideAppBar) {
     _settingsBox.put(Settings.autoHideAppBar, autoHideAppBar);
-    _isAutoHideAppBar.value = autoHideAppBar;
+    _autoHideAppBar.value = autoHideAppBar;
   }
 
-  bool get isAutoHideAppBar => _isAutoHideAppBar.value;
+  bool get autoHideAppBarRx => _autoHideAppBar.value;
 
   bool get hideFloatingButton =>
       _settingsBox.get(Settings.hideFloatingButton, defaultValue: false);
@@ -296,6 +409,36 @@ class SettingsService extends GetxService {
   set autoHideFloatingButton(bool autoHideFloatingButton) =>
       _settingsBox.put(Settings.autoHideFloatingButton, autoHideFloatingButton);
 
+  /// 0是始终显示悬浮球，1是隐藏悬浮球，2是向下滑动时隐藏悬浮球
+  int get floatingButtonSetting => !hasBottomBar
+      ? (hideFloatingButton ? 1 : (autoHideFloatingButton ? 2 : 0))
+      : 1;
+
+  set floatingButtonSetting(int floatingButtonSetting) {
+    if (!hasBottomBar) {
+      switch (floatingButtonSetting.clamp(0, 2)) {
+        case 0:
+          hideFloatingButton = false;
+          autoHideFloatingButton = false;
+          break;
+        case 1:
+          hideFloatingButton = true;
+          autoHideFloatingButton = false;
+          break;
+        case 2:
+          hideFloatingButton = false;
+          autoHideFloatingButton = true;
+          break;
+      }
+    }
+  }
+
+  /// 不包含设置里隐藏悬浮球的情况
+  bool get hasFloatingButton => !hasBottomBar;
+
+  /// 不包含设置里隐藏悬浮球的情况
+  bool get hasFloatingButtonRx => !hasBottomBarRx;
+
   double get drawerEdgeDragWidthRatio =>
       (_settingsBox.get(Settings.drawerEdgeDragWidthRatio, defaultValue: 0.25)
               as double)
@@ -305,10 +448,10 @@ class SettingsService extends GetxService {
     ratio =
         ratio.clamp(minDrawerEdgeDragWidthRatio, maxDrawerEdgeDragWidthRatio);
     _settingsBox.put(Settings.drawerEdgeDragWidthRatio, ratio);
-    _drawerDragRatio.value = ratio;
+    _drawerEdgeDragWidthRatio.value = ratio;
   }
 
-  double get drawerDragRatio => _drawerDragRatio.value;
+  double get drawerEdgeDragWidthRatioRx => _drawerEdgeDragWidthRatio.value;
 
   double get swipeablePageDragWidthRatio =>
       (_settingsBox.get(Settings.swipeablePageDragWidthRatio,
@@ -323,7 +466,7 @@ class SettingsService extends GetxService {
 
   set compactTabAndForumList(bool isCompact) {
     _settingsBox.put(Settings.compactTabAndForumList, isCompact);
-    _isCompactTabAndForumList.value = isCompact;
+    _compactTabAndForumList.value = isCompact;
   }
 
   bool get transparentSystemNavigationBar => _settingsBox
@@ -333,7 +476,7 @@ class SettingsService extends GetxService {
       _settingsBox.put(Settings.transparentSystemNavigationBar,
           transparentSystemNavigationBar);
 
-  bool get isCompactTabAndForumList => _isCompactTabAndForumList.value;
+  bool get compactTabAndForumListRx => _compactTabAndForumList.value;
 
   bool get showPoCookieTag =>
       _settingsBox.get(Settings.showPoCookieTag, defaultValue: false);
@@ -365,6 +508,7 @@ class SettingsService extends GetxService {
   set showRelativeTime(bool showRelativeTime) =>
       _settingsBox.put(Settings.showRelativeTime, showRelativeTime);
 
+  /// 0是不显示，1是显示绝对时间，2是显示相对时间
   int get showLatestPostTimeInFeed =>
       (_settingsBox.get(Settings.showLatestPostTimeInFeed, defaultValue: 0)
               as int)
@@ -373,7 +517,7 @@ class SettingsService extends GetxService {
   set showLatestPostTimeInFeed(int mode) {
     mode = mode.clamp(0, 2);
     _settingsBox.put(Settings.showLatestPostTimeInFeed, mode);
-    _isShowLatestPostTimeInFeed.value = mode;
+    _showLatestPostTimeInFeed.value = mode;
   }
 
   bool get isNotShowLatestPostTimeInFeed => showLatestPostTimeInFeed == 0;
@@ -382,7 +526,7 @@ class SettingsService extends GetxService {
 
   bool get isShowLatestRelativePostTimeInFeed => showLatestPostTimeInFeed == 2;
 
-  int get isShowLatestPostTimeInFeed => _isShowLatestPostTimeInFeed.value;
+  int get showLatestPostTimeInFeedRx => _showLatestPostTimeInFeed.value;
 
   double get postHeaderFontSize =>
       (_settingsBox.get(Settings.postHeaderFontSize,
@@ -479,6 +623,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> isJumpToLastBrowsePositionListenable;
 
+  late final ValueListenable<Box> jumpToLastBrowseSettingListenable;
+
   late final ValueListenable<Box> isAfterPostRefreshListenable;
 
   late final ValueListenable<Box> dismissibleTabListenable;
@@ -509,15 +655,23 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> showGuideListenable;
 
+  late final ValueListenable<Box> useDrawerAndEndDrawerListenable;
+
   late final ValueListenable<Box> showBottomBarListenable;
 
   late final ValueListenable<Box> autoHideBottomBarListenable;
+
+  late final ValueListenable<Box> bottomBarSettingListenable;
+
+  late final ValueListenable<Box> endDrawerSettingListenable;
 
   late final ValueListenable<Box> autoHideAppBarListenable;
 
   late final ValueListenable<Box> hideFloatingButtonListenable;
 
   late final ValueListenable<Box> autoHideFloatingButtonListenable;
+
+  late final ValueListenable<Box> floatingButtonSettingListenable;
 
   late final ValueListenable<Box> drawerEdgeDragWidthRatioListenable;
 
@@ -553,6 +707,16 @@ class SettingsService extends GetxService {
     // 是否修复字体
     isFixMissingFont =
         box.get(Settings.fixMissingFont, defaultValue: GetPlatform.isIOS);
+
+    // 兼容旧版本
+    if (!GetPlatform.isIOS &&
+        !box.containsKey(Settings.useDrawerAndEndDrawer)) {
+      if (box.get(Settings.showBottomBar, defaultValue: true)) {
+        await box.put(Settings.useDrawerAndEndDrawer, false);
+      } else {
+        await box.put(Settings.useDrawerAndEndDrawer, true);
+      }
+    }
   }
 
   Future<void> _updateTransparentSystemNavigationBar() async {
@@ -570,7 +734,7 @@ class SettingsService extends GetxService {
           Brightness.dark;
 
   void _setSystemUIOverlayStyle() =>
-      SystemChrome.setSystemUIOverlayStyle((hasBeenDarkMode.value
+      SystemChrome.setSystemUIOverlayStyle((isDarkModeRx.value
               ? (transparentSystemNavigationBar
                   ? const SystemUiOverlayStyle(
                       systemNavigationBarColor: Colors.transparent,
@@ -603,7 +767,7 @@ class SettingsService extends GetxService {
       await Future.delayed(const Duration(milliseconds: 500));
     }
 
-    hasBeenDarkMode.value = Get.isDarkMode;
+    isDarkModeRx.value = Get.isDarkMode;
     _setSystemUIOverlayStyle();
   }
 
@@ -661,6 +825,10 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePage]);
     isJumpToLastBrowsePositionListenable =
         _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePosition]);
+    jumpToLastBrowseSettingListenable = _settingsBox.listenable(keys: [
+      Settings.isJumpToLastBrowsePage,
+      Settings.isJumpToLastBrowsePosition,
+    ]);
     isAfterPostRefreshListenable =
         _settingsBox.listenable(keys: [Settings.isAfterPostRefresh]);
     dismissibleTabListenable =
@@ -691,16 +859,36 @@ class SettingsService extends GetxService {
     fixMissingFontListenable =
         _settingsBox.listenable(keys: [Settings.fixMissingFont]);
     showGuideListenable = _settingsBox.listenable(keys: [Settings.showGuide]);
+    useDrawerAndEndDrawerListenable =
+        _settingsBox.listenable(keys: [Settings.useDrawerAndEndDrawer]);
     showBottomBarListenable =
         _settingsBox.listenable(keys: [Settings.showBottomBar]);
     autoHideBottomBarListenable =
         _settingsBox.listenable(keys: [Settings.autoHideBottomBar]);
+    bottomBarSettingListenable = _settingsBox.listenable(keys: [
+      Settings.useDrawerAndEndDrawer,
+      Settings.showBottomBar,
+      Settings.autoHideBottomBar,
+    ]);
+    endDrawerSettingListenable = _settingsBox.listenable(keys: [
+      Settings.useDrawerAndEndDrawer,
+      Settings.showBottomBar,
+      Settings.autoHideBottomBar,
+      Settings.endDrawerContent,
+    ]);
     autoHideAppBarListenable =
         _settingsBox.listenable(keys: [Settings.autoHideAppBar]);
     hideFloatingButtonListenable =
         _settingsBox.listenable(keys: [Settings.hideFloatingButton]);
     autoHideFloatingButtonListenable =
         _settingsBox.listenable(keys: [Settings.autoHideFloatingButton]);
+    floatingButtonSettingListenable = _settingsBox.listenable(keys: [
+      Settings.useDrawerAndEndDrawer,
+      Settings.showBottomBar,
+      Settings.autoHideBottomBar,
+      Settings.hideFloatingButton,
+      Settings.autoHideFloatingButton,
+    ]);
     drawerEdgeDragWidthRatioListenable = _settingsBox.listenable(
         keys: [Settings.showBottomBar, Settings.drawerEdgeDragWidthRatio]);
     swipeablePageDragWidthRatioListenable = _settingsBox.listenable(
@@ -722,12 +910,14 @@ class SettingsService extends GetxService {
     showLatestPostTimeInFeedListenable =
         _settingsBox.listenable(keys: [Settings.showLatestPostTimeInFeed]);
 
-    _isShowBottomBar = showBottomBar.obs;
-    _isAutoHideBottomBar = autoHideBottomBar.obs;
-    _isAutoHideAppBar = autoHideAppBar.obs;
-    _drawerDragRatio = drawerEdgeDragWidthRatio.obs;
-    _isCompactTabAndForumList = compactTabAndForumList.obs;
-    _isShowLatestPostTimeInFeed = showLatestPostTimeInFeed.obs;
+    _useDrawerAndEndDrawer = useDrawerAndEndDrawer.obs;
+    _showBottomBar = showBottomBar.obs;
+    _autoHideBottomBar = autoHideBottomBar.obs;
+    _endDrawerContent = endDrawerContent.obs;
+    _autoHideAppBar = autoHideAppBar.obs;
+    _drawerEdgeDragWidthRatio = drawerEdgeDragWidthRatio.obs;
+    _compactTabAndForumList = compactTabAndForumList.obs;
+    _showLatestPostTimeInFeed = showLatestPostTimeInFeed.obs;
     shouldShowGuide = showGuide;
     isShowGuide = shouldShowGuide;
 

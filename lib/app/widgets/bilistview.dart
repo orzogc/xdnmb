@@ -41,7 +41,7 @@ class _BiListViewRefreshHeader extends MaterialHeader {
   Widget build(BuildContext context, IndicatorState state) {
     final settings = SettingsService.to;
 
-    return Obx(() => settings.isAutoHideAppBar
+    return Obx(() => settings.autoHideAppBarRx
         ? Padding(
             padding: EdgeInsets.only(top: postListController.appBarHeight),
             child: super.build(context, state),
@@ -58,7 +58,7 @@ class _BiListViewHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    return Obx(() => settings.isAutoHideAppBar
+    return Obx(() => settings.autoHideAppBarRx
         ? const SizedBox(height: PostListAppBar.height)
         : const SizedBox.shrink());
   }

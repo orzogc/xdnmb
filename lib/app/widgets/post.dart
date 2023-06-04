@@ -13,7 +13,6 @@ import '../data/services/tag.dart';
 import '../data/services/time.dart';
 import '../data/services/user.dart';
 import '../utils/extensions.dart';
-import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../utils/time.dart';
 import 'content.dart';
@@ -77,7 +76,7 @@ class _PostUser extends StatelessWidget {
         }
 
         Widget cookie = htmlToRichText(context, userHash,
-            textStyle: style, strutStyle: strutStyleFromHeight(style));
+            textStyle: style, strutStyle: style.sameHeightStrutStyle);
 
         if (showPoTag && isPo && settings.showPoCookieTag) {
           final tagStyle =
@@ -89,7 +88,7 @@ class _PostUser extends StatelessWidget {
               Tag(
                 text: 'Po',
                 textStyle: tagStyle,
-                strutStyle: strutStyleFromHeight(tagStyle),
+                strutStyle: tagStyle.sameHeightStrutStyle,
               ),
               const SizedBox(width: 3.0),
               cookie,
@@ -110,7 +109,7 @@ class _PostUser extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: style,
-                    strutStyle: strutStyleFromHeight(style),
+                    strutStyle: style.sameHeightStrutStyle,
                   ),
                 ],
               )
@@ -286,7 +285,7 @@ class _PostTitle extends StatelessWidget {
           ),
         ),
       ),
-      strutStyle: strutStyleFromHeight(spanTextStyle),
+      strutStyle: spanTextStyle.sameHeightStrutStyle,
     );
   }
 }
@@ -325,7 +324,7 @@ class _PostName extends StatelessWidget {
           ),
         ),
       ),
-      strutStyle: strutStyleFromHeight(spanTextStyle),
+      strutStyle: spanTextStyle.sameHeightStrutStyle,
     );
   }
 }

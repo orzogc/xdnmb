@@ -17,12 +17,12 @@ class QuestionTooltip extends StatelessWidget {
 
     return Obx(
       () {
-        settings.hasBeenDarkMode.value;
+        settings.isDarkModeRx.value;
 
         return Tooltip(
           triggerMode: TooltipTriggerMode.tap,
           showDuration: const Duration(seconds: 5),
-          preferBelow: settings.isAutoHideAppBar,
+          preferBelow: settings.autoHideAppBarRx,
           message: message,
           child: DecoratedBox(
             decoration: BoxDecoration(

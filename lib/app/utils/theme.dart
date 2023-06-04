@@ -33,6 +33,18 @@ abstract class AppTheme {
 
   //static const Color cardColorDark = Color(0xff424242);
 
+  static Color get specialTextColor =>
+      Get.isDarkMode ? AppTheme.colorDark : AppTheme.primaryColorLight;
+
+  static Color get textColor =>
+      Get.isDarkMode ? AppTheme.colorDark : Colors.black;
+
+  static Color get highlightColor =>
+      Get.isDarkMode ? Colors.white : AppTheme.primaryColorLight;
+
+  static Color get inactiveSettingColor =>
+      Get.isDarkMode ? const Color(0xff848284) : Colors.grey;
+
   static final TextTheme textTheme =
       Typography.material2018(platform: defaultTargetPlatform).black;
 
@@ -209,18 +221,6 @@ abstract class AppTheme {
             height: 1.5)), */
     textTheme: textThemeDark,
   );
-
-  static Color get specialTextColor =>
-      Get.isDarkMode ? AppTheme.colorDark : AppTheme.primaryColorLight;
-
-  static Color get textColor =>
-      Get.isDarkMode ? AppTheme.colorDark : Colors.black;
-
-  static Color get highlightColor =>
-      Get.isDarkMode ? Colors.white : AppTheme.primaryColorLight;
-
-  static Color get inactiveSettingColor =>
-      Get.isDarkMode ? AppTheme.primaryColorDark : Colors.grey;
 }
 
 class _ButtonDefaultOverlay extends MaterialStateProperty<Color?> {
