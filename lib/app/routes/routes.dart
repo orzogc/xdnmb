@@ -305,7 +305,6 @@ class AppSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
   @override
   bool get canSwipe => SettingsService.to.isSwipeablePageRx;
 
-  // TODO: 修改这里
   @override
   double get backGestureDetectionWidth => _backGestureDetectionWidth;
 

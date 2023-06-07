@@ -696,14 +696,6 @@ class PostListPage extends StatefulWidget {
 class PostListPageState extends State<PostListPage> {
   late final PageController _pageController;
 
-  void _openDrawer() => Scaffold.of(context).openDrawer();
-
-  void _closeDrawer() => Scaffold.of(context).closeDrawer();
-
-  void _openEndDrawer() => Scaffold.of(context).openEndDrawer();
-
-  void _closeEndDrawer() => Scaffold.of(context).closeEndDrawer();
-
   void jumpToPage(int page) {
     _pageController.jumpToPage(page);
     ControllerStacksService.to.index = page;
@@ -1022,12 +1014,10 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
     }
   }
 
-  // TODO: 修改这里
-  void _showTabAndForumList() => _TabAndForumListButton._showTabAndForumList();
-
   void _setTabAndForumListController() {
     if (SettingsService.to.bottomBarHasTabOrForumListButtonRx) {
-      _tabAndForumListController._show = _showTabAndForumList;
+      _tabAndForumListController._show =
+          TabAndForumListButton._showTabAndForumList;
     } else {
       _tabAndForumListController._show = null;
     }
@@ -1112,7 +1102,7 @@ class _ListInBottomSheet extends StatelessWidget {
 
     final Widget list = LayoutBuilder(
       builder: (context, constraints) => Obx(() {
-        final topPadding = _TabAndForumListButton._topPadding(context);
+        final topPadding = TabAndForumListButton._topPadding(context);
 
         return SizedBox(
           height: (settings.autoHideAppBarRx && topPadding != null)
@@ -1125,7 +1115,7 @@ class _ListInBottomSheet extends StatelessWidget {
 
     return Material(
       child: Obx(() {
-        final bottomPadding = _TabAndForumListButton._bottomPadding(context);
+        final bottomPadding = TabAndForumListButton._bottomPadding(context);
 
         return (bottomPadding != null && bottomPadding > 0.0)
             ? Padding(
@@ -1175,13 +1165,13 @@ class _CompactTabAndForumList extends StatelessWidget {
             children: [
               Flexible(
                 child: TabList(
-                  onTapEnd: _TabAndForumListButton._closeBottomSheet,
+                  onTapEnd: TabAndForumListButton.closeBottomSheet,
                 ),
               ),
               VerticalDivider(width: 1.0, thickness: 1.0),
               Flexible(
                 child: ForumList(
-                  onTapEnd: _TabAndForumListButton._closeBottomSheet,
+                  onTapEnd: TabAndForumListButton.closeBottomSheet,
                 ),
               ),
             ],
@@ -1272,8 +1262,8 @@ class _TabAndForumListState extends State<_TabAndForumList>
         child: TabBarView(
           controller: _tabController,
           children: const [
-            TabList(onTapEnd: _TabAndForumListButton._closeBottomSheet),
-            ForumList(onTapEnd: _TabAndForumListButton._closeBottomSheet),
+            TabList(onTapEnd: TabAndForumListButton.closeBottomSheet),
+            ForumList(onTapEnd: TabAndForumListButton.closeBottomSheet),
           ],
         ),
       ),
@@ -1309,9 +1299,9 @@ class _TabOrForumList extends StatelessWidget {
                 Expanded(
                   child: settings.endDrawerSettingRx == 1
                       ? const TabList(
-                          onTapEnd: _TabAndForumListButton._closeBottomSheet)
+                          onTapEnd: TabAndForumListButton.closeBottomSheet)
                       : const ForumList(
-                          onTapEnd: _TabAndForumListButton._closeBottomSheet),
+                          onTapEnd: TabAndForumListButton.closeBottomSheet),
                 ),
               ],
             )
@@ -1320,7 +1310,7 @@ class _TabOrForumList extends StatelessWidget {
   }
 }
 
-enum _TabAndForumListButtonType {
+enum TabAndForumListButtonType {
   tabList,
   forumList,
   compact;
@@ -1332,7 +1322,7 @@ enum _TabAndForumListButtonType {
   bool get _isCompact => this == compact;
 }
 
-class _TabAndForumListButton extends StatelessWidget {
+class TabAndForumListButton extends StatelessWidget {
   static BottomSheetController get _bottomSheetController =>
       BottomSheetController._tabAndForumListController;
 
@@ -1342,7 +1332,7 @@ class _TabAndForumListButton extends StatelessWidget {
   static BottomSheetController get _editPostBottomSheetController =>
       BottomSheetController.editPostController;
 
-  static void _closeBottomSheet() => _bottomSheetController.close();
+  static void closeBottomSheet() => _bottomSheetController.close();
 
   // 可能需要在Obx里调用
   static double? _topPadding(BuildContext context) =>
@@ -1354,7 +1344,7 @@ class _TabAndForumListButton extends StatelessWidget {
           ? (PostListBottomBar.height + getPadding(context).bottom)
           : null;
 
-  static void _showTabAndForumList({_TabAndForumListButtonType? buttonType}) {
+  static void _showTabAndForumList({TabAndForumListButtonType? buttonType}) {
     final settings = SettingsService.to;
 
     if (settings.bottomBarHasTabOrForumListButtonRx) {
@@ -1385,10 +1375,10 @@ class _TabAndForumListButton extends StatelessWidget {
     }
   }
 
-  final _TabAndForumListButtonType buttonType;
+  final TabAndForumListButtonType buttonType;
 
   // ignore: unused_element
-  const _TabAndForumListButton({super.key, required this.buttonType});
+  const TabAndForumListButton({super.key, required this.buttonType});
 
   @override
   Widget build(BuildContext context) {
@@ -1410,17 +1400,17 @@ class _TabAndForumListButton extends StatelessWidget {
               if (_tabAndForumListController._index != 0) {
                 _tabAndForumListController._animateTo(0);
               } else {
-                _closeBottomSheet();
+                closeBottomSheet();
               }
             } else if (buttonType._isForumList) {
               if (_tabAndForumListController._index != 1) {
                 _tabAndForumListController._animateTo(1);
               } else {
-                _closeBottomSheet();
+                closeBottomSheet();
               }
             }
           } else {
-            _closeBottomSheet();
+            closeBottomSheet();
           }
         }
       },
@@ -1438,6 +1428,7 @@ class _TabAndForumListButton extends StatelessWidget {
 void showHidden() {
   PostListController.showAppBar();
   PostListController.scrollDirection = ScrollDirection.forward;
+  PostListBottomBar.toHide = false;
 }
 
 class PostListBottomBar extends StatelessWidget {
@@ -1486,24 +1477,24 @@ class PostListBottomBar extends StatelessWidget {
     );
     final Widget? compactListButton =
         (settings.endDrawerSettingRx == 0 && settings.compactTabAndForumListRx)
-            ? const _TabAndForumListButton(
-                buttonType: _TabAndForumListButtonType.compact)
+            ? const TabAndForumListButton(
+                buttonType: TabAndForumListButtonType.compact)
             : null;
     final Widget? tabListButton = (settings.endDrawerSettingRx != 2 &&
             settings.endDrawerSettingRx != 3 &&
             (settings.endDrawerSettingRx == 1 ||
                 (settings.endDrawerSettingRx == 0 &&
                     !settings.compactTabAndForumListRx)))
-        ? const _TabAndForumListButton(
-            buttonType: _TabAndForumListButtonType.tabList)
+        ? const TabAndForumListButton(
+            buttonType: TabAndForumListButtonType.tabList)
         : null;
     final Widget? forumListButton = (settings.endDrawerSettingRx != 1 &&
             settings.endDrawerSettingRx != 3 &&
             (settings.endDrawerSettingRx == 2 ||
                 (settings.endDrawerSettingRx == 0 &&
                     !settings.compactTabAndForumListRx)))
-        ? const _TabAndForumListButton(
-            buttonType: _TabAndForumListButtonType.forumList)
+        ? const TabAndForumListButton(
+            buttonType: TabAndForumListButtonType.forumList)
         : null;
     final Widget historyButton = HistoryButton(
       iconColor: buttonColor,
@@ -1639,7 +1630,7 @@ class _PostListViewState extends State<PostListView>
 
   DateTime? _lastPressBackTime;
 
-  ShowCaseWidgetState? showCase;
+  ShowCaseWidgetState? _showCaseState;
 
   Future<bool> _onWillPop(BuildContext context) async {
     if (Navigator.canPop(context)) {
@@ -1666,76 +1657,163 @@ class _PostListViewState extends State<PostListView>
     return true;
   }
 
-  void _startDrawerGuide() => WidgetsBinding.instance.addPostFrameCallback(
-        (timeStamp) => Future.delayed(_delayDuration, () {
-          if (mounted) {
-            showCase?.startShowCase(Guide.drawerGuides);
-          }
-        }),
-      );
+  void _startShowCase(List<GlobalKey> guides) {
+    if (mounted && guides.isNotEmpty) {
+      _showCaseState?.startShowCase(guides);
+    }
+  }
 
-  void _startEndDrawerGuide() => WidgetsBinding.instance.addPostFrameCallback(
-        (timeStamp) => Future.delayed(_delayDuration, () {
-          if (mounted) {
-            showCase?.startShowCase(Guide.endDrawerGuides);
-          }
-        }),
-      );
+  void _startDrawerGuides() => WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) => Future.delayed(
+          _delayDuration, () => _startShowCase(Guide.drawerGuides)));
 
-  void _startBottomBarGuide() =>
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+  void _startEndDrawerHasOnlyOneListGuides() => WidgetsBinding.instance
+      .addPostFrameCallback((timeStamp) => Future.delayed(_delayDuration,
+          () => _startShowCase(Guide.endDrawerHasOnlyOneListGuides)));
+
+  void _startBottomBarGuides() => WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) => _startShowCase(Guide.bottomBarGuides));
+
+  void _startTabListGuide() => WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) => Future.delayed(_delayDuration, () async {
+            if (mounted) {
+              await AppEndDrawer.endDrawerAnimateToPage(0);
+              _startShowCase(Guide.tabListGuide);
+            }
+          }));
+
+  void _startForumListGuide() =>
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
         if (mounted) {
-          showCase?.startShowCase(Guide.bottomBarGuides);
+          await AppEndDrawer.endDrawerAnimateToPage(1);
+          _startShowCase(Guide.forumListGuide);
         }
       });
+
+  void _startEndDrawerBottomGuides() =>
+      WidgetsBinding.instance.addPostFrameCallback(
+          (timeStamp) => _startShowCase(Guide.endDrawerBottomGuides));
+
+  void _endShowCase() {
+    final settings = SettingsService.to;
+
+    if (settings.showDrawerAndEndDrawerGuide) {
+      settings.showDrawerAndEndDrawerGuide = false;
+    } else if (settings.showOnlyEndDrawerGuide) {
+      settings.showOnlyEndDrawerGuide = false;
+    } else if (settings.showBottomBarGuide) {
+      settings.showBottomBarGuide = false;
+    }
+
+    settings.showGuide = false;
+    SettingsService.shouldShowGuide = false;
+    CheckAppVersionService.to.checkAppVersion();
+    PersistentDataService.to.showNotice();
+  }
 
   void _showCase() {
     final settings = SettingsService.to;
 
-    if (settings.showBottomBar) {
-      if (Guide.isShowForumGuides) {
-        Guide.isShowForumGuides = false;
-        Guide.isShowBottomBarGuides = true;
-        _startBottomBarGuide();
-      } else if (Guide.isShowBottomBarGuides) {
-        Guide.isShowBottomBarGuides = false;
-        settings.showGuide = false;
-        if (settings.showBottomBarGuide) {
-          settings.showBottomBarGuide = false;
+    if (Guide.isShowForumGuides) {
+      Guide.isShowForumGuides = false;
+
+      final state = PostListView._scaffoldKey.currentState;
+      if (state != null && state.mounted) {
+        if (state.hasDrawer) {
+          Guide.isShowDrawerGuides = true;
+          state.openDrawer();
+          _startDrawerGuides();
+        } else if (settings.hasBottomBar) {
+          Guide.isShowBottomBarGuides = true;
+          _startBottomBarGuides();
+        } else if (state.hasEndDrawer) {
+          Guide.isShowTabListGuide = true;
+          state.openEndDrawer();
+          _startTabListGuide();
+        } else {
+          _endShowCase();
         }
-        if (settings.showGuideWithoutBottomBar) {
-          settings.showGuideWithoutBottomBar = false;
-        }
-        SettingsService.shouldShowGuide = false;
-        CheckAppVersionService.to.checkAppVersion();
-        PersistentDataService.to.showNotice();
       }
-    } else {
-      if (Guide.isShowForumGuides) {
-        Guide.isShowForumGuides = false;
-        Guide.isShowDrawerGuides = true;
-        PostListPage.pageKey.currentState!._openDrawer();
-        _startDrawerGuide();
-      } else if (Guide.isShowDrawerGuides) {
-        Guide.isShowDrawerGuides = false;
-        PostListPage.pageKey.currentState!._closeDrawer();
-        Guide.isShowEndDrawerGuides = true;
-        PostListPage.pageKey.currentState!._openEndDrawer();
-        _startEndDrawerGuide();
-      } else if (Guide.isShowEndDrawerGuides) {
-        Guide.isShowEndDrawerGuides = false;
-        PostListPage.pageKey.currentState!._closeEndDrawer();
-        settings.showGuide = false;
-        if (settings.showBottomBarGuide) {
-          settings.showBottomBarGuide = false;
-        }
-        if (settings.showGuideWithoutBottomBar) {
-          settings.showGuideWithoutBottomBar = false;
-        }
-        SettingsService.shouldShowGuide = false;
-        CheckAppVersionService.to.checkAppVersion();
-        PersistentDataService.to.showNotice();
+
+      return;
+    }
+
+    if (Guide.isShowDrawerGuides) {
+      Guide.isShowDrawerGuides = false;
+
+      final state = PostListView._scaffoldKey.currentState;
+      if (state != null && state.mounted) {
+        state.closeDrawer();
+        Guide.isShowEndDrawerHasOnlyOneListGuides = true;
+        state.openEndDrawer();
+        _startEndDrawerHasOnlyOneListGuides();
       }
+
+      return;
+    }
+
+    if (Guide.isShowEndDrawerHasOnlyOneListGuides) {
+      Guide.isShowEndDrawerHasOnlyOneListGuides = false;
+      PostListView._scaffoldKey.currentState?.closeEndDrawer();
+      _endShowCase();
+
+      return;
+    }
+
+    if (Guide.isShowBottomBarGuides) {
+      Guide.isShowBottomBarGuides = false;
+
+      if (settings.hasEndDrawerRx) {
+        final state = PostListView._scaffoldKey.currentState;
+        if (state != null && state.mounted) {
+          if (settings.endDrawerSetting == 3) {
+            Guide.isShowTabListGuide = true;
+            state.openEndDrawer();
+            _startTabListGuide();
+          } else {
+            Guide.isShowEndDrawerHasOnlyOneListGuides = true;
+            state.openEndDrawer();
+            _startEndDrawerHasOnlyOneListGuides();
+          }
+        }
+      } else {
+        _endShowCase();
+      }
+
+      return;
+    }
+
+    if (Guide.isShowTabListGuide) {
+      Guide.isShowTabListGuide = false;
+      if (PostListView._scaffoldKey.currentState?.isEndDrawerOpen ?? false) {
+        Guide.isShowForumListGuide = true;
+        _startForumListGuide();
+      }
+
+      return;
+    }
+
+    if (Guide.isShowForumListGuide) {
+      Guide.isShowForumListGuide = false;
+
+      final state = PostListView._scaffoldKey.currentState;
+      if (state != null && state.mounted) {
+        if (settings.hasBottomBar) {
+          state.closeEndDrawer();
+          _endShowCase();
+        } else if (state.isEndDrawerOpen) {
+          Guide.isShowEndDrawerBottomGuides = true;
+          _startEndDrawerBottomGuides();
+        }
+      }
+
+      return;
+    }
+
+    if (Guide.isShowEndDrawerBottomGuides) {
+      Guide.isShowEndDrawerBottomGuides = false;
+      PostListView._scaffoldKey.currentState?.closeEndDrawer();
+      _endShowCase();
     }
   }
 
@@ -1894,7 +1972,7 @@ class _PostListViewState extends State<PostListView>
                 ? ShowCaseWidget(
                     onFinish: _showCase,
                     builder: Builder(builder: (context) {
-                      showCase = ShowCaseWidget.of(context);
+                      _showCaseState = ShowCaseWidget.of(context);
 
                       return scaffold;
                     }))

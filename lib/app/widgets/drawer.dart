@@ -370,9 +370,11 @@ class _InfiniteTabListState extends State<_InfiniteTabList> {
 }
 
 class _TabAndForumList extends StatefulWidget {
+  static final GlobalKey<_TabAndForumListState> _key =
+      GlobalKey<_TabAndForumListState>();
+
   final double? bottomPadding;
 
-  // ignore: unused_element
   const _TabAndForumList({super.key, this.bottomPadding})
       : assert(bottomPadding == null || bottomPadding >= 0.0);
 
@@ -447,6 +449,7 @@ class _TabAndForumListState extends State<_TabAndForumList> {
     _controller.removeListener(_onPageChanged);
     _controller.dispose();
 
+    _toRebuild = false;
     _handleRemainedPointerDataPacket();
 
     if (_pointerDataPacketCallback != null) {
@@ -530,6 +533,14 @@ class _TabAndForumListState extends State<_TabAndForumList> {
 }
 
 class AppEndDrawer extends StatefulWidget {
+  static Future<void> endDrawerAnimateToPage(int page) async {
+    final state = _TabAndForumList._key.currentState;
+    if (state != null && state.mounted) {
+      await state._controller.animateToPage(page.clamp(0, 1),
+          duration: PageViewTabBar.animationDuration, curve: Curves.easeIn);
+    }
+  }
+
   final double width;
 
   const AppEndDrawer({super.key, required this.width});
@@ -543,8 +554,10 @@ class _AppEndDrawerState extends State<AppEndDrawer> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance
-        .addPostFrameCallback((timeStamp) => PostListBottomBar.toHide = true);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      TabAndForumListButton.closeBottomSheet();
+      PostListBottomBar.toHide = true;
+    });
   }
 
   @override
@@ -582,7 +595,8 @@ class _AppEndDrawerState extends State<AppEndDrawer> {
                   ),
                 ],
               )
-            : _TabAndForumList(bottomPadding: bottomPadding),
+            : _TabAndForumList(
+                key: _TabAndForumList._key, bottomPadding: bottomPadding),
       ),
     );
   }

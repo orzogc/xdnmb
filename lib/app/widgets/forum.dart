@@ -272,7 +272,9 @@ class _ForumBodyState extends State<ForumBody> {
           await Future.delayed(const Duration(milliseconds: 300));
 
           Guide.isShowForumGuides = true;
-          showCase.startShowCase(Guide.forumGuides);
+          if (Guide.forumGuides.isNotEmpty) {
+            showCase.startShowCase(Guide.forumGuides);
+          }
         }
       });
     }

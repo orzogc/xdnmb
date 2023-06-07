@@ -47,7 +47,9 @@ abstract class Settings {
 
   static const String showGuide = 'showGuide';
 
-  static const String showGuideWithoutBottomBar = 'showGuideWithoutBottomBar';
+  static const String showDrawerAndEndDrawerGuide = 'showGuideWithoutBottomBar';
+
+  static const String showOnlyEndDrawerGuide = 'showOnlyEndDrawerGuide';
 
   static const String showBottomBarGuide = 'showBottomBarGuide';
 

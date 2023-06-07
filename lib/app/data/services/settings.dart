@@ -255,20 +255,34 @@ class SettingsService extends GetxService {
       _settingsBox.get(Settings.showGuide, defaultValue: true);
 
   bool get showGuide =>
-      rawShowGuide || showBottomBarGuide || showGuideWithoutBottomBar;
-
-  bool get showGuideWithoutBottomBar =>
-      !showBottomBar &&
-      _settingsBox.get(Settings.showGuideWithoutBottomBar, defaultValue: true);
-
-  set showGuideWithoutBottomBar(bool showGuideWithoutBottomBar) => _settingsBox
-      .put(Settings.showGuideWithoutBottomBar, showGuideWithoutBottomBar);
+      rawShowGuide ||
+      showDrawerAndEndDrawerGuide ||
+      showBottomBarGuide ||
+      showOnlyEndDrawerGuide;
 
   set showGuide(bool showGuide) =>
       _settingsBox.put(Settings.showGuide, showGuide);
 
+  bool get showDrawerAndEndDrawerGuide =>
+      useDrawerAndEndDrawer &&
+      _settingsBox.get(Settings.showDrawerAndEndDrawerGuide,
+          defaultValue: true);
+
+  set showDrawerAndEndDrawerGuide(bool showDrawerAndEndDrawerGuide) =>
+      _settingsBox.put(
+          Settings.showDrawerAndEndDrawerGuide, showDrawerAndEndDrawerGuide);
+
+  bool get showOnlyEndDrawerGuide =>
+      !useDrawerAndEndDrawer &&
+      endDrawerSetting > 0 &&
+      _settingsBox.get(Settings.showOnlyEndDrawerGuide, defaultValue: true);
+
+  set showOnlyEndDrawerGuide(bool showOnlyEndDrawerGuide) =>
+      _settingsBox.put(Settings.showOnlyEndDrawerGuide, showOnlyEndDrawerGuide);
+
   bool get showBottomBarGuide =>
-      showBottomBar &&
+      bottomBarSetting != 2 &&
+      endDrawerSetting == 0 &&
       _settingsBox.get(Settings.showBottomBarGuide, defaultValue: true);
 
   set showBottomBarGuide(bool showBottomBarGuide) =>
@@ -289,7 +303,6 @@ class SettingsService extends GetxService {
 
   bool get isSwipeablePageRx => !useDrawerAndEndDrawerRx;
 
-  // TODO: guide
   bool get showBottomBar =>
       _settingsBox.get(Settings.showBottomBar, defaultValue: true);
 

@@ -9,69 +9,83 @@ abstract class Guide {
 
   static bool isShowDrawerGuides = false;
 
-  static bool isShowEndDrawerGuides = false;
+  static bool isShowEndDrawerHasOnlyOneListGuides = false;
 
   static bool isShowBottomBarGuides = false;
 
-  static bool isShowBackLayerTabListGuides = false;
+  static bool isShowTabListGuide = false;
 
-  static bool isShowBackLayerForumListGuides = false;
+  static bool isShowForumListGuide = false;
 
-  static final List<GlobalKey> forumGuides = [
-    if (AppBarMenuGuide._key.currentState?.mounted ?? false)
-      AppBarMenuGuide._key,
-    if (AppBarTitleGuide._key.currentState?.mounted ?? false)
-      AppBarTitleGuide._key,
-    if (AppBarPageButtonGuide._key.currentState?.mounted ?? false)
-      AppBarPageButtonGuide._key,
-    if (AppBarPopupMenuGuide._key.currentState?.mounted ?? false)
-      AppBarPopupMenuGuide._key,
-    if (ThreadGuide._key.currentState?.mounted ?? false) ThreadGuide._key,
-    if (!SettingsService.to.showBottomBar &&
-        !SettingsService.to.hideFloatingButton &&
-        (FloatingButtonGuide._key.currentState?.mounted ?? false))
-      FloatingButtonGuide._key,
-  ];
+  static bool isShowEndDrawerBottomGuides = false;
 
-  static final List<GlobalKey> drawerGuides = [
-    if (TabListGuide._key.currentState?.mounted ?? false) TabListGuide._key,
-    if (DarkModeGuide._key.currentState?.mounted ?? false) DarkModeGuide._key,
-    if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
-    if (SettingsGuide._key.currentState?.mounted ?? false) SettingsGuide._key,
-    if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
-    if (FeedGuide._key.currentState?.mounted ?? false) FeedGuide._key,
-  ];
+  static List<GlobalKey> get forumGuides => [
+        if (AppBarMenuGuide._key.currentState?.mounted ?? false)
+          AppBarMenuGuide._key,
+        if (AppBarTitleGuide._key.currentState?.mounted ?? false)
+          AppBarTitleGuide._key,
+        if (AppBarPageButtonGuide._key.currentState?.mounted ?? false)
+          AppBarPageButtonGuide._key,
+        if (AppBarPopupMenuGuide._key.currentState?.mounted ?? false)
+          AppBarPopupMenuGuide._key,
+        if (ThreadGuide._key.currentState?.mounted ?? false) ThreadGuide._key,
+        if (FloatingButtonGuide._key.currentState?.mounted ?? false)
+          FloatingButtonGuide._key,
+      ];
 
-  static final List<GlobalKey> endDrawerGuides = [
-    if (ForumListGuide._key.currentState?.mounted ?? false) ForumListGuide._key,
-    if (ReorderForumsGuide._key.currentState?.mounted ?? false)
-      ReorderForumsGuide._key,
-  ];
+  static List<GlobalKey> get drawerGuides => [
+        if (TabListGuide._key.currentState?.mounted ?? false) TabListGuide._key,
+        if (ForumListGuide._key.currentState?.mounted ?? false)
+          ForumListGuide._key,
+        if (DarkModeGuide._key.currentState?.mounted ?? false)
+          DarkModeGuide._key,
+        if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
+        if (SettingsGuide._key.currentState?.mounted ?? false)
+          SettingsGuide._key,
+        if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
+        if (FeedGuide._key.currentState?.mounted ?? false) FeedGuide._key,
+      ];
 
-  static final List<GlobalKey> bottomBarGuides = [
-    if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
-    if (SettingsGuide._key.currentState?.mounted ?? false) SettingsGuide._key,
-    if (SettingsService.to.compactTabAndForumList &&
-        (CompactListButtonGuide._key.currentState?.mounted ?? false))
-      CompactListButtonGuide._key,
-    if (!SettingsService.to.compactTabAndForumList &&
-        (TabListButtonGuide._key.currentState?.mounted ?? false))
-      TabListButtonGuide._key,
-    if (!SettingsService.to.compactTabAndForumList &&
-        (ForumListButtonGuide._key.currentState?.mounted ?? false))
-      ForumListButtonGuide._key,
-    if (FeedGuide._key.currentState?.mounted ?? false) FeedGuide._key,
-    if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
-    if (EditPostGuide._key.currentState?.mounted ?? false) EditPostGuide._key,
-  ];
+  static List<GlobalKey> get endDrawerHasOnlyOneListGuides => [
+        if (ForumListGuide._key.currentState?.mounted ?? false)
+          ForumListGuide._key,
+        if (TabListGuide._key.currentState?.mounted ?? false) TabListGuide._key,
+        if (ReorderForumsGuide._key.currentState?.mounted ?? false)
+          ReorderForumsGuide._key,
+      ];
 
-  static final List<GlobalKey> backLayerTabListGuides = [
-    if (TabListGuide._key.currentState?.mounted ?? false) TabListGuide._key,
-  ];
+  static List<GlobalKey> get bottomBarGuides => [
+        if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
+        if (SettingsGuide._key.currentState?.mounted ?? false)
+          SettingsGuide._key,
+        if (CompactListButtonGuide._key.currentState?.mounted ?? false)
+          CompactListButtonGuide._key,
+        if (TabListButtonGuide._key.currentState?.mounted ?? false)
+          TabListButtonGuide._key,
+        if (ForumListButtonGuide._key.currentState?.mounted ?? false)
+          ForumListButtonGuide._key,
+        if (FeedGuide._key.currentState?.mounted ?? false) FeedGuide._key,
+        if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
+        if (EditPostGuide._key.currentState?.mounted ?? false)
+          EditPostGuide._key,
+      ];
 
-  static final List<GlobalKey> backLayerForumListGuides = [
-    if (ForumListGuide._key.currentState?.mounted ?? false) ForumListGuide._key,
-  ];
+  static List<GlobalKey> get tabListGuide => [
+        if (TabListGuide._key.currentState?.mounted ?? false) TabListGuide._key,
+      ];
+
+  static List<GlobalKey> get forumListGuide => [
+        if (ForumListGuide._key.currentState?.mounted ?? false)
+          ForumListGuide._key,
+      ];
+
+  static List<GlobalKey> get endDrawerBottomGuides => [
+        if (HistoryGuide._key.currentState?.mounted ?? false) HistoryGuide._key,
+        if (FeedGuide._key.currentState?.mounted ?? false) FeedGuide._key,
+        if (SettingsGuide._key.currentState?.mounted ?? false)
+          SettingsGuide._key,
+        if (SearchGuide._key.currentState?.mounted ?? false) SearchGuide._key,
+      ];
 }
 
 class AppBarMenuGuide extends StatelessWidget {
@@ -87,16 +101,32 @@ class AppBarMenuGuide extends StatelessWidget {
 
     return SettingsService.shouldShowGuide
         ? Obx(
-            () => Showcase(
-              key: _key,
-              title: (!settings.showBottomBarRx && settings.showGuide)
-                  ? '标签页菜单'
-                  : '标签页和版块列表菜单',
-              description: (!settings.showBottomBarRx && settings.showGuide)
-                  ? '点击打开标签页'
-                  : '点击打开标签页和版块列表',
-              child: child,
-            ),
+            () {
+              late final String text;
+              switch (settings.endDrawerSettingRx) {
+                case 0:
+                  text = '标签页和版块列表';
+                  break;
+                case 1:
+                  text = '标签页列表';
+                  break;
+                case 2:
+                  text = '版块列表';
+                  break;
+                case 3:
+                  text = '标签页和版块列表';
+                  break;
+                default:
+                  text = '未知列表';
+              }
+
+              return Showcase(
+                key: _key,
+                title: '$text菜单',
+                description: '点击打开$text',
+                child: child,
+              );
+            },
           )
         : child;
   }
@@ -110,15 +140,43 @@ class AppBarTitleGuide extends StatelessWidget {
   const AppBarTitleGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => SettingsService.shouldShowGuide
-      ? Showcase(
-          key: _key,
-          title: '标题栏',
-          description: SettingsService.to.showGuide
-              ? '点击刷新页面'
-              : '点击刷新页面，双击或下拉显示标签页和版块列表',
-          child: child)
-      : child;
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return SettingsService.shouldShowGuide
+        ? Obx(
+            () {
+              late final String text;
+              switch (settings.endDrawerSettingRx) {
+                case 0:
+                  text = '标签页和版块列表';
+                  break;
+                case 1:
+                  text = '标签页列表';
+                  break;
+                case 2:
+                  text = '版块列表';
+                  break;
+                case 3:
+                  text = '未知列表';
+                  break;
+                default:
+                  text = '未知列表';
+              }
+
+              return Showcase(
+                key: _key,
+                title: '标题栏',
+                description: (settings.useDrawerAndEndDrawerRx ||
+                        settings.endDrawerSettingRx == 3)
+                    ? '点击刷新页面'
+                    : '点击刷新页面，双击显示$text',
+                child: child,
+              );
+            },
+          )
+        : child;
+  }
 }
 
 class AppBarPageButtonGuide extends StatelessWidget {
@@ -158,7 +216,7 @@ class ThreadGuide extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Showcase(
-      key: _key, title: '主串', description: '点击进入主串，长按打开功能菜单', child: child);
+      key: _key, title: '主串', description: '点击查看串的内容，长按打开功能菜单', child: child);
 }
 
 class FloatingButtonGuide extends StatelessWidget {
@@ -190,18 +248,48 @@ class EditPostGuide extends StatelessWidget {
 class TabListGuide extends StatelessWidget {
   static final GlobalKey _key = GlobalKey();
 
+  static final GlobalKey _key2 = GlobalKey();
+
   final Widget child;
 
   const TabListGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
-        key: _key,
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return Obx(() {
+      late final String text;
+      switch (settings.endDrawerSettingRx) {
+        case 0:
+          text = '';
+          break;
+        case 1:
+          if (settings.useDrawerAndEndDrawerRx) {
+            text = '从左向右划可以打开标签页列表，';
+          } else {
+            text = '';
+          }
+
+          break;
+        case 2:
+          text = '从右向左划可以打开标签页列表，';
+          break;
+        case 3:
+          text = '从右向左划可以打开标签页列表，';
+          break;
+        default:
+          text = '';
+      }
+
+      return Showcase(
+        key: _key.currentState == null ? _key : _key2,
         title: '标签页列表',
-        description:
-            SettingsService.to.showGuide ? '从左向右划可以打开标签页列表，点击切换标签页' : '点击切换标签页',
+        description: '$text点击切换标签页',
         child: child,
       );
+    });
+  }
 }
 
 class DarkModeGuide extends StatelessWidget {
@@ -333,14 +421,41 @@ class ForumListGuide extends StatelessWidget {
   const ForumListGuide(this.child, {super.key});
 
   @override
-  Widget build(BuildContext context) => Showcase(
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return Obx(() {
+      late final String text;
+      switch (settings.endDrawerSettingRx) {
+        case 0:
+          text = '';
+          break;
+        case 1:
+          text = '从右向左划可以打开版块列表，';
+          break;
+        case 2:
+          if (settings.useDrawerAndEndDrawerRx) {
+            text = '从左向右划可以打开版块列表，';
+          } else {
+            text = '';
+          }
+
+          break;
+        case 3:
+          text = '从右向左划可以切换到版块列表，';
+          break;
+        default:
+          text = '';
+      }
+
+      return Showcase(
         key: _key,
         title: '版块列表',
-        description: SettingsService.to.showGuide
-            ? '从右向左划可以打开版块列表，点击进入版块，长按打开功能菜单'
-            : '点击进入版块，长按打开功能菜单',
+        description: '$text点击进入版块，长按打开功能菜单',
         child: child,
       );
+    });
+  }
 }
 
 class ReorderForumsGuide extends StatelessWidget {
