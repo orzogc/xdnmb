@@ -193,6 +193,12 @@ class SettingsService extends GetxService {
 
   set feedId(String feedId) => _settingsBox.put(Settings.feedId, feedId);
 
+  bool get useHtmlFeed =>
+      _settingsBox.get(Settings.useHtmlFeed, defaultValue: false);
+
+  set useHtmlFeed(bool useHtmlFeed) =>
+      _settingsBox.put(Settings.useHtmlFeed, useHtmlFeed);
+
   String? get saveImagePath =>
       _settingsBox.get(Settings.saveImagePath, defaultValue: null);
 
@@ -648,6 +654,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> feedIdListenable;
 
+  late final ValueListenable<Box> useHtmlFeedListenable;
+
   late final ValueListenable<Box> saveImagePathListenable;
 
   late final ValueListenable<Box> cacheImageCountListenable;
@@ -850,7 +858,10 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.selectCookieBeforePost]);
     forbidDuplicatedPostsListenable =
         _settingsBox.listenable(keys: [Settings.forbidDuplicatedPosts]);
-    feedIdListenable = _settingsBox.listenable(keys: [Settings.feedId]);
+    feedIdListenable =
+        _settingsBox.listenable(keys: [Settings.feedId, Settings.useHtmlFeed]);
+    useHtmlFeedListenable =
+        _settingsBox.listenable(keys: [Settings.useHtmlFeed]);
     saveImagePathListenable =
         _settingsBox.listenable(keys: [Settings.saveImagePath]);
     showLargeImageInPostListenable =
@@ -920,8 +931,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.showUserCookieColor]);
     showRelativeTimeListenable =
         _settingsBox.listenable(keys: [Settings.showRelativeTime]);
-    showLatestPostTimeInFeedListenable =
-        _settingsBox.listenable(keys: [Settings.showLatestPostTimeInFeed]);
+    showLatestPostTimeInFeedListenable = _settingsBox.listenable(
+        keys: [Settings.useHtmlFeed, Settings.showLatestPostTimeInFeed]);
 
     _useDrawerAndEndDrawer = useDrawerAndEndDrawer.obs;
     _showBottomBar = showBottomBar.obs;

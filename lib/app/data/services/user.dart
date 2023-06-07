@@ -75,11 +75,6 @@ class UserService extends GetxService {
   set postCookie(CookieData? postCookie) =>
       _userBox.put(User.postCookie, postCookie);
 
-  CookieData? get feedCookie => _userBox.get(User.feedCookie);
-
-  set feedCookie(CookieData? feedCookie) =>
-      _userBox.put(User.feedCookie, feedCookie);
-
   bool get isLogin => userCookie != null;
 
   bool? get isUserCookieExpired => userCookieExpireDate != null
@@ -92,8 +87,6 @@ class UserService extends GetxService {
 
   bool get hasPostCookie => postCookie != null;
 
-  bool get hasFeedCookie => feedCookie != null;
-
   Iterable<CookieData> get xdnmbCookies => _cookiesBox.values;
 
   bool get hasXdnmbCookie => _cookiesBox.isNotEmpty;
@@ -103,8 +96,6 @@ class UserService extends GetxService {
   late final ValueListenable<Box> browseCookieListenable;
 
   late final ValueListenable<Box> postCookieListenable;
-
-  late final ValueListenable<Box> feedCookieListenable;
 
   late final ValueListenable<Box<CookieData>> cookiesListenable;
 
@@ -145,17 +136,6 @@ class UserService extends GetxService {
       }
     } else {
       postCookie = null;
-    }
-  }
-
-  void _updateFeedCookie() {
-    if (hasFeedCookie && hasXdnmbCookie) {
-      for (final cookie in xdnmbCookies) {
-        if (cookie.userHash == feedCookie!.userHash) {
-          feedCookie = cookie.copy();
-          break;
-        }
-      }
     }
   }
 
@@ -296,8 +276,6 @@ class UserService extends GetxService {
     }
   }
 
-  Future<void> deleteFeedCookie() => _userBox.delete(User.feedCookie);
-
   Future<void> updateLastPostTime() async {
     for (final cookie in xdnmbCookies) {
       if (cookie.userHash == postCookie?.userHash) {
@@ -363,26 +341,22 @@ class UserService extends GetxService {
         _userBox.watch(key: User.browseCookie).listen((event) {
       debugPrint('browseCookie change');
       final cookie = event.value as CookieData?;
-      final client = XdnmbClientService.to.client;
-      client.xdnmbCookie = cookie != null
+      XdnmbClientService.to.client.xdnmbCookie = cookie != null
           ? XdnmbCookie(cookie.userHash, name: cookie.name, id: cookie.id)
           : null;
     });
 
     _updateBrowseCookie();
     _updatePostCookie();
-    _updateFeedCookie();
     _cookiesBoxSubscription = _cookiesBox.watch().listen((event) {
       debugPrint('_cookiesBox change');
       _updateBrowseCookie();
       _updatePostCookie();
-      _updateFeedCookie();
     });
 
     userCookieListenable = _userBox.listenable(keys: [User.userCookie]);
     browseCookieListenable = _userBox.listenable(keys: [User.browseCookie]);
     postCookieListenable = _userBox.listenable(keys: [User.postCookie]);
-    feedCookieListenable = _userBox.listenable(keys: [User.feedCookie]);
     cookiesListenable = _cookiesBox.listenable();
 
     isReady.value = true;

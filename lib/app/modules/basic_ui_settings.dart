@@ -3,7 +3,6 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
 
 import '../data/services/settings.dart';
-import '../data/services/user.dart';
 import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
@@ -475,26 +474,24 @@ class _ShowLatestPostTimeInFeed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
-    final user = UserService.to;
     final textStyle = Theme.of(context).textTheme.bodyMedium;
 
     return ListenBuilder(
-      listenable: Listenable.merge([
-        user.feedCookieListenable,
-        settings.showLatestPostTimeInFeedListenable,
-      ]),
+      listenable: settings.showLatestPostTimeInFeedListenable,
       builder: (context, child) => ListTile(
-        title: Text('订阅界面里的串显示最后回复时间',
-            style: TextStyle(
-                color:
-                    user.hasFeedCookie ? AppTheme.inactiveSettingColor : null)),
+        title: Text(
+          '订阅界面里的串显示最后回复时间',
+          style: TextStyle(
+            color: settings.useHtmlFeed ? AppTheme.inactiveSettingColor : null,
+          ),
+        ),
         trailing: DropdownButton<int>(
-          value: !user.hasFeedCookie ? settings.showLatestPostTimeInFeed : 0,
+          value: !settings.useHtmlFeed ? settings.showLatestPostTimeInFeed : 0,
           alignment: Alignment.centerRight,
           underline: const SizedBox.shrink(),
           icon: const SizedBox.shrink(),
           style: textStyle,
-          onChanged: !user.hasFeedCookie
+          onChanged: !settings.useHtmlFeed
               ? (value) {
                   if (value != null) {
                     settings.showLatestPostTimeInFeed = value;

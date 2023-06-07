@@ -6,6 +6,4 @@ abstract class User {
   static const String browseCookie = 'browseCookie';
 
   static const String postCookie = 'postCookie';
-
-  static const String feedCookie = 'feedCookie';
 }

@@ -44,8 +44,10 @@ class _FeedKey {
 
   _FeedKey(this.refresh)
       : feedId =
-            UserService.to.hasFeedCookie ? null : SettingsService.to.feedId,
-        userHash = UserService.to.feedCookie?.userHash;
+            !SettingsService.to.useHtmlFeed ? SettingsService.to.feedId : null,
+        userHash = SettingsService.to.useHtmlFeed
+            ? UserService.to.browseCookie?.userHash
+            : null;
 
   @override
   bool operator ==(Object other) =>
@@ -348,11 +350,9 @@ class _FeedBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final client = XdnmbClientService.to;
     final settings = SettingsService.to;
-    final user = UserService.to;
 
     return ListenBuilder(
-      listenable: Listenable.merge(
-          [settings.feedIdListenable, user.feedCookieListenable]),
+      listenable: settings.feedIdListenable,
       builder: (context, child) => PostListScrollView(
         controller: controller,
         builder: (context, scrollController, refresh) =>
@@ -363,9 +363,8 @@ class _FeedBody extends StatelessWidget {
           initialPage: controller.page,
           canLoadMoreAtBottom: false,
           fetch: (page) async {
-            if (user.hasFeedCookie) {
-              final (feeds, maxPage) = await client.getHtmlFeed(
-                  page: page, cookie: user.feedCookie!.cookie());
+            if (settings.useHtmlFeed) {
+              final (feeds, maxPage) = await client.getHtmlFeed(page: page);
               controller._maxPage = maxPage;
 
               return feeds

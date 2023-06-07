@@ -347,7 +347,7 @@ class HistoryButton extends StatelessWidget {
   void _onTap() {
     onTapPrelude?.call();
 
-    if (PostListController.get().isHistory) {
+    if (SettingsService.to.hasBottomBar && PostListController.get().isHistory) {
       postListBack();
     } else {
       AppRoutes.toHistory();
@@ -383,7 +383,7 @@ class FeedButton extends StatelessWidget {
   void _onTap() {
     onTapPrelude?.call();
 
-    if (PostListController.get().isFeed) {
+    if (SettingsService.to.hasBottomBar && PostListController.get().isFeed) {
       postListBack();
     } else {
       AppRoutes.toFeed();

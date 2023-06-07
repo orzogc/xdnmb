@@ -11,7 +11,6 @@ import 'forum.dart';
 import 'persistent.dart';
 import 'settings.dart';
 import 'tag.dart';
-import 'user.dart';
 
 class ReferenceWithData {
   final HtmlReference reference;
@@ -137,26 +136,22 @@ class XdnmbClientService extends GetxService {
   }
 
   Future<void> addFeed(int mainPostId, {String? cookie}) async {
-    final user = UserService.to;
+    final settings = SettingsService.to;
 
-    if (user.hasFeedCookie) {
-      await client.addHtmlFeed(mainPostId,
-          cookie: cookie ?? user.feedCookie!.cookie());
+    if (settings.useHtmlFeed) {
+      await client.addHtmlFeed(mainPostId, cookie: cookie);
     } else {
-      await client.addFeed(SettingsService.to.feedId, mainPostId,
-          cookie: cookie);
+      await client.addFeed(settings.feedId, mainPostId, cookie: cookie);
     }
   }
 
   Future<void> deleteFeed(int mainPostId, {String? cookie}) async {
-    final user = UserService.to;
+    final settings = SettingsService.to;
 
-    if (user.hasFeedCookie) {
-      await client.deleteHtmlFeed(mainPostId,
-          cookie: cookie ?? user.feedCookie!.cookie());
+    if (settings.useHtmlFeed) {
+      await client.deleteHtmlFeed(mainPostId, cookie: cookie);
     } else {
-      await client.deleteFeed(SettingsService.to.feedId, mainPostId,
-          cookie: cookie);
+      await client.deleteFeed(settings.feedId, mainPostId, cookie: cookie);
     }
   }
 
