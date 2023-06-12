@@ -10,6 +10,7 @@ import 'settings.dart';
 class ImageService extends GetxService {
   static final ImageService to = Get.find<ImageService>();
 
+  /// 保存图片的文件夹，iOS下为图片临时保存文件夹
   static String? savePath;
 
   bool hasStoragePermission = false;

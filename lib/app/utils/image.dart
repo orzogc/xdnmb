@@ -114,7 +114,7 @@ class ReferenceImageCache {
 }
 
 String _imageFilename(Uint8List imageData) {
-  final time = imageFilenameTime();
+  final time = filenameFromTime();
   final mimeType = lookupMimeType(time, headerBytes: imageData);
   if (mimeType == null) {
     return time;
@@ -143,7 +143,7 @@ String hashImage(String imageName, [int? length]) {
 }
 
 Image? getImage(Uint8List imageData) {
-  final time = imageFilenameTime();
+  final time = filenameFromTime();
   final mimeType = lookupMimeType(time, headerBytes: imageData);
   if (mimeType != null) {
     final imageType = ImageType.fromMimeType(mimeType);

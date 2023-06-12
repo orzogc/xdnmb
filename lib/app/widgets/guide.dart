@@ -276,7 +276,7 @@ class TabListGuide extends StatelessWidget {
           text = '从右向左划可以打开标签页列表，';
           break;
         case 3:
-          text = '从右向左划可以打开标签页列表，';
+          text = '从右向左划可以打开标签页列表和版块列表，';
           break;
         default:
           text = '';
@@ -442,7 +442,7 @@ class ForumListGuide extends StatelessWidget {
 
           break;
         case 3:
-          text = '从右向左划可以切换到版块列表，';
+          text = '从右向左划可以切换标签页列表和版块列表，';
           break;
         default:
           text = '';

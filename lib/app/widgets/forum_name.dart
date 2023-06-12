@@ -221,10 +221,12 @@ class _EditForumNameState extends State<EditForumName> {
       content: TextFormField(
         key: _formKey,
         controller: _controller,
-        decoration: const InputDecoration(labelText: '版块名字'),
+        decoration: InputDecoration(
+            labelText: widget.forum.isTimeline ? '时间线名字' : '版块名字'),
         autofocus: true,
-        validator: (value) =>
-            (value == null || value.isEmpty) ? '请输入版块名字' : null,
+        validator: (value) => (value == null || value.isEmpty)
+            ? '请输入${widget.forum.isTimeline ? '时间线' : '版块'}名字'
+            : null,
       ),
       actions: [
         ElevatedButton(

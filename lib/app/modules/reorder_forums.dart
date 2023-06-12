@@ -199,9 +199,7 @@ class _ForumsState extends State<_Forums> {
             children: [
               IconButton(
                 onPressed: () => Get.dialog(EditForumName(forum: forum)),
-                icon: const Icon(
-                  Icons.edit,
-                ),
+                icon: const Icon(Icons.edit),
               ),
               const SizedBox(width: 10.0),
               ReorderableDragStartListener(

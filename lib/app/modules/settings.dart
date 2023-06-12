@@ -171,6 +171,7 @@ class SettingsView extends StatelessWidget {
             const ListTile(
                 title: Text('高级设置'), onTap: AppRoutes.toAdvancedSettings),
             const _DarkMode(),
+            const ListTile(title: Text('应用数据备份与恢复'), onTap: AppRoutes.toBackup),
             const _Feedback(),
             const ListTile(title: Text('客户端作者'), subtitle: Text('Orzogc')),
             const _AuthorQRCodeSponsor(),

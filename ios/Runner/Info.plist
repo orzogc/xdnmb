@@ -56,5 +56,9 @@
 	<string>To get and save images in the photo library</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Use the camera to scan the cookie QR code</string>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 </dict>
 </plist>

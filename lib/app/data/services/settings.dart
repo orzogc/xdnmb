@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../utils/backup.dart';
 import '../../utils/extensions.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
@@ -199,12 +200,15 @@ class SettingsService extends GetxService {
   set useHtmlFeed(bool useHtmlFeed) =>
       _settingsBox.put(Settings.useHtmlFeed, useHtmlFeed);
 
-  String? get saveImagePath =>
-      _settingsBox.get(Settings.saveImagePath, defaultValue: null);
+  String? get saveImagePath => !(GetPlatform.isIOS || GetPlatform.isMacOS)
+      ? _settingsBox.get(Settings.saveImagePath, defaultValue: null)
+      : null;
 
   set saveImagePath(String? directory) {
-    _settingsBox.put(Settings.saveImagePath, directory);
-    ImageService.savePath = directory;
+    if (!(GetPlatform.isIOS || GetPlatform.isMacOS)) {
+      _settingsBox.put(Settings.saveImagePath, directory);
+      ImageService.savePath = directory;
+    }
   }
 
   int get cacheImageCount =>
@@ -213,11 +217,17 @@ class SettingsService extends GetxService {
   set cacheImageCount(int count) =>
       _settingsBox.put(Settings.cacheImageCount, count);
 
-  bool get followPlatformBrightness =>
-      _settingsBox.get(Settings.followPlatformBrightness, defaultValue: false);
+  bool get followPlatformBrightness => (GetPlatform.isMobile ||
+          GetPlatform.isMacOS)
+      ? _settingsBox.get(Settings.followPlatformBrightness, defaultValue: false)
+      : false;
 
-  set followPlatformBrightness(bool followPlatformBrightness) => _settingsBox
-      .put(Settings.followPlatformBrightness, followPlatformBrightness);
+  set followPlatformBrightness(bool followPlatformBrightness) {
+    if (GetPlatform.isMobile || GetPlatform.isMacOS) {
+      _settingsBox.put(
+          Settings.followPlatformBrightness, followPlatformBrightness);
+    }
+  }
 
   bool get addBlueIslandEmoticons =>
       _settingsBox.get(Settings.addBlueIslandEmoticons, defaultValue: true);
@@ -368,9 +378,6 @@ class SettingsService extends GetxService {
   bool get bottomBarHasSingleTabOrForumListButtonRx =>
       hasBottomBarRx && (endDrawerSettingRx == 1 || endDrawerSettingRx == 2);
 
-  bool get bottomBarAllowCompactTanAndForumListButtonRx =>
-      hasBottomBarRx && (endDrawerSettingRx == 0);
-
   /// 0是不用侧边栏，1是版块侧边栏，2是标签页侧边栏，3是版块/标签页侧边栏
   int get endDrawerContent =>
       (_settingsBox.get(Settings.endDrawerContent, defaultValue: 0) as int)
@@ -455,9 +462,6 @@ class SettingsService extends GetxService {
   /// 不包含设置里隐藏悬浮球的情况
   bool get hasFloatingButton => !hasBottomBar;
 
-  /// 不包含设置里隐藏悬浮球的情况
-  bool get hasFloatingButtonRx => !hasBottomBarRx;
-
   double get drawerEdgeDragWidthRatio =>
       (_settingsBox.get(Settings.drawerEdgeDragWidthRatio, defaultValue: 0.25)
               as double)
@@ -488,8 +492,11 @@ class SettingsService extends GetxService {
     _compactTabAndForumList.value = isCompact;
   }
 
-  bool get transparentSystemNavigationBar => _settingsBox
-      .get(Settings.transparentSystemNavigationBar, defaultValue: true);
+  bool get transparentSystemNavigationBar =>
+      isAllowTransparentSystemNavigationBar
+          ? _settingsBox.get(Settings.transparentSystemNavigationBar,
+              defaultValue: true)
+          : false;
 
   set transparentSystemNavigationBar(bool transparentSystemNavigationBar) =>
       _settingsBox.put(Settings.transparentSystemNavigationBar,
@@ -638,10 +645,6 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> isWatermarkListenable;
 
-  late final ValueListenable<Box> isJumpToLastBrowsePageListenable;
-
-  late final ValueListenable<Box> isJumpToLastBrowsePositionListenable;
-
   late final ValueListenable<Box> jumpToLastBrowseSettingListenable;
 
   late final ValueListenable<Box> isAfterPostRefreshListenable;
@@ -678,19 +681,11 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> useDrawerAndEndDrawerListenable;
 
-  late final ValueListenable<Box> showBottomBarListenable;
-
-  late final ValueListenable<Box> autoHideBottomBarListenable;
-
   late final ValueListenable<Box> bottomBarSettingListenable;
 
   late final ValueListenable<Box> endDrawerSettingListenable;
 
   late final ValueListenable<Box> autoHideAppBarListenable;
-
-  late final ValueListenable<Box> hideFloatingButtonListenable;
-
-  late final ValueListenable<Box> autoHideFloatingButtonListenable;
 
   late final ValueListenable<Box> floatingButtonSettingListenable;
 
@@ -722,7 +717,9 @@ class SettingsService extends GetxService {
   static Future<void> getSettings() async {
     final box = await Hive.openBox(HiveBoxName.settings);
 
-    ImageService.savePath = box.get(Settings.saveImagePath, defaultValue: null);
+    ImageService.savePath = !(GetPlatform.isIOS || GetPlatform.isMacOS)
+        ? box.get(Settings.saveImagePath, defaultValue: null)
+        : null;
     isRestoreForumPage =
         box.get(Settings.restoreForumPage, defaultValue: false);
     // 是否修复字体
@@ -745,8 +742,8 @@ class SettingsService extends GetxService {
         (await DeviceInfoPlugin().androidInfo).version.sdkInt >= 30) {
       isAllowTransparentSystemNavigationBar = true;
     } else {
-      transparentSystemNavigationBar = false;
       isAllowTransparentSystemNavigationBar = false;
+      transparentSystemNavigationBar = false;
     }
   }
 
@@ -776,7 +773,8 @@ class SettingsService extends GetxService {
               systemStatusBarContrastEnforced: false));
 
   void updateSaveImagePath() {
-    if (saveImagePath != ImageService.savePath) {
+    if (!(GetPlatform.isIOS || GetPlatform.isMacOS) &&
+        saveImagePath != ImageService.savePath) {
       saveImagePath = ImageService.savePath;
     }
   }
@@ -842,10 +840,6 @@ class SettingsService extends GetxService {
     showImageListenable = _settingsBox.listenable(keys: [Settings.showImage]);
     isWatermarkListenable =
         _settingsBox.listenable(keys: [Settings.isWatermark]);
-    isJumpToLastBrowsePageListenable =
-        _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePage]);
-    isJumpToLastBrowsePositionListenable =
-        _settingsBox.listenable(keys: [Settings.isJumpToLastBrowsePosition]);
     jumpToLastBrowseSettingListenable = _settingsBox.listenable(keys: [
       Settings.isJumpToLastBrowsePage,
       Settings.isJumpToLastBrowsePosition,
@@ -885,10 +879,6 @@ class SettingsService extends GetxService {
     showGuideListenable = _settingsBox.listenable(keys: [Settings.showGuide]);
     useDrawerAndEndDrawerListenable =
         _settingsBox.listenable(keys: [Settings.useDrawerAndEndDrawer]);
-    showBottomBarListenable =
-        _settingsBox.listenable(keys: [Settings.showBottomBar]);
-    autoHideBottomBarListenable =
-        _settingsBox.listenable(keys: [Settings.autoHideBottomBar]);
     bottomBarSettingListenable = _settingsBox.listenable(keys: [
       Settings.useDrawerAndEndDrawer,
       Settings.showBottomBar,
@@ -902,10 +892,6 @@ class SettingsService extends GetxService {
     ]);
     autoHideAppBarListenable =
         _settingsBox.listenable(keys: [Settings.autoHideAppBar]);
-    hideFloatingButtonListenable =
-        _settingsBox.listenable(keys: [Settings.hideFloatingButton]);
-    autoHideFloatingButtonListenable =
-        _settingsBox.listenable(keys: [Settings.autoHideFloatingButton]);
     floatingButtonSettingListenable = _settingsBox.listenable(keys: [
       Settings.useDrawerAndEndDrawer,
       Settings.showBottomBar,
@@ -913,12 +899,24 @@ class SettingsService extends GetxService {
       Settings.hideFloatingButton,
       Settings.autoHideFloatingButton,
     ]);
-    drawerEdgeDragWidthRatioListenable = _settingsBox.listenable(
-        keys: [Settings.showBottomBar, Settings.drawerEdgeDragWidthRatio]);
-    swipeablePageDragWidthRatioListenable = _settingsBox.listenable(
-        keys: [Settings.showBottomBar, Settings.swipeablePageDragWidthRatio]);
-    compactTabAndForumListListenable =
-        _settingsBox.listenable(keys: [Settings.compactTabAndForumList]);
+    drawerEdgeDragWidthRatioListenable = _settingsBox.listenable(keys: [
+      Settings.useDrawerAndEndDrawer,
+      Settings.showBottomBar,
+      Settings.autoHideBottomBar,
+      Settings.endDrawerContent,
+      Settings.drawerEdgeDragWidthRatio,
+    ]);
+    swipeablePageDragWidthRatioListenable = _settingsBox.listenable(keys: [
+      Settings.useDrawerAndEndDrawer,
+      Settings.swipeablePageDragWidthRatio,
+    ]);
+    compactTabAndForumListListenable = _settingsBox.listenable(keys: [
+      Settings.useDrawerAndEndDrawer,
+      Settings.showBottomBar,
+      Settings.autoHideBottomBar,
+      Settings.endDrawerContent,
+      Settings.compactTabAndForumList,
+    ]);
     transparentSystemNavigationBarListListenable = _settingsBox
         .listenable(keys: [Settings.transparentSystemNavigationBar]);
     showPoCookieTagListenable =
@@ -963,5 +961,130 @@ class SettingsService extends GetxService {
     isReady.value = false;
 
     super.onClose();
+  }
+}
+
+class SettingsBackupData extends BackupData {
+  @override
+  String get title => '设置';
+
+  SettingsBackupData();
+
+  @override
+  Future<void> backup(String dir) async {
+    await SettingsService.to._settingsBox.close();
+
+    await copyHiveFileToBackupDir(dir, HiveBoxName.settings);
+    progress = 1.0;
+  }
+}
+
+class FeedIdRestoreData extends RestoreData {
+  @override
+  String get title => '订阅ID';
+
+  @override
+  String? get subTitle => '会覆盖现有的订阅ID';
+
+  FeedIdRestoreData();
+
+  @override
+  Future<bool> canRestore(String dir) =>
+      hiveBackupFileInDir(dir, HiveBoxName.settings).exists();
+
+  @override
+  Future<void> restore(String dir) async {
+    final file = await copyHiveBackupFile(dir, HiveBoxName.settings);
+    final box = await Hive.openBox(hiveBackupName(HiveBoxName.settings));
+    if (box.containsKey(Settings.feedId)) {
+      await SettingsService.to._settingsBox
+          .put(Settings.feedId, box.get(Settings.feedId));
+    }
+    await box.close();
+    await file.delete();
+    await deleteHiveBackupLockFile(HiveBoxName.settings);
+
+    progress = 1.0;
+  }
+}
+
+class SettingsRestoreData extends RestoreData {
+  static final List<String> _settings = [
+    Settings.isRestoreTabs,
+    Settings.initialForum,
+    Settings.showImage,
+    Settings.showLargeImageInPost,
+    Settings.isWatermark,
+    Settings.isJumpToLastBrowsePage,
+    Settings.isJumpToLastBrowsePosition,
+    Settings.isAfterPostRefresh,
+    Settings.dismissibleTab,
+    Settings.selectCookieBeforePost,
+    Settings.forbidDuplicatedPosts,
+    Settings.useHtmlFeed,
+    Settings.cacheImageCount,
+    if (GetPlatform.isMobile || GetPlatform.isMacOS)
+      Settings.followPlatformBrightness,
+    Settings.addBlueIslandEmoticons,
+    Settings.restoreForumPage,
+    Settings.addDeleteFeedInThread,
+    Settings.imageDisposeDistance,
+    Settings.fixedImageDisposeRatio,
+    if (!GetPlatform.isIOS) Settings.useDrawerAndEndDrawer,
+    Settings.showBottomBar,
+    Settings.autoHideBottomBar,
+    Settings.endDrawerContent,
+    Settings.autoHideAppBar,
+    Settings.hideFloatingButton,
+    Settings.autoHideFloatingButton,
+    Settings.drawerEdgeDragWidthRatio,
+    Settings.swipeablePageDragWidthRatio,
+    Settings.compactTabAndForumList,
+    if (SettingsService.isAllowTransparentSystemNavigationBar)
+      Settings.transparentSystemNavigationBar,
+    Settings.showPoCookieTag,
+    Settings.poCookieColor,
+    Settings.showUserCookieNote,
+    Settings.showUserCookieColor,
+    Settings.showRelativeTime,
+    Settings.showLatestPostTimeInFeed,
+    Settings.postHeaderFontSize,
+    Settings.postHeaderFontWeight,
+    Settings.postHeaderLineHeight,
+    Settings.postHeaderLetterSpacing,
+    Settings.postContentFontSize,
+    Settings.postContentFontWeight,
+    Settings.postContentLineHeight,
+    Settings.postContentLetterSpacing,
+  ];
+
+  @override
+  String get title => '设置';
+
+  @override
+  String? get subTitle => '会覆盖大部分设置';
+
+  SettingsRestoreData();
+
+  @override
+  Future<bool> canRestore(String dir) =>
+      hiveBackupFileInDir(dir, HiveBoxName.settings).exists();
+
+  @override
+  Future<void> restore(String dir) async {
+    final settings = SettingsService.to;
+
+    final file = await copyHiveBackupFile(dir, HiveBoxName.settings);
+    final box = await Hive.openBox(hiveBackupName(HiveBoxName.settings));
+    for (final s in _settings) {
+      if (box.containsKey(s)) {
+        await settings._settingsBox.put(s, box.get(s));
+      }
+    }
+    await box.close();
+    await file.delete();
+    await deleteHiveBackupLockFile(HiveBoxName.settings);
+
+    progress = 1.0;
   }
 }

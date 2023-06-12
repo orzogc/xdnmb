@@ -30,6 +30,9 @@ class PostDraftData extends HiveObject {
         name = controller.name,
         content = controller.content;
 
+  PostDraftData copy() =>
+      PostDraftData(title: title, name: name, content: content);
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

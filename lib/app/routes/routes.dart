@@ -9,6 +9,7 @@ import '../data/models/controller.dart';
 import '../data/services/settings.dart';
 import '../data/services/stack.dart';
 import '../modules/advanced_settings.dart';
+import '../modules/backup.dart';
 import '../modules/basic_settings.dart';
 import '../modules/basic_ui_settings.dart';
 import '../modules/blacklist.dart';
@@ -91,6 +92,10 @@ abstract class AppRoutes {
   static const String postUISettings = '/${PathNames.postUISettings}';
 
   static const String postUISettingsPath = '$uiSettingsPath$postUISettings';
+
+  static const String backup = '/${PathNames.backup}';
+
+  static const String backupPath = '$settings$backup';
 
   static const String reorderForums = '/${PathNames.reorderForums}';
 
@@ -207,6 +212,8 @@ abstract class AppRoutes {
   static Future<T?>? toPostUISettings<T>() =>
       Get.toNamed<T>(postUISettingsPath);
 
+  static Future<T?>? toBackup<T>() => Get.toNamed<T>(backupPath);
+
   static Future<T?>? toReorderForums<T>() => Get.toNamed<T>(reorderForums);
 
   static Future<T?>? toEditPost<T>(
@@ -283,6 +290,8 @@ abstract class PathNames {
   static const String basicUISettings = 'basicUISettings';
 
   static const String postUISettings = 'postUISettings';
+
+  static const String backup = 'backup';
 
   static const String reorderForums = 'reorderForums';
 
@@ -449,6 +458,9 @@ Route? onGenerateRoute(RouteSettings settings) {
             binding: PostFontSettingsBinding(),
             page: () => const PostFontSettingsView(),
             transition: Transition.rightToLeft);
+      case AppRoutes.backupPath:
+        return AppSwipeablePageRoute(
+            settings: settings, builder: (context) => const BackupView());
       case AppRoutes.reorderForums:
         return AppSwipeablePageRoute(
             settings: settings,

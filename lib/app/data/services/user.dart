@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../../utils/backup.dart';
 import '../../utils/toast.dart';
 import '../../widgets/listenable.dart';
 import '../models/cookie.dart';
@@ -371,8 +372,171 @@ class UserService extends GetxService {
     await _cookiesBoxSubscription.cancel();
     await _userBox.close();
     await _cookiesBox.close();
+    await _deletedCookiesBox.close();
     isReady.value = false;
 
     super.onClose();
+  }
+}
+
+class CookiesBackupData extends BackupData {
+  @override
+  String get title => '饼干备注和颜色';
+
+  CookiesBackupData();
+
+  @override
+  Future<void> backup(String dir) async {
+    final user = UserService.to;
+
+    await deleteHiveBackupFile(HiveBoxName.cookies);
+    await deleteHiveBackupLockFile(HiveBoxName.cookies);
+    await deleteHiveBackupFile(HiveBoxName.deletedCookies);
+    await deleteHiveBackupLockFile(HiveBoxName.deletedCookies);
+
+    final cookiesBox =
+        await Hive.openBox<CookieData>(hiveBackupName(HiveBoxName.cookies));
+    await cookiesBox.putAll({
+      for (final cookie in user._cookiesBox.values)
+        cookie.name: cookie.deleted(),
+    });
+    await cookiesBox.close();
+    progress = 0.25;
+
+    final cookiesBackupFile = hiveBackupFile(HiveBoxName.cookies);
+    await cookiesBackupFile
+        .copy(hiveBackupFilePathInDir(dir, HiveBoxName.cookies));
+    await cookiesBackupFile.delete();
+    await deleteHiveBackupLockFile(HiveBoxName.cookies);
+    progress = 0.5;
+
+    final deletedCookiesBox = await Hive.openBox<CookieData>(
+        hiveBackupName(HiveBoxName.deletedCookies));
+    await deletedCookiesBox.putAll({
+      for (final cookie in user._deletedCookiesBox.values)
+        cookie.name: cookie.deleted(),
+    });
+    await deletedCookiesBox.close();
+    progress = 0.75;
+
+    final deletedCookiesBackupFile = hiveBackupFile(HiveBoxName.deletedCookies);
+    await deletedCookiesBackupFile
+        .copy(hiveBackupFilePathInDir(dir, HiveBoxName.deletedCookies));
+    await deletedCookiesBackupFile.delete();
+    await deleteHiveBackupLockFile(HiveBoxName.deletedCookies);
+    progress = 1.0;
+  }
+}
+
+class CookiesRestoreData extends RestoreData {
+  @override
+  String get title => '饼干备注和颜色';
+
+  @override
+  String? get subTitle => '会覆盖已有饼干的备注和颜色';
+
+  @override
+  Future<bool> canRestore(String dir) async =>
+      await hiveBackupFileInDir(dir, HiveBoxName.cookies).exists() ||
+      await hiveBackupFileInDir(dir, HiveBoxName.deletedCookies).exists();
+
+  @override
+  Future<void> restore(String dir) async {
+    final user = UserService.to;
+    final addToDeleted = HashMap<String, CookieData>();
+
+    final deletedCookiesFile =
+        hiveBackupFileInDir(dir, HiveBoxName.deletedCookies);
+    if (await deletedCookiesFile.exists()) {
+      await deleteHiveBackupFile(HiveBoxName.deletedCookies);
+      await deleteHiveBackupLockFile(HiveBoxName.deletedCookies);
+      final file = await deletedCookiesFile
+          .copy(hiveBackupFilePath(HiveBoxName.deletedCookies));
+      final box = await Hive.openBox<CookieData>(
+          hiveBackupName(HiveBoxName.deletedCookies));
+
+      for (final cookie in user._deletedCookiesBox.values) {
+        final backupCookie = box.get(cookie.name);
+        if (backupCookie != null) {
+          // 备份饼干存在于现有饼干里时
+          bool isChanged = false;
+          if ((backupCookie.note?.isNotEmpty ?? false) &&
+              backupCookie.note != cookie.note) {
+            cookie.note = backupCookie.note;
+            isChanged = true;
+          }
+          if (backupCookie.colorValue != cookie.colorValue) {
+            cookie.colorValue = backupCookie.colorValue;
+            isChanged = true;
+          }
+
+          if (isChanged) {
+            await cookie.save();
+          }
+          await backupCookie.delete();
+        }
+
+        addToDeleted.addEntries(box.values
+            .map((cookie) => MapEntry(cookie.name, cookie.deleted())));
+        await box.close();
+        await file.delete();
+        await deleteHiveBackupLockFile(HiveBoxName.deletedCookies);
+
+        progress = 1.0 / 3.0;
+      }
+    }
+
+    final cookiesFile = hiveBackupFileInDir(dir, HiveBoxName.cookies);
+    if (await cookiesFile.exists()) {
+      await deleteHiveBackupFile(HiveBoxName.cookies);
+      await deleteHiveBackupLockFile(HiveBoxName.cookies);
+      final file =
+          await cookiesFile.copy(hiveBackupFilePath(HiveBoxName.cookies));
+      final box =
+          await Hive.openBox<CookieData>(hiveBackupName(HiveBoxName.cookies));
+
+      for (final cookie in user._cookiesBox.values) {
+        final backupCookie = box.get(cookie.name);
+        if (backupCookie != null) {
+          // 备份饼干存在于现有饼干里时
+          bool isChanged = false;
+          if ((backupCookie.note?.isNotEmpty ?? false) &&
+              backupCookie.note != cookie.note) {
+            cookie.note = backupCookie.note;
+            isChanged = true;
+          }
+          if (backupCookie.lastPostTime != null) {
+            if (cookie.lastPostTime == null ||
+                backupCookie.lastPostTime!.isAfter(cookie.lastPostTime!)) {
+              cookie.lastPostTime = backupCookie.lastPostTime;
+              isChanged = true;
+            }
+          }
+          if (backupCookie.colorValue != cookie.colorValue) {
+            cookie.colorValue = backupCookie.colorValue;
+            isChanged = true;
+          }
+
+          if (isChanged) {
+            await cookie.save();
+          }
+          await backupCookie.delete();
+        }
+      }
+
+      addToDeleted.addEntries(
+          box.values.map((cookie) => MapEntry(cookie.name, cookie.deleted())));
+      await box.close();
+      await file.delete();
+      await deleteHiveBackupLockFile(HiveBoxName.cookies);
+
+      progress = 2.0 / 3.0;
+    }
+
+    if (addToDeleted.isNotEmpty) {
+      await user._deletedCookiesBox.putAll(addToDeleted);
+    }
+
+    progress = 1.0;
   }
 }

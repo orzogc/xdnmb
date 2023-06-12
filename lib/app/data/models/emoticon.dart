@@ -35,6 +35,8 @@ class EmoticonData extends HiveObject {
     }
   }
 
+  EmoticonData copy() => EmoticonData(name: name, text: text, offset: offset);
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

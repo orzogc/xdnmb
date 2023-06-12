@@ -11,7 +11,7 @@ import 'directory.dart';
 
 /// 初始化Hive数据库
 Future<void> initHive() async {
-  Hive.init(databasePath);
+  Hive.init(databaseDirectory);
 
   Hive.registerAdapter<ForumData>(ForumDataAdapter());
   Hive.registerAdapter<CookieData>(CookieDataAdapter());

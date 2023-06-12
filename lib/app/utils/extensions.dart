@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -211,4 +212,12 @@ extension TextStyleNullExtension on TextStyle? {
   /// 主要是在富文本中使用
   StrutStyle? get sameHeightStrutStyle =>
       this?.height != null ? StrutStyle(height: this!.height) : null;
+}
+
+extension FileExtension on File {
+  Future<void> deleteIfExist() async {
+    if (await exists()) {
+      await delete();
+    }
+  }
 }

@@ -12,34 +12,38 @@ import '../data/services/image.dart';
 const String directoryName = 'xdnmb';
 
 /// 数据库文件夹路径
-late final String databasePath;
+late final String databaseDirectory;
 
-/// 获取数据库文件夹路径，保存在[databasePath]
+/// 获取数据库文件夹路径，保存在[databaseDirectory]
 Future<void> getDatabasePath() async {
   if (GetPlatform.isAndroid || GetPlatform.isIOS || GetPlatform.isMacOS) {
     // Android、iOS和macOS上数据库保存在应用支持文件夹里
     final directory = await getApplicationSupportDirectory();
-    databasePath = directory.path;
+    databaseDirectory = directory.path;
   } else if (GetPlatform.isLinux) {
     // Linux上数据库保存在 ~/.local/share/xdnmb
-    databasePath = join(dataHome.path, directoryName);
+    databaseDirectory = join(dataHome.path, directoryName);
   } else if (GetPlatform.isWindows) {
     // Windows上数据库保存在Roaming文件夹
     final directory = await getApplicationSupportDirectory();
-    databasePath = join(directory.path, directoryName);
+    databaseDirectory = join(directory.path, directoryName);
   } else {
     throw 'Unsupported platform: ${Platform.operatingSystem}';
   }
 
-  final directory = Directory(databasePath);
+  final directory = Directory(databaseDirectory);
   if (!await directory.exists()) {
     await directory.create(recursive: true);
   }
 }
 
+/// 图片文件夹名字
+const String pictureDirectoryName = 'pictures';
+
 /// 获取默认图片保存文件夹
 Future<void> getDefaultSaveImagePath() async {
-  if (ImageService.savePath == null && !(GetPlatform.isIOS || GetPlatform.isMacOS)) {
+  if (ImageService.savePath == null &&
+      !(GetPlatform.isIOS || GetPlatform.isMacOS)) {
     if (GetPlatform.isAndroid) {
       // Android上图片默认保存在Pictures/xdnmb文件夹里
       final picturesPath = await ExternalPath.getExternalStoragePublicDirectory(
@@ -53,16 +57,19 @@ Future<void> getDefaultSaveImagePath() async {
     } else if (GetPlatform.isWindows) {
       // Windows上图片默认保存在文档下的xdnmb文件夹里
       final directory = await getApplicationDocumentsDirectory();
-      ImageService.savePath = join(directory.path, directoryName);
+      ImageService.savePath = join(directory.path, pictureDirectoryName);
     } else {
       throw 'Unsupported platform: ${Platform.operatingSystem}';
     }
   } else if (GetPlatform.isIOS || GetPlatform.isMacOS) {
-      // iOS 系统在一些情况下（如更新应用后），目录会发生改变，所以不能缓存
-      // macOS上图片默认保存在应用文档文件夹里，iOS则为临时保存图片
-      final directory = GetPlatform.isIOS ? 
-        await getTemporaryDirectory() : await getApplicationDocumentsDirectory();
-      ImageService.savePath = directory.path;
+    // iOS 系统在一些情况下（如更新应用后），目录会发生改变，所以不能缓存
+    // macOS上图片默认保存在应用文档文件夹里的pictures文件夹，iOS则为临时保存图片
+    final directory = GetPlatform.isIOS
+        ? await getTemporaryDirectory()
+        : await getApplicationDocumentsDirectory();
+    ImageService.savePath = GetPlatform.isIOS
+        ? directory.path
+        : join(directory.path, pictureDirectoryName);
   }
 
   // 文件夹不存在则新建文件夹
@@ -70,4 +77,15 @@ Future<void> getDefaultSaveImagePath() async {
   if (!await directory.exists()) {
     await directory.create(recursive: true);
   }
+}
+
+const String backupDirectoryPrefix = 'xdnmbBackup';
+
+Future<Directory> getBackupTempDirectory() async {
+  final directory = await getTemporaryDirectory();
+  if (!await directory.exists()) {
+    await directory.create(recursive: true);
+  }
+
+  return directory.createTemp(backupDirectoryPrefix);
 }

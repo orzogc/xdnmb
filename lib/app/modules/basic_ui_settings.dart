@@ -307,10 +307,7 @@ class _CompactTabAndForumList extends StatelessWidget {
     final settings = SettingsService.to;
 
     return ListenBuilder(
-      listenable: Listenable.merge([
-        settings.endDrawerSettingListenable,
-        settings.compactTabAndForumListListenable,
-      ]),
+      listenable: settings.compactTabAndForumListListenable,
       builder: (context, child) => SwitchListTile(
         title: Text(
           '合并显示标签页列表和版块列表',

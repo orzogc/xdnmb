@@ -26,7 +26,7 @@ const List<String> _sameYearFormat = [m, '/', d, ' ', H, ':', nn];
 
 const List<String> _sameDayFormat = [H, ':', nn];
 
-const List<String> _imageFilenameFormat = [yyyy, mm, dd, HH, nn, ss];
+const List<String> _filenameFormat = [yyyy, mm, dd, HH, nn, ss];
 
 const List<String> _onlyDayFormat = [yyyy, '/', mm, '/', dd];
 
@@ -56,6 +56,6 @@ String formatTime(DateTime time) {
               : _sameDayFormat));
 }
 
-String imageFilenameTime() => formatDate(DateTime.now(), _imageFilenameFormat);
+String filenameFromTime() => formatDate(DateTime.now(), _filenameFormat);
 
 String formatDay(DateTime time) => formatDate(time, _onlyDayFormat);

@@ -1,10 +1,10 @@
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
+import '../../utils/backup.dart';
 import '../../widgets/listenable.dart';
 import '../models/forum.dart';
 import '../models/hive.dart';
@@ -47,15 +47,19 @@ class BlacklistService extends GetxService {
   Future<void> blockForum(
       {required int forumId, required int timelineId}) async {
     final forum = BlockForumData(forumId: forumId, timelineId: timelineId);
-    await _forumBlacklistBox.add(forum);
-    _forumBlacklist.add(forum);
-    forumBlacklistNotifier.notify();
+    if (!_forumBlacklist.contains(forum)) {
+      await _forumBlacklistBox.add(forum);
+      _forumBlacklist.add(forum);
+      forumBlacklistNotifier.notify();
+    }
   }
 
   Future<void> unblockForum(BlockForumData forum) async {
-    await forum.delete();
-    _forumBlacklist.remove(forum);
-    forumBlacklistNotifier.notify();
+    if (_forumBlacklist.contains(forum)) {
+      await forum.delete();
+      _forumBlacklist.remove(forum);
+      forumBlacklistNotifier.notify();
+    }
   }
 
   int get postBlacklistLength => _postBlacklistBox.length;
@@ -71,15 +75,19 @@ class BlacklistService extends GetxService {
   int? blockedPost(int index) => _postBlacklistBox.getAt(index);
 
   Future<void> blockPost(int postId) async {
-    await _postBlacklistBox.put(postId, postId);
-    _postBlacklist.add(postId);
-    postAndUserBlacklistNotifier.notify();
+    if (!hasPost(postId)) {
+      await _postBlacklistBox.put(postId, postId);
+      _postBlacklist.add(postId);
+      postAndUserBlacklistNotifier.notify();
+    }
   }
 
   Future<void> unblockPost(int postId) async {
-    await _postBlacklistBox.delete(postId);
-    _postBlacklist.remove(postId);
-    postAndUserBlacklistNotifier.notify();
+    if (hasPost(postId)) {
+      await _postBlacklistBox.delete(postId);
+      _postBlacklist.remove(postId);
+      postAndUserBlacklistNotifier.notify();
+    }
   }
 
   int get userBlacklistLength => _userBlacklistBox.length;
@@ -95,15 +103,19 @@ class BlacklistService extends GetxService {
   String? blockedUser(int index) => _userBlacklistBox.getAt(index);
 
   Future<void> blockUser(String userHash) async {
-    await _userBlacklistBox.put(userHash, userHash);
-    _userBlacklist.add(userHash);
-    postAndUserBlacklistNotifier.notify();
+    if (!hasUser(userHash)) {
+      await _userBlacklistBox.put(userHash, userHash);
+      _userBlacklist.add(userHash);
+      postAndUserBlacklistNotifier.notify();
+    }
   }
 
   Future<void> unblockUser(String userHash) async {
-    await _userBlacklistBox.delete(userHash);
-    _userBlacklist.remove(userHash);
-    postAndUserBlacklistNotifier.notify();
+    if (hasUser(userHash)) {
+      await _userBlacklistBox.delete(userHash);
+      _userBlacklist.remove(userHash);
+      postAndUserBlacklistNotifier.notify();
+    }
   }
 
   @override
@@ -133,5 +145,111 @@ class BlacklistService extends GetxService {
     isReady.value = false;
 
     super.onClose();
+  }
+}
+
+class BlacklistBackupData extends BackupData {
+  @override
+  String get title => '黑名单';
+
+  BlacklistBackupData();
+
+  @override
+  Future<void> backup(String dir) async {
+    final blacklist = BlacklistService.to;
+    await blacklist._forumBlacklistBox.close();
+    await blacklist._postBlacklistBox.close();
+    await blacklist._userBlacklistBox.close();
+
+    await copyHiveFileToBackupDir(dir, HiveBoxName.forumBlacklist);
+    progress = 1.0 / 3.0;
+    await copyHiveFileToBackupDir(dir, HiveBoxName.postBlacklist);
+    progress = 2.0 / 3.0;
+    await copyHiveFileToBackupDir(dir, HiveBoxName.userBlacklist);
+    progress = 1.0;
+  }
+}
+
+class ForumBlacklistRestoreData extends RestoreData {
+  @override
+  String get title => '时间线里的版块黑名单';
+
+  ForumBlacklistRestoreData();
+
+  @override
+  Future<bool> canRestore(String dir) =>
+      hiveBackupFileInDir(dir, HiveBoxName.forumBlacklist).exists();
+
+  @override
+  Future<void> restore(String dir) async {
+    final blacklist = BlacklistService.to;
+
+    final file = await copyHiveBackupFile(dir, HiveBoxName.forumBlacklist);
+    final box = await Hive.openBox<BlockForumData>(
+        hiveBackupName(HiveBoxName.forumBlacklist));
+    await blacklist._forumBlacklistBox.addAll(box.values
+        .where((forum) => !blacklist._forumBlacklist.contains(forum))
+        .map((forum) => forum.copy()));
+    await box.close();
+    await file.delete();
+    await deleteHiveBackupLockFile(HiveBoxName.forumBlacklist);
+
+    progress = 1.0;
+  }
+}
+
+class PostBlacklistRestoreData extends RestoreData {
+  @override
+  String get title => '串号黑名单';
+
+  PostBlacklistRestoreData();
+
+  @override
+  Future<bool> canRestore(String dir) =>
+      hiveBackupFileInDir(dir, HiveBoxName.postBlacklist).exists();
+
+  @override
+  Future<void> restore(String dir) async {
+    final blacklist = BlacklistService.to;
+
+    final file = await copyHiveBackupFile(dir, HiveBoxName.postBlacklist);
+    final box =
+        await Hive.openBox<int>(hiveBackupName(HiveBoxName.postBlacklist));
+    await blacklist._postBlacklistBox.putAll(HashMap.fromEntries(box.values
+        .where((postId) => !blacklist._postBlacklist.contains(postId))
+        .map((postId) => MapEntry(postId, postId))));
+    await box.close();
+    await file.delete();
+    await deleteHiveBackupLockFile(HiveBoxName.postBlacklist);
+
+    progress = 1.0;
+  }
+}
+
+class UserBlacklistRestoreData extends RestoreData {
+  @override
+  String get title => '饼干黑名单';
+
+  UserBlacklistRestoreData();
+
+  @override
+  Future<bool> canRestore(String dir) =>
+      hiveBackupFileInDir(dir, HiveBoxName.userBlacklist).exists();
+
+  @override
+  Future<void> restore(String dir) async {
+    final blacklist = BlacklistService.to;
+
+    final file = await copyHiveBackupFile(dir, HiveBoxName.userBlacklist);
+    final box =
+        await Hive.openBox<String>(hiveBackupName(HiveBoxName.userBlacklist));
+    await blacklist._userBlacklistBox.putAll(HashMap.fromEntries(box.values
+        .where((userHash) => !blacklist._userBlacklist.contains(userHash))
+        .map((userHash) => MapEntry(userHash, userHash))));
+    await box.close();
+    await file.delete();
+    await deleteHiveBackupLockFile(HiveBoxName.userBlacklist);
+
+    progress = 1.0;
   }
 }

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../../utils/backup.dart';
 import '../../utils/toast.dart';
 import '../../widgets/listenable.dart';
 import '../models/forum.dart';
@@ -298,5 +299,66 @@ class ForumListService extends GetxService {
     isReady.value = false;
 
     super.onClose();
+  }
+}
+
+class ForumListBackupData extends BackupData {
+  @override
+  String get title => '时间线和版块';
+
+  ForumListBackupData();
+
+  @override
+  Future<void> backup(String dir) async {
+    await ForumListService.to._forumBox.close();
+
+    await copyHiveFileToBackupDir(dir, HiveBoxName.forums);
+    progress = 1.0;
+  }
+}
+
+class ForumListRestoreData extends RestoreData {
+  @override
+  String get title => '时间线和版块';
+
+  @override
+  String? get subTitle => '会覆盖时间线和版块的自定义名字';
+
+  ForumListRestoreData();
+
+  @override
+  Future<bool> canRestore(String dir) =>
+      hiveBackupFileInDir(dir, HiveBoxName.forums).exists();
+
+  @override
+  Future<void> restore(String dir) async {
+    final forumService = ForumListService.to;
+
+    final file = await copyHiveBackupFile(dir, HiveBoxName.forums);
+    final box =
+        await Hive.openBox<ForumData>(hiveBackupName(HiveBoxName.forums));
+    final map = HashMap.fromEntries(box.values
+        .map((forum) => MapEntry(_ForumKey.fromForumData(forum), forum)));
+
+    for (final forum in forumService._forumBox.values) {
+      final backupForum = map[_ForumKey.fromForumData(forum)];
+      if (backupForum != null &&
+          (backupForum.userDefinedName?.isNotEmpty ?? false) &&
+          backupForum.userDefinedName != forum.userDefinedName) {
+        forum.userDefinedName = backupForum.userDefinedName;
+        await forum.save();
+      }
+    }
+
+    await forumService._forumBox.addAll(map.values
+        .where((forum) =>
+            !forumService._forumMap.containsKey(_ForumKey.fromForumData(forum)))
+        .map((forum) => forum.copy()));
+
+    await box.close();
+    await file.delete();
+    await deleteHiveBackupLockFile(HiveBoxName.forums);
+
+    progress = 1.0;
   }
 }

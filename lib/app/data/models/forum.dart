@@ -169,6 +169,9 @@ class BlockForumData extends HiveObject {
 
   BlockForumData({required this.forumId, required this.timelineId});
 
+  BlockForumData copy() =>
+      BlockForumData(forumId: forumId, timelineId: timelineId);
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

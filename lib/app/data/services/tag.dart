@@ -331,9 +331,18 @@ class TagService extends GetxService {
   }
 
   @override
-  void onClose() {
+  void onClose() async {
+    await _tagsBox.close();
     isReady.value = false;
 
     super.onClose();
+  }
+}
+
+abstract class TagBackupRestore {
+  static Future<void> backupHiveTagData(String dir) async {
+    await TagService.to._tagsBox.close();
+
+    await copyHiveFileToBackupDir(dir, HiveBoxName.tags);
   }
 }

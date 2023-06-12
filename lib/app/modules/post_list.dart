@@ -1056,8 +1056,7 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
     return ListenBuilder(
       listenable: Listenable.merge([
         ControllerStacksService.to.notifier,
-        settings.hideFloatingButtonListenable,
-        settings.autoHideFloatingButtonListenable,
+        settings.floatingButtonSettingListenable,
       ]),
       builder: (context, child) => Obx(() {
         final Widget floatingButton = FloatingActionButton(
@@ -1072,7 +1071,7 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
         return AnimatedSwitcher(
           duration: _animationDuration,
           child: ((_hasBottomSheet ||
-                      !(!settings.hasFloatingButtonRx ||
+                      !(!settings.hasFloatingButton ||
                           settings.hideFloatingButton ||
                           (settings.autoHideFloatingButton &&
                               PostListController.isScrollingDown))) &&

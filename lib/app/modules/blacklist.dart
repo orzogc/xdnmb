@@ -210,7 +210,12 @@ class _Body extends StatelessWidget {
           subtitleBuilder: (forum) => ForumName(
               forumId: forum.timelineId, isTimeline: true, maxLines: 1),
           onDelete: (forum) async {
-            await blacklist.unblockForum(forum);
+            try {
+              await blacklist.unblockForum(forum);
+            } catch (e) {
+              showToast('取消屏蔽版块出现错误：$e');
+            }
+
             refresh();
           },
           deleteDialogContent: (forum) {

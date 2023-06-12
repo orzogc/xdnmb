@@ -1,4 +1,3 @@
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,17 +10,14 @@ import '../widgets/dialog.dart';
 import '../widgets/listenable.dart';
 
 class _SaveImagePath extends StatelessWidget {
-  final Future<AndroidDeviceInfo>? _androidInfo =
-      GetPlatform.isAndroid ? DeviceInfoPlugin().androidInfo : null;
-
   // ignore: unused_element
-  _SaveImagePath({super.key});
+  const _SaveImagePath({super.key});
 
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
 
-    final Widget widget = ListenBuilder(
+    return ListenBuilder(
       listenable: settings.saveImagePathListenable,
       builder: (context, child) => ListTile(
         title: const Text('图片保存位置'),
@@ -49,27 +45,6 @@ class _SaveImagePath extends StatelessWidget {
         },
       ),
     );
-
-    return (GetPlatform.isAndroid && _androidInfo != null)
-        ? FutureBuilder<AndroidDeviceInfo>(
-            future: _androidInfo!,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done &&
-                  snapshot.hasError) {
-                showToast('获取Android设备信息失败：${snapshot.error}');
-              }
-
-              if (snapshot.connectionState == ConnectionState.done &&
-                  snapshot.hasData) {
-                if (snapshot.data!.version.sdkInt >= 21) {
-                  return widget;
-                }
-              }
-
-              return const SizedBox.shrink();
-            },
-          )
-        : widget;
   }
 }
 
@@ -302,8 +277,9 @@ class AdvancedSettingsView extends StatelessWidget {
         ),
         body: ListView(
           children: [
-            if (!GetPlatform.isIOS && ImageService.to.hasStoragePermission)
-              _SaveImagePath(),
+            if (!(GetPlatform.isIOS || GetPlatform.isMacOS) &&
+                ImageService.to.hasStoragePermission)
+              const _SaveImagePath(),
             const _CacheImageCount(),
             const _ClearImageCache(),
             if (GetPlatform.isMobile || GetPlatform.isMacOS)
