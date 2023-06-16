@@ -12,7 +12,7 @@ import '../data/services/settings.dart';
 import 'image.dart';
 import 'regex.dart';
 
-const int _int32Max = 4294967295;
+const int int32Max = 4294967295;
 
 const int imageHashLength = 20;
 
@@ -54,7 +54,7 @@ extension IntExtension on int {
 
   int get pageFromPostIndex => this >>> 32;
 
-  int get postIdFromPostIndex => this & _int32Max;
+  int get postIdFromPostIndex => this & int32Max;
 
   int get postMaxPage => this > 0 ? (this / 19).ceil() : 1;
 
@@ -67,7 +67,7 @@ extension IntExtension on int {
   int? get postId => isNormalPost ? this : null;
 
   int? get historyId =>
-      (isPostHistory || isReplyHistory) ? this & _int32Max : null;
+      (isPostHistory || isReplyHistory) ? this & int32Max : null;
 }
 
 extension IntNullExtension on int? {

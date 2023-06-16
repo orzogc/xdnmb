@@ -1,13 +1,15 @@
 import 'dart:collection';
+import 'dart:math';
 
 import 'package:isar/isar.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
 import '../data/models/reference.dart';
+import 'backup.dart';
 import 'isar.dart';
 
 abstract class ReferenceDatabase {
-  static final IsarCollection<ReferenceData> _referenceData =
+  static IsarCollection<ReferenceData> get _referenceData =>
       isar.referenceDatas;
 
   static Future<HashMap<int, ReferenceData>> _getReferenceMap(
@@ -21,7 +23,8 @@ abstract class ReferenceDatabase {
     return HashMap.fromEntries(posts.map((post) => MapEntry(post.id, post)));
   }
 
-  static Future<void> _addReferences(Iterable<ReferenceData> references) async {
+  static Future<void> _addReferences(Iterable<ReferenceData> references,
+      [List<ReferenceData>? cacheList]) async {
     if (references.isEmpty) {
       return;
     }
@@ -29,7 +32,7 @@ abstract class ReferenceDatabase {
     await isar.writeTxn(() async {
       final map = await _getReferenceMap(references);
 
-      final toAdd = <ReferenceData>[];
+      final toAdd = cacheList ?? <ReferenceData>[];
       for (final reference in references) {
         final stored = map[reference.id];
         if (stored != null) {
@@ -86,4 +89,46 @@ abstract class ReferenceDatabase {
 
   static Future<void> addHtmlFeeds(Iterable<HtmlFeed> feeds) =>
       _addReferences(ReferenceData.fromHtmlFeeds(feeds));
+}
+
+class ReferencesRestoreData extends RestoreData {
+  static const int _stepNum = 10000;
+
+  static IsarCollection<ReferenceData> get _referenceData =>
+      IsarRestoreOperator.backupIsar.referenceDatas;
+
+  @override
+  String get title => '其他数据';
+
+  @override
+  CommonRestoreOperator? get commonOperator => const IsarRestoreOperator();
+
+  ReferencesRestoreData();
+
+  @override
+  Future<bool> canRestore(String dir) =>
+      IsarRestoreOperator.backupIsarExist(dir);
+
+  @override
+  Future<void> restore(String dir) async {
+    await IsarRestoreOperator.openBackupIsar();
+    final count = await _referenceData.count();
+    final n = (count / _stepNum).ceil();
+    final cacheList = <ReferenceData>[];
+
+    for (var i = 0; i < n; i++) {
+      await IsarRestoreOperator.openBackupIsar();
+      final references = await _referenceData
+          .where()
+          .anyId()
+          .offset(i * _stepNum)
+          .limit(_stepNum)
+          .findAll();
+      await IsarRestoreOperator.openIsar();
+      await ReferenceDatabase._addReferences(references, cacheList);
+
+      cacheList.clear();
+      progress = min((i + 1) * _stepNum, count) / count;
+    }
+  }
 }

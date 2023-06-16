@@ -8,11 +8,15 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:isar/isar.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../../utils/backup.dart';
 import '../../utils/extensions.dart';
+import '../../utils/history.dart';
 import '../../utils/isar.dart';
 import '../../utils/post.dart';
 import '../models/controller.dart';
 import '../models/hive.dart';
+import '../models/post.dart';
+import '../models/reply.dart';
 import '../models/tag.dart';
 import '../models/tagged_post.dart';
 import 'persistent.dart';
@@ -20,7 +24,7 @@ import 'persistent.dart';
 class TagService extends GetxService {
   static final TagService to = Get.find<TagService>();
 
-  static final IsarCollection<TaggedPost> _taggedPostData = isar.taggedPosts;
+  static IsarCollection<TaggedPost> get _taggedPostData => isar.taggedPosts;
 
   static late final HashSet<int> _taggedPostIdSet;
 
@@ -78,9 +82,7 @@ class TagService extends GetxService {
 
           for (final post in list) {
             if (post.deleteTag(tagId)) {
-              retained.add(post
-                ..image = ''
-                ..imageExtension = '');
+              retained.add(post.removeImage());
             } else {
               removed.add(post.id);
             }
@@ -170,7 +172,8 @@ class TagService extends GetxService {
   Future<int> getTagIdOrAddNewTag(
       {required String tagName,
       Color? backgroundColor,
-      Color? textColor}) async {
+      Color? textColor,
+      List<int>? pinnedPosts}) async {
     int? tagId = _tagsMap[tagName];
     if (tagId == null) {
       tagId = _nextTagId;
@@ -181,7 +184,7 @@ class TagService extends GetxService {
               name: tagName,
               backgroundColorValue: backgroundColor?.value,
               textColorValue: textColor?.value,
-              pinnedPosts: <int>[]));
+              pinnedPosts: pinnedPosts ?? <int>[]));
       _tagsMap[tagName] = tagId;
       _nextTagId++;
       PersistentDataService.to.addRecentTag(tagId);
@@ -245,9 +248,7 @@ class TagService extends GetxService {
               TaggedPost.fromPost(post: post, forumId: forumId, tags: [tagId]);
         }
 
-        await _taggedPostData.put(data
-          ..image = ''
-          ..imageExtension = '');
+        await _taggedPostData.put(data.removeImage());
         _taggedPostIdSet.add(post.id);
       });
 
@@ -265,9 +266,7 @@ class TagService extends GetxService {
       final data = await _taggedPostData.get(postId);
       if (data != null) {
         if (data.deleteTag(tagId)) {
-          await _taggedPostData.put(data
-            ..image = ''
-            ..imageExtension = '');
+          await _taggedPostData.put(data.removeImage());
         } else {
           await _taggedPostData.delete(postId);
           _taggedPostIdSet.remove(postId);
@@ -290,9 +289,7 @@ class TagService extends GetxService {
           final data = await _taggedPostData.get(postId);
           if (data != null) {
             if (data.replaceTag(oldTagId, newTagId)) {
-              await _taggedPostData.put(data
-                ..image = ''
-                ..imageExtension = '');
+              await _taggedPostData.put(data.removeImage());
               PersistentDataService.to.addRecentTag(newTagId);
             }
           } else {
@@ -323,8 +320,8 @@ class TagService extends GetxService {
         : 0;
     _tagsMap = HashMap.fromEntries(
         _tagsBox.values.map((tag) => MapEntry(tag.name, tag.id)));
-    _taggedPostIdSet = HashSet.of(
-        await _taggedPostData.where().anyId().idProperty().findAll());
+    _taggedPostIdSet =
+        HashSet.of(await _taggedPostData.where().idProperty().findAll());
 
     isReady.value = true;
     debugPrint('读取标签数据成功');
@@ -340,9 +337,177 @@ class TagService extends GetxService {
 }
 
 abstract class TagBackupRestore {
+  static final HashMap<int, int> _tagIdConvertMap = HashMap();
+
   static Future<void> backupHiveTagData(String dir) async {
     await TagService.to._tagsBox.close();
 
     await copyHiveFileToBackupDir(dir, HiveBoxName.tags);
+  }
+
+  // 需要考虑 convertMap 由于发串和回复记录没恢复的情况
+  static int? _convertPostId(int postId) {
+    if (postId.isNormalPost) {
+      return postId;
+    } else if (postId.isPostHistory) {
+      final newId = PostHistoryRestoreData.convertMap[postId.historyId!];
+
+      return newId != null ? PostData.getTaggedPostId(newId) : null;
+    } else if (postId.isReplyHistory) {
+      final newId = ReplyHistoryRestoreData.convertMap[postId.historyId!];
+
+      return newId != null ? ReplyData.getTaggedPostId(newId) : null;
+    }
+
+    debugPrint('未知的postId：$postId');
+    return null;
+  }
+
+  static List<int> _convertPostIds(List<int> postIds) {
+    final list = <int>[];
+    for (final postId in postIds) {
+      final newId = _convertPostId(postId);
+      if (newId != null) {
+        list.add(newId);
+      } else {
+        debugPrint('无法获取新的taggedPostId');
+      }
+    }
+
+    return list;
+  }
+
+  static Future<void> _restoreHiveTagData(String dir) async {
+    final tagService = TagService.to;
+
+    final file = await copyHiveBackupFile(dir, HiveBoxName.tags);
+    final box = await Hive.openBox<TagData>(hiveBackupName(HiveBoxName.tags));
+    for (final tag in box.values) {
+      final tagData = tagService.getTagDataFromName(tag.name);
+      if (tagData != null) {
+        final newTagData = tagData.copyWith(
+            backgroundColor: tag.backgroundColor, textColor: tag.textColor);
+        for (final postId in _convertPostIds(tag.pinnedPosts)) {
+          await newTagData.pinPost(postId, false);
+        }
+        if (!await tagService.editTag(newTagData)) {
+          throw '保存新的 TagData 失败';
+        }
+        _tagIdConvertMap[tag.id] = newTagData.id;
+      } else {
+        final newTagId = await tagService.getTagIdOrAddNewTag(
+            tagName: tag.name,
+            backgroundColor: tag.backgroundColor,
+            textColor: tag.textColor,
+            pinnedPosts: _convertPostIds(tag.pinnedPosts));
+        _tagIdConvertMap[tag.id] = newTagId;
+      }
+    }
+
+    await box.close();
+    await file.delete();
+    await deleteHiveBackupLockFile(HiveBoxName.tags);
+  }
+}
+
+class TagRestoreData extends RestoreData {
+  static const int _stepNum = 1000;
+
+  static IsarCollection<TaggedPost> get _taggedPostData =>
+      IsarRestoreOperator.backupIsar.taggedPosts;
+
+  @override
+  String get title => '标签';
+
+  @override
+  String get subTitle => '会覆盖和合并现有标签';
+
+  @override
+  CommonRestoreOperator? get commonOperator => const IsarRestoreOperator();
+
+  TagRestoreData();
+
+  TaggedPost _convertTags(TaggedPost post) {
+    final newTags = <int>[];
+    for (final tagId in post.tags) {
+      final newTagId = TagBackupRestore._tagIdConvertMap[tagId];
+      if (newTagId != null) {
+        newTags.add(newTagId);
+      } else {
+        debugPrint('无法获取新的标签ID');
+      }
+    }
+
+    return post..tags = newTags;
+  }
+
+  @override
+  Future<bool> canRestore(String dir) async =>
+      await hiveBackupFileInDir(dir, HiveBoxName.tags).exists() &&
+      await IsarRestoreOperator.backupIsarExist(dir);
+
+  @override
+  Future<void> restore(String dir) async {
+    await TagBackupRestore._restoreHiveTagData(dir);
+
+    await IsarRestoreOperator.openBackupIsar();
+    final count = await _taggedPostData.count();
+    final n = (count / _stepNum).ceil();
+    final existPostIds = <int>[];
+    final newPosts = <TaggedPost>[];
+
+    for (var i = 0; i < n; i++) {
+      await IsarRestoreOperator.openBackupIsar();
+      final posts = await _taggedPostData
+          .where()
+          .anyId()
+          .offset(i * _stepNum)
+          .limit(_stepNum)
+          .findAll();
+
+      for (final post in posts) {
+        if (post.id.isNormalPost) {
+          if (TagService._taggedPostIdSet.contains(post.id)) {
+            existPostIds.add(post.id);
+          }
+          newPosts.add(post);
+        } else {
+          final newId = TagBackupRestore._convertPostId(post.id);
+          if (newId != null) {
+            if (TagService._taggedPostIdSet.contains(newId)) {
+              existPostIds.add(newId);
+            }
+            newPosts.add(post.copyWithId(newId));
+          } else {
+            debugPrint('无法获取新的ID');
+          }
+        }
+      }
+
+      await IsarRestoreOperator.openIsar();
+      final existPosts = await TagService._taggedPostData
+          .where()
+          .anyOf(existPostIds, (query, postId) => query.idEqualTo(postId))
+          .findAll();
+      final existPostsMap = HashMap.fromEntries(
+          existPosts.map((post) => MapEntry(post.id, post)));
+
+      final toAddPosts = newPosts.map((post) {
+        post = _convertTags(post);
+        final existPost = existPostsMap[post.id];
+        if (existPost != null) {
+          existPost.updateTags(post);
+
+          return existPost.removeImage();
+        } else {
+          return post.removeImage();
+        }
+      }).toList();
+      await isar.writeTxn(() => TagService._taggedPostData.putAll(toAddPosts));
+
+      existPostIds.clear();
+      newPosts.clear();
+      progress = min((i + 1) * _stepNum, count) / count;
+    }
   }
 }

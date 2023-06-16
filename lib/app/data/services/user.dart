@@ -433,7 +433,7 @@ class CookiesRestoreData extends RestoreData {
   String get title => '饼干备注和颜色';
 
   @override
-  String? get subTitle => '会覆盖已有饼干的备注和颜色';
+  String get subTitle => '会覆盖现有饼干的备注和颜色';
 
   @override
   Future<bool> canRestore(String dir) async =>
@@ -465,7 +465,8 @@ class CookiesRestoreData extends RestoreData {
             cookie.note = backupCookie.note;
             isChanged = true;
           }
-          if (backupCookie.colorValue != cookie.colorValue) {
+          if (backupCookie.colorValue != CookieData.defaultColor &&
+              cookie.colorValue != backupCookie.colorValue) {
             cookie.colorValue = backupCookie.colorValue;
             isChanged = true;
           }
@@ -507,12 +508,13 @@ class CookiesRestoreData extends RestoreData {
           }
           if (backupCookie.lastPostTime != null) {
             if (cookie.lastPostTime == null ||
-                backupCookie.lastPostTime!.isAfter(cookie.lastPostTime!)) {
+                cookie.lastPostTime!.isBefore(backupCookie.lastPostTime!)) {
               cookie.lastPostTime = backupCookie.lastPostTime;
               isChanged = true;
             }
           }
-          if (backupCookie.colorValue != cookie.colorValue) {
+          if (backupCookie.colorValue != CookieData.defaultColor &&
+              cookie.colorValue != backupCookie.colorValue) {
             cookie.colorValue = backupCookie.colorValue;
             isChanged = true;
           }

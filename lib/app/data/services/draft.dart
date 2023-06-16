@@ -65,6 +65,9 @@ class PostDraftListRestoreData extends RestoreData {
   @override
   String get title => '草稿';
 
+  @override
+  String get subTitle => '不会覆盖或合并现有草稿';
+
   PostDraftListRestoreData();
 
   @override

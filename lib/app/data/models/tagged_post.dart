@@ -1,6 +1,8 @@
 import 'package:isar/isar.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
+import '../../utils/extensions.dart';
+
 part 'tagged_post.g.dart';
 
 @Collection(ignore: {
@@ -12,9 +14,9 @@ part 'tagged_post.g.dart';
   'postType',
 })
 class TaggedPost implements PostBase {
-  /// 右边32位，0为普通串数据，1为发串数据，2为回串数据
+  /// 高位32位，0为普通串数据，1为发串数据，2为回串数据
   ///
-  /// 左边32位为对应的串号或Id
+  /// 低位32位为对应的串号或Id
   @override
   final Id id;
 
@@ -130,13 +132,37 @@ class TaggedPost implements PostBase {
     hasImage = post.hasImage;
   }
 
+  TaggedPost copyWithId(int newId) => TaggedPost(
+      id: (id & (int32Max << 32)) | (newId & int32Max),
+      forumId: forumId,
+      postTime: postTime,
+      userHash: userHash,
+      name: name,
+      title: title,
+      content: content,
+      isAdmin: isAdmin,
+      hasImage: hasImage,
+      taggedTime: taggedTime,
+      tags: tags);
+
+  void updateTags(TaggedPost post) {
+    for (final tagId in post.tags) {
+      addTag(tagId, false);
+    }
+    if (taggedTime.isBefore(post.taggedTime)) {
+      taggedTime = post.taggedTime;
+    }
+  }
+
   /// 添加标签成功返回`true`，有重复标签返回`false`
-  bool addTag(int tagId) {
+  bool addTag(int tagId, [bool modifyTaggedTime = true]) {
     assert(hasTag);
 
     if (!tags.contains(tagId)) {
       tags = [...tags, tagId];
-      taggedTime = DateTime.now().toUtc();
+      if (modifyTaggedTime) {
+        taggedTime = DateTime.now().toUtc();
+      }
 
       return true;
     } else {
@@ -181,4 +207,8 @@ class TaggedPost implements PostBase {
       return false;
     }
   }
+
+  TaggedPost removeImage() => this
+    ..image = ''
+    ..imageExtension = '';
 }

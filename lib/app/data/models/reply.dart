@@ -8,6 +8,8 @@ part 'reply.g.dart';
 class ReplyData {
   static const int taggedPostIdPrefix = 2;
 
+  static int getTaggedPostId(int id) => (taggedPostIdPrefix << 32) | id;
+
   Id id = Isar.autoIncrement;
 
   int mainPostId;
@@ -45,7 +47,7 @@ class ReplyData {
   bool get isComplete => hasPostId && page != null;
 
   @ignore
-  int get taggedPostId => (taggedPostIdPrefix << 32) | id;
+  int get taggedPostId => getTaggedPostId(id);
 
   /// [image]是为了兼容旧版本，用来判断[hasImage]
   ReplyData(
@@ -119,6 +121,20 @@ class ReplyData {
     isAdmin = post.isAdmin;
     hasImage = post.hasImage;
   }
+
+  /// 不复制[image]和[imageExtension]
+  ReplyData copy() => ReplyData(
+      mainPostId: mainPostId,
+      postId: postId,
+      forumId: forumId,
+      postTime: postTime,
+      userHash: userHash,
+      name: name,
+      title: title,
+      content: content,
+      isAdmin: isAdmin,
+      page: page,
+      hasImage: hasImage);
 
   @override
   bool operator ==(Object other) =>

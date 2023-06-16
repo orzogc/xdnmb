@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
@@ -31,33 +32,51 @@ abstract class BackupRestoreBase {
 abstract class BackupData extends BackupRestoreBase {
   static bool _isBackup = false;
 
-  static Future<void> backupData(String saveDir, List<BackupData> list,
-      ValueSetter<int> setCompleteNum) async {
+  /// 备份成功返回`true`，否则返回`false`
+  static Future<(bool, String?)> backupData(String saveDir,
+      List<BackupData> list, ValueSetter<int> setCompleteNum) async {
     if (!_isBackup && !RestoreData._isRestored) {
       final directory = await getBackupTempDirectory();
+      final filename = join(saveDir, 'xdnmb_backup_${filenameFromTime()}.zip');
 
-      for (var i = 0; i < list.length; i++) {
-        setCompleteNum(i);
+      try {
+        for (var i = 0; i < list.length; i++) {
+          setCompleteNum(i);
 
-        await list[i].backup(directory.path);
+          debugPrint('正在备份 ${list[i].title}');
+          await list[i].backup(directory.path);
+        }
+
+        final encoder = ZipFileEncoder();
+        encoder.zipDirectory(directory, filename: filename, followLinks: false);
+      } catch (e) {
+        rethrow;
+      } finally {
+        await directory.delete(recursive: true);
+        _isBackup = true;
       }
 
-      final filename = 'xdnmb_backup_${filenameFromTime()}.zip';
-      final encoder = ZipFileEncoder();
-      encoder.zipDirectory(directory,
-          filename: join(saveDir, filename), followLinks: false);
-      await directory.delete(recursive: true);
       setCompleteNum(list.length);
-
-      _isBackup = true;
+      return (true, filename);
     } else {
       showToast('请重启应用后再备份数据');
+
+      return (false, null);
     }
   }
 
   Future<void> backup(String dir);
 
   BackupData();
+}
+
+/// 子类的构造器必须是const
+abstract class CommonRestoreOperator {
+  const CommonRestoreOperator();
+
+  Future<void> beforeRestore(String dir) async {}
+
+  Future<void> afterRestore(String dir) async {}
 }
 
 abstract class RestoreData extends BackupRestoreBase {
@@ -70,23 +89,55 @@ abstract class RestoreData extends BackupRestoreBase {
     return directory;
   }
 
-  static Future<void> restoreData(Directory backupDir, List<RestoreData> list,
+  /// 恢复成功返回`true`，否则返回`false`
+  static Future<bool> restoreData(Directory backupDir, List<RestoreData> list,
       ValueSetter<int> setCompleteNum) async {
     if (!BackupData._isBackup && !_isRestored) {
-      for (var i = 0; i < list.length; i++) {
-        setCompleteNum(i);
-
-        await list[i].restore(backupDir.path);
+      final operatorSet = HashSet.of(list
+          .map((data) => data.commonOperator)
+          .whereType<CommonRestoreOperator>());
+      debugPrint('operator数量：${operatorSet.length}');
+      for (final operator in operatorSet) {
+        await operator.beforeRestore(backupDir.path);
       }
 
-      await backupDir.delete(recursive: true);
-      setCompleteNum(list.length);
+      try {
+        final errors = <String>[];
+        for (var i = 0; i < list.length; i++) {
+          setCompleteNum(i);
 
-      _isRestored = true;
+          debugPrint('正在恢复 ${list[i].title}');
+          try {
+            await list[i].restore(backupDir.path);
+          } catch (e) {
+            debugPrint('恢复 ${list[i].title} 出现错误：$e');
+            errors.add(list[i].title);
+          }
+        }
+
+        if (errors.isNotEmpty) {
+          throw '恢复和合并 ${errors.join('、')} 的备份数据失败，其余备份数据恢复成功';
+        }
+      } catch (e) {
+        rethrow;
+      } finally {
+        for (final operator in operatorSet) {
+          await operator.afterRestore(backupDir.path);
+        }
+
+        await backupDir.delete(recursive: true);
+        _isRestored = true;
+      }
+
+      setCompleteNum(list.length);
+      return true;
     } else {
       showToast('请重启应用后再恢复数据');
+      return false;
     }
   }
+
+  CommonRestoreOperator? get commonOperator => null;
 
   Future<bool> canRestore(String dir);
 

@@ -112,7 +112,7 @@ class SettingsService extends GetxService {
       _settingsBox.get(Settings.initialForum, defaultValue: defaultForum);
 
   set initialForum(ForumData forum) =>
-      _settingsBox.put(Settings.initialForum, forum);
+      _settingsBox.put(Settings.initialForum, forum.copy());
 
   bool get showImage =>
       _settingsBox.get(Settings.showImage, defaultValue: true);
@@ -979,12 +979,29 @@ class SettingsBackupData extends BackupData {
   }
 }
 
+class SettingsRestoreOperator implements CommonRestoreOperator {
+  const SettingsRestoreOperator();
+
+  @override
+  Future<void> beforeRestore(String dir) =>
+      copyHiveBackupFile(dir, HiveBoxName.settings);
+
+  @override
+  Future<void> afterRestore(String dir) async {
+    await deleteHiveBackupFile(HiveBoxName.settings);
+    await deleteHiveBackupLockFile(HiveBoxName.settings);
+  }
+}
+
 class FeedIdRestoreData extends RestoreData {
   @override
   String get title => '订阅ID';
 
   @override
-  String? get subTitle => '会覆盖现有的订阅ID';
+  String get subTitle => '会覆盖现有的订阅ID';
+
+  @override
+  CommonRestoreOperator? get commonOperator => const SettingsRestoreOperator();
 
   FeedIdRestoreData();
 
@@ -994,15 +1011,12 @@ class FeedIdRestoreData extends RestoreData {
 
   @override
   Future<void> restore(String dir) async {
-    final file = await copyHiveBackupFile(dir, HiveBoxName.settings);
     final box = await Hive.openBox(hiveBackupName(HiveBoxName.settings));
     if (box.containsKey(Settings.feedId)) {
       await SettingsService.to._settingsBox
           .put(Settings.feedId, box.get(Settings.feedId));
     }
     await box.close();
-    await file.delete();
-    await deleteHiveBackupLockFile(HiveBoxName.settings);
 
     progress = 1.0;
   }
@@ -1011,7 +1025,6 @@ class FeedIdRestoreData extends RestoreData {
 class SettingsRestoreData extends RestoreData {
   static final List<String> _settings = [
     Settings.isRestoreTabs,
-    Settings.initialForum,
     Settings.showImage,
     Settings.showLargeImageInPost,
     Settings.isWatermark,
@@ -1062,7 +1075,10 @@ class SettingsRestoreData extends RestoreData {
   String get title => '设置';
 
   @override
-  String? get subTitle => '会覆盖大部分设置';
+  String get subTitle => '会覆盖大部分设置';
+
+  @override
+  CommonRestoreOperator? get commonOperator => const SettingsRestoreOperator();
 
   SettingsRestoreData();
 
@@ -1074,16 +1090,18 @@ class SettingsRestoreData extends RestoreData {
   Future<void> restore(String dir) async {
     final settings = SettingsService.to;
 
-    final file = await copyHiveBackupFile(dir, HiveBoxName.settings);
     final box = await Hive.openBox(hiveBackupName(HiveBoxName.settings));
     for (final s in _settings) {
       if (box.containsKey(s)) {
         await settings._settingsBox.put(s, box.get(s));
       }
     }
+    // initialForum需要特殊处理
+    if (box.containsKey(Settings.initialForum)) {
+      await settings._settingsBox.put(Settings.initialForum,
+          (box.get(Settings.initialForum) as ForumData).copy());
+    }
     await box.close();
-    await file.delete();
-    await deleteHiveBackupLockFile(HiveBoxName.settings);
 
     progress = 1.0;
   }

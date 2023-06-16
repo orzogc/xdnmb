@@ -54,7 +54,7 @@ class TagData extends HiveObject {
           textColorValue: textColor?.value ?? textColorValue,
           pinnedPosts: pinnedPosts ?? this.pinnedPosts);
 
-  Future<void> pinPost(int postId) async {
+  Future<void> pinPost(int postId, [bool toSave = true]) async {
     if (pinnedPosts.contains(postId)) {
       pinnedPosts
         ..removeWhere((element) => element == postId)
@@ -63,12 +63,16 @@ class TagData extends HiveObject {
       pinnedPosts.insert(0, postId);
     }
 
-    await save();
+    if (toSave) {
+      await save();
+    }
   }
 
-  Future<void> unpinPost(int postId) async {
+  Future<void> unpinPost(int postId, [bool toSave = true]) async {
     pinnedPosts.removeWhere((element) => element == postId);
 
-    await save();
+    if (toSave) {
+      await save();
+    }
   }
 }

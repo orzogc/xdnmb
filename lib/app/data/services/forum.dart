@@ -322,7 +322,7 @@ class ForumListRestoreData extends RestoreData {
   String get title => '时间线和版块';
 
   @override
-  String? get subTitle => '会覆盖时间线和版块的自定义名字';
+  String get subTitle => '会覆盖时间线和版块的自定义名字，但不改变版块顺序和是否显示该版块';
 
   ForumListRestoreData();
 
