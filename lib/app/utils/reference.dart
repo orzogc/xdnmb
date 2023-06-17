@@ -101,6 +101,9 @@ class ReferencesRestoreData extends RestoreData {
   String get title => '其他数据';
 
   @override
+  String get subTitle => '恢复其他数据可能会比较慢';
+
+  @override
   CommonRestoreOperator? get commonOperator => const IsarRestoreOperator();
 
   ReferencesRestoreData();

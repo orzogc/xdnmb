@@ -20,6 +20,7 @@ class ReferenceWithData {
   const ReferenceWithData(this.reference, this.data);
 }
 
+// TODO: 更改user agent
 // TODO: 增加备用host
 class XdnmbClientService extends GetxService {
   static final XdnmbClientService to = Get.find<XdnmbClientService>();

@@ -6,6 +6,7 @@ import 'package:swipeable_page_route/swipeable_page_route.dart';
 
 import '../data/services/settings.dart';
 
+// TODO: 修复切换页面时自动隐藏标题栏的bug
 class PageViewTabBar extends StatefulWidget implements PreferredSizeWidget {
   static const animationDuration = kTabScrollDuration;
 

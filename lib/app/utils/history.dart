@@ -354,10 +354,10 @@ class BrowseDataHistoryRestoreData extends RestoreData {
       IsarRestoreOperator.backupIsar.browseHistorys;
 
   @override
-  String get title => '浏览历史';
+  String get title => '浏览历史记录';
 
   @override
-  String get subTitle => '会覆盖和合并现有的浏览历史';
+  String get subTitle => '会覆盖和合并现有的浏览历史记录';
 
   @override
   CommonRestoreOperator? get commonOperator => const IsarRestoreOperator();
@@ -532,7 +532,7 @@ class PostHistoryRestoreData extends RestoreData {
           .findAll();
       for (final post in posts) {
         if (post.postId != null) {
-          normalPostIdSet.add(post.id);
+          normalPostIdSet.add(post.postId!);
         } else {
           abnormalPostMap[_PostKey._fromPostData(post)] = post.id;
         }
@@ -625,7 +625,7 @@ class ReplyHistoryRestoreData extends RestoreData {
           .findAll();
       for (final reply in replies) {
         if (reply.postId != null) {
-          normalReplyIdSet.add(reply.id);
+          normalReplyIdSet.add(reply.postId!);
         } else {
           abnormalReplyMap[_ReplyKey._fromReplyData(reply)] = reply.id;
         }

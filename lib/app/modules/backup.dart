@@ -21,6 +21,12 @@ import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/list_tile.dart';
 
+void _showDialog(String text) => WidgetsBinding.instance
+    .addPostFrameCallback((timeStamp) => Get.dialog(ConfirmCancelDialog(
+          contentWidget: Text(text, style: AppTheme.boldRed),
+          onConfirm: Get.back,
+        )));
+
 class _Selection<T> {
   final T value;
 
@@ -127,17 +133,15 @@ class _BackupDialogState extends State<_BackupDialog> {
                     ),
                   );
 
-                  final (result, file) = await BackupData.backupData(
+                  final file = await BackupData.backupData(
                       path, backups, (value) => num.value = value);
-                  if (result) {
-                    showToast('备份应用数据成功，请马上重启应用，备份文件保存在 $file');
-                  }
+                  _showDialog('备份应用数据成功，请马上重启应用，备份文件保存在 $file');
                 }
               } else {
                 debugPrint('用户放弃或者获取备份保存文件夹失败');
               }
             } catch (e) {
-              showToast('备份应用数据出现错误，请马上重启应用：$e');
+              _showDialog('备份应用数据出现错误，请马上重启应用：$e');
             } finally {
               if (overlay.visible) {
                 overlay.hide();
@@ -159,12 +163,18 @@ class _Backup extends StatelessWidget {
   Widget build(BuildContext context) => ListTile(
         title: const Text('备份应用数据'),
         subtitle: const Text('备份数据时请勿退出或者关闭应用，备份后需要重启应用'),
-        onTap: () => Get.dialog(const _BackupDialog()),
+        onTap: () {
+          if (!BackupData.isBackup && !RestoreData.isRestored) {
+            Get.dialog(const _BackupDialog());
+          } else {
+            showToast('请重启应用后再备份应用数据');
+          }
+        },
       );
 }
 
 class _RestoreDialog extends StatefulWidget {
-  final Directory backupDir;
+  final String backupDir;
 
   // ignore: unused_element
   const _RestoreDialog({super.key, required this.backupDir});
@@ -199,8 +209,7 @@ class _RestoreDialogState extends State<_RestoreDialog> {
 
     _check = Future(() async {
       for (final restore in _restores) {
-        restore.isVisible =
-            await restore.value.canRestore(widget.backupDir.path);
+        restore.isVisible = await restore.value.canRestore(widget.backupDir);
       }
 
       return _restores.where((restore) => restore.isVisible).toList();
@@ -217,8 +226,10 @@ class _RestoreDialogState extends State<_RestoreDialog> {
           final restoreList = snapshot.data!;
 
           if (restoreList.isEmpty) {
-            return const AlertDialog(
-                content: Text('无效的应用备份数据', style: AppTheme.boldRed));
+            return ConfirmCancelDialog(
+              contentWidget: const Text('无效的应用备份数据', style: AppTheme.boldRed),
+              onConfirm: Get.back,
+            );
           }
 
           return LoaderOverlay(
@@ -286,12 +297,26 @@ class _RestoreDialogState extends State<_RestoreDialog> {
                     ),
                   );
 
-                  if (await RestoreData.restoreData(widget.backupDir, restores,
-                      (value) => num.value = value)) {
-                    showToast('恢复应用数据成功，请马上重启应用');
+                  final errors = await RestoreData.restoreData(
+                      widget.backupDir, restores, (value) => num.value = value);
+                  if (errors.isNotEmpty) {
+                    final text = errors.map((error) {
+                      final (restore, e) = error;
+
+                      return '恢复 ${restore.title} 的数据出现错误：$e';
+                    }).followedBy([
+                      if (errors.length < restores.length)
+                        '其余应用数据恢复成功，请马上重启应用'
+                      else
+                        '请马上重启应用'
+                    ]).join('\n');
+
+                    _showDialog(text);
+                  } else {
+                    _showDialog('恢复应用数据成功，请马上重启应用');
                   }
                 } catch (e) {
-                  showToast('恢复应用数据出现错误，请马上重启应用：$e');
+                  _showDialog('恢复应用数据出现错误，请马上重启应用：$e');
                 } finally {
                   if (overlay.visible) {
                     overlay.hide();
@@ -307,9 +332,10 @@ class _RestoreDialogState extends State<_RestoreDialog> {
 
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasError) {
-          return AlertDialog(
-            content: Text('获取应用备份数据文件出现错误：${snapshot.error}',
+          return ConfirmCancelDialog(
+            contentWidget: Text('获取应用备份数据文件出现错误：${snapshot.error}',
                 style: AppTheme.boldRed),
+            onConfirm: Get.back,
           );
         }
 
@@ -329,33 +355,53 @@ class _Restore extends StatelessWidget {
           title: const Text('恢复合并应用数据'),
           subtitle: const Text('恢复数据时请勿退出或者关闭应用，恢复后需要重启应用'),
           onTap: () async {
-            showToast('请选取应用备份数据');
+            if (!BackupData.isBackup && !RestoreData.isRestored) {
+              showToast('请选取应用备份数据');
 
-            final overlay = context.loaderOverlay;
-            try {
-              final result = await FilePicker.platform.pickFiles(
-                dialogTitle: 'xdnmb',
-                type: FileType.custom,
-                allowedExtensions: ['zip'],
-                lockParentWindow: true,
-              );
+              final overlay = context.loaderOverlay;
+              try {
+                final result = await FilePicker.platform.pickFiles(
+                    dialogTitle: 'xdnmb',
+                    type: FileType.custom,
+                    allowedExtensions: ['zip'],
+                    lockParentWindow: true);
 
-              if (result != null) {
-                final path = result.files.single.path;
-                if (path != null) {
-                  overlay.show();
-                  final dir = await RestoreData.unzipBackupFile(path);
-                  Get.dialog(_RestoreDialog(backupDir: dir));
-                } else {
-                  showToast('无法获取应用备份数据具体路径');
+                if (result != null) {
+                  final path = result.files.single.path;
+                  if (path != null) {
+                    Directory? backupDir;
+                    overlay.show();
+                    try {
+                      backupDir = await RestoreData.unzipBackupFile(path);
+                    } catch (e) {
+                      showToast('解压应用备份数据出现错误：$e');
+
+                      return;
+                    } finally {
+                      if (overlay.visible) {
+                        overlay.hide();
+                      }
+                    }
+
+                    try {
+                      await Get.dialog(
+                          _RestoreDialog(backupDir: backupDir.path));
+                    } catch (e) {
+                      showToast('恢复应用备份数据出现错误：$e');
+
+                      return;
+                    } finally {
+                      await backupDir.delete(recursive: true);
+                    }
+                  } else {
+                    showToast('无法获取应用备份数据具体路径');
+                  }
                 }
+              } catch (e) {
+                showToast('选取应用备份数据出现错误：$e');
               }
-            } catch (e) {
-              showToast('选取或者解压应用备份数据失败：$e');
-            } finally {
-              if (overlay.visible) {
-                overlay.hide();
-              }
+            } else {
+              showToast('请重启应用后再恢复应用数据');
             }
           },
         ),

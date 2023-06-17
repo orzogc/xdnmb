@@ -476,15 +476,15 @@ class CookiesRestoreData extends RestoreData {
           }
           await backupCookie.delete();
         }
-
-        addToDeleted.addEntries(box.values
-            .map((cookie) => MapEntry(cookie.name, cookie.deleted())));
-        await box.close();
-        await file.delete();
-        await deleteHiveBackupLockFile(HiveBoxName.deletedCookies);
-
-        progress = 1.0 / 3.0;
       }
+
+      addToDeleted.addEntries(
+          box.values.map((cookie) => MapEntry(cookie.name, cookie.deleted())));
+      await box.close();
+      await file.delete();
+      await deleteHiveBackupLockFile(HiveBoxName.deletedCookies);
+
+      progress = 1.0 / 3.0;
     }
 
     final cookiesFile = hiveBackupFileInDir(dir, HiveBoxName.cookies);
