@@ -101,7 +101,7 @@ class ReferencesRestoreData extends RestoreData {
   String get title => '其他数据';
 
   @override
-  String get subTitle => '恢复其他数据可能会比较慢';
+  String get subTitle => '恢复其他数据可能会比较慢，除非刚卸载重装或者清除过应用数据，否则最好不要选这项';
 
   @override
   CommonRestoreOperator? get commonOperator => const IsarRestoreOperator();

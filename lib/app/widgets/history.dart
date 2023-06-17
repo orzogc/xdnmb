@@ -513,12 +513,18 @@ class _BrowseHistoryBody extends StatelessWidget {
 
   final HistoryController controller;
 
-  // ignore: unused_element
-  const _BrowseHistoryBody(this.controller, {super.key});
+  final PostListScrollController scrollController;
+
+  const _BrowseHistoryBody(
+      // ignore: unused_element
+      {super.key,
+      required this.controller,
+      required this.scrollController});
 
   @override
   Widget build(BuildContext context) => PostListScrollView(
         controller: controller,
+        scrollController: scrollController,
         builder: (context, scrollController, refresh) =>
             ValueListenableBuilder<bool>(
           valueListenable: controller._getNotifier(_index),
@@ -688,12 +694,18 @@ class _PostHistoryBody extends StatelessWidget {
 
   final HistoryController controller;
 
-  // ignore: unused_element
-  const _PostHistoryBody(this.controller, {super.key});
+  final PostListScrollController scrollController;
+
+  const _PostHistoryBody(
+      // ignore: unused_element
+      {super.key,
+      required this.controller,
+      required this.scrollController});
 
   @override
   Widget build(BuildContext context) => PostListScrollView(
         controller: controller,
+        scrollController: scrollController,
         builder: (context, scrollController, refresh) =>
             ValueListenableBuilder<bool>(
           valueListenable: controller._getNotifier(_index),
@@ -872,12 +884,18 @@ class _ReplyHistoryBody extends StatelessWidget {
 
   final HistoryController controller;
 
-  // ignore: unused_element
-  const _ReplyHistoryBody(this.controller, {super.key});
+  final PostListScrollController scrollController;
+
+  const _ReplyHistoryBody(
+      // ignore: unused_element
+      {super.key,
+      required this.controller,
+      required this.scrollController});
 
   @override
   Widget build(BuildContext context) => PostListScrollView(
         controller: controller,
+        scrollController: scrollController,
         builder: (context, scrollController, refresh) =>
             ValueListenableBuilder<bool>(
           valueListenable: controller._getNotifier(_index),
@@ -958,6 +976,8 @@ class _HistoryBodyState extends State<HistoryBody> {
 
   late final int _initialIndex;
 
+  late final List<PostListScrollController> _scrollControllerList;
+
   HistoryController get _controller => widget.controller;
 
   void _updateIndex() {
@@ -970,7 +990,10 @@ class _HistoryBodyState extends State<HistoryBody> {
   void _trySave(Object object) => _controller.trySave();
 
   void _onPageIndex(int index) {
+    index = index.clamp(0, _historyPageCount - 1);
     HistoryController._index = index;
+    _controller.scrollController = _scrollControllerList[index];
+
     _trySave(index);
   }
 
@@ -981,6 +1004,10 @@ class _HistoryBodyState extends State<HistoryBody> {
     _initialIndex = _controller.pageIndex;
     _pageController = PageController(initialPage: _initialIndex);
     _pageController.addListener(_updateIndex);
+    _scrollControllerList = List.generate(
+        _historyPageCount,
+        (index) =>
+            PostListScrollController.fromPostListController(_controller));
 
     _pageIndexSubscription = _controller._pageIndex.listen(_onPageIndex);
     _dateRangeSubscription = _controller._dateRange.listen(_trySave);
@@ -1005,6 +1032,10 @@ class _HistoryBodyState extends State<HistoryBody> {
     _dateRangeSubscription.cancel();
     _pageController.removeListener(_updateIndex);
     _pageController.dispose();
+    _controller.scrollController = null;
+    for (final scrollController in _scrollControllerList) {
+      scrollController.dispose();
+    }
 
     super.dispose();
   }
@@ -1035,13 +1066,25 @@ class _HistoryBodyState extends State<HistoryBody> {
             late final Widget body;
             switch (index) {
               case _BrowseHistoryBody._index:
-                body = _BrowseHistoryBody(_controller);
+                body = _BrowseHistoryBody(
+                  controller: _controller,
+                  scrollController:
+                      _scrollControllerList[_BrowseHistoryBody._index],
+                );
                 break;
               case _PostHistoryBody._index:
-                body = _PostHistoryBody(_controller);
+                body = _PostHistoryBody(
+                  controller: _controller,
+                  scrollController:
+                      _scrollControllerList[_PostHistoryBody._index],
+                );
                 break;
               case _ReplyHistoryBody._index:
-                body = _ReplyHistoryBody(_controller);
+                body = _ReplyHistoryBody(
+                  controller: _controller,
+                  scrollController:
+                      _scrollControllerList[_ReplyHistoryBody._index],
+                );
                 break;
               default:
                 body = const Center(

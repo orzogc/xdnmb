@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_expanded_tile/flutter_expanded_tile.dart';
 import 'package:get/get.dart';
+import 'package:html_to_text/html_to_text.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' hide Image;
 
@@ -283,6 +284,65 @@ class _NoticeDialogState extends State<NoticeDialog> {
       ],
     );
   }
+}
+
+class NewVersionDialog extends StatefulWidget {
+  final String url;
+
+  final String? latestVersion;
+
+  final String? updateMessage;
+
+  const NewVersionDialog(
+      {super.key, required this.url, this.latestVersion, this.updateMessage});
+
+  @override
+  State<NewVersionDialog> createState() => _NewVersionDialogState();
+}
+
+class _NewVersionDialogState extends State<NewVersionDialog> {
+  late HtmlText _text;
+
+  void _setText() => _text = HtmlText(
+      context, widget.updateMessage ?? '新版本 ${widget.latestVersion}',
+      onTapLink: (context, link, text) => launchURL(link),
+      textStyle: Theme.of(context).textTheme.titleMedium);
+
+  @override
+  void initState() {
+    super.initState();
+
+    _setText();
+  }
+
+  @override
+  void didUpdateWidget(covariant NewVersionDialog oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.updateMessage != oldWidget.updateMessage ||
+        widget.latestVersion != oldWidget.latestVersion) {
+      _text.dispose();
+      _setText();
+    }
+  }
+
+  @override
+  void dispose() {
+    _text.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ConfirmCancelDialog(
+        title: '发现新版本 ${widget.latestVersion}',
+        contentWidget: _text.toRichText(),
+        onConfirm: () {
+          showToast('正在打开下载链接');
+          launchURL(widget.url);
+        },
+        confirmText: '下载',
+      );
 }
 
 class ForumRuleDialog extends StatefulWidget {

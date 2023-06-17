@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:html_to_text/html_to_text.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:system_info2/system_info2.dart';
 import 'package:version/version.dart';
@@ -41,17 +40,8 @@ class CheckAppVersionService extends GetxService {
     }
   }
 
-  void _showUpdateDialog(String url) => Get.dialog(ConfirmCancelDialog(
-        title: '发现新版本 $_latestVersion',
-        contentWidget: htmlToRichText(
-            Get.context!, _updateMessage ?? '新版本 $_latestVersion',
-            textStyle: Get.textTheme.titleMedium),
-        onConfirm: () {
-          showToast('正在打开下载链接');
-          launchURL(url);
-        },
-        confirmText: '下载',
-      ));
+  void _showUpdateDialog(String url) => Get.dialog(NewVersionDialog(
+      url: url, latestVersion: _latestVersion, updateMessage: _updateMessage));
 
   Future<bool> _hasNewVersion() async {
     final info = await PackageInfo.fromPlatform();

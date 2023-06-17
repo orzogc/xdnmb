@@ -53,6 +53,17 @@ class PostListScrollController extends AnchorScrollController {
       super.initialScrollOffset,
       super.getAnchorOffset,
       super.onIndexChanged});
+
+  PostListScrollController.fromPostListController(PostListController controller)
+      : this(
+          getInitialScrollOffset: () => SettingsService.to.autoHideAppBar
+              ? -controller.appBarHeight
+              : 0.0,
+          getAnchorOffset: () =>
+              SettingsService.to.autoHideAppBar ? controller.appBarHeight : 0.0,
+          onIndexChanged: (index, userScroll) =>
+              controller.page = index.pageFromPostIndex,
+        );
 }
 
 typedef PostListScrollViewBuilder = Widget Function(BuildContext context,
@@ -96,19 +107,8 @@ class _PostListScrollViewState extends State<PostListScrollView> {
     }
   }
 
-  void _setScrollController() {
-    final settings = SettingsService.to;
-
-    _scrollController = widget.scrollController ??
-        PostListScrollController(
-          getInitialScrollOffset: () =>
-              settings.autoHideAppBar ? -widget.controller.appBarHeight : 0.0,
-          getAnchorOffset: () =>
-              settings.autoHideAppBar ? widget.controller.appBarHeight : 0.0,
-          onIndexChanged: (index, userScroll) =>
-              widget.controller.page = index.pageFromPostIndex,
-        );
-  }
+  void _setScrollController() => _scrollController = widget.scrollController ??
+      PostListScrollController.fromPostListController(widget.controller);
 
   @override
   void initState() {

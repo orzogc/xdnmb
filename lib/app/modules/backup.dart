@@ -201,19 +201,30 @@ class _RestoreDialogState extends State<_RestoreDialog> {
     ReferencesRestoreData(),
   ].map((restore) => _Selection(restore)).toList();
 
-  late final Future<List<_Selection<RestoreData>>> _check;
+  late Future<List<_Selection<RestoreData>>> _check;
+
+  void _setCheck() => _check = Future(() async {
+        for (final restore in _restores) {
+          restore.isVisible = await restore.value.canRestore(widget.backupDir);
+        }
+
+        return _restores.where((restore) => restore.isVisible).toList();
+      });
 
   @override
   void initState() {
     super.initState();
 
-    _check = Future(() async {
-      for (final restore in _restores) {
-        restore.isVisible = await restore.value.canRestore(widget.backupDir);
-      }
+    _setCheck();
+  }
 
-      return _restores.where((restore) => restore.isVisible).toList();
-    });
+  @override
+  void didUpdateWidget(covariant _RestoreDialog oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.backupDir != oldWidget.backupDir) {
+      _setCheck();
+    }
   }
 
   @override

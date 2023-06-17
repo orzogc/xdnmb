@@ -343,8 +343,13 @@ class _FeedBody extends StatelessWidget {
 
   final FeedController controller;
 
-  // ignore: unused_element
-  const _FeedBody(this.controller, {super.key});
+  final PostListScrollController scrollController;
+
+  const _FeedBody(
+      // ignore: unused_element
+      {super.key,
+      required this.controller,
+      required this.scrollController});
 
   @override
   Widget build(BuildContext context) {
@@ -355,6 +360,7 @@ class _FeedBody extends StatelessWidget {
       listenable: settings.feedIdListenable,
       builder: (context, child) => PostListScrollView(
         controller: controller,
+        scrollController: scrollController,
         builder: (context, scrollController, refresh) =>
             BiListView<Visible<PostWithPage<FeedBase>>>(
           key: ValueKey<_FeedKey>(_FeedKey(refresh)),
@@ -550,12 +556,18 @@ class _TagListBody extends StatelessWidget {
 
   final FeedController controller;
 
-  // ignore: unused_element
-  const _TagListBody(this.controller, {super.key});
+  final PostListScrollController scrollController;
+
+  const _TagListBody(
+      // ignore: unused_element
+      {super.key,
+      required this.controller,
+      required this.scrollController});
 
   @override
   Widget build(BuildContext context) => PostListScrollView(
         controller: controller,
+        scrollController: scrollController,
         builder: (context, scrollController, refresh) => BiListView<int>(
           key: ValueKey<int>(refresh),
           scrollController: scrollController,
@@ -593,6 +605,8 @@ class _FeedBodyState extends State<FeedBody> {
 
   late final int _initialIndex;
 
+  late final List<PostListScrollController> _scrollControllerList;
+
   FeedController get _controller => widget.controller;
 
   void _updateIndex() {
@@ -603,8 +617,11 @@ class _FeedBodyState extends State<FeedBody> {
   }
 
   void _onPageIndex(int index) {
+    index = index.clamp(0, _feedPageCount - 1);
     FeedController._index = index;
-    widget.controller.trySave();
+    _controller.scrollController = _scrollControllerList[index];
+
+    _controller.trySave();
   }
 
   @override
@@ -614,6 +631,10 @@ class _FeedBodyState extends State<FeedBody> {
     _initialIndex = _controller.pageIndex;
     _pageController = PageController(initialPage: _initialIndex);
     _pageController.addListener(_updateIndex);
+    _scrollControllerList = List.generate(
+        _feedPageCount,
+        (index) =>
+            PostListScrollController.fromPostListController(_controller));
 
     _pageIndexSubscription = _controller._pageIndex.listen(_onPageIndex);
   }
@@ -634,6 +655,10 @@ class _FeedBodyState extends State<FeedBody> {
     _pageIndexSubscription.cancel();
     _pageController.removeListener(_updateIndex);
     _pageController.dispose();
+    _controller.scrollController = null;
+    for (final scrollController in _scrollControllerList) {
+      scrollController.dispose();
+    }
 
     super.dispose();
   }
@@ -662,10 +687,16 @@ class _FeedBodyState extends State<FeedBody> {
             late final Widget body;
             switch (index) {
               case _FeedBody._index:
-                body = _FeedBody(_controller);
+                body = _FeedBody(
+                  controller: _controller,
+                  scrollController: _scrollControllerList[_FeedBody._index],
+                );
                 break;
               case _TagListBody._index:
-                body = _TagListBody(_controller);
+                body = _TagListBody(
+                  controller: _controller,
+                  scrollController: _scrollControllerList[_TagListBody._index],
+                );
                 break;
               default:
                 body = const Center(
