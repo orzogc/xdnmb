@@ -72,6 +72,7 @@ typedef PostListScrollViewBuilder = Widget Function(BuildContext context,
 class PostListScrollView extends StatefulWidget {
   final PostListController controller;
 
+  /// 不为`null`时需要自行设置[controller]的`scrollController`为这个[scrollController]
   final PostListScrollController? scrollController;
 
   final VoidCallback? onRefresh;
@@ -117,7 +118,9 @@ class _PostListScrollViewState extends State<PostListScrollView> {
     _setScrollController();
     _scrollController.addListener(_setScrollDirection);
 
-    widget.controller.scrollController = _scrollController;
+    if (widget.scrollController == null) {
+      widget.controller.scrollController = _scrollController;
+    }
     widget.controller.addListener(_addRefresh);
   }
 
@@ -128,31 +131,36 @@ class _PostListScrollViewState extends State<PostListScrollView> {
     if (widget.scrollController != oldWidget.scrollController) {
       _scrollController.removeListener(_setScrollDirection);
       if (oldWidget.scrollController == null) {
+        oldWidget.controller.scrollController = null;
         _scrollController.dispose();
       }
 
       _setScrollController();
       _scrollController.addListener(_setScrollDirection);
+      if (widget.scrollController == null) {
+        widget.controller.scrollController = _scrollController;
+      }
     }
 
     if (widget.controller != oldWidget.controller) {
       oldWidget.controller.removeListener(_addRefresh);
-      oldWidget.controller.scrollController = null;
+      if (oldWidget.scrollController == null) {
+        oldWidget.controller.scrollController = null;
+      }
 
-      widget.controller.scrollController = _scrollController;
+      if (widget.scrollController == null) {
+        widget.controller.scrollController = _scrollController;
+      }
       widget.controller.addListener(_addRefresh);
-    } else if (widget.scrollController != oldWidget.scrollController) {
-      widget.controller.scrollController = _scrollController;
     }
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_addRefresh);
-    widget.controller.scrollController = null;
-
     _scrollController.removeListener(_setScrollDirection);
     if (widget.scrollController == null) {
+      widget.controller.scrollController = null;
       _scrollController.dispose();
     }
 

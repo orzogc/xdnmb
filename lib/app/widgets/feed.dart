@@ -636,6 +636,7 @@ class _FeedBodyState extends State<FeedBody> {
         _feedPageCount,
         (index) =>
             PostListScrollController.fromPostListController(_controller));
+    _controller.scrollController = _scrollControllerList[_controller.pageIndex];
 
     _pageIndexSubscription = _controller._pageIndex.listen(_onPageIndex);
   }
@@ -648,6 +649,9 @@ class _FeedBodyState extends State<FeedBody> {
       _pageIndexSubscription.cancel();
       _pageIndexSubscription =
           widget.controller._pageIndex.listen(_onPageIndex);
+      oldWidget.controller.scrollController = null;
+      widget.controller.scrollController =
+          _scrollControllerList[widget.controller.pageIndex];
     }
   }
 

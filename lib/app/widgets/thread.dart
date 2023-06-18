@@ -491,7 +491,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   BrowseHistory? _history;
 
-  late final PostListScrollController _anchorController;
+  late PostListScrollController _anchorController;
 
   /// 第一次加载是否要跳转
   final RxBool _isToJump = false.obs;
@@ -502,11 +502,11 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   late StreamSubscription<int> _pageSubscription;
 
-  final BiListViewController biListViewController = BiListViewController();
+  final BiListViewController _biListViewController = BiListViewController();
 
   late Future<void> _getHistory;
 
-  ThreadTypeController get controller => widget.controller;
+  ThreadTypeController get _controller => widget.controller;
 
   Future<void> _saveBrowseHistory() async {
     if (!_isSavingBrowseHistory) {
@@ -514,14 +514,14 @@ class _ThreadBodyState extends State<ThreadBody> {
 
       try {
         await Future.delayed(_saveBrowseHistoryPeriod, () async {
-          final post = controller.mainPost;
-          final browsePostId = controller.browsePostId;
+          final post = _controller.mainPost;
+          final browsePostId = _controller.browsePostId;
           if (_history != null && post is Post && browsePostId != null) {
             _history!.update(
                 mainPost: post,
-                browsePage: controller.page,
+                browsePage: _controller.page,
                 browsePostId: browsePostId,
-                isOnlyPo: controller.isOnlyPoThread);
+                isOnlyPo: _controller.isOnlyPoThread);
             await BrowseDataHistory.saveBrowseData(_history!);
           }
         });
@@ -533,8 +533,8 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   void _saveHistoryAndJumpToIndex(Thread thread, int firstPage, int page) {
     if (page == firstPage) {
-      final jumpToId = controller.jumpToId;
-      final isOnlyPoThread = controller.isOnlyPoThread;
+      final jumpToId = _controller.jumpToId;
+      final isOnlyPoThread = _controller.isOnlyPoThread;
 
       if (page == 1 || thread.replies.isNotEmpty) {
         final Post firstPost =
@@ -577,7 +577,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                       if (firstPost.id != id) {
                         while (mounted &&
                             _isToJump.value &&
-                            id != controller.browsePostId &&
+                            id != _controller.browsePostId &&
                             !_isNoMoreItems) {
                           await Future.delayed(const Duration(milliseconds: 50),
                               () async {
@@ -616,7 +616,7 @@ class _ThreadBodyState extends State<ThreadBody> {
           }
         } else {
           // 用户主动加载的不要保存
-          if (!biListViewController.isLoadingMore) {
+          if (!_biListViewController.isLoadingMore) {
             updateHistory();
           }
         }
@@ -629,9 +629,9 @@ class _ThreadBodyState extends State<ThreadBody> {
   Future<List<PostWithPage<PostBase>>> _fetch(int firstPage, int page) async {
     final client = XdnmbClientService.to;
     final blacklist = BlacklistService.to;
-    final postId = controller.id;
+    final postId = _controller.id;
 
-    final thread = controller.isThread
+    final thread = _controller.isThread
         ? await client.getThread(postId,
             page: page, isFirstPage: firstPage == page)
         : await client.getOnlyPoThread(postId,
@@ -639,12 +639,12 @@ class _ThreadBodyState extends State<ThreadBody> {
     final mainPost = thread.mainPost;
 
     _maxPage = thread.maxPage;
-    controller.mainPost = mainPost;
+    _controller.mainPost = mainPost;
     // 发现Po饼干被屏蔽就刷新页面
     if (page == firstPage &&
         !mainPost.isAdmin &&
         blacklist.hasUser(mainPost.userHash)) {
-      controller.refresh();
+      _controller.refresh();
     }
 
     if (page != 1 && thread.replies.isEmpty) {
@@ -690,7 +690,7 @@ class _ThreadBodyState extends State<ThreadBody> {
     }
 
     final theme = Theme.of(context);
-    final mainPost = controller.mainPost;
+    final mainPost = _controller.mainPost;
 
     final Widget item = PostInkWell(
       key: post.isTipType ? UniqueKey() : null,
@@ -698,17 +698,17 @@ class _ThreadBodyState extends State<ThreadBody> {
       poUserHash: mainPost?.userHash,
       onTapLink: (context, link, text) => parseUrl(
           url: link, mainPostId: mainPost?.id, poUserHash: mainPost?.userHash),
-      onPaintImage: (imageData) => _replyWithImage(controller, imageData),
+      onPaintImage: (imageData) => _replyWithImage(_controller, imageData),
       canReturnImageData: true,
       canTapHiddenText: true,
       showForumName: false,
       showReplyCount: false,
       showPoTag: true,
       onTapPostId:
-          !post.isTipType ? (postId) => _replyPost(controller, postId) : null,
+          !post.isTipType ? (postId) => _replyPost(_controller, postId) : null,
       onTap: (post) {},
       onLongPress: (post) => postListDialog(_ThreadDialog(
-        controller: controller,
+        controller: _controller,
         post: post,
         page: postWithPage.page,
       )),
@@ -736,16 +736,16 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   Widget _body() {
     final blacklist = BlacklistService.to;
-    final postId = controller.id;
+    final postId = _controller.id;
 
     return PostListScrollView(
-      controller: controller,
+      controller: _controller,
       scrollController: _anchorController,
       builder: (context, scrollController, refresh) {
-        final firstPage = controller.page;
+        final firstPage = _controller.page;
 
         bool isBlocked() {
-          final mainPost = controller.mainPost;
+          final mainPost = _controller.mainPost;
 
           return (mainPost == null || !mainPost.isAdmin) &&
               (blacklist.hasPost(postId) ||
@@ -769,9 +769,9 @@ class _ThreadBodyState extends State<ThreadBody> {
                       maintainSize: true,
                       child: BiListView<PostWithPage<PostBase>>(
                         key: ValueKey<int>(refresh),
-                        controller: biListViewController,
+                        controller: _biListViewController,
                         scrollController: scrollController,
-                        postListController: controller,
+                        postListController: _controller,
                         initialPage: firstPage,
                         fetch: (page) async {
                           try {
@@ -793,12 +793,12 @@ class _ThreadBodyState extends State<ThreadBody> {
                         onNoMoreItems: () => _isNoMoreItems = true,
                         onRefresh: () {
                           if (isBlocked()) {
-                            controller.refresh();
+                            _controller.refresh();
                           }
                         },
                         onLoadMore: () {
                           if (isBlocked()) {
-                            controller.refresh();
+                            _controller.refresh();
                           }
                         },
                         fetchFallback: (page) => Future.value(
@@ -811,7 +811,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                 ),
               )
             : GestureDetector(
-                onTap: controller.refresh,
+                onTap: _controller.refresh,
                 child: Center(
                   child: Text(
                     '本串已被屏蔽',
@@ -828,26 +828,26 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   void _setToJump() {
     _isToJump.value = true;
-    controller.removeListener(_cancelJump);
-    controller.addListener(_cancelJump);
+    _controller.removeListener(_cancelJump);
+    _controller.addListener(_cancelJump);
   }
 
-  void _trySave(int page) => controller.trySave();
+  void _trySave(int page) => _controller.trySave();
 
   void _setGetHistory() => _getHistory = Future(() async {
         final settings = SettingsService.to;
 
-        _history = await BrowseDataHistory.getBrowseData(controller.id);
+        _history = await BrowseDataHistory.getBrowseData(_controller.id);
 
-        if (controller.jumpToId == null) {
-          if (!controller.cancelAutoJump &&
+        if (_controller.jumpToId == null) {
+          if (!_controller.cancelAutoJump &&
               settings.isJumpToLastBrowsePage &&
               _history != null) {
-            final page = controller.isThread
+            final page = _controller.isThread
                 ? _history!.browsePage
                 : _history!.onlyPoBrowsePage;
             if (page != null) {
-              controller.page = page;
+              _controller.page = page;
 
               if (settings.isJumpToLastBrowsePosition) {
                 _setToJump();
@@ -859,30 +859,33 @@ class _ThreadBodyState extends State<ThreadBody> {
         }
       });
 
-  @override
-  void initState() {
-    super.initState();
-
+  void _setAnchorController() {
     final settings = SettingsService.to;
 
     _anchorController = PostListScrollController(
       getInitialScrollOffset: () =>
-          settings.autoHideAppBar ? -controller.appBarHeight : 0.0,
+          settings.autoHideAppBar ? -_controller.appBarHeight : 0.0,
       getAnchorOffset: () =>
-          settings.autoHideAppBar ? controller.appBarHeight : 0.0,
+          settings.autoHideAppBar ? _controller.appBarHeight : 0.0,
       onIndexChanged: (index, userScroll) {
-        controller.page = index.pageFromPostIndex;
-        controller.browsePostId = index.postIdFromPostIndex;
+        _controller.page = index.pageFromPostIndex;
+        _controller.browsePostId = index.postIdFromPostIndex;
 
         _saveBrowseHistory();
       },
     );
+  }
 
-    _pageSubscription = controller.listenPage(_trySave);
+  @override
+  void initState() {
+    super.initState();
 
-    _maxPage = controller.mainPost?.maxPage ?? 1;
+    _setAnchorController();
 
-    controller._loadMore = biListViewController.loadMore;
+    _pageSubscription = _controller.listenPage(_trySave);
+    _maxPage = _controller.mainPost?.maxPage ?? 1;
+    _controller._loadMore = _biListViewController.loadMore;
+    _controller.scrollController = _anchorController;
 
     _setGetHistory();
   }
@@ -891,13 +894,19 @@ class _ThreadBodyState extends State<ThreadBody> {
   void didUpdateWidget(covariant ThreadBody oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (controller != oldWidget.controller) {
+    if (widget.controller != oldWidget.controller) {
       oldWidget.controller._loadMore = null;
+      oldWidget.controller.scrollController = null;
       oldWidget.controller.removeListener(_cancelJump);
 
+      _anchorController.dispose();
+      _setAnchorController();
+
       _pageSubscription.cancel();
-      _pageSubscription = controller.listenPage(_trySave);
-      controller._loadMore = biListViewController.loadMore;
+      _pageSubscription = widget.controller.listenPage(_trySave);
+      _maxPage = widget.controller.mainPost?.maxPage ?? 1;
+      widget.controller._loadMore = _biListViewController.loadMore;
+      widget.controller.scrollController = _anchorController;
 
       _setGetHistory();
     }
@@ -905,11 +914,12 @@ class _ThreadBodyState extends State<ThreadBody> {
 
   @override
   void dispose() {
-    controller._loadMore = null;
+    _controller._loadMore = null;
+    _controller.scrollController = null;
 
     _isToJump.value = false;
     _anchorController.dispose();
-    controller.removeListener(_cancelJump);
+    _controller.removeListener(_cancelJump);
     _pageSubscription.cancel();
 
     super.dispose();

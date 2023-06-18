@@ -1008,6 +1008,7 @@ class _HistoryBodyState extends State<HistoryBody> {
         _historyPageCount,
         (index) =>
             PostListScrollController.fromPostListController(_controller));
+    _controller.scrollController = _scrollControllerList[_controller.pageIndex];
 
     _pageIndexSubscription = _controller._pageIndex.listen(_onPageIndex);
     _dateRangeSubscription = _controller._dateRange.listen(_trySave);
@@ -1023,6 +1024,9 @@ class _HistoryBodyState extends State<HistoryBody> {
           widget.controller._pageIndex.listen(_onPageIndex);
       _dateRangeSubscription.cancel();
       _dateRangeSubscription = widget.controller._dateRange.listen(_trySave);
+      oldWidget.controller.scrollController = null;
+      widget.controller.scrollController =
+          _scrollControllerList[widget.controller.pageIndex];
     }
   }
 
