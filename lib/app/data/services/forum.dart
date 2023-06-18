@@ -322,7 +322,7 @@ class ForumListRestoreData extends RestoreData {
   String get title => '时间线和版块';
 
   @override
-  String get subTitle => '会覆盖时间线和版块的自定义名字，但不改变版块顺序和是否显示该版块';
+  String get subTitle => '会覆盖时间线和版块的自定义名字、顺序和是否显示/隐藏';
 
   ForumListRestoreData();
 
@@ -337,23 +337,46 @@ class ForumListRestoreData extends RestoreData {
     final file = await copyHiveBackupFile(dir, HiveBoxName.forums);
     final box =
         await Hive.openBox<ForumData>(hiveBackupName(HiveBoxName.forums));
-    final map = HashMap.fromEntries(box.values
+    final backupMap = HashMap.fromEntries(box.values
         .map((forum) => MapEntry(_ForumKey.fromForumData(forum), forum)));
+    final Map<_ForumKey, ForumData> map = {
+      for (final forum in forumService._forumBox.values)
+        _ForumKey.fromForumData(forum): forum,
+    };
 
-    for (final forum in forumService._forumBox.values) {
-      final backupForum = map[_ForumKey.fromForumData(forum)];
+    // 覆盖版块的自定义名字
+    for (final forum in map.values) {
+      final backupForum = backupMap[_ForumKey.fromForumData(forum)];
       if (backupForum != null &&
           (backupForum.userDefinedName?.isNotEmpty ?? false) &&
-          backupForum.userDefinedName != forum.userDefinedName) {
+          forum.userDefinedName != backupForum.userDefinedName) {
         forum.userDefinedName = backupForum.userDefinedName;
-        await forum.save();
       }
     }
 
-    await forumService._forumBox.addAll(map.values
+    // 添加本地没有的版块
+    map.addEntries(box.values
         .where((forum) =>
             !forumService._forumMap.containsKey(_ForumKey.fromForumData(forum)))
-        .map((forum) => forum.copy()));
+        .map((forum) => MapEntry(_ForumKey.fromForumData(forum), forum)));
+
+    // 恢复版块排序和显示/隐藏
+    await forumService._forumBox.clear();
+    for (final backupForum in box.values) {
+      final key = _ForumKey.fromForumData(backupForum);
+      final forum = map[key];
+      if (forum != null) {
+        forum.isHidden = backupForum.isHidden;
+        await forumService._forumBox.add(forum.copy());
+        map.remove(key);
+      } else {
+        debugPrint('存在未保存的版块数据');
+      }
+    }
+    if (map.isNotEmpty) {
+      await forumService._forumBox
+          .addAll(map.values.map((forum) => forum.copy()));
+    }
 
     await box.close();
     await file.delete();

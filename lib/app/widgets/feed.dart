@@ -357,7 +357,8 @@ class _FeedBody extends StatelessWidget {
     final settings = SettingsService.to;
 
     return ListenBuilder(
-      listenable: settings.feedIdListenable,
+      listenable: Listenable.merge(
+          [UserService.to.browseCookieListenable, settings.feedIdListenable]),
       builder: (context, child) => PostListScrollView(
         controller: controller,
         scrollController: scrollController,

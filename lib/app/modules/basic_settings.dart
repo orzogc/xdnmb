@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/services/settings.dart';
+import '../data/services/user.dart';
 import '../utils/theme.dart';
 import '../widgets/dialog.dart';
 import '../widgets/forum_name.dart';
@@ -309,7 +310,8 @@ class _FeedId extends StatelessWidget {
     final settings = SettingsService.to;
 
     return ListenBuilder(
-      listenable: settings.feedIdListenable,
+      listenable: Listenable.merge(
+          [UserService.to.browseCookieListenable, settings.feedIdListenable]),
       builder: (context, child) {
         final textStyle = TextStyle(
             color: settings.useHtmlFeed ? AppTheme.inactiveSettingColor : null);
@@ -330,15 +332,24 @@ class _UseHtmlFeed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = UserService.to;
     final settings = SettingsService.to;
 
     return ListenBuilder(
-      listenable: settings.useHtmlFeedListenable,
+      listenable: Listenable.merge(
+          [user.browseCookieListenable, settings.useHtmlFeedListenable]),
       builder: (context, child) => SwitchListTile(
-        title: const Text('使用跟浏览饼干绑定的网页版订阅'),
+        title: Text(
+          '使用跟浏览饼干绑定的网页版订阅',
+          style: TextStyle(
+            color: !user.hasBrowseCookie ? AppTheme.inactiveSettingColor : null,
+          ),
+        ),
         subtitle: const Text('使用网页版订阅会导致无法显示最后回复时间'),
         value: settings.useHtmlFeed,
-        onChanged: (value) => settings.useHtmlFeed = value,
+        onChanged: user.hasBrowseCookie
+            ? (value) => settings.useHtmlFeed = value
+            : null,
       ),
     );
   }

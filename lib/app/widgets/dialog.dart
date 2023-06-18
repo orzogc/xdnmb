@@ -301,48 +301,34 @@ class NewVersionDialog extends StatefulWidget {
 }
 
 class _NewVersionDialogState extends State<NewVersionDialog> {
-  late HtmlText _text;
-
-  void _setText() => _text = HtmlText(
-      context, widget.updateMessage ?? '新版本 ${widget.latestVersion}',
-      onTapLink: (context, link, text) => launchURL(link),
-      textStyle: Theme.of(context).textTheme.titleMedium);
-
-  @override
-  void initState() {
-    super.initState();
-
-    _setText();
-  }
-
-  @override
-  void didUpdateWidget(covariant NewVersionDialog oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (widget.updateMessage != oldWidget.updateMessage ||
-        widget.latestVersion != oldWidget.latestVersion) {
-      _text.dispose();
-      _setText();
-    }
-  }
+  HtmlText? _text;
 
   @override
   void dispose() {
-    _text.dispose();
+    _text?.dispose();
 
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => ConfirmCancelDialog(
-        title: '发现新版本 ${widget.latestVersion}',
-        contentWidget: _text.toRichText(),
-        onConfirm: () {
-          showToast('正在打开下载链接');
-          launchURL(widget.url);
-        },
-        confirmText: '下载',
-      );
+  Widget build(BuildContext context) {
+    _text?.dispose();
+
+    _text = HtmlText(
+        context, widget.updateMessage ?? '新版本 ${widget.latestVersion}',
+        onTapLink: (context, link, text) => launchURL(link),
+        textStyle: Theme.of(context).textTheme.titleMedium);
+
+    return ConfirmCancelDialog(
+      title: '发现新版本 ${widget.latestVersion}',
+      contentWidget: _text!.toRichText(),
+      onConfirm: () {
+        showToast('正在打开下载链接');
+        launchURL(widget.url);
+      },
+      confirmText: '下载',
+    );
+  }
 }
 
 class ForumRuleDialog extends StatefulWidget {

@@ -15,6 +15,7 @@ import '../models/forum.dart';
 import '../models/hive.dart';
 import '../models/settings.dart';
 import 'image.dart';
+import 'user.dart';
 
 final ForumData defaultForum = ForumData(
     id: 1,
@@ -194,11 +195,15 @@ class SettingsService extends GetxService {
 
   set feedId(String feedId) => _settingsBox.put(Settings.feedId, feedId);
 
-  bool get useHtmlFeed =>
-      _settingsBox.get(Settings.useHtmlFeed, defaultValue: false);
+  bool get useHtmlFeed => UserService.to.hasBrowseCookie
+      ? _settingsBox.get(Settings.useHtmlFeed, defaultValue: false)
+      : false;
 
-  set useHtmlFeed(bool useHtmlFeed) =>
+  set useHtmlFeed(bool useHtmlFeed) {
+    if (UserService.to.hasBrowseCookie) {
       _settingsBox.put(Settings.useHtmlFeed, useHtmlFeed);
+    }
+  }
 
   String? get saveImagePath => !(GetPlatform.isIOS || GetPlatform.isMacOS)
       ? _settingsBox.get(Settings.saveImagePath, defaultValue: null)
