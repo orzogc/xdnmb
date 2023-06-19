@@ -503,7 +503,8 @@ class _DiceDialogState extends State<_DiceDialog> {
                         controller: _lowerController,
                         decoration: const InputDecoration(hintText: '下限'),
                         textAlign: TextAlign.center,
-                        keyboardType: TextInputType.number,
+                        keyboardType:
+                            const TextInputType.numberWithOptions(signed: true),
                         validator: (value) =>
                             value.tryParseInt() == null ? '请输入数字' : null,
                       ),
@@ -545,7 +546,8 @@ class _DiceDialogState extends State<_DiceDialog> {
                         controller: _upperController,
                         decoration: const InputDecoration(hintText: '上限'),
                         textAlign: TextAlign.center,
-                        keyboardType: TextInputType.number,
+                        keyboardType:
+                            const TextInputType.numberWithOptions(signed: true),
                         validator: (value) =>
                             value.tryParseInt() == null ? '请输入数字' : null,
                       ),
@@ -1534,6 +1536,9 @@ class EditPostCallback {
       _setPostList(postList, forumId, poUserHash);
 }
 
+// TODO: 增加选项，单独页面时可以把图片放下面
+// TODO: 考虑输入法没有关闭选项的问题
+// TODO: 图片压缩
 class EditPost extends StatefulWidget {
   static const int dutyRoomId = 18;
 

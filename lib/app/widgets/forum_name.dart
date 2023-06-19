@@ -8,6 +8,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 import '../data/models/forum.dart';
 import '../data/services/forum.dart';
 import '../utils/extensions.dart';
+import '../utils/theme.dart';
 import 'dialog.dart';
 import 'listenable.dart';
 import 'tag.dart';
@@ -30,26 +31,45 @@ class _ForumName {
   int get hashCode => Object.hash(forumName, isDarkMode);
 }
 
-class _ForumNameTextSpan {
-  final TextSpan bodyLargeStyle;
+abstract class _ForumNameCache {
+  static final HashMap<_ForumName, TextSpan> _bodyLarge = HashMap();
 
-  _ForumNameTextSpan(BuildContext context, String forumName)
-      : bodyLargeStyle = htmlToTextSpan(context, forumName,
-            textStyle: Theme.of(context).textTheme.bodyLarge);
+  static final HashMap<String, TextSpan> _bodySmallWithHeaderColor = HashMap();
 }
 
-final HashMap<_ForumName, _ForumNameTextSpan> _forumNameMap = HashMap();
+enum ForumNameStyle {
+  bodyLarge,
+  bodySmallWithHeaderColor;
 
-TextSpan _getBodyLargeForumName(BuildContext context, String forumName) {
-  final key = _ForumName(forumName, Get.isDarkMode);
-  final text = _forumNameMap[key];
-  if (text != null) {
-    return text.bodyLargeStyle;
-  } else {
-    final span = _ForumNameTextSpan(context, forumName);
-    _forumNameMap[key] = span;
+  TextSpan _getForumName(BuildContext context, String forumName) {
+    switch (this) {
+      case bodyLarge:
+        final key = _ForumName(forumName, Get.isDarkMode);
+        final text = _ForumNameCache._bodyLarge[key];
+        if (text == null) {
+          final span = htmlToTextSpan(context, forumName,
+              textStyle: Theme.of(context).textTheme.bodyLarge);
+          _ForumNameCache._bodyLarge[key] = span;
 
-    return span.bodyLargeStyle;
+          return span;
+        } else {
+          return text;
+        }
+      case bodySmallWithHeaderColor:
+        final text = _ForumNameCache._bodySmallWithHeaderColor[forumName];
+        if (text == null) {
+          final span = htmlToTextSpan(context, forumName,
+              textStyle: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.apply(color: AppTheme.headerColor));
+          _ForumNameCache._bodySmallWithHeaderColor[forumName] = span;
+
+          return span;
+        } else {
+          return text;
+        }
+    }
   }
 }
 
@@ -64,7 +84,7 @@ class ForumNameText extends StatelessWidget {
 
   final int? maxLines;
 
-  final bool isBodyLargeStyle;
+  final ForumNameStyle? forumNameCache;
 
   const ForumNameText(
       {super.key,
@@ -73,14 +93,13 @@ class ForumNameText extends StatelessWidget {
       this.trailing,
       this.textStyle,
       this.maxLines,
-      this.isBodyLargeStyle = false})
-      : assert(!isBodyLargeStyle || textStyle == null);
+      this.forumNameCache})
+      : assert(forumNameCache == null || textStyle == null);
 
   @override
   Widget build(BuildContext context) {
-    final span = isBodyLargeStyle
-        ? _getBodyLargeForumName(context, forumName)
-        : htmlToTextSpan(context, forumName, textStyle: textStyle);
+    final span = forumNameCache?._getForumName(context, forumName) ??
+        htmlToTextSpan(context, forumName, textStyle: textStyle);
 
     return (leading != null || trailing != null)
         ? RichText(
@@ -125,7 +144,7 @@ class ForumName extends StatelessWidget {
 
   final int? maxLines;
 
-  final bool isBodyLargeStyle;
+  final ForumNameStyle? forumNameCache;
 
   const ForumName(
       {super.key,
@@ -138,7 +157,7 @@ class ForumName extends StatelessWidget {
       this.fallbackText,
       this.textStyle,
       this.maxLines,
-      this.isBodyLargeStyle = false})
+      this.forumNameCache})
       : assert(isDeprecated == null || (leading == null && trailing == null));
 
   @override
@@ -157,7 +176,7 @@ class ForumName extends StatelessWidget {
                 trailing: trailing,
                 textStyle: textStyle,
                 maxLines: maxLines,
-                isBodyLargeStyle: isBodyLargeStyle)
+                forumNameCache: forumNameCache)
             : (fallbackText != null
                 ? Text(fallbackText!,
                     style: textStyle,

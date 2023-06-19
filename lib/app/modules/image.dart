@@ -70,6 +70,7 @@ class _TopOverlay extends StatelessWidget {
               showReplyCount: false,
               showPoTag: true,
               showPostTags: false,
+              longPressPostIdToCopy: false,
             ),
           ),
         ),

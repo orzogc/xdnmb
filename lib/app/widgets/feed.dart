@@ -614,6 +614,19 @@ class _FeedBodyState extends State<FeedBody> {
     final page = _pageController.page;
     if (page != null) {
       _controller.pageIndex = page.round();
+
+      if (page - page.truncateToDouble() == 0.0) {
+        final scrollController = _scrollControllerList[_controller.pageIndex];
+        if (scrollController.hasClients) {
+          final position = scrollController.position;
+          final offset = position.pixels - position.minScrollExtent;
+
+          if (offset >= 0.0 && offset <= PostListAppBar.height) {
+            _controller.appBarHeight = PostListAppBar.height - offset;
+            scrollController.notifyListeners();
+          }
+        }
+      }
     }
   }
 

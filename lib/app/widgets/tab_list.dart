@@ -36,18 +36,24 @@ class _TabTitle extends StatelessWidget {
           final forumId =
               (controller as ThreadTypeController).mainPost?.forumId;
 
-          return DefaultTextStyle.merge(
-            style:
-                theme.textTheme.bodySmall?.apply(color: AppTheme.headerColor),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              spacing: 5.0,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                if (forumId != null) ForumName(forumId: forumId, maxLines: 1),
-                Text(postId.toPostNumber()),
-              ],
-            ),
+          return Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            spacing: 5.0,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (forumId != null)
+                ForumName(
+                  forumId: forumId,
+                  maxLines: 1,
+                  forumNameCache: ForumNameStyle.bodySmallWithHeaderColor,
+                ),
+              Text(
+                postId.toPostNumber(),
+                style: theme.textTheme.bodySmall?.apply(
+                  color: AppTheme.headerColor,
+                ),
+              ),
+            ],
           );
         });
 
@@ -60,7 +66,7 @@ class _TabTitle extends StatelessWidget {
                 forumId: forumId,
                 isTimeline: controller.isTimeline,
                 maxLines: 1,
-                textStyle: theme.textTheme.bodyLarge)
+                forumNameCache: ForumNameStyle.bodyLarge)
             : const SizedBox.shrink());
 
         break;

@@ -239,8 +239,6 @@ class HistoryController extends PostListController {
 
   @override
   void dispose() {
-    //_pageIndex.close();
-    //_dateRange.close();
     for (final notifier in _notifiers) {
       notifier.dispose();
     }
@@ -984,6 +982,19 @@ class _HistoryBodyState extends State<HistoryBody> {
     final page = _pageController.page;
     if (page != null) {
       _controller.pageIndex = page.round();
+
+      if (page - page.truncateToDouble() == 0.0) {
+        final scrollController = _scrollControllerList[_controller.pageIndex];
+        if (scrollController.hasClients) {
+          final position = scrollController.position;
+          final offset = position.pixels - position.minScrollExtent;
+
+          if (offset >= 0.0 && offset <= PostListAppBar.height) {
+            _controller.appBarHeight = PostListAppBar.height - offset;
+            scrollController.notifyListeners();
+          }
+        }
+      }
     }
   }
 

@@ -912,7 +912,8 @@ class NumRangeDialog<T extends num> extends StatelessWidget {
             labelText:
                 max != null ? '$text（ $min - $max ）' : '$text（ >= $min ）'),
         autofocus: true,
-        keyboardType: TextInputType.number,
+        keyboardType:
+            const TextInputType.numberWithOptions(signed: true, decimal: true),
         initialValue: '$initialValue',
         onSaved: (newValue) => number = newValue,
         validator: (value) {

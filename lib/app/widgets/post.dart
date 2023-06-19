@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:html_to_text/html_to_text.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
@@ -15,6 +15,7 @@ import '../data/services/user.dart';
 import '../utils/extensions.dart';
 import '../utils/theme.dart';
 import '../utils/time.dart';
+import '../utils/toast.dart';
 import 'content.dart';
 import 'dialog.dart';
 import 'forum_name.dart';
@@ -182,6 +183,8 @@ class _PostTimeState extends State<_PostTime> {
 class _PostId extends StatelessWidget {
   final int postId;
 
+  final bool longPressPostIdToCopy;
+
   /// 串号被按时调用，参数是串号
   final ValueSetter<int>? onTapPostId;
 
@@ -191,6 +194,7 @@ class _PostId extends StatelessWidget {
       // ignore: unused_element
       {super.key,
       required this.postId,
+      this.longPressPostIdToCopy = true,
       this.onTapPostId,
       this.textStyle});
 
@@ -202,11 +206,18 @@ class _PostId extends StatelessWidget {
             ? StrutStyle.fromTextStyle(textStyle!)
             : AppTheme.postHeaderStrutStyle);
 
-    return onTapPostId != null
+    return (longPressPostIdToCopy || onTapPostId != null)
         ? MouseRegion(
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
-              onTap: () => onTapPostId!(postId),
+              onTap: onTapPostId != null ? () => onTapPostId!(postId) : null,
+              onLongPress: longPressPostIdToCopy
+                  ? () async {
+                      await Clipboard.setData(
+                          ClipboardData(text: postId.toPostReference()));
+                      showToast('已复制 ${postId.toPostReference()}');
+                    }
+                  : null,
               child: text,
             ),
           )
@@ -592,6 +603,8 @@ class PostContent extends StatelessWidget {
 
   final bool isPinned;
 
+  final bool longPressPostIdToCopy;
+
   final double? headerHeight;
 
   final double? contentMaxHeight;
@@ -635,6 +648,7 @@ class PostContent extends StatelessWidget {
       this.showPoTag = false,
       this.showPostTags = true,
       this.isPinned = false,
+      this.longPressPostIdToCopy = true,
       this.headerHeight,
       this.contentMaxHeight,
       this.onTapPostId,
@@ -720,6 +734,7 @@ class PostContent extends StatelessWidget {
                 if (showPostId)
                   _PostId(
                     postId: post.id,
+                    longPressPostIdToCopy: longPressPostIdToCopy,
                     onTapPostId: onTapPostId,
                     textStyle: headerTextStyle,
                   ),
@@ -803,6 +818,7 @@ class PostInkWell extends StatelessWidget {
       bool showPoTag = false,
       bool showPostTags = true,
       bool isPinned = false,
+      bool longPressPostIdToCopy = true,
       double? headerHeight,
       double? contentMaxHeight,
       ValueSetter<int>? onTapPostId,
@@ -834,6 +850,7 @@ class PostInkWell extends StatelessWidget {
             showPoTag: showPoTag,
             showPostTags: showPostTags,
             isPinned: isPinned,
+            longPressPostIdToCopy: longPressPostIdToCopy,
             headerHeight: headerHeight,
             contentMaxHeight: contentMaxHeight,
             onTapPostId: onTapPostId,

@@ -173,7 +173,7 @@ class ForumList extends StatelessWidget {
                   isTimeline: forum.isTimeline,
                   isDeprecated: forum.isDeprecated,
                   maxLines: 1,
-                  isBodyLargeStyle: true,
+                  forumNameCache: ForumNameStyle.bodyLarge,
                 ),
               );
 

@@ -203,11 +203,6 @@ abstract class PostListController extends ChangeNotifier {
   StreamSubscription<int> listenPage(ValueChanged<int> onPage) =>
       _page.listen(onPage);
 
-  // [onAppBarHeight]参数是标题栏显示的高度
-  /* StreamSubscription<double> listenAppBarHeight(
-          ValueChanged<double> onAppBarHeight) =>
-      _appBarHeight.listen(onAppBarHeight); */
-
   @override
   void dispose() {
     save = null;
@@ -480,14 +475,12 @@ class _AnimatedAppBarState extends State<_AnimatedAppBar>
 
   void _updateController([double? preHeight]) {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      if (_scrollController?.hasClients ?? false) {
+      if ((_scrollController?.hasClients ?? false) && preHeight != null) {
         final position = _scrollController!.position;
         final offset = position.pixels - position.minScrollExtent;
 
-        if (preHeight != null) {
-          if (offset >= 0.0 && offset <= PostListAppBar.height) {
-            _height = max(preHeight, PostListAppBar.height - offset);
-          }
+        if (offset >= 0.0 && offset <= PostListAppBar.height) {
+          _height = max(preHeight, PostListAppBar.height - offset);
         }
       }
 

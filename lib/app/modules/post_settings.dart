@@ -276,6 +276,7 @@ class PostFontSettingsView extends GetView<PostFontSettingsController> {
                     child: PostContent(
                       post: _post,
                       showFullTime: false,
+                      longPressPostIdToCopy: false,
                       contentTextStyle: TextStyle(
                         fontSize: controller._postContentFontSize.value,
                         fontWeight: FontWeightExtension.fromInt(
