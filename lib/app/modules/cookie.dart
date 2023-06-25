@@ -153,7 +153,7 @@ class _Login extends StatelessWidget {
     final user = UserService.to;
 
     final forgetPassword = TextButton(
-      onPressed: () async => await launchURL(XdnmbUrls().resetPassword),
+      onPressed: () async => await launchUri(XdnmbUrls().resetPassword),
       child: const Text(
         '忘记密码',
         style: TextStyle(color: AppTheme.linkTextColor),
@@ -189,7 +189,7 @@ class _Login extends StatelessWidget {
               children: [
                 TextButton(
                   onPressed: () async =>
-                      await launchURL(XdnmbUrls().registerAccount),
+                      await launchUri(XdnmbUrls().registerAccount),
                   child: const Text(
                     '注册帐号',
                     style: TextStyle(color: AppTheme.linkTextColor),

@@ -214,6 +214,7 @@ class _ContentState extends State<Content> {
   void didUpdateWidget(covariant Content oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    // 这里不完整，需要比较更多的数据
     if (!_hasHiddenText && widget.textStyle != oldWidget.textStyle) {
       assert(_hiddenTextList.isEmpty);
 
@@ -238,7 +239,12 @@ class _ContentState extends State<Content> {
 
     _setHiddenText();
 
-    final text = _htmlText!.toTextSpan();
+    final text = RichText(
+      text: _htmlText!.toTextSpan(),
+      maxLines: widget.maxLines,
+      overflow: widget.maxLines.textOverflow,
+      strutStyle: widget.textStyle.sameHeightStrutStyle,
+    );
 
     return ListenBuilder(
       listenable: settings.showImageListenable,
@@ -258,20 +264,10 @@ class _ContentState extends State<Content> {
                             widget.allowShowLargeImageInPlace,
                       ),
                     ),
-                    WrappableText(
-                      text: text,
-                      maxLines: widget.maxLines,
-                      overflow: widget.maxLines.textOverflow,
-                      strutStyle: widget.textStyle.sameHeightStrutStyle,
-                    ),
+                    text,
                   ],
                 )
-              : RichText(
-                  text: text,
-                  maxLines: widget.maxLines,
-                  overflow: widget.maxLines.textOverflow,
-                  strutStyle: widget.textStyle.sameHeightStrutStyle,
-                ),
+              : text,
     );
   }
 }

@@ -27,6 +27,8 @@ final ForumData defaultForum = ForumData(
 
 /// 设置服务
 class SettingsService extends GetxService {
+  static const int defaultConnectionTimeout = 15;
+
   static const double minDrawerEdgeDragWidthRatio = 0.1;
 
   static const double maxDrawerEdgeDragWidthRatio = 0.5;
@@ -60,6 +62,8 @@ class SettingsService extends GetxService {
   static final SettingsService to = Get.find<SettingsService>();
 
   static late final bool isAllowTransparentSystemNavigationBar;
+
+  static late Duration connectionTimeoutSecond;
 
   static late final bool isRestoreForumPage;
 
@@ -203,6 +207,23 @@ class SettingsService extends GetxService {
     if (UserService.to.hasBrowseCookie) {
       _settingsBox.put(Settings.useHtmlFeed, useHtmlFeed);
     }
+  }
+
+  bool get useBackupApi =>
+      _settingsBox.get(Settings.useBackupApi, defaultValue: false);
+
+  set useBackupApi(bool useBackupApi) =>
+      _settingsBox.put(Settings.useBackupApi, useBackupApi);
+
+  int get connectionTimeout => max(
+      _settingsBox.get(Settings.connectionTimeout,
+          defaultValue: defaultConnectionTimeout),
+      1);
+
+  set connectionTimeout(int timeout) {
+    timeout = max(timeout, 1);
+    _settingsBox.put(Settings.connectionTimeout, timeout);
+    connectionTimeoutSecond = Duration(seconds: timeout);
   }
 
   String? get saveImagePath => !(GetPlatform.isIOS || GetPlatform.isMacOS)
@@ -664,6 +685,10 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> useHtmlFeedListenable;
 
+  late final ValueListenable<Box> useBackupApiListenable;
+
+  late final ValueListenable<Box> connectionTimeoutListenable;
+
   late final ValueListenable<Box> saveImagePathListenable;
 
   late final ValueListenable<Box> cacheImageCountListenable;
@@ -725,6 +750,11 @@ class SettingsService extends GetxService {
     ImageService.savePath = !(GetPlatform.isIOS || GetPlatform.isMacOS)
         ? box.get(Settings.saveImagePath, defaultValue: null)
         : null;
+    connectionTimeoutSecond = Duration(
+        seconds: max(
+            box.get(Settings.connectionTimeout,
+                defaultValue: defaultConnectionTimeout),
+            1));
     isRestoreForumPage =
         box.get(Settings.restoreForumPage, defaultValue: false);
     // 是否修复字体
@@ -861,6 +891,10 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.feedId, Settings.useHtmlFeed]);
     useHtmlFeedListenable =
         _settingsBox.listenable(keys: [Settings.useHtmlFeed]);
+    useBackupApiListenable =
+        _settingsBox.listenable(keys: [Settings.useBackupApi]);
+    connectionTimeoutListenable =
+        _settingsBox.listenable(keys: [Settings.connectionTimeout]);
     saveImagePathListenable =
         _settingsBox.listenable(keys: [Settings.saveImagePath]);
     showLargeImageInPostListenable =
@@ -1040,6 +1074,8 @@ class SettingsRestoreData extends RestoreData {
     Settings.selectCookieBeforePost,
     Settings.forbidDuplicatedPosts,
     Settings.useHtmlFeed,
+    Settings.useBackupApi,
+    Settings.connectionTimeout,
     Settings.cacheImageCount,
     if (GetPlatform.isMobile || GetPlatform.isMacOS)
       Settings.followPlatformBrightness,

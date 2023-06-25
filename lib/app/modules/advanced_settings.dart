@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../data/services/image.dart';
 import '../data/services/settings.dart';
+import '../routes/routes.dart';
 import '../utils/image.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
@@ -277,6 +278,8 @@ class AdvancedSettingsView extends StatelessWidget {
         ),
         body: ListView(
           children: [
+            const ListTile(
+                title: Text('网络设置'), onTap: AppRoutes.toNetworkSettings),
             if (!(GetPlatform.isIOS || GetPlatform.isMacOS) &&
                 ImageService.to.hasStoragePermission)
               const _SaveImagePath(),

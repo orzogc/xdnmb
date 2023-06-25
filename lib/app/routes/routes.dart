@@ -17,6 +17,7 @@ import '../modules/cookie.dart';
 import '../modules/drafts.dart';
 import '../modules/edit_post.dart';
 import '../modules/image.dart';
+import '../modules/network_settings.dart';
 import '../modules/paint.dart';
 import '../modules/post_settings.dart';
 import '../modules/reorder_forums.dart';
@@ -80,6 +81,11 @@ abstract class AppRoutes {
   static const String advancedSettings = '/${PathNames.advancedSettings}';
 
   static const String advancedSettingsPath = '$settings$advancedSettings';
+
+  static const String networkSettings = '/${PathNames.networkSettings}';
+
+  static const String networkSettingsPath =
+      '$advancedSettingsPath$networkSettings';
 
   static const String uiSettings = '/${PathNames.uiSettings}';
 
@@ -204,6 +210,9 @@ abstract class AppRoutes {
   static Future<T?>? toAdvancedSettings<T>() =>
       Get.toNamed<T>(advancedSettingsPath);
 
+  static Future<T?>? toNetworkSettings<T>() =>
+      Get.toNamed<T>(networkSettingsPath);
+
   static Future<T?>? toUISettings<T>() => Get.toNamed<T>(uiSettingsPath);
 
   static Future<T?>? toBasicUISettings<T>() =>
@@ -284,6 +293,8 @@ abstract class PathNames {
   static const String basicSettings = 'basicSettings';
 
   static const String advancedSettings = 'advancedSettings';
+
+  static const String networkSettings = 'networkSettings';
 
   static const String uiSettings = 'uiSettings';
 
@@ -444,6 +455,10 @@ Route? onGenerateRoute(RouteSettings settings) {
         return AppSwipeablePageRoute(
             settings: settings,
             builder: (context) => const AdvancedSettingsView());
+      case AppRoutes.networkSettingsPath:
+        return AppSwipeablePageRoute(
+            settings: settings,
+            builder: (context) => const NetworkSettingsView());
       case AppRoutes.uiSettingsPath:
         return AppSwipeablePageRoute(
             settings: settings, builder: (context) => const UISettingsView());

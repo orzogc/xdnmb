@@ -21,11 +21,9 @@ class ReferenceWithData {
 }
 
 // TODO: 更改user agent
-// TODO: 增加备用host
 class XdnmbClientService extends GetxService {
   static final XdnmbClientService to = Get.find<XdnmbClientService>();
 
-  // TODO: 允许用户设置timeout
   final XdnmbApi client;
 
   bool finishGettingNotice = false;
@@ -35,7 +33,7 @@ class XdnmbClientService extends GetxService {
   XdnmbClientService()
       : client = XdnmbApi(
             client: XdnmbHttpClient.httpClient,
-            connectionTimeout: XdnmbHttpClient.connectionTimeout,
+            connectionTimeout: SettingsService.connectionTimeoutSecond,
             idleTimeout: XdnmbHttpClient.idleTimeout);
 
   Future<void> _updateForumList() async {
@@ -216,10 +214,17 @@ class XdnmbClientService extends GetxService {
       finishGettingNotice = true;
     }
 
+    while (!settings.isReady.value) {
+      debugPrint('正在等待读取设置');
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
     try {
       await client.updateUrls();
     } catch (e) {
       debugPrint('更新X岛链接失败：$e');
+    } finally {
+      client.useBackupApi(settings.useBackupApi);
     }
 
     while (!data.isReady.value) {

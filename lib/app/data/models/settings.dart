@@ -29,6 +29,10 @@ abstract class Settings {
 
   static const String useHtmlFeed = 'useHtmlFeed';
 
+  static const String useBackupApi = 'useBackupApi';
+
+  static const String connectionTimeout = 'connectionTimeout';
+
   static const String saveImagePath = 'saveImagePath';
 
   static const String cacheImageCount = 'cacheImageCount';
