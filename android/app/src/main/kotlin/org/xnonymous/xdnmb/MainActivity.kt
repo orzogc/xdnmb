@@ -1,4 +1,4 @@
-package org.xnonymous.xdnmb
+package org.xnonymous.nmbxd
 
 import android.os.Build
 import androidx.core.view.WindowCompat

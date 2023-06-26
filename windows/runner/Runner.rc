@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "org.xnonymous" "\0"
-            VALUE "FileDescription", "xdnmb" "\0"
+            VALUE "FileDescription", "nmbxd" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "xdnmb" "\0"
+            VALUE "InternalName", "nmbxd" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2022-2023 orzogc. All rights reserved." "\0"
-            VALUE "OriginalFilename", "xdnmb.exe" "\0"
-            VALUE "ProductName", "xdnmb" "\0"
+            VALUE "OriginalFilename", "nmbxd.exe" "\0"
+            VALUE "ProductName", "nmbxd" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

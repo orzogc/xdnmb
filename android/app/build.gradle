@@ -32,7 +32,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "org.xnonymous.xdnmb"
+    namespace "org.xnonymous.nmbxd"
     compileSdkVersion 33
     ndkVersion flutter.ndkVersion
 
@@ -50,7 +50,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "org.xnonymous.xdnmb"
+        applicationId "org.xnonymous.nmbxd"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
