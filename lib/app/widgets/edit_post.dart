@@ -46,6 +46,7 @@ import 'forum_name.dart';
 import 'image.dart';
 import 'listenable.dart';
 import 'scroll.dart';
+import 'size.dart';
 import 'tag.dart';
 import 'thread.dart';
 import 'tooltip.dart';
@@ -105,31 +106,81 @@ class _ForumName extends StatelessWidget {
   }
 }
 
-// TODO: 自定义举报理由
+class _ReportReasonDialog extends StatelessWidget {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  final String? text;
+
+  // ignore: unused_element
+  _ReportReasonDialog({super.key, this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    String? reason;
+
+    return InputDialog(
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          decoration: const InputDecoration(labelText: '举报理由'),
+          initialValue: text,
+          autofocus: true,
+          onSaved: (newValue) => reason = newValue,
+          validator: (value) => (value == null || value.isEmpty)
+              ? '请输入举报理由'
+              : (xdnmb_api.ReportReason.list
+                      .any((reason) => reason.reason == value)
+                  ? '举报理由不能与已有的重复'
+                  : null),
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+
+              Get.back<String>(result: reason);
+            }
+          },
+          child: const Text('确定'),
+        ),
+      ],
+    );
+  }
+}
+
 class _ReportReason extends StatefulWidget {
   final String? reportReason;
 
   /// 选取举报理由后调用，参数是举报理由
-  final ValueChanged<String?>? onReportReason;
+  final ValueSetter<String?> onReportReason;
 
-  // ignore: unused_element
-  const _ReportReason({super.key, this.reportReason, this.onReportReason});
+  const _ReportReason(
+      // ignore: unused_element
+      {super.key,
+      this.reportReason,
+      required this.onReportReason});
 
   @override
   State<_ReportReason> createState() => _ReportReasonState();
 }
 
 class _ReportReasonState extends State<_ReportReason> {
-  late final TextEditingController _controller;
+  String? _userDefined;
 
-  void _onText() => widget.onReportReason?.call(_controller.text);
+  final RxDouble width = 0.0.obs;
+
+  void _setUserDefined() => _userDefined = !xdnmb_api.ReportReason.list
+          .any((reason) => reason.reason == widget.reportReason)
+      ? widget.reportReason
+      : null;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = TextEditingController(text: widget.reportReason);
-    _controller.addListener(_onText);
+    _setUserDefined();
   }
 
   @override
@@ -137,35 +188,73 @@ class _ReportReasonState extends State<_ReportReason> {
     super.didUpdateWidget(oldWidget);
 
     if (widget.reportReason != oldWidget.reportReason) {
-      final reason = widget.reportReason;
-      if (reason != null) {
-        if (_controller.text != reason) {
-          _controller.text = reason;
-        }
-      } else {
-        _controller.clear();
-      }
+      _setUserDefined();
     }
   }
 
   @override
-  void dispose() {
-    // DropdownMenu会dispose _controller
-    _controller.removeListener(_onText);
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ChildSizeNotifier(builder: (context, size, child) {
+            WidgetsBinding.instance
+                .addPostFrameCallback((timeStamp) => width.value = size.width);
 
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => DropdownMenu<String>(
-        controller: _controller,
-        label: const Text('举报理由'),
-        enableFilter: true,
-        dropdownMenuEntries: [
-          for (final reason in xdnmb_api.ReportReason.list)
-            DropdownMenuEntry<String>(value: reason.text, label: reason.reason),
+            return const Text('举报理由：');
+          }),
+          DropdownButton<String>(
+            value: widget.reportReason,
+            style: Theme.of(context).textTheme.bodyMedium,
+            onChanged: (value) {
+              if (value?.isNotEmpty ?? false) {
+                widget.onReportReason(value);
+              }
+            },
+            items: [
+              for (final reason in xdnmb_api.ReportReason.list)
+                DropdownMenuItem<String>(
+                  value: reason.text,
+                  child: Text(reason.reason),
+                ),
+              DropdownMenuItem<String>(
+                value: _userDefined ?? '',
+                onTap: () {
+                  WidgetsBinding.instance
+                      .addPostFrameCallback((timeStamp) async {
+                    final reason = await Get.dialog<String>(
+                        _ReportReasonDialog(text: _userDefined));
+                    if (reason?.isNotEmpty ?? false) {
+                      widget.onReportReason(reason);
+                    }
+                  });
+                },
+                child: Obx(
+                  () => ConstrainedBox(
+                    constraints: BoxConstraints(
+                      // TODO: 这里应该更加精确
+                      maxWidth: max(
+                        width.value > 0
+                            ? constraints.maxWidth - width.value - 50
+                            : constraints.maxWidth - 120,
+                        0.0,
+                      ),
+                    ),
+                    child: Text(
+                      _userDefined ?? '自定义',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
-      );
+      ),
+    );
+  }
 }
 
 class _WatermarkDialog extends StatelessWidget {

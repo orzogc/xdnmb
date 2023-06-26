@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../data/services/blacklist.dart';
 import '../data/services/draft.dart';
@@ -20,6 +21,23 @@ import '../utils/theme.dart';
 import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/list_tile.dart';
+
+/// Android上需要`MANAGE_EXTERNAL_STORAGE`权限（可能只有Android 10或以上版本需要）
+///
+/// 返回是否成功获取权限
+Future<bool> _requestStoragePermission() async {
+  if (GetPlatform.isAndroid) {
+    PermissionStatus status = await Permission.manageExternalStorage.status;
+    if (status.isDenied) {
+      showToast('请授予应用相应存储权限');
+      status = await Permission.manageExternalStorage.request();
+    }
+
+    return status.isGranted;
+  }
+
+  return true;
+}
 
 void _showDialog(String text) => WidgetsBinding.instance
     .addPostFrameCallback((timeStamp) => Get.dialog(ConfirmCancelDialog(
@@ -163,9 +181,13 @@ class _Backup extends StatelessWidget {
   Widget build(BuildContext context) => ListTile(
         title: const Text('备份应用数据'),
         subtitle: const Text('备份数据时请勿退出或者关闭应用，备份后需要重启应用'),
-        onTap: () {
+        onTap: () async {
           if (!BackupData.isBackup && !RestoreData.isRestored) {
-            Get.dialog(const _BackupDialog());
+            if (await _requestStoragePermission()) {
+              Get.dialog(const _BackupDialog());
+            } else {
+              showToast('没有存储权限无法备份应用数据');
+            }
           } else {
             showToast('请重启应用后再备份应用数据');
           }
@@ -367,49 +389,54 @@ class _Restore extends StatelessWidget {
           subtitle: const Text('恢复数据时请勿退出或者关闭应用，恢复后需要重启应用'),
           onTap: () async {
             if (!BackupData.isBackup && !RestoreData.isRestored) {
-              showToast('请选取应用备份数据');
-
               final overlay = context.loaderOverlay;
-              try {
-                final result = await FilePicker.platform.pickFiles(
-                    dialogTitle: 'xdnmb',
-                    type: FileType.custom,
-                    allowedExtensions: ['zip'],
-                    lockParentWindow: true);
 
-                if (result != null) {
-                  final path = result.files.single.path;
-                  if (path != null) {
-                    Directory? backupDir;
-                    overlay.show();
-                    try {
-                      backupDir = await RestoreData.unzipBackupFile(path);
-                    } catch (e) {
-                      showToast('解压应用备份数据出现错误：$e');
+              if (await _requestStoragePermission()) {
+                showToast('请选取应用备份数据');
 
-                      return;
-                    } finally {
-                      if (overlay.visible) {
-                        overlay.hide();
+                try {
+                  final result = await FilePicker.platform.pickFiles(
+                      dialogTitle: 'xdnmb',
+                      type: FileType.custom,
+                      allowedExtensions: ['zip'],
+                      lockParentWindow: true);
+
+                  if (result != null) {
+                    final path = result.files.single.path;
+                    if (path != null) {
+                      Directory? backupDir;
+                      overlay.show();
+                      try {
+                        backupDir = await RestoreData.unzipBackupFile(path);
+                      } catch (e) {
+                        showToast('解压应用备份数据出现错误：$e');
+
+                        return;
+                      } finally {
+                        if (overlay.visible) {
+                          overlay.hide();
+                        }
                       }
-                    }
 
-                    try {
-                      await Get.dialog(
-                          _RestoreDialog(backupDir: backupDir.path));
-                    } catch (e) {
-                      showToast('恢复应用备份数据出现错误：$e');
+                      try {
+                        await Get.dialog(
+                            _RestoreDialog(backupDir: backupDir.path));
+                      } catch (e) {
+                        showToast('恢复应用备份数据出现错误：$e');
 
-                      return;
-                    } finally {
-                      await backupDir.delete(recursive: true);
+                        return;
+                      } finally {
+                        await backupDir.delete(recursive: true);
+                      }
+                    } else {
+                      showToast('无法获取应用备份数据具体路径');
                     }
-                  } else {
-                    showToast('无法获取应用备份数据具体路径');
                   }
+                } catch (e) {
+                  showToast('选取应用备份数据出现错误：$e');
                 }
-              } catch (e) {
-                showToast('选取应用备份数据出现错误：$e');
+              } else {
+                showToast('没有存储权限无法恢复应用数据');
               }
             } else {
               showToast('请重启应用后再恢复应用数据');
