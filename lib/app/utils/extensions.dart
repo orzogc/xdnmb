@@ -214,10 +214,10 @@ extension TextStyleNullExtension on TextStyle? {
       this?.height != null ? StrutStyle(height: this!.height) : null;
 }
 
-extension FileExtension on File {
+extension FileExtension on FileSystemEntity {
   Future<void> deleteIfExist() async {
     if (await exists()) {
-      await delete();
+      await delete(recursive: true);
     }
   }
 }

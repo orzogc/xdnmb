@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,10 +11,12 @@ import '../data/services/blacklist.dart';
 import '../data/services/draft.dart';
 import '../data/services/emoticon.dart';
 import '../data/services/forum.dart';
+import '../data/services/image.dart';
 import '../data/services/settings.dart';
 import '../data/services/tag.dart';
 import '../data/services/user.dart';
 import '../utils/backup.dart';
+import '../utils/extensions.dart';
 import '../utils/history.dart';
 import '../utils/isar.dart';
 import '../utils/reference.dart';
@@ -22,11 +25,12 @@ import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/list_tile.dart';
 
-/// Android上需要`MANAGE_EXTERNAL_STORAGE`权限（可能只有Android 10或以上版本需要）
+/// Android 11或以上版本需要`MANAGE_EXTERNAL_STORAGE`权限
 ///
 /// 返回是否成功获取权限
 Future<bool> _requestStoragePermission() async {
-  if (GetPlatform.isAndroid) {
+  if (GetPlatform.isAndroid &&
+      (await DeviceInfoPlugin().androidInfo).version.sdkInt >= 30) {
     PermissionStatus status = await Permission.manageExternalStorage.status;
     if (status.isDenied) {
       showToast('请授予应用相应存储权限');
@@ -36,7 +40,7 @@ Future<bool> _requestStoragePermission() async {
     return status.isGranted;
   }
 
-  return true;
+  return ImageService.to.hasStoragePermission;
 }
 
 void _showDialog(String text) => WidgetsBinding.instance
@@ -180,7 +184,7 @@ class _Backup extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
         title: const Text('备份应用数据'),
-        subtitle: const Text('备份数据时请勿退出或者关闭应用，备份后需要重启应用'),
+        subtitle: const Text('只支持保存备份数据在内部存储，备份数据时请勿退出或者关闭应用，备份后需要重启应用'),
         onTap: () async {
           if (!BackupData.isBackup && !RestoreData.isRestored) {
             if (await _requestStoragePermission()) {
@@ -250,132 +254,133 @@ class _RestoreDialogState extends State<_RestoreDialog> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<_Selection<RestoreData>>>(
-      future: _check,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasData) {
-          final restoreList = snapshot.data!;
+  Widget build(BuildContext context) =>
+      FutureBuilder<List<_Selection<RestoreData>>>(
+        future: _check,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasData) {
+            final restoreList = snapshot.data!;
 
-          if (restoreList.isEmpty) {
+            if (restoreList.isEmpty) {
+              return ConfirmCancelDialog(
+                contentWidget: const Text('无效的应用备份数据', style: AppTheme.boldRed),
+                onConfirm: Get.back,
+              );
+            }
+
+            return LoaderOverlay(
+              child: ConfirmCancelDialog(
+                title: '恢复',
+                contentWidget: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: restoreList
+                      .map(
+                        (restore) => Obx(
+                          () => TightCheckboxListTile(
+                            title: Text(restore.value.title),
+                            subtitle: restore.value.subTitle != null
+                                ? Text(restore.value.subTitle!)
+                                : null,
+                            value: restore.isSelected,
+                            onChanged: (value) {
+                              if (value != null) {
+                                restore.isSelected = value;
+                              }
+                            },
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+                confirmText: '恢复',
+                onConfirm: () async {
+                  final restores = restoreList
+                      .where((restore) => restore.isSelected)
+                      .map((restore) => restore.value)
+                      .toList();
+                  if (restores.isEmpty) {
+                    Get.back();
+                    return;
+                  }
+                  final overlay = context.loaderOverlay;
+                  final num = 0.obs;
+
+                  try {
+                    overlay.show(
+                      widget: Center(
+                        child: Obx(
+                          () => num.value < restores.length
+                              ? Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ValueListenableBuilder(
+                                      valueListenable: restores[num.value]
+                                          .progressListenable,
+                                      builder: (context, value, child) => Text(
+                                        '正在恢复 ${restores[num.value].title} ：'
+                                        '${(value * 100.0).toInt()}%',
+                                        style: AppTheme.boldRed,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5.0),
+                                    CircularProgressIndicator(
+                                      value: num.value / restores.length,
+                                    ),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ),
+                    );
+
+                    final errors = await RestoreData.restoreData(
+                        widget.backupDir,
+                        restores,
+                        (value) => num.value = value);
+                    if (errors.isNotEmpty) {
+                      final text = errors.map((error) {
+                        final (restore, e) = error;
+
+                        return '恢复 ${restore.title} 的数据出现错误：$e';
+                      }).followedBy([
+                        if (errors.length < restores.length)
+                          '其余应用数据恢复成功，请马上重启应用'
+                        else
+                          '请马上重启应用'
+                      ]).join('\n');
+
+                      _showDialog(text);
+                    } else {
+                      _showDialog('恢复应用数据成功，请马上重启应用');
+                    }
+                  } catch (e) {
+                    _showDialog('恢复应用数据出现错误，请马上重启应用：$e');
+                  } finally {
+                    if (overlay.visible) {
+                      overlay.hide();
+                    }
+
+                    Get.back();
+                  }
+                },
+                onCancel: Get.back,
+              ),
+            );
+          }
+
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasError) {
             return ConfirmCancelDialog(
-              contentWidget: const Text('无效的应用备份数据', style: AppTheme.boldRed),
+              contentWidget: Text('获取应用备份数据文件出现错误：${snapshot.error}',
+                  style: AppTheme.boldRed),
               onConfirm: Get.back,
             );
           }
 
-          return LoaderOverlay(
-            child: ConfirmCancelDialog(
-              title: '恢复',
-              contentWidget: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: restoreList
-                    .map(
-                      (restore) => Obx(
-                        () => TightCheckboxListTile(
-                          title: Text(restore.value.title),
-                          subtitle: restore.value.subTitle != null
-                              ? Text(restore.value.subTitle!)
-                              : null,
-                          value: restore.isSelected,
-                          onChanged: (value) {
-                            if (value != null) {
-                              restore.isSelected = value;
-                            }
-                          },
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-              confirmText: '恢复',
-              onConfirm: () async {
-                final restores = restoreList
-                    .where((restore) => restore.isSelected)
-                    .map((restore) => restore.value)
-                    .toList();
-                if (restores.isEmpty) {
-                  Get.back();
-                  return;
-                }
-                final overlay = context.loaderOverlay;
-                final num = 0.obs;
-
-                try {
-                  overlay.show(
-                    widget: Center(
-                      child: Obx(
-                        () => num.value < restores.length
-                            ? Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ValueListenableBuilder(
-                                    valueListenable:
-                                        restores[num.value].progressListenable,
-                                    builder: (context, value, child) => Text(
-                                      '正在恢复 ${restores[num.value].title} ：'
-                                      '${(value * 100.0).toInt()}%',
-                                      style: AppTheme.boldRed,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5.0),
-                                  CircularProgressIndicator(
-                                    value: num.value / restores.length,
-                                  ),
-                                ],
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ),
-                  );
-
-                  final errors = await RestoreData.restoreData(
-                      widget.backupDir, restores, (value) => num.value = value);
-                  if (errors.isNotEmpty) {
-                    final text = errors.map((error) {
-                      final (restore, e) = error;
-
-                      return '恢复 ${restore.title} 的数据出现错误：$e';
-                    }).followedBy([
-                      if (errors.length < restores.length)
-                        '其余应用数据恢复成功，请马上重启应用'
-                      else
-                        '请马上重启应用'
-                    ]).join('\n');
-
-                    _showDialog(text);
-                  } else {
-                    _showDialog('恢复应用数据成功，请马上重启应用');
-                  }
-                } catch (e) {
-                  _showDialog('恢复应用数据出现错误，请马上重启应用：$e');
-                } finally {
-                  if (overlay.visible) {
-                    overlay.hide();
-                  }
-
-                  Get.back();
-                }
-              },
-              onCancel: Get.back,
-            ),
-          );
-        }
-
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasError) {
-          return ConfirmCancelDialog(
-            contentWidget: Text('获取应用备份数据文件出现错误：${snapshot.error}',
-                style: AppTheme.boldRed),
-            onConfirm: Get.back,
-          );
-        }
-
-        return const AlertDialog(content: CircularProgressIndicator());
-      },
-    );
-  }
+          return const AlertDialog(content: CircularProgressIndicator());
+        },
+      );
 }
 
 class _Restore extends StatelessWidget {
@@ -383,66 +388,51 @@ class _Restore extends StatelessWidget {
   const _Restore({super.key});
 
   @override
-  Widget build(BuildContext context) => LoaderOverlay(
-        child: ListTile(
-          title: const Text('恢复合并应用数据'),
-          subtitle: const Text('恢复数据时请勿退出或者关闭应用，恢复后需要重启应用'),
-          onTap: () async {
-            if (!BackupData.isBackup && !RestoreData.isRestored) {
-              final overlay = context.loaderOverlay;
+  Widget build(BuildContext context) => ListTile(
+        title: const Text('恢复合并应用数据'),
+        subtitle: const Text('恢复数据时请勿退出或者关闭应用，恢复后需要重启应用'),
+        onTap: () async {
+          if (!BackupData.isBackup && !RestoreData.isRestored) {
+            if (await _requestStoragePermission()) {
+              showToast('请选取应用备份数据');
 
-              if (await _requestStoragePermission()) {
-                showToast('请选取应用备份数据');
+              try {
+                final result = await FilePicker.platform.pickFiles(
+                    dialogTitle: 'xdnmb',
+                    type: FileType.custom,
+                    allowedExtensions: ['zip'],
+                    lockParentWindow: true);
 
-                try {
-                  final result = await FilePicker.platform.pickFiles(
-                      dialogTitle: 'xdnmb',
-                      type: FileType.custom,
-                      allowedExtensions: ['zip'],
-                      lockParentWindow: true);
+                if (result != null) {
+                  final path = result.files.single.path;
+                  if (path != null) {
+                    Directory? backupDir;
+                    try {
+                      backupDir = await RestoreData.unzipBackupFile(path);
 
-                  if (result != null) {
-                    final path = result.files.single.path;
-                    if (path != null) {
-                      Directory? backupDir;
-                      overlay.show();
-                      try {
-                        backupDir = await RestoreData.unzipBackupFile(path);
-                      } catch (e) {
-                        showToast('解压应用备份数据出现错误：$e');
+                      await Get.dialog(
+                          _RestoreDialog(backupDir: backupDir.path));
+                    } catch (e) {
+                      showToast('解压缩和恢复应用备份数据出现错误：$e');
 
-                        return;
-                      } finally {
-                        if (overlay.visible) {
-                          overlay.hide();
-                        }
-                      }
-
-                      try {
-                        await Get.dialog(
-                            _RestoreDialog(backupDir: backupDir.path));
-                      } catch (e) {
-                        showToast('恢复应用备份数据出现错误：$e');
-
-                        return;
-                      } finally {
-                        await backupDir.delete(recursive: true);
-                      }
-                    } else {
-                      showToast('无法获取应用备份数据具体路径');
+                      return;
+                    } finally {
+                      await backupDir?.deleteIfExist();
                     }
+                  } else {
+                    showToast('无法获取应用备份数据具体路径');
                   }
-                } catch (e) {
-                  showToast('选取应用备份数据出现错误：$e');
                 }
-              } else {
-                showToast('没有存储权限无法恢复应用数据');
+              } catch (e) {
+                showToast('选取应用备份数据出现错误：$e');
               }
             } else {
-              showToast('请重启应用后再恢复应用数据');
+              showToast('没有存储权限无法恢复应用数据');
             }
-          },
-        ),
+          } else {
+            showToast('请重启应用后再恢复应用数据');
+          }
+        },
       );
 }
 
