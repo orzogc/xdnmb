@@ -77,11 +77,8 @@ class HistoryController extends PostListController {
 
   final RxList<int?> _counts = RxList(List.filled(_historyPageCount, null));
 
-  final List<ListenableNotifier> _notifiers = [
-    ListenableNotifier(),
-    ListenableNotifier(),
-    ListenableNotifier(),
-  ];
+  final List<ListenableNotifier> _notifiers =
+      List.generate(_historyPageCount, (index) => ListenableNotifier());
 
   final RxDouble _headerHeight = 0.0.obs;
 
