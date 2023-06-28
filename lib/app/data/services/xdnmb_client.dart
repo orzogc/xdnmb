@@ -28,6 +28,8 @@ class XdnmbClientService extends GetxService {
 
   bool finishGettingNotice = false;
 
+  bool hasUpdateUrls = false;
+
   final RxBool isReady = false.obs;
 
   XdnmbClientService()
@@ -173,6 +175,20 @@ class XdnmbClientService extends GetxService {
     final data = PersistentDataService.to;
     final settings = SettingsService.to;
 
+    while (!settings.isReady.value) {
+      debugPrint('正在等待读取设置');
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    try {
+      await client.updateUrls();
+    } catch (e) {
+      debugPrint('更新X岛链接失败：$e');
+    } finally {
+      client.useBackupApi(settings.useBackupApi);
+      hasUpdateUrls = true;
+    }
+
     try {
       debugPrint('开始获取X岛公告');
 
@@ -197,8 +213,8 @@ class XdnmbClientService extends GetxService {
         notice = await client.getNotice();
       }
 
-      while (!(data.isReady.value && settings.isReady.value)) {
-        debugPrint('正在等待读取数据和设置');
+      while (!data.isReady.value) {
+        debugPrint('正在等待读取数据');
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
@@ -212,19 +228,6 @@ class XdnmbClientService extends GetxService {
       showToast('获取X岛公告失败：${exceptionMessage(e)}');
     } finally {
       finishGettingNotice = true;
-    }
-
-    while (!settings.isReady.value) {
-      debugPrint('正在等待读取设置');
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-
-    try {
-      await client.updateUrls();
-    } catch (e) {
-      debugPrint('更新X岛链接失败：$e');
-    } finally {
-      client.useBackupApi(settings.useBackupApi);
     }
 
     while (!data.isReady.value) {

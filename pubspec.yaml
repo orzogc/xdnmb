@@ -1,7 +1,7 @@
 name: nmbxd
 description: An app for nmbxd.com.
 publish_to: 'none'
-version: 0.4.1+10
+version: 0.5.0-alpha+10
 
 environment:
   sdk: '>=3.0.5 <4.0.0'
@@ -47,7 +47,7 @@ dependencies:
   loader_overlay: ^2.2.0
   media_scanner: ^2.1.0
   mime: ^1.0.4
-  mobile_scanner: ^3.2.0
+  mobile_scanner: ^3.3.0
   package_info_plus: ^4.0.2
   path: ^1.8.2
   path_provider: ^2.0.15

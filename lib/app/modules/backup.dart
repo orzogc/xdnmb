@@ -52,7 +52,7 @@ void _showDialog(String text) => WidgetsBinding.instance
 class _Selection<T> {
   final T value;
 
-  final RxBool _isSelected = true.obs;
+  final RxBool _isSelected;
 
   bool isVisible = true;
 
@@ -60,7 +60,8 @@ class _Selection<T> {
 
   set isSelected(bool isSelected) => _isSelected.value = isSelected;
 
-  _Selection(this.value);
+  _Selection(this.value, [bool isSelected = true])
+      : _isSelected = isSelected.obs;
 }
 
 class _BackupDialog extends StatefulWidget {
@@ -224,8 +225,9 @@ class _RestoreDialogState extends State<_RestoreDialog> {
     PostHistoryRestoreData(),
     ReplyHistoryRestoreData(),
     TagRestoreData(),
-    ReferencesRestoreData(),
-  ].map((restore) => _Selection(restore)).toList();
+  ]
+      .map((restore) => _Selection(restore))
+      .followedBy([_Selection(ReferencesRestoreData(), false)]).toList();
 
   late Future<List<_Selection<RestoreData>>> _check;
 

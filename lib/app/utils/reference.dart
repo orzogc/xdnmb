@@ -101,7 +101,7 @@ class ReferencesRestoreData extends RestoreData {
   String get title => '其他数据';
 
   @override
-  String get subTitle => '恢复其他数据可能会比较慢，除非刚卸载重装或者清除过应用数据，否则最好不要选这项';
+  String get subTitle => '恢复其他数据可能会比较慢，建议不恢复，除非刚卸载重装或者清除过应用数据，否则最好不要选这项';
 
   @override
   CommonRestoreOperator? get commonOperator => const IsarRestoreOperator();
@@ -114,9 +114,26 @@ class ReferencesRestoreData extends RestoreData {
 
   @override
   Future<void> restore(String dir) async {
+    await IsarRestoreOperator.openIsar();
+    int count = await ReferenceDatabase._referenceData.count();
+    int n = (count / _stepNum).ceil();
+    final completedReferences = HashSet<int>();
+
+    for (var i = 0; i < n; i++) {
+      final references = await ReferenceDatabase._referenceData
+          .where()
+          .anyId()
+          .offset(i * _stepNum)
+          .limit(_stepNum)
+          .findAll();
+      completedReferences.addAll(references
+          .where((reference) => reference.isComplete)
+          .map((reference) => reference.id));
+    }
+
     await IsarRestoreOperator.openBackupIsar();
-    final count = await _referenceData.count();
-    final n = (count / _stepNum).ceil();
+    count = await _referenceData.count();
+    n = (count / _stepNum).ceil();
     final cacheList = <ReferenceData>[];
 
     for (var i = 0; i < n; i++) {
@@ -128,7 +145,10 @@ class ReferencesRestoreData extends RestoreData {
           .limit(_stepNum)
           .findAll();
       await IsarRestoreOperator.openIsar();
-      await ReferenceDatabase._addReferences(references, cacheList);
+      await ReferenceDatabase._addReferences(
+          references.where(
+              (reference) => !completedReferences.contains(reference.id)),
+          cacheList);
 
       cacheList.clear();
       progress = min((i + 1) * _stepNum, count) / count;
