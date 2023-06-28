@@ -1,7 +1,7 @@
 name: nmbxd
 description: An app for nmbxd.com.
 publish_to: 'none'
-version: 0.4.1-alpha+9
+version: 0.4.1+10
 
 environment:
   sdk: '>=3.0.5 <4.0.0'
@@ -77,7 +77,7 @@ dev_dependencies:
 
 dependency_overrides:
   # https://github.com/Baseflow/flutter_cache_manager/pull/414
-  http: ^1.0.0
+  http: ^1.1.0
 
 flutter:
   uses-material-design: true
