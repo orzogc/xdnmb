@@ -144,7 +144,7 @@ class _FeedDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final client = XdnmbClientService.to;
+    final client = XdnmbClientService.to.client;
     final textStyle = Theme.of(context).textTheme.titleMedium;
 
     return SimpleDialog(
@@ -158,7 +158,7 @@ class _FeedDialog extends StatelessWidget {
             postListBack();
 
             try {
-              await client.deleteFeed(post.id);
+              await client.xdnmbDeleteFeed(post.id);
 
               showToast('取消订阅 ${post.toPostNumber()} 成功');
               onDelete();
@@ -176,8 +176,8 @@ class _FeedDialog extends StatelessWidget {
             postListBack();
 
             try {
-              await client.deleteFeed(post.id);
-              await client.addFeed(post.id);
+              await client.xdnmbDeleteFeed(post.id);
+              await client.xdnmbAddFeed(post.id);
 
               showToast('提升 ${post.toPostNumber()} 至订阅最上方成功');
               controller.refreshPage();
@@ -186,7 +186,7 @@ class _FeedDialog extends StatelessWidget {
                   '提升至订阅最上方失败，请手动重新订阅 ${post.toPostNumber()} ：${exceptionMessage(e)}');
 
               try {
-                await client.addFeed(post.id);
+                await client.xdnmbAddFeed(post.id);
               } catch (e) {
                 debugPrint(
                     '订阅 ${post.toPostNumber()} 失败：${exceptionMessage(e)}');
@@ -221,7 +221,7 @@ class _FeedItemState extends State<_FeedItem> {
 
   void _setGetLatestPostTime() {
     final settings = SettingsService.to;
-    final client = XdnmbClientService.to;
+    final client = XdnmbClientService.to.client;
     final time = TimeService.to;
 
     _getLatestPostTime = (_feed is Feed &&
@@ -353,7 +353,7 @@ class _FeedBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final client = XdnmbClientService.to;
+    final client = XdnmbClientService.to.client;
     final settings = SettingsService.to;
 
     return ListenBuilder(

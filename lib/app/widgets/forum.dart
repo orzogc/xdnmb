@@ -163,7 +163,7 @@ class _AddFeed extends StatelessWidget {
         onPressed: () async {
           postListBack();
           try {
-            await XdnmbClientService.to.addFeed(postId);
+            await XdnmbClientService.to.client.xdnmbAddFeed(postId);
             showToast('订阅 ${postId.toPostNumber()} 成功');
           } catch (e) {
             showToast('订阅 ${postId.toPostNumber()} 失败：${exceptionMessage(e)}');
@@ -308,7 +308,7 @@ class _ForumBodyState extends State<ForumBody> {
 
   @override
   Widget build(BuildContext context) {
-    final client = XdnmbClientService.to;
+    final client = XdnmbClientService.to.client;
     final settings = SettingsService.to;
     final forums = ForumListService.to;
     final blacklist = BlacklistService.to;

@@ -71,7 +71,8 @@ class _ReferenceCardState extends State<ReferenceCard> {
   void _setGetReference() {
     debugPrint('获取串 ${widget.postId.toPostNumber()} 的引用');
 
-    _getReference = XdnmbClientService.to.getHtmlReference(widget.postId);
+    _getReference =
+        XdnmbClientService.to.client.xdnmbGetHtmlReference(widget.postId);
   }
 
   @override

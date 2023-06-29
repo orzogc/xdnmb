@@ -14,6 +14,7 @@ import 'app/modules/post_list.dart';
 import 'app/routes/routes.dart';
 import 'app/utils/directory.dart';
 import 'app/utils/hive.dart';
+import 'app/utils/http_client.dart';
 import 'app/utils/isar.dart';
 import 'app/utils/theme.dart';
 
@@ -21,6 +22,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await _addCert();
+  await XdnmbHttpClient.setUserAgent();
 
   await getDatabasePath();
   try {

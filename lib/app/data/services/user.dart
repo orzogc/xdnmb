@@ -333,8 +333,7 @@ class UserService extends GetxService {
         _userBox.watch(key: User.userCookie).listen((event) {
       debugPrint('userCookie change');
       final cookie = event.value as String?;
-      final client = XdnmbClientService.to.client;
-      client.xdnmbUserCookie =
+      XdnmbClientService.to.client.xdnmbUserCookie =
           cookie != null ? Cookie.fromSetCookieValue(cookie) : null;
     });
 

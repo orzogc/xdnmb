@@ -304,7 +304,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
-    final client = XdnmbClientService.to;
+    final client = XdnmbClientService.to.client;
     final blacklist = BlacklistService.to;
     final postId = controller.id;
 
@@ -327,7 +327,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
           PopupMenuItem(
             onTap: () async {
               try {
-                await client.addFeed(postId);
+                await client.xdnmbAddFeed(postId);
                 showToast('订阅 ${postId.toPostNumber()} 成功');
               } catch (e) {
                 showToast(
@@ -371,7 +371,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
                   postListBack();
 
                   try {
-                    await client.deleteFeed(postId);
+                    await client.xdnmbDeleteFeed(postId);
                     showToast('取消订阅 ${postId.toPostNumber()} 成功');
                   } catch (e) {
                     showToast(
@@ -627,7 +627,7 @@ class _ThreadBodyState extends State<ThreadBody> {
   }
 
   Future<List<PostWithPage<PostBase>>> _fetch(int firstPage, int page) async {
-    final client = XdnmbClientService.to;
+    final client = XdnmbClientService.to.client;
     final blacklist = BlacklistService.to;
     final postId = _controller.id;
 

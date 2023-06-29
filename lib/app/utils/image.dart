@@ -74,7 +74,7 @@ class ReferenceImageCache {
       debugPrint('串 ${postId.toPostNumber()} 有图片，开始获取其引用');
 
       try {
-        final reference = await XdnmbClientService.to
+        final reference = await XdnmbClientService.to.client
             .getReference(postId, mainPostId: mainPostId);
         if (reference.hasImage) {
           _images[postId] = ReferenceImageCache(

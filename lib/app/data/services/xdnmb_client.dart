@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Image;
 import 'package:get/get.dart';
 import 'package:xdnmb_api/xdnmb_api.dart';
 
@@ -20,23 +20,150 @@ class ReferenceWithData {
   const ReferenceWithData(this.reference, this.data);
 }
 
-// TODO: 更改user agent
+class XdnmbClient extends XdnmbApi {
+  XdnmbClient(
+      {super.client,
+      super.connectionTimeout,
+      super.idleTimeout,
+      super.userAgent});
+
+  @override
+  Future<List<ForumThread>> getForum(int forumId,
+      {int page = 1, String? cookie}) async {
+    final threads = await super.getForum(forumId, page: page, cookie: cookie);
+    ReferenceDatabase.addForumThreads(threads);
+    TagService.addForumThreads(threads);
+
+    return threads;
+  }
+
+  @override
+  Future<List<ForumThread>> getTimeline(int timelineId,
+      {int page = 1, String? cookie}) async {
+    final threads =
+        await super.getTimeline(timelineId, page: page, cookie: cookie);
+    ReferenceDatabase.addForumThreads(threads);
+    TagService.addForumThreads(threads);
+
+    return threads;
+  }
+
+  @override
+  Future<Thread> getThread(int mainPostId,
+      {int page = 1, String? cookie, bool isFirstPage = false}) async {
+    final thread =
+        await super.getThread(mainPostId, page: page, cookie: cookie);
+    ReferenceDatabase.addThread(thread, page);
+    TagService.addThread(thread, isFirstPage);
+
+    return thread;
+  }
+
+  @override
+  Future<Thread> getOnlyPoThread(int mainPostId,
+      {int page = 1, String? cookie, bool isFirstPage = false}) async {
+    final thread =
+        await super.getOnlyPoThread(mainPostId, page: page, cookie: cookie);
+    ReferenceDatabase.addThread(thread, page);
+    TagService.addThread(thread, isFirstPage);
+
+    return thread;
+  }
+
+  @override
+  Future<Reference> getReference(int postId,
+      {String? cookie, int? mainPostId}) async {
+    final reference = await super.getReference(postId, cookie: cookie);
+    ReferenceDatabase.addPost(post: reference, mainPostId: mainPostId);
+    TagService.updatePosts([reference]);
+
+    return reference;
+  }
+
+  Future<ReferenceWithData> xdnmbGetHtmlReference(int postId,
+      {String? cookie}) async {
+    final reference = await super.getHtmlReference(postId, cookie: cookie);
+    TagService.updatePosts([reference]);
+    final data = await ReferenceDatabase.addPost(
+        post: reference, mainPostId: reference.mainPostId);
+
+    return ReferenceWithData(reference, data);
+  }
+
+  @override
+  Future<List<Feed>> getFeed(String feedId,
+      {int page = 1, String? cookie}) async {
+    final feeds = await super.getFeed(feedId, page: page, cookie: cookie);
+    ReferenceDatabase.addFeeds(feeds);
+    TagService.addFeeds(feeds);
+
+    return feeds;
+  }
+
+  @override
+  Future<(List<HtmlFeed>, int?)> getHtmlFeed(
+      {int page = 1, String? cookie}) async {
+    final (feeds, maxPage) =
+        await super.getHtmlFeed(page: page, cookie: cookie);
+    ReferenceDatabase.addHtmlFeeds(feeds);
+    TagService.addFeeds(feeds);
+
+    return (feeds, maxPage);
+  }
+
+  Future<void> xdnmbAddFeed(int mainPostId, {String? cookie}) async {
+    final settings = SettingsService.to;
+
+    if (settings.useHtmlFeed) {
+      await super.addHtmlFeed(mainPostId, cookie: cookie);
+    } else {
+      await super.addFeed(settings.feedId, mainPostId, cookie: cookie);
+    }
+  }
+
+  Future<void> xdnmbDeleteFeed(int mainPostId, {String? cookie}) async {
+    final settings = SettingsService.to;
+
+    if (settings.useHtmlFeed) {
+      await super.deleteHtmlFeed(mainPostId, cookie: cookie);
+    } else {
+      await super.deleteFeed(settings.feedId, mainPostId, cookie: cookie);
+    }
+  }
+
+  @override
+  Future<LastPost?> getLastPost({String? cookie}) async {
+    final post = await super.getLastPost(cookie: cookie);
+    if (post != null) {
+      ReferenceDatabase.addPost(
+          post: post,
+          mainPostId: post.mainPostId ?? post.id,
+          accuratePage: post.mainPostId == null ? 1 : null);
+    }
+
+    return post;
+  }
+}
+
 class XdnmbClientService extends GetxService {
   static final XdnmbClientService to = Get.find<XdnmbClientService>();
 
-  final XdnmbApi client;
+  final XdnmbClient client;
 
   bool finishGettingNotice = false;
+
+  final RxBool hasSetWhetherUseBackupApi = false.obs;
 
   bool hasUpdateUrls = false;
 
   final RxBool isReady = false.obs;
 
   XdnmbClientService()
-      : client = XdnmbApi(
+      : client = XdnmbClient(
             client: XdnmbHttpClient.httpClient,
             connectionTimeout: SettingsService.connectionTimeoutSecond,
-            idleTimeout: XdnmbHttpClient.idleTimeout);
+            idleTimeout: XdnmbHttpClient.idleTimeout,
+            userAgent: XdnmbHttpClient.userAgent);
 
   Future<void> _updateForumList() async {
     final timelineList = await client.getTimelineList();
@@ -59,115 +186,6 @@ class XdnmbClientService extends GetxService {
     PersistentDataService.to.updateForumListTime = DateTime.now();
   }
 
-  Future<List<ForumThread>> getForum(int forumId,
-      {int page = 1, String? cookie}) async {
-    final threads = await client.getForum(forumId, page: page, cookie: cookie);
-    ReferenceDatabase.addForumThreads(threads);
-    TagService.addForumThreads(threads);
-
-    return threads;
-  }
-
-  Future<List<ForumThread>> getTimeline(int timelineId,
-      {int page = 1, String? cookie}) async {
-    final threads =
-        await client.getTimeline(timelineId, page: page, cookie: cookie);
-    ReferenceDatabase.addForumThreads(threads);
-    TagService.addForumThreads(threads);
-
-    return threads;
-  }
-
-  Future<Thread> getThread(int mainPostId,
-      {int page = 1, String? cookie, bool isFirstPage = false}) async {
-    final thread =
-        await client.getThread(mainPostId, page: page, cookie: cookie);
-    ReferenceDatabase.addThread(thread, page);
-    TagService.addThread(thread, isFirstPage);
-
-    return thread;
-  }
-
-  Future<Thread> getOnlyPoThread(int mainPostId,
-      {int page = 1, String? cookie, bool isFirstPage = false}) async {
-    final thread =
-        await client.getOnlyPoThread(mainPostId, page: page, cookie: cookie);
-    ReferenceDatabase.addThread(thread, page);
-    TagService.addThread(thread, isFirstPage);
-
-    return thread;
-  }
-
-  Future<Reference> getReference(int postId,
-      {String? cookie, int? mainPostId}) async {
-    final reference = await client.getReference(postId, cookie: cookie);
-    ReferenceDatabase.addPost(post: reference, mainPostId: mainPostId);
-    TagService.updatePosts([reference]);
-
-    return reference;
-  }
-
-  Future<ReferenceWithData> getHtmlReference(int postId,
-      {String? cookie}) async {
-    final reference = await client.getHtmlReference(postId, cookie: cookie);
-    TagService.updatePosts([reference]);
-    final data = await ReferenceDatabase.addPost(
-        post: reference, mainPostId: reference.mainPostId);
-
-    return ReferenceWithData(reference, data);
-  }
-
-  Future<List<Feed>> getFeed(String feedId,
-      {int page = 1, String? cookie}) async {
-    final feeds = await client.getFeed(feedId, page: page, cookie: cookie);
-    ReferenceDatabase.addFeeds(feeds);
-    TagService.addFeeds(feeds);
-
-    return feeds;
-  }
-
-  Future<(List<HtmlFeed>, int?)> getHtmlFeed(
-      {int page = 1, String? cookie}) async {
-    final (feeds, maxPage) =
-        await client.getHtmlFeed(page: page, cookie: cookie);
-    ReferenceDatabase.addHtmlFeeds(feeds);
-    TagService.addFeeds(feeds);
-
-    return (feeds, maxPage);
-  }
-
-  Future<void> addFeed(int mainPostId, {String? cookie}) async {
-    final settings = SettingsService.to;
-
-    if (settings.useHtmlFeed) {
-      await client.addHtmlFeed(mainPostId, cookie: cookie);
-    } else {
-      await client.addFeed(settings.feedId, mainPostId, cookie: cookie);
-    }
-  }
-
-  Future<void> deleteFeed(int mainPostId, {String? cookie}) async {
-    final settings = SettingsService.to;
-
-    if (settings.useHtmlFeed) {
-      await client.deleteHtmlFeed(mainPostId, cookie: cookie);
-    } else {
-      await client.deleteFeed(settings.feedId, mainPostId, cookie: cookie);
-    }
-  }
-
-  Future<LastPost?> getLastPost({String? cookie}) async {
-    final post = await client.getLastPost(cookie: cookie);
-    if (post != null) {
-      ReferenceDatabase.addPost(
-          post: post,
-          mainPostId: post.mainPostId ?? post.id,
-          accuratePage: post.mainPostId == null ? 1 : null);
-    }
-
-    return post;
-  }
-
   @override
   void onReady() async {
     super.onReady();
@@ -181,11 +199,12 @@ class XdnmbClientService extends GetxService {
     }
 
     try {
+      client.useBackupApi(settings.useBackupApi);
+      hasSetWhetherUseBackupApi.value = true;
       await client.updateUrls();
     } catch (e) {
       debugPrint('更新X岛链接失败：$e');
     } finally {
-      client.useBackupApi(settings.useBackupApi);
       hasUpdateUrls = true;
     }
 

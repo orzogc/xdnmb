@@ -1867,6 +1867,7 @@ class _PostListViewState extends State<PostListView>
               tagService.isReady.value &&
               time.isReady.value &&
               user.isReady.value &&
+              client.hasSetWhetherUseBackupApi.value &&
               (!PersistentDataService.isFirstLaunched ||
                   client.isReady.value)) {
             if (_isInitial) {

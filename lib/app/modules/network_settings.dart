@@ -20,6 +20,7 @@ class _UseBackupApi extends StatelessWidget {
       listenable: settings.useBackupApiListenable,
       builder: (context, child) => SwitchListTile(
         title: const Text('使用X岛备用API'),
+        //subtitle: const Text('如果发串返回405错误可以尝试重启应用再发串'),
         value: settings.useBackupApi,
         onChanged: (value) {
           client.useBackupApi(value);
