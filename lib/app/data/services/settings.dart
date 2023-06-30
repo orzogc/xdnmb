@@ -273,6 +273,12 @@ class SettingsService extends GetxService {
   set addDeleteFeedInThread(bool addDeleteFeedInThread) =>
       _settingsBox.put(Settings.addDeleteFeedInThread, addDeleteFeedInThread);
 
+  int get maxPagesEachTab =>
+      max(_settingsBox.get(Settings.maxPagesEachTab, defaultValue: 0), 0);
+
+  set maxPagesEachTab(int maxPages) =>
+      _settingsBox.put(Settings.maxPagesEachTab, max(maxPages, 0));
+
   int get imageDisposeDistance => max(
       _settingsBox.get(Settings.imageDisposeDistance, defaultValue: 120), 0);
 
@@ -701,6 +707,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> addDeleteFeedInThreadListenable;
 
+  late final ValueListenable<Box> maxPagesEachTabListenable;
+
   late final ValueListenable<Box> imageDisposeDistanceListenable;
 
   late final ValueListenable<Box> fixedImageDisposeRatioListenable;
@@ -909,6 +917,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.restoreForumPage]);
     addDeleteFeedInThreadListenable =
         _settingsBox.listenable(keys: [Settings.addDeleteFeedInThread]);
+    maxPagesEachTabListenable =
+        _settingsBox.listenable(keys: [Settings.maxPagesEachTab]);
     imageDisposeDistanceListenable =
         _settingsBox.listenable(keys: [Settings.imageDisposeDistance]);
     fixedImageDisposeRatioListenable =
@@ -1082,6 +1092,7 @@ class SettingsRestoreData extends RestoreData {
     Settings.addBlueIslandEmoticons,
     Settings.restoreForumPage,
     Settings.addDeleteFeedInThread,
+    Settings.maxPagesEachTab,
     Settings.imageDisposeDistance,
     Settings.fixedImageDisposeRatio,
     if (!GetPlatform.isIOS) Settings.useDrawerAndEndDrawer,

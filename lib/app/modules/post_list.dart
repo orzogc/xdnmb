@@ -703,6 +703,7 @@ class PostListPageState extends State<PostListPage> {
   Widget _buildNavigator(int index) {
     debugPrint('build navigator: $index');
 
+    final settings = SettingsService.to;
     final stacks = ControllerStacksService.to;
 
     // 需要Navigator显示公告
@@ -712,22 +713,34 @@ class PostListPageState extends State<PostListPage> {
     }
 
     return ListenBuilder(
-      listenable: stacks.getStackNotifier(index),
-      builder: (context, child) => Navigator(
-        key: Get.nestedKey(stacks.getKeyId(index)),
-        pages: [
-          for (final controller in stacks.getControllers(index))
-            _PostListPage(
-              key: ValueKey(controller.key),
-              controller: controller.controller,
-            ),
-        ],
-        onPopPage: (route, result) {
-          stacks.popController(index);
+      listenable: Listenable.merge(
+          [stacks.getStackNotifier(index), settings.maxPagesEachTabListenable]),
+      builder: (context, child) {
+        final controllers = stacks.getControllers(index);
+        final Iterable<ControllerData> pageControllers =
+            (settings.maxPagesEachTab > 0 &&
+                    controllers.length > settings.maxPagesEachTab)
+                ? controllers.getRange(
+                    controllers.length - settings.maxPagesEachTab,
+                    controllers.length)
+                : controllers;
 
-          return route.didPop(result);
-        },
-      ),
+        return Navigator(
+          key: Get.nestedKey(stacks.getKeyId(index)),
+          pages: [
+            for (final controller in pageControllers)
+              _PostListPage(
+                key: ValueKey(controller.key),
+                controller: controller.controller,
+              ),
+          ],
+          onPopPage: (route, result) {
+            stacks.popController(index);
+
+            return route.didPop(result);
+          },
+        );
+      },
     );
   }
 

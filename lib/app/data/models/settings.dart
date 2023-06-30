@@ -45,6 +45,8 @@ abstract class Settings {
 
   static const String addDeleteFeedInThread = 'addDeleteFeedInThread';
 
+  static const String maxPagesEachTab = 'maxPagesEachTab';
+
   static const String imageDisposeDistance = 'imageDisposeDistance';
 
   static const String fixedImageDisposeRatio = 'fixedImageDisposeRatio';

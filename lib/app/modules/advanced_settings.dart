@@ -170,6 +170,33 @@ class _AddDeleteFeedInThread extends StatelessWidget {
   }
 }
 
+class _MaxPagesEachTab extends StatelessWidget {
+  // ignore: unused_element
+  const _MaxPagesEachTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenBuilder(
+      listenable: settings.maxPagesEachTabListenable,
+      builder: (context, child) => ListTile(
+        title: const Text('每个标签页同时保持状态的最多页数'),
+        subtitle: const Text('设置为较小的数字可以改善性能和减少内存占用，0为无限制'),
+        trailing: Text('${settings.maxPagesEachTab}'),
+        onTap: () async {
+          final n = await Get.dialog<int>(NumRangeDialog<int>(
+              text: '页数', initialValue: settings.maxPagesEachTab, min: 0));
+
+          if (n != null) {
+            settings.maxPagesEachTab = n;
+          }
+        },
+      ),
+    );
+  }
+}
+
 class _ImageDisposeDistance extends StatelessWidget {
   // ignore: unused_element
   const _ImageDisposeDistance({super.key});
@@ -290,6 +317,7 @@ class AdvancedSettingsView extends StatelessWidget {
             const _AddBlueIslandEmoticons(),
             const _RestoreForumPage(),
             const _AddDeleteFeedInThread(),
+            const _MaxPagesEachTab(),
             const _ImageDisposeDistance(),
             const _FixedImageDisposeRatio(),
             const _FixMissingFont(),
