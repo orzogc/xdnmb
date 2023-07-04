@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import '../modules/post_list.dart';
 
-// 可能需要在Obx里调用
+/// 可能需要在Obx里调用
 EdgeInsets getPadding(BuildContext context) {
   final view = View.of(context);
   // 为了通知`padding`的变化
@@ -12,7 +12,7 @@ EdgeInsets getPadding(BuildContext context) {
   return EdgeInsets.fromViewPadding(view.padding, view.devicePixelRatio);
 }
 
-// 可能需要在Obx里调用
+/// 可能需要在Obx里调用
 EdgeInsets getViewPadding(BuildContext context) {
   final view = View.of(context);
   // 为了通知`viewPadding`的变化

@@ -38,6 +38,27 @@ double? _getWidgetOffset(BuildContext context) {
   return null;
 }
 
+class _ThumbImageLayout extends StatelessWidget {
+  final Widget child;
+
+  // ignore: unused_element
+  const _ThumbImageLayout({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, constraints) => ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: ThumbImage.minWidth,
+            maxWidth: (constraints.maxWidth / 3.0)
+                .clamp(ThumbImage.minWidth, ThumbImage.maxWidth),
+            minHeight: ThumbImage.minHeight,
+            maxHeight: ThumbImage.maxHeight,
+          ),
+          child: child,
+        ),
+      );
+}
+
 class _RawThumbImage extends StatelessWidget {
   final String imageUrl;
 
@@ -56,23 +77,14 @@ class _RawThumbImage extends StatelessWidget {
       this.errorWidget});
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-        builder: (context, constraints) => ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: ThumbImage.minWidth,
-            maxWidth: (constraints.maxWidth / 3.0)
-                .clamp(ThumbImage.minWidth, ThumbImage.maxWidth),
-            minHeight: ThumbImage.minHeight,
-            maxHeight: ThumbImage.maxHeight,
-          ),
-          child: CachedNetworkImage(
-            imageUrl: imageUrl,
-            cacheKey: cacheKey,
-            cacheManager: XdnmbImageCacheManager(),
-            fit: BoxFit.contain,
-            progressIndicatorBuilder: progressIndicatorBuilder,
-            errorWidget: errorWidget,
-          ),
+  Widget build(BuildContext context) => _ThumbImageLayout(
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          cacheKey: cacheKey,
+          cacheManager: XdnmbImageCacheManager(),
+          fit: BoxFit.contain,
+          progressIndicatorBuilder: progressIndicatorBuilder,
+          errorWidget: errorWidget,
         ),
       );
 }
@@ -218,8 +230,9 @@ class _LargeImageState extends State<_LargeImage> {
             ],
           ),
         ),
-        errorWidget: (context, url, error) =>
-            loadingImageErrorBuilder(context, url, error, showError: false),
+        errorWidget: (context, url, error) => _ThumbImageLayout(
+            child: loadingImageErrorBuilder(context, url, error,
+                showError: false)),
         imageBuilder: (context, imageProvider) => Padding(
           padding: const EdgeInsets.only(bottom: 5.0),
           child: SizedBox(

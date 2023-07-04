@@ -1497,12 +1497,8 @@ class _EmoticonState extends State<_Emoticon> {
         () {
           final double? bottomViewPadding =
               widget.isAtBottom ? getViewPadding(context).bottom : null;
-          final keyboardHeight = data.keyboardHeight;
-          final height = max(
-              (keyboardHeight != null && keyboardHeight > 0.0)
-                  ? keyboardHeight - value
-                  : _defaultHeight - value,
-              0.0);
+          final height =
+              max((data.keyboardHeight ?? _defaultHeight) - value, 0.0);
 
           final Widget box = !data.isKeyboardVisible
               ? SizedBox(
@@ -1627,7 +1623,6 @@ class EditPostCallback {
 }
 
 // TODO: 增加选项，单独页面时可以把图片放下面
-// TODO: 考虑输入法没有关闭选项的问题
 // TODO: 图片压缩
 class EditPost extends StatefulWidget {
   static const int dutyRoomId = 18;
@@ -1761,7 +1756,7 @@ class _EditPostState extends State<EditPost> {
   }
 
   Widget _inputArea(BuildContext context, double height) {
-    assert(height > 0.0);
+    assert(height >= 0.0);
 
     final textStyle = Theme.of(context).textTheme.bodyMedium;
 
@@ -2105,25 +2100,26 @@ class _EditPostState extends State<EditPost> {
       builder: (context, value, child) => Obx(() {
         final viewPadding = getViewPadding(context);
         final padding = getPadding(context);
+        final paddingBottom = !data.isKeyboardVisible ? padding.bottom : 0.0;
 
-        final fullHeight = _isAtBottom
-            ? (size.height - viewPadding.top - padding.bottom)
-            : (size.height -
-                viewPadding.top -
-                PostListAppBar.height -
-                viewPadding.bottom);
-        final extraBottomPadding = _isAtBottom ? 0.0 : viewPadding.bottom;
-        final dynamicHeight = value > 0.0
-            ? (fullHeight + extraBottomPadding - value)
-            : fullHeight;
-        final lessHeight =
-            fullHeight + extraBottomPadding - (data.keyboardHeight ?? value);
+        final fullHeight = size.height -
+            viewPadding.top -
+            PostListAppBar.height -
+            paddingBottom;
+        final dynamicHeight = value > 0.0 ? (fullHeight - value) : fullHeight;
+        final lessHeight = fullHeight -
+            (data.keyboardHeight ?? _EmoticonState._defaultHeight) +
+            (_showEmoticon.value ? paddingBottom : 0.0);
 
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (_isAtBottom)
-              _inputArea(context, max(min(widget.height!, dynamicHeight), 0.0))
+              (data.isKeyboardVisible || _showEmoticon.value)
+                  ? _inputArea(
+                      context, max(min(widget.height!, lessHeight), 0.0))
+                  : _inputArea(
+                      context, max(min(widget.height!, dynamicHeight), 0.0))
             else
               (data.isKeyboardVisible || _showEmoticon.value)
                   ? _inputArea(context, max(lessHeight, 0.0))

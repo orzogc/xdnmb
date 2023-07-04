@@ -1062,6 +1062,7 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
   @override
   Widget build(BuildContext context) {
     final settings = SettingsService.to;
+    final data = PersistentDataService.to;
 
     return ListenBuilder(
       listenable: Listenable.merge([
@@ -1072,7 +1073,13 @@ class _PostListFloatingButtonState extends State<_PostListFloatingButton> {
         final Widget floatingButton = FloatingActionButton(
           heroTag: null,
           tooltip: _hasBottomSheet ? '收起' : '发串',
-          onPressed: _toggleEditPostBottomSheet,
+          onPressed: () {
+            if (data.isKeyboardVisible && _hasBottomSheet) {
+              FocusManager.instance.primaryFocus?.unfocus();
+            } else {
+              _toggleEditPostBottomSheet();
+            }
+          },
           child: Icon(
             _hasBottomSheet ? Icons.arrow_downward : Icons.edit,
           ),
