@@ -170,6 +170,25 @@ class _AddDeleteFeedInThread extends StatelessWidget {
   }
 }
 
+class _LongPressButtonToOpenNewTab extends StatelessWidget {
+  // ignore: unused_element
+  const _LongPressButtonToOpenNewTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenBuilder(
+      listenable: settings.longPressButtonToOpenNewTabListenable,
+      builder: (context, child) => SwitchListTile(
+        title: const Text('长按历史或订阅/标签按钮会在新标签页打开对应页面'),
+        value: settings.longPressButtonToOpenNewTab,
+        onChanged: (value) => settings.longPressButtonToOpenNewTab = value,
+      ),
+    );
+  }
+}
+
 class _MaxPagesEachTab extends StatelessWidget {
   // ignore: unused_element
   const _MaxPagesEachTab({super.key});
@@ -317,6 +336,7 @@ class AdvancedSettingsView extends StatelessWidget {
             const _AddBlueIslandEmoticons(),
             const _RestoreForumPage(),
             const _AddDeleteFeedInThread(),
+            const _LongPressButtonToOpenNewTab(),
             const _MaxPagesEachTab(),
             const _ImageDisposeDistance(),
             const _FixedImageDisposeRatio(),

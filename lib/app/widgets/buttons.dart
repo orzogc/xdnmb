@@ -11,6 +11,8 @@ import '../utils/regex.dart';
 import '../utils/toast.dart';
 import '../utils/url.dart';
 import 'dialog.dart';
+import 'feed.dart';
+import 'history.dart';
 import 'reference.dart';
 import 'size.dart';
 
@@ -356,12 +358,30 @@ class HistoryButton extends StatelessWidget {
     onTapEnd?.call();
   }
 
+  void _onLongPress() {
+    onTapPrelude?.call();
+
+    openNewTab(HistoryController(page: 1));
+    showToast('已在新标签页打开历史记录页面');
+
+    onTapEnd?.call();
+  }
+
   @override
-  Widget build(BuildContext context) => IconButton(
-      padding: iconPadding,
-      onPressed: _onTap,
-      tooltip: '历史',
-      icon: Icon(Icons.history, color: iconColor));
+  Widget build(BuildContext context) =>
+      SettingsService.to.longPressButtonToOpenNewTab
+          ? GestureDetector(
+              onLongPress: _onLongPress,
+              child: IconButton(
+                padding: iconPadding,
+                onPressed: _onTap,
+                icon: Icon(Icons.history, color: iconColor),
+              ))
+          : IconButton(
+              padding: iconPadding,
+              onPressed: _onTap,
+              tooltip: '历史',
+              icon: Icon(Icons.history, color: iconColor));
 }
 
 class FeedButton extends StatelessWidget {
@@ -392,12 +412,30 @@ class FeedButton extends StatelessWidget {
     onTapEnd?.call();
   }
 
+  void _onLongPress() {
+    onTapPrelude?.call();
+
+    openNewTab(FeedController(page: 1));
+    showToast('已在新标签页打开订阅/标签页面');
+
+    onTapEnd?.call();
+  }
+
   @override
-  Widget build(BuildContext context) => IconButton(
-      padding: iconPadding,
-      onPressed: _onTap,
-      tooltip: '订阅/标签',
-      icon: Icon(Icons.rss_feed, color: iconColor));
+  Widget build(BuildContext context) =>
+      SettingsService.to.longPressButtonToOpenNewTab
+          ? GestureDetector(
+              onLongPress: _onLongPress,
+              child: IconButton(
+                padding: iconPadding,
+                onPressed: _onTap,
+                icon: Icon(Icons.rss_feed, color: iconColor),
+              ))
+          : IconButton(
+              padding: iconPadding,
+              onPressed: _onTap,
+              tooltip: '订阅/标签',
+              icon: Icon(Icons.rss_feed, color: iconColor));
 }
 
 class _SponsorDialog extends StatelessWidget {

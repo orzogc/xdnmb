@@ -273,6 +273,13 @@ class SettingsService extends GetxService {
   set addDeleteFeedInThread(bool addDeleteFeedInThread) =>
       _settingsBox.put(Settings.addDeleteFeedInThread, addDeleteFeedInThread);
 
+  bool get longPressButtonToOpenNewTab => _settingsBox
+      .get(Settings.longPressButtonToOpenNewTab, defaultValue: false);
+
+  set longPressButtonToOpenNewTab(bool longPressButtonToOpenNewTab) =>
+      _settingsBox.put(
+          Settings.longPressButtonToOpenNewTab, longPressButtonToOpenNewTab);
+
   int get maxPagesEachTab =>
       max(_settingsBox.get(Settings.maxPagesEachTab, defaultValue: 0), 0);
 
@@ -707,6 +714,8 @@ class SettingsService extends GetxService {
 
   late final ValueListenable<Box> addDeleteFeedInThreadListenable;
 
+  late final ValueListenable<Box> longPressButtonToOpenNewTabListenable;
+
   late final ValueListenable<Box> maxPagesEachTabListenable;
 
   late final ValueListenable<Box> imageDisposeDistanceListenable;
@@ -917,6 +926,8 @@ class SettingsService extends GetxService {
         _settingsBox.listenable(keys: [Settings.restoreForumPage]);
     addDeleteFeedInThreadListenable =
         _settingsBox.listenable(keys: [Settings.addDeleteFeedInThread]);
+    longPressButtonToOpenNewTabListenable =
+        _settingsBox.listenable(keys: [Settings.longPressButtonToOpenNewTab]);
     maxPagesEachTabListenable =
         _settingsBox.listenable(keys: [Settings.maxPagesEachTab]);
     imageDisposeDistanceListenable =
@@ -1092,6 +1103,7 @@ class SettingsRestoreData extends RestoreData {
     Settings.addBlueIslandEmoticons,
     Settings.restoreForumPage,
     Settings.addDeleteFeedInThread,
+    Settings.longPressButtonToOpenNewTab,
     Settings.maxPagesEachTab,
     Settings.imageDisposeDistance,
     Settings.fixedImageDisposeRatio,

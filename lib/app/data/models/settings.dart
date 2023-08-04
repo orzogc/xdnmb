@@ -45,6 +45,9 @@ abstract class Settings {
 
   static const String addDeleteFeedInThread = 'addDeleteFeedInThread';
 
+  static const String longPressButtonToOpenNewTab =
+      'longPressButtonToOpenNewTab';
+
   static const String maxPagesEachTab = 'maxPagesEachTab';
 
   static const String imageDisposeDistance = 'imageDisposeDistance';
