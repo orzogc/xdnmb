@@ -161,21 +161,21 @@ class _PostTimeState extends State<_PostTime> {
 
     return ListenBuilder(
       listenable: settings.showRelativeTimeListenable,
-      builder: (context, child) => settings.showRelativeTime
-          ? TimerRefresher(
-              builder: (context) => Text(
-                time.relativeTime(widget.postTime),
-                style: textStyle,
-                strutStyle: strutStyle,
-              ),
-            )
-          : Text(
-              widget.showFullTime
-                  ? fullFormatTime(widget.postTime)
-                  : formatTime(widget.postTime),
-              style: textStyle,
-              strutStyle: strutStyle,
-            ),
+      builder: (context, child) => PostTime(
+        isShowRelativeTime: settings.showRelativeTime,
+        relativeTime: (context) => Text(
+          time.relativeTime(widget.postTime),
+          style: textStyle,
+          strutStyle: strutStyle,
+        ),
+        absoluteTime: Text(
+          widget.showFullTime
+              ? fullFormatTime(widget.postTime)
+              : formatTime(widget.postTime),
+          style: textStyle,
+          strutStyle: strutStyle,
+        ),
+      ),
     );
   }
 }

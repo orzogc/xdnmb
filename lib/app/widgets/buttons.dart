@@ -13,6 +13,7 @@ import '../utils/url.dart';
 import 'dialog.dart';
 import 'feed.dart';
 import 'history.dart';
+import 'listenable.dart';
 import 'reference.dart';
 import 'size.dart';
 
@@ -368,8 +369,12 @@ class HistoryButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      SettingsService.to.longPressButtonToOpenNewTab
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenBuilder(
+      listenable: settings.longPressButtonToOpenNewTabListenable,
+      builder: (context, child) => settings.longPressButtonToOpenNewTab
           ? GestureDetector(
               onLongPress: _onLongPress,
               child: IconButton(
@@ -381,7 +386,9 @@ class HistoryButton extends StatelessWidget {
               padding: iconPadding,
               onPressed: _onTap,
               tooltip: '历史',
-              icon: Icon(Icons.history, color: iconColor));
+              icon: Icon(Icons.history, color: iconColor)),
+    );
+  }
 }
 
 class FeedButton extends StatelessWidget {
@@ -422,8 +429,12 @@ class FeedButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      SettingsService.to.longPressButtonToOpenNewTab
+  Widget build(BuildContext context) {
+    final settings = SettingsService.to;
+
+    return ListenBuilder(
+      listenable: settings.longPressButtonToOpenNewTabListenable,
+      builder: (context, child) => settings.longPressButtonToOpenNewTab
           ? GestureDetector(
               onLongPress: _onLongPress,
               child: IconButton(
@@ -435,7 +446,9 @@ class FeedButton extends StatelessWidget {
               padding: iconPadding,
               onPressed: _onTap,
               tooltip: '订阅/标签',
-              icon: Icon(Icons.rss_feed, color: iconColor));
+              icon: Icon(Icons.rss_feed, color: iconColor)),
+    );
+  }
 }
 
 class _SponsorDialog extends StatelessWidget {

@@ -460,20 +460,22 @@ class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
                     showFullTime: false,
                     showReplyCount: false,
                     header: (textStyle) => PostHeader(children: [
-                      if (settings.showRelativeTime)
-                        TimerRefresher(
-                          builder: (context) => Text(
+                      ListenBuilder(
+                        listenable: settings.showRelativeTimeListenable,
+                        builder: (context, child) => PostTime(
+                          isShowRelativeTime: settings.showRelativeTime,
+                          relativeTime: (context) => Text(
                             '最后浏览时间：${time.relativeTime(_history.browseTime)}',
                             style: AppTheme.postHeaderTextStyle,
                             strutStyle: AppTheme.postHeaderStrutStyle,
                           ),
-                        )
-                      else
-                        Text(
-                          '最后浏览时间：${fullFormatTime(_history.browseTime)}',
-                          style: AppTheme.postHeaderTextStyle,
-                          strutStyle: AppTheme.postHeaderStrutStyle,
+                          absoluteTime: Text(
+                            '最后浏览时间：${fullFormatTime(_history.browseTime)}',
+                            style: AppTheme.postHeaderTextStyle,
+                            strutStyle: AppTheme.postHeaderStrutStyle,
+                          ),
                         ),
+                      ),
                       if (browsePage != null && browsePostId != null)
                         Text(
                           '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',

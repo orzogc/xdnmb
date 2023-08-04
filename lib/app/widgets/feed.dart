@@ -302,24 +302,24 @@ class _FeedItemState extends State<_FeedItem> {
                     replyTime != null)
                 ? (textStyle) => Align(
                       alignment: Alignment.centerRight,
-                      child: (settings.isShowLatestAbsolutePostTimeInFeed
-                          ? Text(
-                              '最新回复 ${formatTime(replyTime)}',
-                              style: textStyle ?? AppTheme.postHeaderTextStyle,
-                              strutStyle: textStyle != null
-                                  ? StrutStyle.fromTextStyle(textStyle)
-                                  : AppTheme.postHeaderStrutStyle,
-                            )
-                          : TimerRefresher(
-                              builder: (context) => Text(
-                                '最新回复 ${time.relativeTime(replyTime)}',
-                                style:
-                                    textStyle ?? AppTheme.postHeaderTextStyle,
-                                strutStyle: textStyle != null
-                                    ? StrutStyle.fromTextStyle(textStyle)
-                                    : AppTheme.postHeaderStrutStyle,
-                              ),
-                            )),
+                      child: PostTime(
+                        isShowRelativeTime:
+                            settings.isShowLatestRelativePostTimeInFeed,
+                        relativeTime: (context) => Text(
+                          '最新回复 ${time.relativeTime(replyTime)}',
+                          style: textStyle ?? AppTheme.postHeaderTextStyle,
+                          strutStyle: textStyle != null
+                              ? StrutStyle.fromTextStyle(textStyle)
+                              : AppTheme.postHeaderStrutStyle,
+                        ),
+                        absoluteTime: Text(
+                          '最新回复 ${formatTime(replyTime)}',
+                          style: textStyle ?? AppTheme.postHeaderTextStyle,
+                          strutStyle: textStyle != null
+                              ? StrutStyle.fromTextStyle(textStyle)
+                              : AppTheme.postHeaderStrutStyle,
+                        ),
+                      ),
                     )
                 : null,
             onTap: (post) =>
