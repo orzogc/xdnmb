@@ -420,7 +420,7 @@ class _SponsorDialog extends StatelessWidget {
         ),
         SimpleDialogOption(
           onPressed: () => launchURL(Urls.xdnmbSponsor),
-          child: Text('赞助X岛匿名版官方', style: textStyle),
+          child: Text('赞助X岛揭示版官方', style: textStyle),
         ),
       ],
     );

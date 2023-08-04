@@ -702,7 +702,7 @@ class PostContent extends StatelessWidget {
             ),
           if (post.isTipType)
             Text(
-              '来自X岛匿名版官方的内容',
+              '来自X岛揭示版官方的内容',
               style: headerTextStyle ?? AppTheme.postHeaderTextStyle,
               strutStyle: headerTextStyle != null
                   ? StrutStyle.fromTextStyle(headerTextStyle!)

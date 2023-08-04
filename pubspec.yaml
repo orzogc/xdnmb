@@ -1,11 +1,11 @@
 name: nmbxd
 description: An app for nmbxd.com.
 publish_to: 'none'
-version: 0.5.0+11
+version: 0.5.1-alpha+11
 
 environment:
-  sdk: '>=3.0.5 <4.0.0'
-  flutter: '>=3.10.5'
+  sdk: '>=3.0.6 <4.0.0'
+  flutter: '>=3.10.6'
 
 dependencies:
   align_positioned: ^3.0.0
@@ -17,11 +17,11 @@ dependencies:
   cached_network_image: ^3.2.3
   crypto: ^3.0.3
   date_format: ^2.0.7
-  device_info_plus: ^9.0.2
+  device_info_plus: ^9.0.3
   easy_refresh: ^3.3.2+1
   expandable_text: ^2.3.0
   external_path: ^1.0.3
-  file_picker: ^5.3.2
+  file_picker: ^5.3.3
   float_column: ^2.0.1
   flutter:
     sdk: flutter
@@ -40,18 +40,18 @@ dependencies:
   html_to_text:
     git: https://github.com/orzogc/html_to_text.git
   http: ^1.1.0
-  image_painter: ^0.5.0
+  image_painter: ^0.6.0
   infinite_scroll_pagination: ^3.2.0
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
-  loader_overlay: ^2.2.0
+  loader_overlay: ^2.3.0
   media_scanner: ^2.1.0
   mime: ^1.0.4
   mobile_scanner: ^3.3.0
-  package_info_plus: ^4.0.2
+  package_info_plus: ^4.1.0
   path: ^1.8.2
   path_provider: ^2.0.15
-  permission_handler: ^10.4.1
+  permission_handler: ^10.4.3
   responsive_grid_list: ^1.3.2
   saver_gallery: ^2.0.1
   screenshot: ^2.1.0
@@ -59,10 +59,10 @@ dependencies:
   swipeable_page_route: ^0.4.0
   system_info2: ^4.0.0
   timeago_flutter: ^3.5.0
-  url_launcher: ^6.1.11
+  url_launcher: ^6.1.12
   uuid: ^3.0.7
   version: ^3.0.2
-  xdg_directories: ^1.0.0
+  xdg_directories: ^1.0.1
   xdnmb_api:
     git: https://github.com/orzogc/xdnmb_api.git
 

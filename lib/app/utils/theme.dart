@@ -45,8 +45,12 @@ abstract class AppTheme {
   static Color get inactiveSettingColor =>
       Get.isDarkMode ? const Color(0xff848284) : Colors.grey;
 
+  static final String? fontFamily =
+      SettingsService.isFixMissingFont ? 'Go Noto CJKCore' : null;
+
   static final TextTheme textTheme =
-      Typography.material2018(platform: defaultTargetPlatform).black;
+      (Typography.material2018(platform: defaultTargetPlatform).black)
+          .apply(fontFamily: fontFamily);
 
   static final TextTheme textThemeLight = textTheme;
 
@@ -111,7 +115,7 @@ abstract class AppTheme {
         onPrimary: Colors.white,
         onSurface: Colors.black,
         onSecondary: Colors.white),
-    fontFamily: SettingsService.isFixMissingFont ? 'Go Noto CJKCore' : null,
+    fontFamily: fontFamily,
     appBarTheme: AppBarTheme(backgroundColor: primaryColorLight),
     progressIndicatorTheme:
         ProgressIndicatorThemeData(color: primaryColorLight),
@@ -172,7 +176,7 @@ abstract class AppTheme {
         onPrimary: colorDark,
         onSurface: colorDark,
         onSecondary: colorDark),
-    fontFamily: SettingsService.isFixMissingFont ? 'Go Noto CJKCore' : null,
+    fontFamily: fontFamily,
     appBarTheme: AppBarTheme(backgroundColor: primaryColorDark),
     progressIndicatorTheme: ProgressIndicatorThemeData(color: primaryColorDark),
     textButtonTheme: TextButtonThemeData(

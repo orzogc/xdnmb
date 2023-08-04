@@ -73,7 +73,7 @@ class _XdnmbUrlSponsor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-        title: const Text('赞助X岛匿名版官方'),
+        title: const Text('赞助X岛揭示版官方'),
         subtitle: const Text(Urls.xdnmbSponsor),
         onTap: () => launchURL(Urls.xdnmbSponsor),
       );
