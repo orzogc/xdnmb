@@ -12,6 +12,8 @@ class _TimerRefresher extends TimerRefreshWidget {
 }
 
 class PostTime extends StatefulWidget {
+  final bool enableSwitch;
+
   final bool isShowRelativeTime;
 
   final WidgetBuilder relativeTime;
@@ -20,6 +22,7 @@ class PostTime extends StatefulWidget {
 
   const PostTime(
       {super.key,
+      this.enableSwitch = true,
       required this.isShowRelativeTime,
       required this.relativeTime,
       required this.absoluteTime});
@@ -49,8 +52,9 @@ class _PostTimeState extends State<PostTime> {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-      onLongPress: () =>
-          setState(() => _isShowRelativeTime = !_isShowRelativeTime),
+      onLongPress: widget.enableSwitch
+          ? () => setState(() => _isShowRelativeTime = !_isShowRelativeTime)
+          : null,
       child: _isShowRelativeTime
           ? _TimerRefresher(builder: widget.relativeTime)
           : widget.absoluteTime);

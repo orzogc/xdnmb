@@ -573,7 +573,7 @@ class SettingsService extends GetxService {
   set showRelativeTime(bool showRelativeTime) =>
       _settingsBox.put(Settings.showRelativeTime, showRelativeTime);
 
-  /// 0是不显示，1是显示绝对时间，2是显示相对时间
+  /// 0是不显示，1是显示具体时间，2是显示相对时间
   int get showLatestPostTimeInFeed =>
       (_settingsBox.get(Settings.showLatestPostTimeInFeed, defaultValue: 0)
               as int)

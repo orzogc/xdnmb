@@ -125,6 +125,8 @@ class _PostTime extends StatefulWidget {
 
   final bool showFullTime;
 
+  final bool longPressPostTimeToSwitch;
+
   final TextStyle? textStyle;
 
   const _PostTime(
@@ -132,6 +134,7 @@ class _PostTime extends StatefulWidget {
       {super.key,
       required this.postTime,
       this.showFullTime = true,
+      this.longPressPostTimeToSwitch = true,
       this.textStyle});
 
   @override
@@ -162,6 +165,7 @@ class _PostTimeState extends State<_PostTime> {
     return ListenBuilder(
       listenable: settings.showRelativeTimeListenable,
       builder: (context, child) => PostTime(
+        enableSwitch: widget.longPressPostTimeToSwitch,
         isShowRelativeTime: settings.showRelativeTime,
         relativeTime: (context) => Text(
           time.relativeTime(widget.postTime),
@@ -603,6 +607,8 @@ class PostContent extends StatelessWidget {
 
   final bool isPinned;
 
+  final bool longPressPostTimeToSwitch;
+
   final bool longPressPostIdToCopy;
 
   final double? headerHeight;
@@ -648,6 +654,7 @@ class PostContent extends StatelessWidget {
       this.showPoTag = false,
       this.showPostTags = true,
       this.isPinned = false,
+      this.longPressPostTimeToSwitch = true,
       this.longPressPostIdToCopy = true,
       this.headerHeight,
       this.contentMaxHeight,
@@ -728,6 +735,7 @@ class PostContent extends StatelessWidget {
                   child: _PostTime(
                     postTime: post.postTime,
                     showFullTime: showFullTime,
+                    longPressPostTimeToSwitch: longPressPostTimeToSwitch,
                     textStyle: headerTextStyle,
                   ),
                 ),
@@ -818,6 +826,7 @@ class PostInkWell extends StatelessWidget {
       bool showPoTag = false,
       bool showPostTags = true,
       bool isPinned = false,
+      bool longPressPostTimeToSwitch = true,
       bool longPressPostIdToCopy = true,
       double? headerHeight,
       double? contentMaxHeight,
@@ -850,6 +859,7 @@ class PostInkWell extends StatelessWidget {
             showPoTag: showPoTag,
             showPostTags: showPostTags,
             isPinned: isPinned,
+            longPressPostTimeToSwitch: longPressPostTimeToSwitch,
             longPressPostIdToCopy: longPressPostIdToCopy,
             headerHeight: headerHeight,
             contentMaxHeight: contentMaxHeight,

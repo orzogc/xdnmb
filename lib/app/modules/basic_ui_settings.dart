@@ -504,7 +504,7 @@ class _ShowLatestPostTimeInFeed extends StatelessWidget {
             DropdownMenuItem<int>(
               value: 1,
               alignment: Alignment.centerRight,
-              child: Text('显示绝对时间'),
+              child: Text('显示具体时间'),
             ),
             DropdownMenuItem<int>(
               value: 2,
