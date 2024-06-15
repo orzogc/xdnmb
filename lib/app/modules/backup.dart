@@ -25,7 +25,7 @@ import '../utils/toast.dart';
 import '../widgets/dialog.dart';
 import '../widgets/list_tile.dart';
 
-/// Android 11或以上版本需要`MANAGE_EXTERNAL_STORAGE`权限
+/// Android 11 或以上版本需要`MANAGE_EXTERNAL_STORAGE`权限
 ///
 /// 返回是否成功获取权限
 Future<bool> _requestStoragePermission() async {
@@ -123,14 +123,16 @@ class _BackupDialogState extends State<_BackupDialog> {
 
             try {
               showToast('请选择备份文件的保存位置');
+              // autocorrect: false
               final path =
                   await FilePicker.platform.getDirectoryPath(dialogTitle: 'X岛');
+              // autocorrect: true
               if (path != null) {
                 if (GetPlatform.isAndroid && path == '/') {
                   throw '获取备份保存文件夹失败';
                 } else {
                   overlay.show(
-                    widget: Center(
+                    widgetBuilder: (_) => Center(
                       child: Obx(
                         () => num.value < backups.length
                             ? Column(
@@ -310,7 +312,7 @@ class _RestoreDialogState extends State<_RestoreDialog> {
 
                   try {
                     overlay.show(
-                      widget: Center(
+                      widgetBuilder: (_) => Center(
                         child: Obx(
                           () => num.value < restores.length
                               ? Column(

@@ -14,13 +14,13 @@ class ReferenceData {
   /// UTC
   DateTime? postTime;
 
-  /// [mainPostId]等于[id]时为主串
+  /// [mainPostId] 等于 [id] 时为主串
   @Index()
   int? mainPostId;
 
   /// 准确的页数
   ///
-  /// 主串页数固定为1
+  /// 主串页数固定为 1
   int? accuratePage;
 
   /// 不一定准确的页数

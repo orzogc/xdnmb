@@ -98,7 +98,7 @@ const TaggedPostSchema = CollectionSchema(
   getId: _taggedPostGetId,
   getLinks: _taggedPostGetLinks,
   attach: _taggedPostAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _taggedPostEstimateSize(

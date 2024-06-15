@@ -39,7 +39,7 @@ void main() async {
   runApp(const _XdnmbApp());
 }
 
-/// xdnmb应用
+/// xdnmb 应用
 class _XdnmbApp extends StatelessWidget {
   // ignore: unused_element
   const _XdnmbApp({super.key});
@@ -55,13 +55,13 @@ class _XdnmbApp extends StatelessWidget {
         theme: AppTheme.theme,
         darkTheme: AppTheme.darkTheme,
         builder: EasyLoading.init(),
-        // Flutter官方的翻译
+        // Flutter 官方的翻译
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        // 支持的locale
+        // 支持的 locale
         supportedLocales: const [
           Locale.fromSubtags(languageCode: 'zh'),
           Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'),
@@ -81,9 +81,9 @@ class _XdnmbApp extends StatelessWidget {
 
 /// 添加 Let’s Encrypt 的证书
 ///
-/// Let’s Encrypt 的旧证书过期导致部分旧手机无法访问X岛链接
+/// Let’s Encrypt 的旧证书过期导致部分旧手机无法访问 X 岛链接
 Future<void> _addCert() async {
-  // 可能只有Android旧手机有此问题？
+  // 可能只有 Android 旧手机有此问题？
   if (GetPlatform.isAndroid) {
     final data =
         await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');

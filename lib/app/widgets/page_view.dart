@@ -21,7 +21,7 @@ class PageViewTabBar extends StatefulWidget implements PreferredSizeWidget {
 
   final Color? indicatorColor;
 
-  /// [PageViewTabBar]的index变化时调用，参数是index
+  /// [PageViewTabBar] 的 index 变化时调用，参数是 index
   final ValueChanged<int> onIndex;
 
   final List<Widget> tabs;
@@ -132,7 +132,7 @@ class SwipeablePageView extends StatelessWidget {
     final settings = SettingsService.to;
     final width = MediaQuery.sizeOf(context).width;
 
-    // 手机上PageView能左右滑动换页
+    // 手机上 PageView 能左右滑动换页
     return Obx(() => (settings.isSwipeablePageRx && GetPlatform.isMobile)
         ? Listener(
             onPointerDown: (event) {

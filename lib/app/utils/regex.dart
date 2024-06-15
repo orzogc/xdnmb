@@ -57,7 +57,7 @@ abstract class Regex {
       try {
         return _parseHiddenTag(text);
       } catch (e) {
-        debugPrint('解析隐藏文字tag时出错：$e');
+        debugPrint('解析隐藏文字 tag 时出错：$e');
       }
     }
 
@@ -76,7 +76,7 @@ abstract class Regex {
       }
 
       String? id = match[2] ?? match[3];
-      // 纯数字只有大于50000000才算是串号
+      // 纯数字只有大于 50000000 才算是串号
       if (id == null) {
         final n = match[4];
         if (n != null && int.parse(n) >= 50000000) {

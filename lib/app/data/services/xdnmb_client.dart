@@ -203,19 +203,19 @@ class XdnmbClientService extends GetxService {
       hasSetWhetherUseBackupApi.value = true;
       await client.updateUrls();
     } catch (e) {
-      debugPrint('更新X岛链接失败：$e');
+      debugPrint('更新 X 岛链接失败：$e');
     } finally {
       hasUpdateUrls = true;
     }
 
     try {
-      debugPrint('开始获取X岛公告');
+      debugPrint('开始获取 X 岛公告');
 
       Notice? notice;
       if (PersistentDataService.isFirstLaunched) {
-        // 首次启动应用尝试循环5次获取公告
+        // 首次启动应用尝试循环 5 次获取公告
         for (var i = 0; i < 5; i++) {
-          debugPrint('正在循环获取X岛公告');
+          debugPrint('正在循环获取 X 岛公告');
 
           try {
             notice = await client.getNotice();
@@ -224,7 +224,7 @@ class XdnmbClientService extends GetxService {
             if (i == 4) {
               rethrow;
             }
-            debugPrint('获取X岛公告失败：${exceptionMessage(e)}');
+            debugPrint('获取 X 岛公告失败：${exceptionMessage(e)}');
             await Future.delayed(const Duration(seconds: 5));
           }
         }
@@ -237,14 +237,16 @@ class XdnmbClientService extends GetxService {
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
-      debugPrint('保存X岛公告');
+      debugPrint('保存 X 岛公告');
       if (notice != null) {
         data.saveNotice(notice);
       }
 
-      debugPrint('获取X岛公告成功');
+      debugPrint('获取 X 岛公告成功');
     } catch (e) {
+      // autocorrect: false
       showToast('获取X岛公告失败：${exceptionMessage(e)}');
+      // autocorrect: true
     } finally {
       finishGettingNotice = true;
     }
@@ -255,39 +257,41 @@ class XdnmbClientService extends GetxService {
     }
 
     try {
-      debugPrint('开始更新X岛版块列表');
+      debugPrint('开始更新 X 岛版块列表');
 
       if (PersistentDataService.isFirstLaunched) {
         // 首次启动应用必须获取到版块列表
         while (true) {
-          debugPrint('正在循环获取X岛版块列表');
+          debugPrint('正在循环获取 X 岛版块列表');
 
           try {
             await _updateForumList();
             break;
           } catch (e) {
-            debugPrint('获取X岛版块列表失败：${exceptionMessage(e)}');
+            debugPrint('获取 X 岛版块列表失败：${exceptionMessage(e)}');
             await Future.delayed(const Duration(seconds: 5));
           }
         }
       } else if (data.updateForumListTime != null) {
         if (DateTime.now().difference(data.updateForumListTime!) >=
             PersistentDataService.updateForumListInterval) {
-          debugPrint('版块列表过期，更新X岛版块列表');
+          debugPrint('版块列表过期，更新 X 岛版块列表');
           await _updateForumList();
         } else {
           debugPrint('版块列表未过期，取消更新');
         }
       } else {
-        debugPrint('没有更新记录，更新X岛版块列表');
+        debugPrint('没有更新记录，更新 X 岛版块列表');
         await _updateForumList();
       }
 
-      debugPrint('更新X岛版块列表成功');
+      debugPrint('更新 X 岛版块列表成功');
     } catch (e) {
       // 失败的话确保下次启动会更新版块列表
       data.updateForumListTime == null;
+      // autocorrect: false
       showToast('更新X岛版块列表失败：${exceptionMessage(e)}');
+      // autocorrect: true
     }
 
     isReady.value = true;

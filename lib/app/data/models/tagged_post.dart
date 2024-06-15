@@ -14,9 +14,9 @@ part 'tagged_post.g.dart';
   'postType',
 })
 class TaggedPost implements PostBase {
-  /// 高位32位，0为普通串数据，1为发串数据，2为回串数据
+  /// 高位 32 位，0 为普通串数据，1 为发串数据，2 为回串数据
   ///
-  /// 低位32位为对应的串号或Id
+  /// 低位 32 位为对应的串号或 Id
   @override
   final Id id;
 

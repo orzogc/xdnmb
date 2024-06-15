@@ -15,10 +15,10 @@ abstract class BackupRestoreBase {
 
   String? get subTitle => null;
 
-  /// 进度为0.0到1.0的数字
+  /// 进度为 0.0 到 1.0 的数字
   ValueListenable<double> get progressListenable => _progressListenable;
 
-  /// 返回0.0到1.0的数字
+  /// 返回 0.0 到 1.0 的数字
   double get progress => _progressListenable.value.clamp(0.0, 1.0);
 
   /// 设置进度
@@ -62,7 +62,7 @@ abstract class BackupData extends BackupRestoreBase {
   BackupData();
 }
 
-/// 子类的构造器必须是const
+/// 子类的构造器必须是 const
 abstract class CommonRestoreOperator {
   const CommonRestoreOperator();
 
@@ -86,7 +86,7 @@ abstract class RestoreData extends BackupRestoreBase {
     final operatorSet = HashSet.of(list
         .map((data) => data.commonOperator)
         .whereType<CommonRestoreOperator>());
-    debugPrint('operator数量：${operatorSet.length}');
+    debugPrint('operator 数量：${operatorSet.length}');
 
     try {
       for (final operator in operatorSet) {

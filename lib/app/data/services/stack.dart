@@ -47,7 +47,7 @@ class _StackData {
 
   final List<ControllerData> controllers;
 
-  /// 用来提醒[_StackData]的变化
+  /// 用来提醒 [_StackData] 的变化
   final Notifier _notifier = Notifier();
 
   void _notify() => _notifier.notify();
@@ -70,7 +70,7 @@ class ControllerStacksService extends GetxService {
 
   int _latestKeyId = -1;
 
-  /// 用来提醒[ControllerStacksService]的变化
+  /// 用来提醒 [ControllerStacksService] 的变化
   final Notifier notifier = Notifier();
 
   final RxBool isReady = false.obs;
@@ -239,7 +239,7 @@ class ControllerStacksService extends GetxService {
                   _stacks.length - 1);
             }
           } else {
-            debugPrint('控制器key不存在：$entry');
+            debugPrint('控制器 key 不存在：$entry');
           }
         }
       }

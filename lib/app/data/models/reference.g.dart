@@ -63,7 +63,7 @@ const ReferenceDataSchema = CollectionSchema(
   getId: _referenceDataGetId,
   getLinks: _referenceDataGetLinks,
   attach: _referenceDataAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _referenceDataEstimateSize(

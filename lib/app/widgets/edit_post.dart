@@ -1019,7 +1019,7 @@ class _Post extends StatelessWidget {
     final posts = thread.replies.where((post) => post.id == lastPost.id);
     if (posts.isNotEmpty) {
       if (posts.length > 1) {
-        debugPrint('postId出现重复');
+        debugPrint('postId 出现重复');
       }
 
       return await ReplyHistory.updateReplyData(
@@ -1219,7 +1219,7 @@ class _Post extends StatelessWidget {
                         debugPrint('发串后刷新数据出现错误：$e');
                       }
                     } else {
-                      debugPrint('PostListController跟发串的数据对不上');
+                      debugPrint('PostListController 跟发串的数据对不上');
                     }
                   },
                   onError: (e) async {
@@ -1349,10 +1349,12 @@ class _EditEmoticonState extends State<_EditEmoticon> {
         ),
       ),
       actions: [
+        // autocorrect: false
         ElevatedButton(
           onPressed: () => _controller.insertText('　'),
           child: const Text('全角空格'),
         ),
+        // autocorrect: true
         ElevatedButton(
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
@@ -1442,6 +1444,7 @@ class _Emoticon extends StatefulWidget {
 class _EmoticonState extends State<_Emoticon> {
   static const double _defaultHeight = 200.0;
 
+  // autocorrect: false
   static final Iterable<EmoticonData> _emoticonList = xdnmb_api.Emoticon.list
       .getRange(0, xdnmb_api.Emoticon.list.length - 3)
       .map((emoticon) => EmoticonData(name: emoticon.name, text: emoticon.text))
@@ -1458,6 +1461,7 @@ class _EmoticonState extends State<_Emoticon> {
     EmoticonData(name: '防剧透', text: '[h][/h]', offset: 3),
     EmoticonData(name: '全角空格', text: '　'),
   ]);
+  // autocorrect: true
 
   static double _offset = 0.0;
 
@@ -1863,7 +1867,9 @@ class _EditPostState extends State<EditPost> {
               child: Center(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    // autocorrect: false
                     final height = getLineHeight(context, 'A啊', textStyle);
+                    // autocorrect: true
 
                     return SingleChildScrollViewWithScrollbar(
                       child: Obx(

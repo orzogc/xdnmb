@@ -52,13 +52,13 @@ class UserService extends GetxService {
 
   final Notifier cookieNotifier = Notifier();
 
-  /// 用户帐号cookie
+  /// 用户帐号 cookie
   String? get userCookie => _userBox.get(User.userCookie);
 
   set userCookie(String? userCookie) =>
       _userBox.put(User.userCookie, userCookie);
 
-  /// 用户帐号cookie的过期日期
+  /// 用户帐号 cookie 的过期日期
   DateTime? get userCookieExpireDate => _userBox.get(User.userCookieExpireDate);
 
   set userCookieExpireDate(DateTime? dateTime) =>
@@ -174,7 +174,7 @@ class UserService extends GetxService {
       required String verify}) async {
     final client = XdnmbClientService.to.client;
     if (client.isLogin) {
-      debugPrint('XdnmbClient已经登陆过了');
+      debugPrint('XdnmbClient 已经登陆过了');
     }
 
     try {
@@ -203,7 +203,7 @@ class UserService extends GetxService {
       return;
     }
     if (isLogin && !client.isLogin) {
-      debugPrint('XdnmbClient没有设置userCookie');
+      debugPrint('XdnmbClient 没有设置 userCookie');
       _updateClient();
     }
 

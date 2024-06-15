@@ -13,11 +13,11 @@ class CookieData extends HiveObject {
   @HiveField(0)
   final String name;
 
-  /// 饼干的userhash
+  /// 饼干的 userhash
   @HiveField(1)
   final String userHash;
 
-  /// 饼干的ID
+  /// 饼干的 ID
   @HiveField(2, defaultValue: null)
   final int? id;
 
@@ -106,7 +106,7 @@ class CookieData extends HiveObject {
       lastPostTime: lastPostTime,
       colorValue: colorValue);
 
-  /// 返回饼干的cookie
+  /// 返回饼干的 cookie
   String cookie() => 'userhash=$userHash';
 
   @override

@@ -160,6 +160,7 @@ class _Login extends StatelessWidget {
       ),
     );
 
+    // autocorrect: false
     return user.isLogin
         ? ((user.isUserCookieExpired ?? true)
             ? ListTile(
@@ -199,6 +200,7 @@ class _Login extends StatelessWidget {
               ],
             ),
           );
+    // autocorrect: true
   }
 }
 
@@ -221,6 +223,7 @@ class _AddCookieForm extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // autocorrect: false
             TextFormField(
               decoration: const InputDecoration(labelText: 'name'),
               autofocus: true,
@@ -239,6 +242,7 @@ class _AddCookieForm extends StatelessWidget {
               decoration: const InputDecoration(labelText: '备注（可不填）'),
               onSaved: (newValue) => note = newValue,
             ),
+            // autocorrect: true
           ],
         ),
       ),
@@ -500,7 +504,7 @@ class _CookieViewState extends State<CookieView> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.done &&
                     snapshot.hasError) {
-                  showToast('更新饼干列表出错: ${exceptionMessage(snapshot.error!)}');
+                  showToast('更新饼干列表出错：${exceptionMessage(snapshot.error!)}');
                 }
 
                 return ListenBuilder(

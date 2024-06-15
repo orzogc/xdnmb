@@ -45,7 +45,7 @@ class TaggedPostListController extends PostListController {
   @override
   PostListType get postListType => PostListType.taggedPostList;
 
-  /// 标签ID
+  /// 标签 ID
   @override
   final int id;
 

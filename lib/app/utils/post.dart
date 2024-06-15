@@ -4,7 +4,7 @@ import 'package:xdnmb_api/xdnmb_api.dart';
 
 import 'extensions.dart';
 
-/// 用于修复[forumId]不准确的问题
+/// 用于修复 [forumId] 不准确的问题
 class PostOverideForumId implements PostBase {
   final PostBase post;
 

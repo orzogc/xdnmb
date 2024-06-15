@@ -73,7 +73,7 @@ abstract class BrowseDataHistory {
         }
       });
 
-  /// 包括start，不包括end
+  /// 包括 start，不包括 end
   static Future<List<BrowseHistory>> browseDataList(
       {int? start, int? end, DateTimeRange? range, Search? search}) {
     assert((search != null && start == null && end == null) ||
@@ -142,7 +142,7 @@ abstract class PostHistory {
       postData.update(post);
       await savePostData(postData);
     } else {
-      debugPrint('找不到PostData，id：$id');
+      debugPrint('找不到 PostData，id：$id');
     }
   }
 
@@ -178,7 +178,7 @@ abstract class PostHistory {
         }
       });
 
-  /// 包括start，不包括end
+  /// 包括 start，不包括 end
   static Future<List<PostData>> postDataList(
       {int? start, int? end, DateTimeRange? range, Search? search}) {
     assert((search != null && start == null && end == null) ||
@@ -250,7 +250,7 @@ abstract class ReplyHistory {
 
       return true;
     } else {
-      debugPrint('找不到ReplyData，id：$id');
+      debugPrint('找不到 ReplyData，id：$id');
 
       return false;
     }
@@ -289,7 +289,7 @@ abstract class ReplyHistory {
         }
       });
 
-  /// 包括start，不包括end
+  /// 包括 start，不包括 end
   static Future<List<ReplyData>> replyDataList(
       {int? start, int? end, DateTimeRange? range, Search? search}) {
     assert((search != null && start == null && end == null) ||
@@ -495,7 +495,7 @@ class _ReplyKey extends _PostKey {
       mainPostId, forumId, postTime, userHash, name, title, content);
 }
 
-/// 需要在[TagBackupRestore]前面
+/// 需要在 [TagBackupRestore] 前面
 class PostHistoryRestoreData extends RestoreData {
   static final HashMap<int, int> convertMap = HashMap();
 
@@ -588,7 +588,7 @@ class PostHistoryRestoreData extends RestoreData {
   }
 }
 
-/// 需要在[TagBackupRestore]前面
+/// 需要在 [TagBackupRestore] 前面
 class ReplyHistoryRestoreData extends RestoreData {
   static final HashMap<int, int> convertMap = HashMap();
 

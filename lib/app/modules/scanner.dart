@@ -76,7 +76,7 @@ class _QRCodeScannerViewState extends State<QRCodeScannerView> {
           actions: [
             _ScanImage(onPickImage: (path) async {
               try {
-                if (!await _controller.analyzeImage(path)) {
+                if (await _controller.analyzeImage(path) == null) {
                   showToast('扫描不到二维码');
                 }
               } catch (e) {
@@ -86,20 +86,26 @@ class _QRCodeScannerViewState extends State<QRCodeScannerView> {
             IconButton(
               tooltip: '切换闪光灯',
               onPressed: () {
-                try {
-                  _controller.toggleTorch();
-                } catch (e) {
-                  showToast('切换闪光灯失败：$e');
+                if (_controller.value.torchState != TorchState.unavailable) {
+                  try {
+                    _controller.toggleTorch();
+                  } catch (e) {
+                    showToast('切换闪光灯失败：$e');
+                  }
                 }
               },
-              icon: ValueListenableBuilder<TorchState>(
-                valueListenable: _controller.torchState,
+              icon: ValueListenableBuilder<MobileScannerState>(
+                valueListenable: _controller,
                 builder: (context, state, child) {
-                  switch (state) {
+                  switch (state.torchState) {
                     case TorchState.on:
                       return const Icon(Icons.flash_on);
                     case TorchState.off:
                       return const Icon(Icons.flash_off);
+                    case TorchState.auto:
+                      return const Icon(Icons.flash_auto);
+                    case TorchState.unavailable:
+                      return const Icon(Icons.no_flash);
                   }
                 },
               ),

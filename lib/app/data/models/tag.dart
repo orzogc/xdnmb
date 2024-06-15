@@ -6,7 +6,7 @@ part 'tag.g.dart';
 
 @HiveType(typeId: 11)
 class TagData extends HiveObject {
-  /// 从0开始
+  /// 从 0 开始
   @HiveField(0)
   final int id;
 

@@ -199,7 +199,7 @@ abstract class PostListController extends ChangeNotifier {
 
   void trySave() => save?.call();
 
-  /// [onPage]参数为页数
+  /// [onPage] 参数为页数
   StreamSubscription<int> listenPage(ValueChanged<int> onPage) =>
       _page.listen(onPage);
 
@@ -251,7 +251,7 @@ class PostListBinding implements Bindings {
         controller = taggedPostListController(Get.parameters);
         break;
       default:
-        throw '未知URI: $uri';
+        throw '未知 URI: $uri';
     }
 
     final stacks = ControllerStacksService.to;
@@ -261,7 +261,7 @@ class PostListBinding implements Bindings {
   }
 }
 
-// TODO: AppBar动画
+// TODO: AppBar 动画
 class PostListAppBar extends StatelessWidget implements PreferredSizeWidget {
   static const double height = kToolbarHeight;
 
@@ -706,7 +706,7 @@ class PostListPageState extends State<PostListPage> {
     final settings = SettingsService.to;
     final stacks = ControllerStacksService.to;
 
-    // 需要Navigator显示公告
+    // 需要 Navigator 显示公告
     if (!PersistentDataService.isNavigatorReady) {
       WidgetsBinding.instance.addPostFrameCallback(
           (timeStamp) => PersistentDataService.isNavigatorReady = true);
@@ -883,24 +883,23 @@ class _EditPostBottomSheet extends StatelessWidget {
   }
 }
 
-class BottomSheetController<T> {
+class BottomSheetController {
   static final EditPostBottomSheetController editPostController =
       EditPostBottomSheetController();
 
   static final BottomSheetController _tabAndForumListController =
       BottomSheetController();
 
-  final Rxn<PersistentBottomSheetController<T>> _bottomSheetController =
-      Rxn(null);
+  final Rxn<PersistentBottomSheetController> _bottomSheetController = Rxn(null);
 
   VoidCallback? _show;
 
-  set _controller(PersistentBottomSheetController<T>? controller) =>
+  set _controller(PersistentBottomSheetController? controller) =>
       _bottomSheetController.value = controller;
 
   bool get isShownRx => _bottomSheetController.value != null;
 
-  Future<T>? get closed =>
+  Future<void>? get closed =>
       isShownRx ? _bottomSheetController.value!.closed : null;
 
   BottomSheetController();
@@ -929,7 +928,7 @@ class BottomSheetController<T> {
 typedef _ShowEditPostBottomSheetCallback = void Function(
     [EditPostController? controller]);
 
-class EditPostBottomSheetController<T> extends BottomSheetController<T> {
+class EditPostBottomSheetController extends BottomSheetController {
   _ShowEditPostBottomSheetCallback? _showEditPost;
 
   EditPostBottomSheetController();
@@ -1350,11 +1349,11 @@ class TabAndForumListButton extends StatelessWidget {
 
   static void closeBottomSheet() => _bottomSheetController.close();
 
-  // 可能需要在Obx里调用
+  // 可能需要在 Obx 里调用
   static double? _topPadding(BuildContext context) =>
       SettingsService.to.autoHideAppBarRx ? getPadding(context).top : null;
 
-  // 可能需要在Obx里调用
+  // 可能需要在 Obx 里调用
   static double? _bottomPadding(BuildContext context) =>
       SettingsService.to.autoHideBottomBarRx
           ? (PostListBottomBar.height + getPadding(context).bottom)
@@ -1644,34 +1643,7 @@ class _PostListViewState extends State<PostListView>
   static EditPostBottomSheetController get _editPostBSController =>
       BottomSheetController.editPostController;
 
-  DateTime? _lastPressBackTime;
-
   ShowCaseWidgetState? _showCaseState;
-
-  Future<bool> _onWillPop(BuildContext context) async {
-    if (Navigator.canPop(context)) {
-      Get.back();
-
-      return false;
-    }
-
-    if (postListkey()?.currentState?.canPop() ?? false) {
-      postListPop();
-
-      return false;
-    }
-
-    final now = DateTime.now();
-    if (_lastPressBackTime == null ||
-        now.difference(_lastPressBackTime!) > const Duration(seconds: 2)) {
-      _lastPressBackTime = now;
-
-      showToast('再按一次退出');
-      return false;
-    }
-
-    return true;
-  }
 
   void _startShowCase(List<GlobalKey> guides) {
     if (mounted && guides.isNotEmpty) {
@@ -1863,151 +1835,174 @@ class _PostListViewState extends State<PostListView>
     final tagService = TagService.to;
     final time = TimeService.to;
     final user = UserService.to;
+    final canPop = false.obs;
 
-    return WillPopScope(
-      onWillPop: () => _onWillPop(context),
-      child: LayoutBuilder(builder: (context, constraints) {
-        final theme = Theme.of(context);
-        final media = MediaQuery.of(context);
-        PostListView.padding = Rx(media.padding);
-        PostListView.viewPadding = Rx(media.viewPadding);
-        final topPadding = media.padding.top;
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final bottomSheetHeight = height * 0.4;
+    return Obx(() {
+      return PopScope(
+        canPop: canPop.value,
+        onPopInvoked: (didPop) {
+          if (!didPop) {
+            if (Navigator.canPop(context)) {
+              Get.back();
 
-        return Obx(() {
-          if (blacklist.isReady.value &&
-              data.isReady.value &&
-              drafts.isReady.value &&
-              emoticons.isReady.value &&
-              forums.isReady.value &&
-              settings.isReady.value &&
-              stacks.isReady.value &&
-              tagService.isReady.value &&
-              time.isReady.value &&
-              user.isReady.value &&
-              client.hasSetWhetherUseBackupApi.value &&
-              (!PersistentDataService.isFirstLaunched ||
-                  client.isReady.value)) {
-            if (_isInitial) {
-              // 出现用户指导时更新和公告延后显示
-              if (!SettingsService.shouldShowGuide) {
-                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                  if (mounted) {
-                    CheckAppVersionService.to.checkAppVersion();
-                  }
-                });
+              return;
+            }
 
-                // 公告的显示需要postList的navigator
-                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                  if (mounted) {
-                    data.showNotice();
-                  }
-                });
+            if (postListkey()?.currentState?.canPop() ?? false) {
+              postListPop();
+
+              return;
+            }
+
+            showToast('再按一次退出');
+            canPop.value = true;
+            Future.delayed(
+                const Duration(seconds: 2), () => canPop.value = false);
+          }
+        },
+        child: LayoutBuilder(builder: (context, constraints) {
+          final theme = Theme.of(context);
+          final media = MediaQuery.of(context);
+          PostListView.padding = Rx(media.padding);
+          PostListView.viewPadding = Rx(media.viewPadding);
+          final topPadding = media.padding.top;
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
+          final bottomSheetHeight = height * 0.4;
+
+          return Obx(() {
+            if (blacklist.isReady.value &&
+                data.isReady.value &&
+                drafts.isReady.value &&
+                emoticons.isReady.value &&
+                forums.isReady.value &&
+                settings.isReady.value &&
+                stacks.isReady.value &&
+                tagService.isReady.value &&
+                time.isReady.value &&
+                user.isReady.value &&
+                client.hasSetWhetherUseBackupApi.value &&
+                (!PersistentDataService.isFirstLaunched ||
+                    client.isReady.value)) {
+              if (_isInitial) {
+                // 出现用户指导时更新和公告延后显示
+                if (!SettingsService.shouldShowGuide) {
+                  WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                    if (mounted) {
+                      CheckAppVersionService.to.checkAppVersion();
+                    }
+                  });
+
+                  // 公告的显示需要 postList 的 navigator
+                  WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                    if (mounted) {
+                      data.showNotice();
+                    }
+                  });
+                }
+
+                data.firstLaunched = false;
+                _isInitial = false;
               }
 
-              data.firstLaunched = false;
-              _isInitial = false;
-            }
-
-            Widget body = Column(
-              children: [
-                Expanded(child: PostListPage(key: PostListPage.pageKey)),
-                if (_editPostBSController.isShownRx)
-                  SizedBox(height: bottomSheetHeight),
-              ],
-            );
-
-            if (settings.autoHideAppBarRx) {
-              body = Stack(
+              Widget body = Column(
                 children: [
-                  if (topPadding > 0.0)
-                    Padding(
-                      padding: EdgeInsets.only(top: topPadding),
-                      child: body,
-                    )
-                  else
-                    body,
-                  if (topPadding > 0.0)
-                    Padding(
-                      padding: EdgeInsets.only(top: topPadding),
-                      child: const PostListAppBar(),
-                    )
-                  else
-                    const PostListAppBar(),
-                  if (topPadding > 0.0)
-                    Container(
-                      width: double.infinity,
-                      height: topPadding,
-                      color: theme.primaryColor,
-                    ),
+                  Expanded(child: PostListPage(key: PostListPage.pageKey)),
+                  if (_editPostBSController.isShownRx)
+                    SizedBox(height: bottomSheetHeight),
                 ],
               );
-            }
 
-            final Widget? bottomBar =
-                settings.hasBottomBarRx ? const PostListBottomBar() : null;
+              if (settings.autoHideAppBarRx) {
+                body = Stack(
+                  children: [
+                    if (topPadding > 0.0)
+                      Padding(
+                        padding: EdgeInsets.only(top: topPadding),
+                        child: body,
+                      )
+                    else
+                      body,
+                    if (topPadding > 0.0)
+                      Padding(
+                        padding: EdgeInsets.only(top: topPadding),
+                        child: const PostListAppBar(),
+                      )
+                    else
+                      const PostListAppBar(),
+                    if (topPadding > 0.0)
+                      Container(
+                        width: double.infinity,
+                        height: topPadding,
+                        color: theme.primaryColor,
+                      ),
+                  ],
+                );
+              }
 
-            Widget scaffold = Scaffold(
-              key: PostListView._scaffoldKey,
-              primary: !settings.autoHideAppBarRx,
-              appBar:
-                  !settings.autoHideAppBarRx ? const PostListAppBar() : null,
-              body: body,
-              drawerEnableOpenDragGesture:
-                  settings.hasDrawerRx && !data.isKeyboardVisible,
-              endDrawerEnableOpenDragGesture:
-                  settings.hasEndDrawerRx && !data.isKeyboardVisible,
-              drawerEdgeDragWidth: settings.hasDrawerOrEndDrawerRx
-                  ? width * settings.drawerEdgeDragWidthRatioRx
-                  : null,
-              extendBody: settings.hasBottomBarRx &&
-                  !settings.autoHideBottomBarRx &&
-                  bottomBar != null,
-              drawer: settings.hasDrawerRx ? AppDrawer(width: width) : null,
-              endDrawer:
-                  settings.hasEndDrawerRx ? AppEndDrawer(width: width) : null,
-              floatingActionButton:
-                  _PostListFloatingButton(bottomSheetHeight: bottomSheetHeight),
-              bottomNavigationBar: (settings.hasBottomBarRx &&
-                      !settings.autoHideBottomBarRx &&
-                      bottomBar != null)
-                  ? bottomBar
-                  : null,
-            );
+              final Widget? bottomBar =
+                  settings.hasBottomBarRx ? const PostListBottomBar() : null;
 
-            if (settings.hasBottomBarRx &&
-                settings.autoHideBottomBarRx &&
-                bottomBar != null) {
-              scaffold = Stack(
-                  alignment: Alignment.bottomCenter,
-                  children: [scaffold, bottomBar]);
-            }
+              Widget scaffold = Scaffold(
+                key: PostListView._scaffoldKey,
+                primary: !settings.autoHideAppBarRx,
+                appBar:
+                    !settings.autoHideAppBarRx ? const PostListAppBar() : null,
+                body: body,
+                drawerEnableOpenDragGesture:
+                    settings.hasDrawerRx && !data.isKeyboardVisible,
+                endDrawerEnableOpenDragGesture:
+                    settings.hasEndDrawerRx && !data.isKeyboardVisible,
+                drawerEdgeDragWidth: settings.hasDrawerOrEndDrawerRx
+                    ? width * settings.drawerEdgeDragWidthRatioRx
+                    : null,
+                extendBody: settings.hasBottomBarRx &&
+                    !settings.autoHideBottomBarRx &&
+                    bottomBar != null,
+                drawer: settings.hasDrawerRx ? AppDrawer(width: width) : null,
+                endDrawer:
+                    settings.hasEndDrawerRx ? AppEndDrawer(width: width) : null,
+                floatingActionButton: _PostListFloatingButton(
+                    bottomSheetHeight: bottomSheetHeight),
+                bottomNavigationBar: (settings.hasBottomBarRx &&
+                        !settings.autoHideBottomBarRx &&
+                        bottomBar != null)
+                    ? bottomBar
+                    : null,
+              );
 
-            return SettingsService.isShowGuide
-                ? ShowCaseWidget(
-                    onFinish: _showCase,
-                    builder: Builder(builder: (context) {
-                      _showCaseState = ShowCaseWidget.of(context);
+              if (settings.hasBottomBarRx &&
+                  settings.autoHideBottomBarRx &&
+                  bottomBar != null) {
+                scaffold = Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: [scaffold, bottomBar]);
+              }
 
-                      return scaffold;
-                    }))
-                : scaffold;
-          } else {
-            return Material(
-              child: Center(
-                child: Text(
-                  PersistentDataService.isFirstLaunched
-                      ? '启动中，请授予本应用相应权限'
-                      : '启动中',
-                  style: AppTheme.boldRed,
+              return SettingsService.isShowGuide
+                  ? ShowCaseWidget(
+                      onFinish: _showCase,
+                      builder: (context) {
+                        _showCaseState = ShowCaseWidget.of(context);
+
+                        return scaffold;
+                      })
+                  : scaffold;
+            } else {
+              return Material(
+                child: Center(
+                  child: Text(
+                    PersistentDataService.isFirstLaunched
+                        ? '启动中，请授予本应用相应权限'
+                        : '启动中',
+                    style: AppTheme.boldRed,
+                  ),
                 ),
-              ),
-            );
-          }
-        });
-      }),
-    );
+              );
+            }
+          });
+        }),
+      );
+    });
   }
 }

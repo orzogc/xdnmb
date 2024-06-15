@@ -360,6 +360,7 @@ class _PostSage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.ideographic,
       children: [
+        // autocorrect: false
         Flexible(
             child: Text(
           '本串已经被SAGE',
@@ -380,6 +381,7 @@ class _PostSage extends StatelessWidget {
           size: fontSize != null ? (fontSize - 2.0) : null,
         ),
       ],
+      // autocorrect: true
     );
   }
 }
@@ -618,7 +620,7 @@ class PostContent extends StatelessWidget {
   /// 串号被按时调用，参数是串号
   final ValueSetter<int>? onTapPostId;
 
-  /// 标签被删除时调用，参数是标签ID
+  /// 标签被删除时调用，参数是标签 ID
   final ValueSetter<int>? onDeleteTag;
 
   late final TextStyle? headerTextStyle;
@@ -708,6 +710,7 @@ class PostContent extends StatelessWidget {
               child: header!(headerTextStyle),
             ),
           if (post.isTipType)
+            // autocorrect: false
             Text(
               '来自X岛揭示版官方的内容',
               style: headerTextStyle ?? AppTheme.postHeaderTextStyle,
@@ -715,6 +718,7 @@ class PostContent extends StatelessWidget {
                   ? StrutStyle.fromTextStyle(headerTextStyle!)
                   : AppTheme.postHeaderStrutStyle,
             ),
+          // autocorrect: true
           _PostHeader(
             fontSize:
                 (headerTextStyle ?? AppTheme.postHeaderTextStyle).fontSize,

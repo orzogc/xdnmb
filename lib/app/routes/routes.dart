@@ -34,28 +34,28 @@ import '../widgets/thread.dart';
 abstract class AppRoutes {
   static const String home = '/';
 
-  /// 参数：forumId和page
+  /// 参数：forumId 和 page
   static const String forum = '/${PathNames.forum}';
 
-  /// 参数：timelineId和page
+  /// 参数：timelineId 和 page
   static const String timeline = '/${PathNames.timeline}';
 
-  /// 参数：mainPostId、page、cancelAutoJump和jumpToId，arguments为主串Post
+  /// 参数：mainPostId、page、cancelAutoJump 和 jumpToId，arguments 为主串 Post
   static const String thread = '/${PathNames.thread}';
 
-  /// 参数：mainPostId、page、cancelAutoJump和jumpToId，arguments为主串Post
+  /// 参数：mainPostId、page、cancelAutoJump 和 jumpToId，arguments 为主串 Post
   static const String onlyPoThread = '/${PathNames.onlyPoThread}';
 
   /// 参数：postId
   static const String reference = '/${PathNames.reference}';
 
-  /// 参数：index（0到1）和page
+  /// 参数：index（0 到 1）和 page
   static const String feed = '/${PathNames.feed}';
 
-  /// 参数：index（0到2）和page
+  /// 参数：index（0 到 2）和 page
   static const String history = '/${PathNames.history}';
 
-  /// 参数：tagId和page
+  /// 参数：tagId 和 page
   static const String taggedPostList = '/${PathNames.taggedPostList}';
 
   static const String image = '/${PathNames.image}';
@@ -336,12 +336,9 @@ class AppSwipeablePageRoute<T> extends SwipeablePageRoute<T> {
       };
 
   AppSwipeablePageRoute(
-      {RouteSettings? settings,
-      bool maintainState = true,
-      required WidgetBuilder builder})
+      {super.settings, bool maintainState = true, required super.builder})
       : _maintainState = maintainState,
-        super(
-            settings: settings, canOnlySwipeFromEdge: true, builder: builder) {
+        super(canOnlySwipeFromEdge: true) {
     SettingsService.to.swipeablePageDragWidthRatioListenable
         .addListener(_dragWidth);
   }
@@ -420,7 +417,7 @@ class AppPageTransitionsBuilder extends SwipeablePageTransitionsBuilder {
   }
 }
 
-/// 生成[Route]
+/// 生成 [Route]
 Route? onGenerateRoute(RouteSettings settings) {
   if (settings.name != null) {
     final uri = Uri.parse(settings.name!);
@@ -498,9 +495,9 @@ Route? onGenerateRoute(RouteSettings settings) {
             page: () => const PaintView(),
             transition: Transition.rightToLeft);
       default:
-        throw '未知URI: $uri';
+        throw '未知 URI: $uri';
     }
   } else {
-    throw '未知RouteSettings: $RouteSettings';
+    throw '未知 RouteSettings: $RouteSettings';
   }
 }

@@ -122,7 +122,7 @@ Future<void> launchUri(Uri uri) async {
   }
 }
 
-/// [mainPostId]和[poUserHash]为引用串的主串ID和Po饼干（非被引用串）
+/// [mainPostId] 和 [poUserHash] 为引用串的主串 ID 和 Po 饼干（非被引用串）
 void parseUrl(
     {required String url, Uri? uri, int? mainPostId, String? poUserHash}) {
   uri ??= Uri.tryParse(url);

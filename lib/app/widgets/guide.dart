@@ -120,12 +120,14 @@ class AppBarMenuGuide extends StatelessWidget {
                   text = '未知列表';
               }
 
+              // autocorrect: false
               return Showcase(
                 key: _key,
                 title: '$text菜单',
                 description: '点击打开$text',
                 child: child,
               );
+              // autocorrect: true
             },
           )
         : child;
@@ -282,12 +284,14 @@ class TabListGuide extends StatelessWidget {
           text = '';
       }
 
+      // autocorrect: false
       return Showcase(
         key: _key.currentState == null ? _key : _key2,
         title: '标签页列表',
         description: '$text点击切换标签页',
         child: child,
       );
+      // autocorrect: true
     });
   }
 }
@@ -448,12 +452,14 @@ class ForumListGuide extends StatelessWidget {
           text = '';
       }
 
+      // autocorrect: false
       return Showcase(
         key: _key,
         title: '版块列表',
         description: '$text点击进入版块，长按打开功能菜单',
         child: child,
       );
+      // autocorrect: true
     });
   }
 }

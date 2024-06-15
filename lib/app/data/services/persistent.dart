@@ -92,7 +92,7 @@ class PersistentDataService extends GetxService {
   set imageHashSalt(String salt) =>
       _dataBox.put(PersistentData.imageHashSalt, salt);
 
-  /// 最新的tag在最后
+  /// 最新的 tag 在最后
   List<int> get _recentTags =>
       _dataBox.get(PersistentData.recentTags, defaultValue: <int>[]);
 
@@ -136,14 +136,14 @@ class PersistentDataService extends GetxService {
     if (SettingsService.to.showNotice) {
       final client = XdnmbClientService.to;
       while (!client.finishGettingNotice) {
-        debugPrint('正在等待获取X岛公告');
+        debugPrint('正在等待获取 X 岛公告');
         await Future.delayed(const Duration(milliseconds: 500));
       }
 
       if (notice?.isNotEmpty ?? false) {
-        // 需要Navigator显示公告
+        // 需要 Navigator 显示公告
         while (!isNavigatorReady) {
-          debugPrint('正在等待Navigator');
+          debugPrint('正在等待 Navigator');
           await Future.delayed(const Duration(milliseconds: 500));
         }
         await showNoticeDialog(showCheckbox: true);

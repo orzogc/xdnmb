@@ -67,7 +67,7 @@ class TagService extends GetxService {
   static Future<int> getTaggedPostCount(int tagId) =>
       _taggedPostData.where().tagsElementEqualTo(tagId).count();
 
-  /// 删除拥有标签[tagId]的所有的串的标签[tagId]
+  /// 删除拥有标签 [tagId] 的所有的串的标签 [tagId]
   ///
   /// 串数据没有任何标签时会被删除
   static Future<void> deleteTagInPosts({required int tagId, Search? search}) =>
@@ -168,7 +168,7 @@ class TagService extends GetxService {
   Iterable<TagData> getTagsData(Iterable<int> tagsId) =>
       tagsId.map((tagId) => _tagsBox.get(tagId)).whereType<TagData>();
 
-  /// 返回标签ID，标签不存在则新建标签，已有的标签不做任何改动
+  /// 返回标签 ID，标签不存在则新建标签，已有的标签不做任何改动
   Future<int> getTagIdOrAddNewTag(
       {required String tagName,
       Color? backgroundColor,
@@ -211,7 +211,7 @@ class TagService extends GetxService {
 
       return true;
     } else {
-      debugPrint('不存在标签ID：${tag.id}');
+      debugPrint('不存在标签 ID：${tag.id}');
     }
 
     return false;
@@ -229,13 +229,13 @@ class TagService extends GetxService {
       _tagsMap.remove(tag.name);
       PersistentDataService.to.deleteRecentTag(tagId);
     } else {
-      debugPrint('不存在标签ID：$tagId');
+      debugPrint('不存在标签 ID：$tagId');
     }
   }
 
   /// 添加串的标签
   ///
-  /// 数据库里没有[post]的数据时会新建数据
+  /// 数据库里没有 [post] 的数据时会新建数据
   Future<void> addPostTag(PostBase post, int tagId, [int? forumId]) async {
     if (tagIdExists(tagId)) {
       await isar.writeTxn(() async {
@@ -254,7 +254,7 @@ class TagService extends GetxService {
 
       PersistentDataService.to.addRecentTag(tagId);
     } else {
-      debugPrint('不存在标签ID：$tagId');
+      debugPrint('不存在标签 ID：$tagId');
     }
   }
 
@@ -299,7 +299,7 @@ class TagService extends GetxService {
 
         await unpinPost(postId: postId, tagId: oldTagId);
       } else {
-        debugPrint('不存在要替换的标签ID： $newTagId');
+        debugPrint('不存在要替换的标签 ID： $newTagId');
       }
     }
   }
@@ -359,7 +359,7 @@ abstract class TagBackupRestore {
       return newId != null ? ReplyData.getTaggedPostId(newId) : null;
     }
 
-    debugPrint('未知的postId：$postId');
+    debugPrint('未知的 postId：$postId');
     return null;
   }
 
@@ -370,7 +370,7 @@ abstract class TagBackupRestore {
       if (newId != null) {
         list.add(newId);
       } else {
-        debugPrint('无法获取新的taggedPostId');
+        debugPrint('无法获取新的 taggedPostId');
       }
     }
 
@@ -434,7 +434,7 @@ class TagRestoreData extends RestoreData {
       if (newTagId != null) {
         newTags.add(newTagId);
       } else {
-        debugPrint('无法获取新的标签ID');
+        debugPrint('无法获取新的标签 ID');
       }
     }
 
@@ -479,7 +479,7 @@ class TagRestoreData extends RestoreData {
             }
             newPosts.add(post.copyWithId(newId));
           } else {
-            debugPrint('无法获取新的ID');
+            debugPrint('无法获取新的 ID');
           }
         }
       }

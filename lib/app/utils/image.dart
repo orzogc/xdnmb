@@ -38,7 +38,7 @@ class _XdnmbCacheStore extends CacheStore {
   Future<void> putFile(CacheObject cacheObject) {
     assert(cacheObject.url != cacheObject.key);
 
-    // 不保存图片URL
+    // 不保存图片 URL
     final newCacheObject = cacheObject.copyWith(url: cacheObject.key);
 
     return super.putFile(newCacheObject);
@@ -303,9 +303,9 @@ Widget loadingImageErrorBuilder(
     BuildContext context, String? url, dynamic error,
     {bool showError = true}) {
   if (showError) {
-    showToast('图片加载失败: $error');
+    showToast('图片加载失败：$error');
   } else {
-    debugPrint(url != null ? '图片 $url 加载失败: $error' : '图片加载失败: $error');
+    debugPrint(url != null ? '图片 $url 加载失败：$error' : '图片加载失败：$error');
   }
 
   return const Center(

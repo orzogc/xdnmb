@@ -28,7 +28,9 @@ class _SaveImagePath extends StatelessWidget {
         onTap: () async {
           try {
             final path = await FilePicker.platform.getDirectoryPath(
+              // autocorrect: false
               dialogTitle: 'X岛',
+              // autocorrect: true
               initialDirectory: settings.saveImagePath,
             );
             if (path != null) {
@@ -201,7 +203,9 @@ class _MaxPagesEachTab extends StatelessWidget {
       listenable: settings.maxPagesEachTabListenable,
       builder: (context, child) => ListTile(
         title: const Text('每个标签页同时保持状态的最多页数'),
+        // autocorrect: false
         subtitle: const Text('设置为较小的数值可以改善性能和减少内存占用，0为无限制'),
+        // autocorrect: true
         trailing: Text('${settings.maxPagesEachTab}'),
         onTap: () async {
           final n = await Get.dialog<int>(NumRangeDialog<int>(

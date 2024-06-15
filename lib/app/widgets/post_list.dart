@@ -72,7 +72,7 @@ typedef PostListScrollViewBuilder = Widget Function(BuildContext context,
 class PostListScrollView extends StatefulWidget {
   final PostListController controller;
 
-  /// 不为`null`时需要自行设置[controller]的`scrollController`为这个[scrollController]
+  /// 不为`null`时需要自行设置 [controller] 的`scrollController`为这个 [scrollController]
   final PostListScrollController? scrollController;
 
   final VoidCallback? onRefresh;
@@ -220,7 +220,7 @@ class PostListWithTabBarOrHeader extends StatelessWidget {
         (tabBarWidget != null || header != null)
             ? Obx(
                 () {
-                  // 为了Obx不崩溃
+                  // 为了 Obx 不崩溃
                   dumb.value;
 
                   return Padding(

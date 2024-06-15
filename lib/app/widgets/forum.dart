@@ -50,16 +50,14 @@ class ForumController extends ForumTypeController {
   @override
   PostListType get postListType => PostListType.forum;
 
-  ForumController({required int id, required int page})
-      : super(id: id, page: page);
+  ForumController({required super.id, required super.page});
 }
 
 class TimelineController extends ForumTypeController {
   @override
   PostListType get postListType => PostListType.timeline;
 
-  TimelineController({required int id, required int page})
-      : super(id: id, page: page);
+  TimelineController({required super.id, required super.page});
 }
 
 ForumController forumController(Map<String, String?> parameters) =>
@@ -90,11 +88,13 @@ class ForumAppBarTitle extends StatelessWidget {
             isTimeline: controller.isTimeline,
             isDisplay: false,
             maxLines: 1),
+        // autocorrect: false
         Text(
           'X岛 nmbxd.com',
           style: theme.textTheme.bodyMedium
               ?.apply(color: theme.colorScheme.onPrimary),
         )
+        // autocorrect: true
       ],
     );
   }
@@ -324,7 +324,7 @@ class _ForumBodyState extends State<ForumBody> {
         scrollController: scrollController,
         postListController: controller,
         initialPage: controller.page,
-        // 版块的最大页固定为100
+        // 版块的最大页固定为 100
         lastPage:
             controller.isTimeline ? forums.maxPage(id, isTimeline: true) : 100,
         fetch: (page) async {

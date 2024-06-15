@@ -184,7 +184,7 @@ class HistoryController extends PostListController {
       case _ReplyHistoryBody._index:
         return '回复';
       default:
-        debugPrint('未知index：$index');
+        debugPrint('未知 index：$index');
         return unknown;
     }
   }
@@ -206,7 +206,7 @@ class HistoryController extends PostListController {
           _setCount(await ReplyHistory.replyDataCount(range), index);
           break;
         default:
-          debugPrint('未知index：$index');
+          debugPrint('未知 index：$index');
       }
     }
   }
@@ -227,7 +227,7 @@ class HistoryController extends PostListController {
         await ReplyHistory.clearReplyData(range: range, search: search);
         break;
       default:
-        debugPrint('未知index：$index');
+        debugPrint('未知 index：$index');
     }
 
     _setCount(0, index);
@@ -477,11 +477,13 @@ class _BrowseHistoryItemState extends State<_BrowseHistoryItem> {
                         ),
                       ),
                       if (browsePage != null && browsePostId != null)
+                        // autocorrect: false
                         Text(
                           '浏览到：第$browsePage页 ${browsePostId.toPostNumber()}',
                           style: AppTheme.postHeaderTextStyle,
                           strutStyle: AppTheme.postHeaderStrutStyle,
                         ),
+                      // autocorrect: true
                     ]),
                     onTap: (post) =>
                         AppRoutes.toThread(mainPostId: post.id, mainPost: post),

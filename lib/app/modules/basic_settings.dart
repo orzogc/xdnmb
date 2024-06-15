@@ -266,6 +266,7 @@ class _EditFeedId extends StatelessWidget {
     final feedId = settings.feedId.obs;
     String? id;
 
+    // autocorrect: false
     return InputDialog(
       content: Form(
         key: _formKey,
@@ -298,6 +299,7 @@ class _EditFeedId extends StatelessWidget {
         ),
       ],
     );
+    // autocorrect: true
   }
 }
 
@@ -317,7 +319,9 @@ class _FeedId extends StatelessWidget {
             color: settings.useHtmlFeed ? AppTheme.inactiveSettingColor : null);
 
         return ListTile(
+          // autocorrect: false
           title: Text('订阅ID', style: textStyle),
+          // autocorrect: true
           subtitle: Text(settings.feedId, style: textStyle),
           onTap: !settings.useHtmlFeed ? () => Get.dialog(_EditFeedId()) : null,
         );

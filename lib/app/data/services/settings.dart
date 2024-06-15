@@ -150,7 +150,7 @@ class SettingsService extends GetxService {
       _settingsBox.put(
           Settings.isJumpToLastBrowsePosition, isJumpToLastBrowsePosition);
 
-  /// 0是跳转位置，1是只跳转页数，2是不跳转
+  /// 0 是跳转位置，1 是只跳转页数，2 是不跳转
   int get jumpToLastBrowseSetting =>
       isJumpToLastBrowsePage ? (isJumpToLastBrowsePosition ? 0 : 1) : 2;
 
@@ -378,7 +378,7 @@ class SettingsService extends GetxService {
 
   bool get autoHideBottomBarRx => _autoHideBottomBar.value;
 
-  /// 0是向下滑动时隐藏底边栏，1是始终显示底边栏，2是不显示底边栏
+  /// 0 是向下滑动时隐藏底边栏，1 是始终显示底边栏，2 是不显示底边栏
   int get bottomBarSetting => !useDrawerAndEndDrawer
       ? (showBottomBar ? (autoHideBottomBar ? 0 : 1) : 2)
       : 2;
@@ -402,7 +402,7 @@ class SettingsService extends GetxService {
     }
   }
 
-  /// 0是向下滑动时隐藏底边栏，1是始终显示底边栏，2是不显示底边栏
+  /// 0 是向下滑动时隐藏底边栏，1 是始终显示底边栏，2 是不显示底边栏
   int get bottomBarSettingRx => !useDrawerAndEndDrawerRx
       ? (showBottomBarRx ? (autoHideBottomBarRx ? 0 : 1) : 2)
       : 2;
@@ -417,7 +417,7 @@ class SettingsService extends GetxService {
   bool get bottomBarHasSingleTabOrForumListButtonRx =>
       hasBottomBarRx && (endDrawerSettingRx == 1 || endDrawerSettingRx == 2);
 
-  /// 0是不用侧边栏，1是版块侧边栏，2是标签页侧边栏，3是版块/标签页侧边栏
+  /// 0 是不用侧边栏，1 是版块侧边栏，2 是标签页侧边栏，3 是版块/标签页侧边栏
   int get endDrawerContent =>
       (_settingsBox.get(Settings.endDrawerContent, defaultValue: 0) as int)
           .clamp(0, 3);
@@ -428,7 +428,7 @@ class SettingsService extends GetxService {
     _endDrawerContent.value = value;
   }
 
-  /// 0是不用侧边栏，1是版块侧边栏，2是标签页侧边栏，3是版块/标签页侧边栏
+  /// 0 是不用侧边栏，1 是版块侧边栏，2 是标签页侧边栏，3 是版块/标签页侧边栏
   int get endDrawerSetting => useDrawerAndEndDrawer
       ? endDrawerContent.clamp(1, 2)
       : (bottomBarSetting < 2 ? endDrawerContent : 3);
@@ -438,7 +438,7 @@ class SettingsService extends GetxService {
           ? endDrawerSetting.clamp(1, 2)
           : (bottomBarSetting < 2 ? endDrawerSetting : 3);
 
-  /// 0是不用侧边栏，1是版块侧边栏，2是标签页侧边栏，3是标签页/版块侧边栏
+  /// 0 是不用侧边栏，1 是版块侧边栏，2 是标签页侧边栏，3 是标签页/版块侧边栏
   int get endDrawerSettingRx => useDrawerAndEndDrawerRx
       ? _endDrawerContent.value.clamp(1, 2)
       : (bottomBarSettingRx < 2 ? _endDrawerContent.value.clamp(0, 3) : 3);
@@ -474,7 +474,7 @@ class SettingsService extends GetxService {
   set autoHideFloatingButton(bool autoHideFloatingButton) =>
       _settingsBox.put(Settings.autoHideFloatingButton, autoHideFloatingButton);
 
-  /// 0是始终显示悬浮球，1是隐藏悬浮球，2是向下滑动时隐藏悬浮球
+  /// 0 是始终显示悬浮球，1 是隐藏悬浮球，2 是向下滑动时隐藏悬浮球
   int get floatingButtonSetting => !hasBottomBar
       ? (hideFloatingButton ? 1 : (autoHideFloatingButton ? 2 : 0))
       : 1;
@@ -573,7 +573,7 @@ class SettingsService extends GetxService {
   set showRelativeTime(bool showRelativeTime) =>
       _settingsBox.put(Settings.showRelativeTime, showRelativeTime);
 
-  /// 0是不显示，1是显示具体时间，2是显示相对时间
+  /// 0 是不显示，1 是显示具体时间，2 是显示相对时间
   int get showLatestPostTimeInFeed =>
       (_settingsBox.get(Settings.showLatestPostTimeInFeed, defaultValue: 0)
               as int)
@@ -1054,11 +1054,13 @@ class SettingsRestoreOperator implements CommonRestoreOperator {
 }
 
 class FeedIdRestoreData extends RestoreData {
+  // autocorrect: false
   @override
   String get title => '订阅ID';
 
   @override
   String get subTitle => '会覆盖现有的订阅ID';
+  // autocorrect: true
 
   @override
   CommonRestoreOperator? get commonOperator => const SettingsRestoreOperator();
@@ -1160,7 +1162,7 @@ class SettingsRestoreData extends RestoreData {
         await settings._settingsBox.put(s, box.get(s));
       }
     }
-    // initialForum需要特殊处理
+    // initialForum 需要特殊处理
     if (box.containsKey(Settings.initialForum)) {
       await settings._settingsBox.put(Settings.initialForum,
           (box.get(Settings.initialForum) as ForumData).copy());

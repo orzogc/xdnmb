@@ -128,16 +128,11 @@ class ThreadController extends ThreadTypeController {
   PostListType get postListType => PostListType.thread;
 
   ThreadController(
-      {required int id,
-      required int page,
-      PostBase? mainPost,
-      bool cancelAutoJump = false,
-      this.jumpToId})
-      : super(
-            id: id,
-            page: page,
-            mainPost: mainPost,
-            cancelAutoJump: cancelAutoJump);
+      {required super.id,
+      required super.page,
+      super.mainPost,
+      super.cancelAutoJump,
+      this.jumpToId});
 
   @override
   ThreadTypeController copyPage([int? jumpToId]) => ThreadController(
@@ -152,16 +147,11 @@ class OnlyPoThreadController extends ThreadTypeController {
   PostListType get postListType => PostListType.onlyPoThread;
 
   OnlyPoThreadController(
-      {required int id,
-      required int page,
-      PostBase? mainPost,
-      bool cancelAutoJump = false,
-      this.jumpToId})
-      : super(
-            id: id,
-            page: page,
-            mainPost: mainPost,
-            cancelAutoJump: cancelAutoJump);
+      {required super.id,
+      required super.page,
+      super.mainPost,
+      super.cancelAutoJump,
+      this.jumpToId});
 
   @override
   ThreadTypeController copyPage([int? jumpToId]) => OnlyPoThreadController(
@@ -218,7 +208,9 @@ class ThreadAppBarTitle extends StatelessWidget {
 
               return Row(
                 children: [
+                  // autocorrect: false
                   const Text('X岛 nmbxd.com'),
+                  // autocorrect: true
                   if (forumId != null)
                     Flexible(
                       child: ForumName(
@@ -314,6 +306,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
       final isBlockedUser =
           mainPost != null ? blacklist.hasUser(mainPost.userHash) : false;
 
+      // autocorrect: false
       return PopupMenuButton(
         itemBuilder: (context) => [
           if (mainPost != null && mainPost.forumId != null)
@@ -471,6 +464,7 @@ class ThreadAppBarPopupMenuButton extends StatelessWidget {
             ),
         ],
       );
+      // autocorrect: true
     });
   }
 }
@@ -566,7 +560,7 @@ class _ThreadBodyState extends State<ThreadBody> {
                 .map((post) => post.id);
             final id = index.postIdFromPostIndex;
             if (postIds.contains(id)) {
-              // 存在目标ID时
+              // 存在目标 ID 时
               WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                 Future.delayed(const Duration(milliseconds: 50), () async {
                   try {
@@ -640,7 +634,7 @@ class _ThreadBodyState extends State<ThreadBody> {
 
     _maxPage = thread.maxPage;
     _controller.mainPost = mainPost;
-    // 发现Po饼干被屏蔽就刷新页面
+    // 发现 Po 饼干被屏蔽就刷新页面
     if (page == firstPage &&
         !mainPost.isAdmin &&
         blacklist.hasUser(mainPost.userHash)) {

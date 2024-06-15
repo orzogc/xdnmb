@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:timeago_flutter/timeago_flutter.dart';
 
+// autocorrect: false
 class _CustomMessages implements LookupMessages {
   @override
   String prefixAgo() => '';
@@ -54,6 +55,7 @@ class _CustomMessages implements LookupMessages {
   @override
   String wordSeparator() => '';
 }
+// autocorrect: true
 
 class TimeService extends GetxService {
   static final TimeService to = Get.find<TimeService>();

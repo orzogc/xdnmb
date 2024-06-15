@@ -14,7 +14,7 @@ class EmoticonData extends HiveObject {
   @HiveField(1)
   String text;
 
-  /// 插入颜文字后光标位置的移动，为`null`时光标移动[text]的长度
+  /// 插入颜文字后光标位置的移动，为`null`时光标移动 [text] 的长度
   @HiveField(2, defaultValue: null)
   int? offset;
 
@@ -24,7 +24,7 @@ class EmoticonData extends HiveObject {
   EmoticonData.fromEmoticon(Emoticon emoticon)
       : this(name: emoticon.name, text: emoticon.text);
 
-  /// 设置[name]和[text]
+  /// 设置 [name] 和 [text]
   void set({required String name, required String text}) {
     if (name.isNotEmpty) {
       this.name = name;

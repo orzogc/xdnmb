@@ -1,5 +1,6 @@
 import '../data/models/emoticon.dart';
 
+// autocorrect: false
 final List<EmoticonData> blueIslandEmoticons = [
   EmoticonData(name: '･ﾟ( ﾉヮ´ )', text: '･ﾟ( ﾉヮ´ )'),
   EmoticonData(name: '( ´_ゝ`)旦', text: '( ´_ゝ`)旦'),
@@ -136,3 +137,4 @@ c(　╹^╹)
 　　　　　　　 　(¸.·´ (¸.·’*
 '''),
 ];
+// autocorrect: true

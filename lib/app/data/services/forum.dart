@@ -76,14 +76,14 @@ class ForumListService extends GetxService {
 
   late final ValueListenable<Box<ForumData>> forumsListenable;
 
-  /// key为顺序，value为[_forumBox]里的index
+  /// key 为顺序，value 为 [_forumBox] 里的 index
   final HashMap<int, int> _displayedForumIndexMap = HashMap();
 
   final Notifier displayedForumIndexNotifier = Notifier();
 
   final HashMap<_ForumKey, _ForumValue> _forumMap = HashMap();
 
-  /// 应用本次运行期间新增加的废弃版块ID，防止短时间内多次重复请求[_getHtmlForum]
+  /// 应用本次运行期间新增加的废弃版块 ID，防止短时间内多次重复请求 [_getHtmlForum]
   final HashSet<int> _deprecatedForumId = HashSet();
 
   int get displayedForumsCount => _displayedForumIndexMap.length;
@@ -128,18 +128,18 @@ class ForumListService extends GetxService {
         await addForum(ForumData.fromHtmlForum(forum));
         debugPrint('增加废弃版块：${forum.name}');
       } catch (e) {
-        debugPrint('获取HtmlForum失败：$e');
+        debugPrint('获取 HtmlForum 失败：$e');
       }
     }
   }
 
-  /// 返回[ForumData]，不会自动请求未知版块的信息
+  /// 返回 [ForumData]，不会自动请求未知版块的信息
   ForumData? forum(int forumId, {bool isTimeline = false}) {
     try {
       return forums.firstWhere(
           (forum) => forum.id == forumId && forum.isTimeline == isTimeline);
     } catch (e) {
-      debugPrint('ForumListService里没有ID为$forumId的版块/时间线');
+      debugPrint('ForumListService 里没有 ID 为$forumId 的版块/时间线');
 
       return null;
     }

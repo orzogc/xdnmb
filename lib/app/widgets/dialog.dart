@@ -442,7 +442,7 @@ class _ForumRuleDialogState extends State<ForumRuleDialog> {
   }
 }
 
-// TODO: SimpleDialog自动显示scrollbar
+// TODO: SimpleDialog 自动显示 scrollbar
 class NewTab extends StatelessWidget {
   final int mainPostId;
 
@@ -619,7 +619,9 @@ class BlockUser extends StatelessWidget {
   Widget build(BuildContext context) => SimpleDialogOption(
         onPressed: () async {
           final result = await postListDialog<bool>(ConfirmCancelDialog(
+            // autocorrect: false
             content: '确定屏蔽饼干 $userHash ？',
+            // autocorrect: true
             onConfirm: () => postListBack<bool>(result: true),
             onCancel: () => postListBack<bool>(result: false),
           ));
@@ -659,7 +661,7 @@ class SharePost extends StatelessWidget {
               text: Urls.threadUrl(
                   mainPostId: mainPostId,
                   isOnlyPo: isOnlyPo,
-                  // page不等于1时才显示在链接里
+                  // page 不等于 1 时才显示在链接里
                   page: page != 1 ? page : null,
                   postId: postId)));
 
@@ -905,6 +907,7 @@ class NumRangeDialog<T extends num> extends StatelessWidget {
   Widget build(BuildContext context) {
     String? number;
 
+    // autocorrect: false
     return InputDialog(
       content: TextFormField(
         key: _formKey,
@@ -966,6 +969,7 @@ class NumRangeDialog<T extends num> extends StatelessWidget {
         )
       ],
     );
+    // autocorrect: true
   }
 }
 
@@ -1129,11 +1133,12 @@ class _SetTagColorState extends State<_SetTagColor> {
         headerColor: theme.cardColor,
         headerSplashColor: theme.cardColor,
         headerPadding: const EdgeInsets.symmetric(vertical: 5.0),
-        headerRadius: 0.0,
+        headerBorder: const OutlineInputBorder(borderRadius: BorderRadius.zero),
         titlePadding: EdgeInsets.zero,
         contentBackgroundColor: theme.cardColor,
         contentPadding: EdgeInsets.zero,
-        contentRadius: 0.0,
+        contentBorder:
+            const OutlineInputBorder(borderRadius: BorderRadius.zero),
       ),
       title: Text('设置标签颜色', style: theme.textTheme.titleMedium),
       content: Column(
@@ -1244,6 +1249,7 @@ class _AddOrEditTagDialog extends StatelessWidget {
         ],
       ),
       actions: [
+        // autocorrect: false
         ElevatedButton(
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
@@ -1279,6 +1285,7 @@ class _AddOrEditTagDialog extends StatelessWidget {
           },
           child: Text(_text),
         ),
+        // autocorrect: true
       ],
     );
   }
@@ -1468,6 +1475,7 @@ class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
         ],
       ),
       actions: [
+        // autocorrect: false
         ElevatedButton(
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
@@ -1500,6 +1508,7 @@ class _AddOrReplacePostTagDialogState extends State<AddOrReplacePostTagDialog> {
           },
           child: Text(_replacedTag == null ? '添加' : '替换'),
         ),
+        // autocorrect: true
       ],
     );
   }
@@ -1650,6 +1659,7 @@ class SearchDialog extends StatelessWidget {
         TextButton(
           onPressed: () {
             postListDialog(const ConfirmCancelDialog(
+              // autocorrect: false
               contentWidget: Text.rich(TextSpan(
                 text: "搜索内容尽量不要是HTML标签和样式相关字符串，比如'font'、'color'、'br'。\n通配符 ",
                 children: [
@@ -1663,6 +1673,7 @@ class SearchDialog extends StatelessWidget {
                   ),
                 ],
               )),
+              // autocorrect: true
               onConfirm: postListBack,
             ));
           },
@@ -1725,7 +1736,9 @@ class ClearDialog extends StatelessWidget {
               await onClear?.call();
               showToast('清空$text');
             } catch (e) {
+              // autocorrect: false
               showToast('清空$text失败：$e');
+              // autocorrect: true
             } finally {
               if (overlay.visible) {
                 overlay.hide();

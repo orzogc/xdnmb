@@ -64,7 +64,7 @@ class _BiListViewHeader extends StatelessWidget {
   }
 }
 
-/// 什么都不显示的[Widget]
+/// 什么都不显示的 [Widget]
 class DumpItem extends StatelessWidget {
   const DumpItem({super.key});
 
@@ -224,7 +224,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
           _pagingUpController?.appendLastPage([]);
         }
       } catch (e) {
-        debugPrint('up page获取$T列表失败：$e');
+        debugPrint('up page 获取$T列表失败：$e');
         if (rethrowError) {
           rethrow;
         } else {
@@ -276,7 +276,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
           _pagingDownController?.appendPage([], page + 1);
         }
       } catch (e) {
-        debugPrint('down page获取$T列表失败：$e');
+        debugPrint('down page 获取$T列表失败：$e');
         if (rethrowError) {
           rethrow;
         } else {
@@ -412,11 +412,13 @@ class _BiListViewState<T> extends State<BiListView<T>>
               : null)
           : Align(
               alignment: Alignment.topCenter,
+              // autocorrect: false
               child: Text(
                 '已经抵达X岛的尽头',
                 style: textStyle,
                 strutStyle: StrutStyle.fromTextStyle(textStyle),
               )),
+      // autocorrect: true
     );
   }
 
@@ -424,7 +426,7 @@ class _BiListViewState<T> extends State<BiListView<T>>
     if (_scrollController.hasClients) {
       final position = _scrollController.position;
 
-      // 留1像素的空间
+      // 留 1 像素的空间
       if (position.pixels >= position.maxScrollExtent - 1.0 ||
           position.pixels <= position.minScrollExtent + 1.0) {
         _isOutOfBoundary.value = true;

@@ -55,6 +55,9 @@ class _Text implements TextDelegate {
   @override
   String get undo => '撤回';
 
+  @override
+  String get fill => '填充';
+
   const _Text();
 }
 
@@ -183,7 +186,8 @@ class PaintView extends GetView<PaintController> {
   const PaintView({super.key});
 
   Future<Uint8List?> _exportImage() async =>
-      await controller._painterKey.currentState?.exportImage();
+      await controller._painterKey.currentState?.widget.controller
+          .exportImage();
 
   Future<void> _saveImage() async {
     final data = await _exportImage();
@@ -195,7 +199,9 @@ class PaintView extends GetView<PaintController> {
   }
 
   Widget _painter(Uint8List image) => ImagePainter.memory(image,
-      key: controller._painterKey, textDelegate: const _Text());
+      key: controller._painterKey,
+      controller: ImagePainterController(),
+      textDelegate: const _Text());
 
   Widget _imagePainter() => _painter(controller.image.value!);
 
@@ -204,8 +210,13 @@ class PaintView extends GetView<PaintController> {
           _Canvas(constraints: constraints, painter: _painter));
 
   @override
-  Widget build(BuildContext context) => WillPopScope(
-        onWillPop: () async {
+  Widget build(BuildContext context) => PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) async {
+          if (didPop) {
+            return;
+          }
+
           if (controller._painterKey.currentState?.isEdited ?? false) {
             final result = await Get.dialog(ApplyImageDialog(
               onApply: controller.canReturnImageData
@@ -228,17 +239,14 @@ class PaintView extends GetView<PaintController> {
               onNotSave: () => Get.back(result: true),
             ));
 
-            if (result is bool) {
-              return result;
-            }
-            if (result is Uint8List) {
+            if (result is bool && result) {
+              Get.back<Uint8List>();
+            } else if (result is Uint8List) {
               Get.back<Uint8List>(result: result);
             }
-
-            return false;
+          } else {
+            Get.back<Uint8List>();
           }
-
-          return true;
         },
         child: ColoredSafeArea(
           child: Scaffold(

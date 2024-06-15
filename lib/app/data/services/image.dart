@@ -10,7 +10,7 @@ import 'settings.dart';
 class ImageService extends GetxService {
   static final ImageService to = Get.find<ImageService>();
 
-  /// 保存图片的文件夹，iOS下为图片临时保存文件夹
+  /// 保存图片的文件夹，iOS 下为图片临时保存文件夹
   static String? savePath;
 
   bool hasStoragePermission = false;
@@ -20,7 +20,7 @@ class ImageService extends GetxService {
   final RxBool isReady = false.obs;
 
   Future<void> _getPermission() async {
-    // Android SDK版本大于等于33不需要存储权限，但是需要图库权限
+    // Android SDK 版本大于等于 33 不需要存储权限，但是需要图库权限
     if (GetPlatform.isAndroid &&
         (await DeviceInfoPlugin().androidInfo).version.sdkInt < 33) {
       PermissionStatus status = await Permission.storage.status;

@@ -14,7 +14,7 @@ import 'user.dart';
 import 'version.dart';
 import 'xdnmb_client.dart';
 
-/// 服务Bindings，所有服务都应该放在这里
+/// 服务 Bindings，所有服务都应该放在这里
 Bindings servicesBindings() => BindingsBuilder(() {
       Get.put(TimeService());
       Get.put(SettingsService());

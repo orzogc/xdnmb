@@ -30,6 +30,7 @@ class _AddForum extends StatelessWidget {
 
     return LoaderOverlay(
       child: InputDialog(
+        // autocorrect: false
         content: TextFormField(
           key: _formKey,
           decoration: const InputDecoration(labelText: '版块ID'),
@@ -40,6 +41,7 @@ class _AddForum extends StatelessWidget {
               ? '请输入版块ID数字'
               : (forums.forum(int.parse(value!)) != null ? '已有该版块ID' : null),
         ),
+        // autocorrect: true
         actions: [
           ElevatedButton(
             onPressed: () async {

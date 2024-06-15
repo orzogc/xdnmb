@@ -471,7 +471,9 @@ class _SponsorDialog extends StatelessWidget {
         ),
         SimpleDialogOption(
           onPressed: () => launchURL(Urls.xdnmbSponsor),
+          // autocorrect: false
           child: Text('赞助X岛揭示版官方', style: textStyle),
+          // autocorrect: true
         ),
       ],
     );

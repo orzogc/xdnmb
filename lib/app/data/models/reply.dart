@@ -49,7 +49,7 @@ class ReplyData {
   @ignore
   int get taggedPostId => getTaggedPostId(id);
 
-  /// [image]是为了兼容旧版本，用来判断[hasImage]
+  /// [image] 是为了兼容旧版本，用来判断 [hasImage]
   ReplyData(
       {required this.mainPostId,
       this.postId,
@@ -85,7 +85,7 @@ class ReplyData {
             page: page,
             hasImage: post.hasImage);
 
-  /// 返回的postId可能是[taggedPostId]
+  /// 返回的 postId 可能是 [taggedPostId]
   Post toPost() => Post(
       id: postId ?? taggedPostId,
       forumId: forumId,
@@ -122,7 +122,7 @@ class ReplyData {
     hasImage = post.hasImage;
   }
 
-  /// 不复制[image]和[imageExtension]
+  /// 不复制 [image] 和 [imageExtension]
   ReplyData copy() => ReplyData(
       mainPostId: mainPostId,
       postId: postId,

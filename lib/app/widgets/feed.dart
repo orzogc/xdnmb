@@ -106,7 +106,7 @@ class FeedController extends PostListController {
 
         return '标签';
       default:
-        debugPrint('未知index：$index');
+        debugPrint('未知 index：$index');
         return '';
     }
   }
@@ -428,7 +428,7 @@ class _TagListDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SimpleDialog(
-        // 为了不让Tag占领整行的空间
+        // 为了不让 Tag 占领整行的空间
         title: Align(
           alignment: Alignment.centerLeft,
           child: Tag.fromTagData(tag: tag),
@@ -518,7 +518,7 @@ class _TagListItemState extends State<_TagListItem> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       ListTile(
-                        // 为了不让Tag占领整行的空间
+                        // 为了不让 Tag 占领整行的空间
                         title: Align(
                           alignment: Alignment.centerLeft,
                           child: Tag.fromTagData(

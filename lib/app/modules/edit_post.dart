@@ -67,12 +67,13 @@ class EditPostView extends GetView<EditPostController> {
   const EditPostView({super.key});
 
   @override
-  Widget build(BuildContext context) => WillPopScope(
-        onWillPop: () async {
-          final controller = _editPost?.toController();
-          Get.back(result: controller);
-
-          return false;
+  Widget build(BuildContext context) => PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) {
+          if (!didPop) {
+            final controller = _editPost?.toController();
+            Get.back(result: controller);
+          }
         },
         child: Scaffold(
           appBar: AppBar(

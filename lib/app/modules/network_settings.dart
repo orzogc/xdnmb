@@ -19,7 +19,9 @@ class _UseBackupApi extends StatelessWidget {
     return ListenBuilder(
       listenable: settings.useBackupApiListenable,
       builder: (context, child) => SwitchListTile(
+        // autocorrect: false
         title: const Text('使用X岛备用API'),
+        // autocorrect: true
         value: settings.useBackupApi,
         onChanged: (value) {
           client.useBackupApi(value);

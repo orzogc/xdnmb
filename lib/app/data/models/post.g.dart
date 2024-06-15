@@ -98,7 +98,7 @@ const PostDataSchema = CollectionSchema(
   getId: _postDataGetId,
   getLinks: _postDataGetLinks,
   attach: _postDataAttach,
-  version: '3.1.0+1',
+  version: '3.1.7',
 );
 
 int _postDataEstimateSize(

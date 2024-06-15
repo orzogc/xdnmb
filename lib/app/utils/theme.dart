@@ -122,7 +122,7 @@ abstract class AppTheme {
     textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
             foregroundColor:
-                MaterialStateColor.resolveWith((states) => primaryColorLight),
+                WidgetStateColor.resolveWith((states) => primaryColorLight),
             overlayColor: _ButtonDefaultOverlay(buttonOverlayColorLight))),
     elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
@@ -130,7 +130,7 @@ abstract class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
         style: ButtonStyle(
             foregroundColor:
-                MaterialStateColor.resolveWith((states) => primaryColorLight),
+                WidgetStateColor.resolveWith((states) => primaryColorLight),
             overlayColor: _ButtonDefaultOverlay(buttonOverlayColorLight))),
     inputDecorationTheme: lightInputDecorationTheme,
     dropdownMenuTheme:
@@ -144,7 +144,7 @@ abstract class AppTheme {
         trackColor: _SwitchColor(AppTheme.primaryColorLight.withOpacity(0.5))),
     checkboxTheme: CheckboxThemeData(
         fillColor: _CheckboxFillColor(primaryColorLight),
-        checkColor: MaterialStateColor.resolveWith((states) => Colors.white)),
+        checkColor: WidgetStateColor.resolveWith((states) => Colors.white)),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
         selectedItemColor: primaryColorLight,
         unselectedItemColor: Colors.grey,
@@ -182,7 +182,7 @@ abstract class AppTheme {
     textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
             foregroundColor:
-                MaterialStateColor.resolveWith((states) => Colors.white),
+                WidgetStateColor.resolveWith((states) => Colors.white),
             overlayColor: _ButtonDefaultOverlay(buttonOverlayColorDark))),
     elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
@@ -191,7 +191,7 @@ abstract class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
         style: ButtonStyle(
             foregroundColor:
-                MaterialStateColor.resolveWith((states) => colorDark),
+                WidgetStateColor.resolveWith((states) => colorDark),
             overlayColor: _ButtonDefaultOverlay(buttonOverlayColorDark))),
     inputDecorationTheme: darkInputDecorationTheme,
     dropdownMenuTheme:
@@ -204,7 +204,7 @@ abstract class AppTheme {
         trackColor: _SwitchColor(AppTheme.primaryColorLight.withOpacity(0.5))),
     checkboxTheme: CheckboxThemeData(
         fillColor: _CheckboxFillColor(Colors.white),
-        checkColor: MaterialStateColor.resolveWith((states) => Colors.black)),
+        checkColor: WidgetStateColor.resolveWith((states) => Colors.black)),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
         selectedItemColor: Colors.grey,
         unselectedItemColor: primaryColorDark,
@@ -227,40 +227,40 @@ abstract class AppTheme {
   );
 }
 
-class _ButtonDefaultOverlay extends MaterialStateProperty<Color?> {
+class _ButtonDefaultOverlay extends WidgetStateProperty<Color?> {
   final Color color;
 
   _ButtonDefaultOverlay(this.color);
 
   @override
-  Color? resolve(Set<MaterialState> states) {
-    if (states.contains(MaterialState.hovered)) {
+  Color? resolve(Set<WidgetState> states) {
+    if (states.contains(WidgetState.hovered)) {
       return color.withOpacity(0.04);
     }
-    if (states.contains(MaterialState.focused) ||
-        states.contains(MaterialState.pressed)) {
+    if (states.contains(WidgetState.focused) ||
+        states.contains(WidgetState.pressed)) {
       return color.withOpacity(0.12);
     }
     return null;
   }
 }
 
-class _CheckboxFillColor extends MaterialStateProperty<Color?> {
+class _CheckboxFillColor extends WidgetStateProperty<Color?> {
   final Color color;
 
   _CheckboxFillColor(this.color);
 
   @override
-  Color? resolve(Set<MaterialState> states) =>
-      states.contains(MaterialState.disabled) ? Colors.grey.shade400 : color;
+  Color? resolve(Set<WidgetState> states) =>
+      states.contains(WidgetState.disabled) ? Colors.grey.shade400 : color;
 }
 
-class _SwitchColor extends MaterialStateProperty<Color?> {
+class _SwitchColor extends WidgetStateProperty<Color?> {
   final Color color;
 
   _SwitchColor(this.color);
 
   @override
-  Color? resolve(Set<MaterialState> states) =>
-      states.contains(MaterialState.selected) ? color : null;
+  Color? resolve(Set<WidgetState> states) =>
+      states.contains(WidgetState.selected) ? color : null;
 }

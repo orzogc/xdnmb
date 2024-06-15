@@ -51,7 +51,7 @@ class _ReferenceDialog extends StatelessWidget {
 class ReferenceCard extends StatefulWidget {
   final int postId;
 
-  /// 引用串的主串ID（非被引用串）
+  /// 引用串的主串 ID（非被引用串）
   final int? mainPostId;
 
   final String? poUserHash;

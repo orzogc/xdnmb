@@ -310,7 +310,7 @@ class _Image<T extends Object> extends StatefulWidget {
 
   final ImageProvider<T> provider;
 
-  /// 设置背景透明度，参数是透明度（0.0到 1.0）
+  /// 设置背景透明度，参数是透明度（0.0 到 1.0）
   final ValueChanged<double> onOpacity;
 
   final VoidCallback hideOverlay;
@@ -1056,8 +1056,13 @@ class ImageView extends StatelessWidget {
     final topPadding = MediaQuery.paddingOf(context).top;
     final isLoaded = (_controller.imageData.value != null).obs;
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) {
+          return;
+        }
+
         if (_controller._isPainted && _controller.imageData.value != null) {
           final result = await Get.dialog(ApplyImageDialog(
             onApply: _controller.canReturnImageData
@@ -1073,17 +1078,14 @@ class ImageView extends StatelessWidget {
             onNotSave: () => Get.back(result: true),
           ));
 
-          if (result is bool) {
-            return result;
-          }
-          if (result is Uint8List) {
+          if (result is bool && result) {
+            Get.back<Uint8List>();
+          } else if (result is Uint8List) {
             Get.back<Uint8List>(result: result);
           }
-
-          return false;
+        } else {
+          Get.back<Uint8List>();
         }
-
-        return true;
       },
       child: Obx(
         () => ColoredBox(
@@ -1175,7 +1177,7 @@ class ImageView extends StatelessWidget {
                                     Align(
                                       alignment: Alignment.topCenter,
                                       child: Text(
-                                        '图片加载失败: $error',
+                                        '图片加载失败：$error',
                                         style: AppTheme
                                             .boldRedPostContentTextStyle,
                                         strutStyle: AppTheme

@@ -66,7 +66,7 @@ class BrowseHistory implements PostBase {
   @override
   PostType get postType => PostType.post;
 
-  /// [image]是为了兼容旧版本，用来判断[hasImage]
+  /// [image] 是为了兼容旧版本，用来判断 [hasImage]
   BrowseHistory(
       {required this.id,
       required this.forumId,

@@ -357,7 +357,9 @@ class _ShowPoCookieTag extends StatelessWidget {
     return ListenBuilder(
       listenable: settings.showPoCookieTagListenable,
       builder: (context, child) => SwitchListTile(
+        // autocorrect: false
         title: const Text('串内Po饼干左边显示Po标识'),
+        // autocorrect: true
         value: settings.showPoCookieTag,
         onChanged: (value) => settings.showPoCookieTag = value,
       ),
@@ -376,7 +378,9 @@ class _PoCookieColor extends StatelessWidget {
     return ListenBuilder(
       listenable: settings.poCookieColorListenable,
       builder: (context, child) => ListTile(
+        // autocorrect: false
         title: const Text('Po饼干颜色'),
+        // autocorrect: true
         trailing: ColorIndicator(
           HSVColor.fromColor(settings.poCookieColor),
           key: ValueKey<Color>(settings.poCookieColor),

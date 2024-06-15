@@ -107,7 +107,7 @@ class _AppBarPopupMenuButton extends StatelessWidget {
 
                   break;
                 default:
-                  debugPrint('未知bottomBarIndex：$index');
+                  debugPrint('未知 bottomBarIndex：$index');
               }
             },
           ),
@@ -133,7 +133,7 @@ class _List<T> extends StatelessWidget {
 
   final _ItemWidgetBuilder<T>? subtitleBuilder;
 
-  /// 删除item时调用，参数是被删除的item
+  /// 删除 item 时调用，参数是被删除的 item
   final ValueSetter<T> onDelete;
 
   final _ItemWidgetBuilder<T> deleteDialogContent;
@@ -287,7 +287,9 @@ class _Body extends StatelessWidget {
             await blacklist.unblockUser(userHash);
             refresh();
           },
+          // autocorrect: false
           deleteDialogContent: (userHash) => Text('确定取消屏蔽饼干 $userHash ？'),
+          // autocorrect: true
           deleteToastContent: (userHash) => '取消屏蔽饼干 $userHash',
         );
       default:

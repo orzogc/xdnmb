@@ -15,7 +15,7 @@ import 'backup.dart';
 import 'directory.dart';
 import 'extensions.dart';
 
-/// 由于兼容原因，isar数据库名字为`history`
+/// 由于兼容原因，isar 数据库名字为`history`
 const String _databaseName = 'history';
 
 const String _databaseBackupName = '${_databaseName}_backup';
@@ -28,7 +28,7 @@ const List<CollectionSchema<dynamic>> _isarSchemas = [
   TaggedPostSchema,
 ];
 
-/// [Isar]实例只能同时存在一个
+/// [Isar] 实例只能同时存在一个
 late Isar isar;
 
 String _isarDatabaseFilePath() =>
@@ -50,10 +50,10 @@ String _isarDatabaseBackupFilePathInDir(String dir) =>
 File _isarDatabaseBackupFileInDir(String dir) =>
     File(_isarDatabaseBackupFilePathInDir(dir));
 
-/// 注意iOS设备可能内存不足
+/// 注意 iOS 设备可能内存不足
 Future<Isar> _openIsar(String name, [int? extraSizeMiB]) async {
   final file = File(join(databaseDirectory, '$name.isar'));
-  // 默认256MB大小，保留至少100MB左右的空间
+  // 默认 256MB 大小，保留至少 100MB 左右的空间
   final maxSizeMiB = await file.exists()
       ? ((await file.length() / (1024 * 1024)).floor() + 100)
       : 256;
@@ -76,12 +76,12 @@ class IsarBackupData extends BackupData {
 
   @override
   Future<void> backup(String dir) async {
-    // 要同时备份标签的hive数据
+    // 要同时备份标签的 hive 数据
     await TagBackupRestore.backupHiveTagData(dir);
     progress = 0.5;
 
     if (!await isar.close()) {
-      debugPrint('未能成功关闭isar数据库');
+      debugPrint('未能成功关闭 isar 数据库');
     }
 
     final isarFile = _isarDatabaseFile();
@@ -107,7 +107,7 @@ class IsarRestoreOperator implements CommonRestoreOperator {
           _backupFileSizeMib =
               (await backupFile.length() / (1024 * 1024)).floor();
         } else {
-          throw 'Isar数据库备份文件不存在';
+          throw 'Isar 数据库备份文件不存在';
         }
       }
 
@@ -117,7 +117,7 @@ class IsarRestoreOperator implements CommonRestoreOperator {
 
   static Future<void> _closeIsar() async {
     if (isar.isOpen && !await isar.close()) {
-      throw '未能成功关闭Isar数据库';
+      throw '未能成功关闭 Isar 数据库';
     }
   }
 
@@ -134,7 +134,7 @@ class IsarRestoreOperator implements CommonRestoreOperator {
 
   static Future<void> _closeBackupIsar() async {
     if (_backupIsarIsOpen && !await backupIsar.close()) {
-      throw '未能成功关闭Isar备份数据库';
+      throw '未能成功关闭 Isar 备份数据库';
     }
     _backupIsarIsOpen = false;
   }
