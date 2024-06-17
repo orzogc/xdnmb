@@ -92,7 +92,12 @@ flutter:
     - CHANGELOG.md
 
     # https://letsencrypt.org/certs/lets-encrypt-r3.pem
-    - assets/ca/lets-encrypt-r3.pem
+    #- assets/ca/lets-encrypt-r3.pem
+
+    # https://letsencrypt.org/certs/isrgrootx1.pem
+    - assets/ca/isrgrootx1.pem
+    # https://letsencrypt.org/certs/isrg-root-x2.pem
+    - assets/ca/isrg-root-x2.pem
 
     # Reward QR code
     - assets/image/reward_qrcode.png

@@ -43,10 +43,6 @@ android {
         jvmTarget = '1.8'
     }
 
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-    }
-
     defaultConfig {
         applicationId = "org.xnonymous.nmbxd"
         minSdk = 21

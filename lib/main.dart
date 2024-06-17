@@ -81,13 +81,12 @@ class _XdnmbApp extends StatelessWidget {
 
 /// 添加 Let’s Encrypt 的证书
 ///
-/// Let’s Encrypt 的旧证书过期导致部分旧手机无法访问 X 岛链接
+/// Let’s Encrypt 的旧证书过期导致部分旧设备无法访问 X 岛链接
 Future<void> _addCert() async {
-  // 可能只有 Android 旧手机有此问题？
-  if (GetPlatform.isAndroid) {
-    final data =
-        await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
-    SecurityContext.defaultContext
-        .setTrustedCertificatesBytes(data.buffer.asInt8List());
-  }
+  final x1 = await PlatformAssetBundle().load('assets/ca/isrgrootx1.pem');
+  SecurityContext.defaultContext
+      .setTrustedCertificatesBytes(x1.buffer.asInt8List());
+  final x2 = await PlatformAssetBundle().load('assets/ca/isrg-root-x2.pem');
+  SecurityContext.defaultContext
+      .setTrustedCertificatesBytes(x2.buffer.asInt8List());
 }
