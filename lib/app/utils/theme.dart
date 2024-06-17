@@ -144,7 +144,8 @@ abstract class AppTheme {
         trackColor: _SwitchColor(AppTheme.primaryColorLight.withOpacity(0.5))),
     checkboxTheme: CheckboxThemeData(
         fillColor: _CheckboxFillColor(primaryColorLight),
-        checkColor: WidgetStateColor.resolveWith((states) => Colors.white)),
+        checkColor: WidgetStateColor.resolveWith((states) => Colors.white),
+        side: BorderSide(color: primaryColorLight, width: 2.0)),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
         selectedItemColor: primaryColorLight,
         unselectedItemColor: Colors.grey,
@@ -204,7 +205,8 @@ abstract class AppTheme {
         trackColor: _SwitchColor(AppTheme.primaryColorLight.withOpacity(0.5))),
     checkboxTheme: CheckboxThemeData(
         fillColor: _CheckboxFillColor(Colors.white),
-        checkColor: WidgetStateColor.resolveWith((states) => Colors.black)),
+        checkColor: WidgetStateColor.resolveWith((states) => Colors.black),
+        side: const BorderSide(color: Colors.white, width: 2.0)),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
         selectedItemColor: Colors.grey,
         unselectedItemColor: primaryColorDark,
@@ -251,8 +253,10 @@ class _CheckboxFillColor extends WidgetStateProperty<Color?> {
   _CheckboxFillColor(this.color);
 
   @override
-  Color? resolve(Set<WidgetState> states) =>
-      states.contains(WidgetState.disabled) ? Colors.grey.shade400 : color;
+  Color? resolve(Set<WidgetState> states) => states
+          .contains(WidgetState.disabled)
+      ? Colors.grey.shade400
+      : (states.contains(WidgetState.selected) ? color : Colors.transparent);
 }
 
 class _SwitchColor extends WidgetStateProperty<Color?> {

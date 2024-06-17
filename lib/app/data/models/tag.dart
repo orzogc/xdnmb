@@ -44,14 +44,27 @@ class TagData extends HiveObject {
 
   TagData copyWith(
           {String? name,
+          int? backgroundColorValue,
+          int? textColorValue,
+          List<int>? pinnedPosts}) =>
+      TagData(
+          id: id,
+          name: name ?? this.name,
+          backgroundColorValue:
+              backgroundColorValue ?? this.backgroundColorValue,
+          textColorValue: textColorValue ?? this.textColorValue,
+          pinnedPosts: pinnedPosts ?? this.pinnedPosts);
+
+  TagData setWith(
+          {String? name,
           Color? backgroundColor,
           Color? textColor,
           List<int>? pinnedPosts}) =>
       TagData(
           id: id,
           name: name ?? this.name,
-          backgroundColorValue: backgroundColor?.value ?? backgroundColorValue,
-          textColorValue: textColor?.value ?? textColorValue,
+          backgroundColorValue: backgroundColor?.value,
+          textColorValue: textColor?.value,
           pinnedPosts: pinnedPosts ?? this.pinnedPosts);
 
   Future<void> pinPost(int postId, [bool toSave = true]) async {

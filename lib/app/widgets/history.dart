@@ -862,7 +862,7 @@ class _ReplyHistoryItemState extends State<_ReplyHistoryItem> {
                         mainPostId: _reply.mainPostId,
                         page: _reply.page,
                         onDelete: () async {
-                          await PostHistory.deletePostData(_reply.id);
+                          await ReplyHistory.deleteReplyData(_reply.id);
                           widget.decreaseCount();
                           showToast(_reply.hasPostId
                               ? '删除回复 ${_reply.postId?.toPostNumber()} 的记录'

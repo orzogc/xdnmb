@@ -44,10 +44,11 @@ class ColorListTile extends StatelessWidget {
           Color? color_;
           Get.dialog(
             ConfirmCancelDialog(
-              contentWidget: MaterialPicker(
+              contentWidget: HueRingPicker(
                 pickerColor: color,
                 onColorChanged: (value) => color_ = value,
-                enableLabel: true,
+                enableAlpha: true,
+                displayThumbColor: true,
               ),
               onConfirm: () {
                 if (color_ != null) {

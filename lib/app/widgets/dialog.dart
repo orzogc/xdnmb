@@ -1078,10 +1078,11 @@ class SetCookieColor extends StatelessWidget {
         onPressed: () async {
           Color? color;
           final result = await Get.dialog<bool>(ConfirmCancelDialog(
-            contentWidget: MaterialPicker(
+            contentWidget: HueRingPicker(
               pickerColor: cookie.color,
               onColorChanged: (value) => color = value,
-              enableLabel: true,
+              enableAlpha: true,
+              displayThumbColor: true,
             ),
             onConfirm: () {
               if (color != null) {
@@ -1133,12 +1134,9 @@ class _SetTagColorState extends State<_SetTagColor> {
         headerColor: theme.cardColor,
         headerSplashColor: theme.cardColor,
         headerPadding: const EdgeInsets.symmetric(vertical: 5.0),
-        headerBorder: const OutlineInputBorder(borderRadius: BorderRadius.zero),
         titlePadding: EdgeInsets.zero,
         contentBackgroundColor: theme.cardColor,
         contentPadding: EdgeInsets.zero,
-        contentBorder:
-            const OutlineInputBorder(borderRadius: BorderRadius.zero),
       ),
       title: Text('设置标签颜色', style: theme.textTheme.titleMedium),
       content: Column(
@@ -1265,7 +1263,7 @@ class _AddOrEditTagDialog extends StatelessWidget {
 
                     onAdded?.call();
                   } else {
-                    if (!await tagService.editTag(editedTag!.copyWith(
+                    if (!await tagService.editTag(editedTag!.setWith(
                         name: _tagName.value,
                         backgroundColor: _backgroundColor,
                         textColor: _textColor))) {

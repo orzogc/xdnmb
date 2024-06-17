@@ -390,10 +390,11 @@ class _PoCookieColor extends StatelessWidget {
         onTap: () {
           Color? color;
           Get.dialog(ConfirmCancelDialog(
-            contentWidget: MaterialPicker(
+            contentWidget: HueRingPicker(
               pickerColor: settings.poCookieColor,
               onColorChanged: (value) => color = value,
-              enableLabel: true,
+              enableAlpha: true,
+              displayThumbColor: true,
             ),
             onConfirm: () {
               if (color != null) {

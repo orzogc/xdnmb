@@ -386,7 +386,8 @@ abstract class TagBackupRestore {
       final tagData = tagService.getTagDataFromName(tag.name);
       if (tagData != null) {
         final newTagData = tagData.copyWith(
-            backgroundColor: tag.backgroundColor, textColor: tag.textColor);
+            backgroundColorValue: tag.backgroundColorValue,
+            textColorValue: tag.textColorValue);
         for (final postId in _convertPostIds(tag.pinnedPosts)) {
           await newTagData.pinPost(postId, false);
         }
