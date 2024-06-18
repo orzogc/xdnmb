@@ -7,6 +7,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:nmbxd/app/widgets/list_tile.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
 import 'package:xdnmb_api/xdnmb_api.dart' as xdnmb_api;
@@ -271,59 +272,29 @@ class _WatermarkDialog extends StatelessWidget {
       : isWatermark = isWatermark.obs;
 
   @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      actionsPadding: const EdgeInsets.only(right: 10.0, bottom: 10.0),
-      content: SingleChildScrollViewWithScrollbar(
-        child: Column(
+  Widget build(BuildContext context) => ConfirmCancelDialog(
+        contentWidget: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              title: const Text('水印'),
-              trailing: Obx(
-                () => Radio<bool>(
-                  value: true,
-                  groupValue: isWatermark.value,
-                  onChanged: (isWatermark) {
-                    if (isWatermark != null) {
-                      this.isWatermark.value = isWatermark;
-                    }
-                  },
-                ),
+            Obx(
+              () => TightCheckboxListTile(
+                title: const Text('水印'),
+                value: isWatermark.value,
+                onChanged: (isWatermark) {
+                  if (isWatermark != null) {
+                    this.isWatermark.value = isWatermark;
+                  }
+                },
               ),
-            ),
-            ListTile(
-              title: const Text('没水印'),
-              trailing: Obx(
-                () => Radio<bool>(
-                  value: false,
-                  groupValue: isWatermark.value,
-                  onChanged: (isWatermark) {
-                    if (isWatermark != null) {
-                      this.isWatermark.value = isWatermark;
-                    }
-                  },
-                ),
-              ),
-            ),
+            )
           ],
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            onWatermark(isWatermark.value);
-            Get.back();
-          },
-          child: Text(
-            '确定',
-            style: TextStyle(
-                fontSize: Theme.of(context).textTheme.titleMedium?.fontSize),
-          ),
-        ),
-      ],
-    );
-  }
+        onConfirm: () {
+          onWatermark(isWatermark.value);
+          Get.back();
+        },
+        onCancel: Get.back,
+      );
 }
 
 class _Image extends StatefulWidget {
@@ -1628,6 +1599,7 @@ class EditPostCallback {
 
 // TODO: 增加选项，单独页面时可以把图片放下面
 // TODO: 图片压缩
+// TODO: 自动订阅用户发的主串
 class EditPost extends StatefulWidget {
   static const int dutyRoomId = 18;
 
