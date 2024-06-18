@@ -72,13 +72,41 @@ class _VerifyImageState extends State<_VerifyImage> {
       );
 }
 
-class _LoginForm extends StatelessWidget {
+class _LoginForm extends StatefulWidget {
+  // ignore: unused_element
+  const _LoginForm({super.key});
+
+  @override
+  State<_LoginForm> createState() => _LoginFormState();
+}
+
+class _LoginFormState extends State<_LoginForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final TextEditingController verifyController = TextEditingController();
+  late TextEditingController verifyController;
 
-  // ignore: unused_element
-  _LoginForm({super.key});
+  late FocusNode verifyFocusNode;
+
+  void clearVerify() {
+    verifyController.clear();
+    verifyFocusNode.requestFocus();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    verifyController = TextEditingController();
+    verifyFocusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    verifyController.dispose();
+    verifyFocusNode.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,13 +138,14 @@ class _LoginForm extends StatelessWidget {
               ),
               TextFormField(
                 controller: verifyController,
+                focusNode: verifyFocusNode,
                 decoration: const InputDecoration(labelText: '验证码'),
                 onSaved: (newValue) => verify = newValue,
                 validator: (value) =>
                     (value == null || value.isEmpty) ? '请输入验证码' : null,
               ),
               const SizedBox(height: 10.0),
-              _VerifyImage(onRefresh: verifyController.clear),
+              _VerifyImage(onRefresh: clearVerify),
             ],
           ),
         ),
@@ -135,7 +164,7 @@ class _LoginForm extends StatelessWidget {
                   showToast('登陆成功');
                   Get.back();
                 } catch (e) {
-                  verifyController.clear();
+                  clearVerify();
 
                   showToast('用户登陆失败：${exceptionMessage(e)}');
                 } finally {
@@ -172,7 +201,7 @@ class _Login extends StatelessWidget {
     return user.isLogin
         ? ((user.isUserCookieExpired ?? true)
             ? ListTile(
-                onTap: () => Get.dialog(_LoginForm()),
+                onTap: () => Get.dialog(const _LoginForm()),
                 title: const Text('登陆已经过期，点击重新登陆'),
                 trailing: forgetPassword,
               )
@@ -190,7 +219,7 @@ class _Login extends StatelessWidget {
                 title: const Text('登出X岛帐号'),
               ))
         : ListTile(
-            onTap: () => Get.dialog(_LoginForm()),
+            onTap: () => Get.dialog(const _LoginForm()),
             title: const Text('登陆X岛帐号'),
             trailing: Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -280,22 +309,46 @@ class _AddCookieForm extends StatelessWidget {
 typedef _VerifyCallback = Future<void> Function(
     BuildContext context, String verify);
 
-class _Verify extends StatelessWidget {
-  final GlobalKey<FormFieldState<String>> _formKey =
-      GlobalKey<FormFieldState<String>>();
-
-  final TextEditingController textController;
-
+class _Verify extends StatefulWidget {
   final String buttonText;
 
   final _VerifyCallback onPressed;
 
-  _Verify(
-      // ignore: unused_element
-      {super.key,
-      required this.textController,
-      required this.buttonText,
-      required this.onPressed});
+// ignore: unused_element
+  const _Verify({super.key, required this.buttonText, required this.onPressed});
+
+  @override
+  State<_Verify> createState() => _VerifyState();
+}
+
+class _VerifyState extends State<_Verify> {
+  final GlobalKey<FormFieldState<String>> _formKey =
+      GlobalKey<FormFieldState<String>>();
+
+  late TextEditingController _textController;
+
+  late FocusNode _focusNode;
+
+  void _clear() {
+    _textController.clear();
+    _focusNode.requestFocus();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _textController = TextEditingController();
+    _focusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _focusNode.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -308,7 +361,8 @@ class _Verify extends StatelessWidget {
           children: [
             TextFormField(
               key: _formKey,
-              controller: textController,
+              controller: _textController,
+              focusNode: _focusNode,
               decoration: const InputDecoration(labelText: '验证码'),
               autofocus: true,
               onSaved: (newValue) => verify = newValue,
@@ -316,7 +370,7 @@ class _Verify extends StatelessWidget {
                   (value == null || value.isEmpty) ? '请输入验证码' : null,
             ),
             const SizedBox(height: 10.0),
-            _VerifyImage(onRefresh: textController.clear),
+            _VerifyImage(onRefresh: _clear),
           ],
         ),
         actions: [
@@ -324,10 +378,10 @@ class _Verify extends StatelessWidget {
             onPressed: () async {
               if (_formKey.currentState!.validate()) {
                 _formKey.currentState!.save();
-                await onPressed(context, verify!);
+                await widget.onPressed(context, verify!);
               }
             },
-            child: Text(buttonText),
+            child: Text(widget.buttonText),
           ),
         ],
       ),
@@ -338,7 +392,7 @@ class _Verify extends StatelessWidget {
 class _Cookie extends StatelessWidget {
   final CookieData cookie;
 
-  final TextEditingController textController = TextEditingController();
+  final GlobalKey<_VerifyState> _verifyKey = GlobalKey<_VerifyState>();
 
   _Cookie({super.key, required this.cookie});
 
@@ -360,7 +414,7 @@ class _Cookie extends StatelessWidget {
           )
         : Get.dialog<bool>(
             _Verify(
-              textController: textController,
+              key: _verifyKey,
               buttonText: '删除',
               onPressed: (context, verify) async {
                 final overlay = context.loaderOverlay;
@@ -376,7 +430,7 @@ class _Cookie extends StatelessWidget {
                   showToast('删除饼干成功');
                   Get.back(result: true);
                 } catch (e) {
-                  textController.clear();
+                  _verifyKey.currentState?._clear();
 
                   showToast('删除饼干失败：${exceptionMessage(e)}');
                 } finally {
@@ -474,7 +528,7 @@ class CookieView extends StatefulWidget {
 }
 
 class _CookieViewState extends State<CookieView> {
-  final TextEditingController textController = TextEditingController();
+  final GlobalKey<_VerifyState> _verifyKey = GlobalKey<_VerifyState>();
 
   late Future<void> _updateCookies;
 
@@ -586,7 +640,7 @@ class _CookieViewState extends State<CookieView> {
                           ? ElevatedButton(
                               onPressed: () => Get.dialog(
                                 _Verify(
-                                  textController: textController,
+                                  key: _verifyKey,
                                   buttonText: '领取',
                                   onPressed: (context, verify) async {
                                     final overlay = context.loaderOverlay;
@@ -597,7 +651,7 @@ class _CookieViewState extends State<CookieView> {
                                       showToast('领取新饼干成功');
                                       Get.back();
                                     } catch (e) {
-                                      textController.clear();
+                                      _verifyKey.currentState?._clear();
 
                                       showToast(
                                           '领取新饼干失败：${exceptionMessage(e)}');
