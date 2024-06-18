@@ -6,6 +6,7 @@ import '../utils/theme.dart';
 class TightListTile extends ListTile {
   const TightListTile(
       {super.key,
+      super.enabled,
       super.leading,
       super.title,
       super.subtitle,

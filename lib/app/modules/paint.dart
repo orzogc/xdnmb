@@ -253,7 +253,6 @@ class PaintView extends GetView<PaintController> {
             appBar: AppBar(
               title: const Text('涂鸦'),
               actions: [
-                // TODO: 旋转涂鸦
                 PickImage(onPickImage: (path) async {
                   try {
                     controller.image.value = await File(path).readAsBytes();

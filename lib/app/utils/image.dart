@@ -1,11 +1,13 @@
 import 'dart:collection';
 import 'dart:io' as io;
 import 'dart:math';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
+import 'package:image/image.dart' as img;
 import 'package:media_scanner/media_scanner.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart';
@@ -142,17 +144,87 @@ String hashImage(String imageName, [int? length]) {
   }
 }
 
-Image? getImage(Uint8List imageData) {
+class ImageCompressData {
+  int minWidth;
+  int minHeight;
+  int quality;
+  int rotate;
+
+  ImageCompressData(
+      {required this.minWidth,
+      required this.minHeight,
+      required this.quality,
+      required this.rotate})
+      : assert(minWidth > 0 && minHeight > 0 && quality > 0 && quality <= 100);
+}
+
+Future<Image> getImage(Uint8List imageData,
+    [ImageCompressData? compressData]) async {
   final time = filenameFromTime();
   final mimeType = lookupMimeType(time, headerBytes: imageData);
   if (mimeType != null) {
     final imageType = ImageType.fromMimeType(mimeType);
     if (imageType != null) {
+      if (imageType != ImageType.gif && compressData != null) {
+        if (GetPlatform.isAndroid || GetPlatform.isIOS || GetPlatform.isMacOS) {
+          imageData = await FlutterImageCompress.compressWithList(imageData,
+              minWidth: compressData.minWidth,
+              minHeight: compressData.minHeight,
+              rotate: compressData.rotate,
+              quality: compressData.quality,
+              format: CompressFormat.jpeg);
+        } else {
+          imageData = await compute(
+              compressImage, (imageData, imageType, compressData));
+        }
+      }
+
       return Image('$time.${imageType.extension()}', imageData, imageType);
+    } else {
+      throw '无效的图片格式：$mimeType';
     }
+  } else {
+    throw '无效的图片格式';
+  }
+}
+
+Uint8List compressImage((Uint8List, ImageType, ImageCompressData) data) {
+  final imageData = data.$1;
+  final imageType = data.$2;
+  final compressData = data.$3;
+
+  late final img.Image image;
+  if (imageType == ImageType.jpeg) {
+    image = img.decodeJpg(imageData)!;
+  } else if (imageType == ImageType.png) {
+    image = img.decodePng(imageData)!;
+  } else {
+    throw '无法处理的图片格式：$imageType';
   }
 
-  return null;
+  final scale = getScale(
+      image.width, image.height, compressData.minWidth, compressData.minHeight);
+  final resizedImage = img.copyResize(image,
+      width: (image.width * scale).floor(),
+      height: (image.height * scale).floor());
+  final rotatedImage = img.copyRotate(resizedImage, angle: compressData.rotate);
+
+  return img.encodeJpg(rotatedImage, quality: compressData.quality);
+}
+
+double getScale(
+  int width,
+  int height,
+  int minWidth,
+  int minHeight,
+) {
+  assert(width > 0 && height > 0 && minWidth > 0 && minHeight > 0);
+
+  final scaleW = minWidth / width;
+  final scaleH = minHeight / height;
+  final scale = min(1.0, max(scaleW, scaleH));
+
+  return scale;
 }
 
 Future<Uint8List?> loadImage(PostBase post) async {
