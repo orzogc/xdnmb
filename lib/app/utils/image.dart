@@ -144,38 +144,107 @@ String hashImage(String imageName, [int? length]) {
   }
 }
 
-class ImageCompressData {
-  int minWidth;
-  int minHeight;
-  int quality;
-  int rotate;
+class ImageConfig {
+  static const int minQuality = 1;
 
-  ImageCompressData(
-      {required this.minWidth,
-      required this.minHeight,
-      required this.quality,
-      required this.rotate})
-      : assert(minWidth > 0 && minHeight > 0 && quality > 0 && quality <= 100);
+  static const int maxQuality = 100;
+
+  static const int defaultRotate = 0;
+
+  static const int rotateCycle = 360;
+
+  final int _width;
+
+  final int _height;
+
+  int? _minWidth;
+
+  int? _minHeight;
+
+  int? _quality;
+
+  int? _rotate;
+
+  ImageConfig({required int width, required int height})
+      : assert(width > 0 && height > 0),
+        _width = width,
+        _height = height;
+
+  ImageConfig._inner(
+      {required int width,
+      required int height,
+      required int? minWidth,
+      required int? minHeight,
+      required int? quality,
+      required int? rotate})
+      : _width = width,
+        _height = height,
+        _minWidth = minWidth,
+        _minHeight = minHeight,
+        _quality = quality,
+        _rotate = rotate;
+
+  int get width => _width;
+
+  int get height => _height;
+
+  int get minWidth => _minWidth ?? _width;
+
+  int get minHeight => _minHeight ?? _height;
+
+  int get quality => _quality ?? maxQuality;
+
+  int get rotate => _rotate ?? defaultRotate;
+
+  bool get needToCompress =>
+      minWidth != width ||
+      minHeight != height ||
+      quality != maxQuality ||
+      rotate % rotateCycle != 0;
+
+  set minWidth(int width) {
+    assert(width > 0);
+
+    _minWidth = width;
+  }
+
+  set minHeight(int height) {
+    assert(height > 0);
+
+    _minHeight = height;
+  }
+
+  set quality(int quality) {
+    assert(quality >= minQuality && quality <= maxQuality);
+
+    _quality = quality;
+  }
+
+  set rotate(int rotate) {
+    _rotate = rotate;
+  }
+
+  ImageConfig copy() => ImageConfig._inner(
+      width: _width,
+      height: _height,
+      minWidth: _minWidth,
+      minHeight: _minHeight,
+      quality: _quality,
+      rotate: _rotate);
 }
 
-Future<Image> getImage(Uint8List imageData,
-    [ImageCompressData? compressData]) async {
+Future<Image> getImage(Uint8List imageData, [ImageConfig? config]) async {
   final time = filenameFromTime();
   final mimeType = lookupMimeType(time, headerBytes: imageData);
   if (mimeType != null) {
     final imageType = ImageType.fromMimeType(mimeType);
     if (imageType != null) {
-      if (imageType != ImageType.gif && compressData != null) {
+      if (imageType != ImageType.gif && config != null) {
         if (GetPlatform.isAndroid || GetPlatform.isIOS || GetPlatform.isMacOS) {
-          imageData = await FlutterImageCompress.compressWithList(imageData,
-              minWidth: compressData.minWidth,
-              minHeight: compressData.minHeight,
-              rotate: compressData.rotate,
-              quality: compressData.quality,
-              format: CompressFormat.jpeg);
+          imageData = await _nativeCompressImage(imageData, config);
         } else {
-          imageData = await compute(
-              compressImage, (imageData, imageType, compressData));
+          imageData =
+              await compute(_dartCompressImage, (imageData, imageType, config));
         }
       }
 
@@ -188,28 +257,46 @@ Future<Image> getImage(Uint8List imageData,
   }
 }
 
-Uint8List compressImage((Uint8List, ImageType, ImageCompressData) data) {
+Future<Uint8List> _nativeCompressImage(
+    Uint8List imageData, ImageConfig config) async {
+  if (config.needToCompress) {
+    return await FlutterImageCompress.compressWithList(imageData,
+        minWidth: config.minWidth,
+        minHeight: config.minHeight,
+        quality: config.quality,
+        rotate: config.rotate,
+        format: CompressFormat.jpeg);
+  } else {
+    return imageData;
+  }
+}
+
+Uint8List _dartCompressImage((Uint8List, ImageType, ImageConfig) data) {
   final imageData = data.$1;
   final imageType = data.$2;
-  final compressData = data.$3;
+  final config = data.$3;
 
-  late final img.Image image;
-  if (imageType == ImageType.jpeg) {
-    image = img.decodeJpg(imageData)!;
-  } else if (imageType == ImageType.png) {
-    image = img.decodePng(imageData)!;
+  if (config.needToCompress) {
+    late final img.Image image;
+    if (imageType == ImageType.jpeg) {
+      image = img.decodeJpg(imageData)!;
+    } else if (imageType == ImageType.png) {
+      image = img.decodePng(imageData)!;
+    } else {
+      throw '无法处理的图片格式：$imageType';
+    }
+
+    final scale =
+        getScale(image.width, image.height, config.minWidth, config.minHeight);
+    final resizedImage = img.copyResize(image,
+        width: (image.width * scale).floor(),
+        height: (image.height * scale).floor());
+    final rotatedImage = img.copyRotate(resizedImage, angle: config.rotate);
+
+    return img.encodeJpg(rotatedImage, quality: config.quality);
   } else {
-    throw '无法处理的图片格式：$imageType';
+    return imageData;
   }
-
-  final scale = getScale(
-      image.width, image.height, compressData.minWidth, compressData.minHeight);
-  final resizedImage = img.copyResize(image,
-      width: (image.width * scale).floor(),
-      height: (image.height * scale).floor());
-  final rotatedImage = img.copyRotate(resizedImage, angle: compressData.rotate);
-
-  return img.encodeJpg(rotatedImage, quality: compressData.quality);
 }
 
 double getScale(

@@ -261,27 +261,22 @@ class _ReportReasonState extends State<_ReportReason> {
 class _ImageDialog extends StatelessWidget {
   final RxBool isWatermark;
 
-  final Rx<ImageCompressData> imageCompressData;
+  final Rx<ImageConfig> imageConfig;
 
   /// 选择是否有水印时调用，参数为是否有水印
   final ValueSetter<bool> onWatermark;
 
-  final ValueSetter<ImageCompressData?> onImageCompressData;
-
-  final RxBool toCompressImage;
+  final ValueSetter<ImageConfig?> onImageConfig;
 
   _ImageDialog(
       // ignore: unused_element
       {super.key,
       required bool isWatermark,
-      ImageCompressData? imageCompressData,
+      required ImageConfig imageConfig,
       required this.onWatermark,
-      required this.onImageCompressData})
+      required this.onImageConfig})
       : isWatermark = isWatermark.obs,
-        imageCompressData = Rx(imageCompressData ??
-            ImageCompressData(
-                minWidth: 1024, minHeight: 1024, rotate: 0, quality: 100)),
-        toCompressImage = (imageCompressData != null).obs;
+        imageConfig = imageConfig.obs;
 
   @override
   Widget build(BuildContext context) => Obx(() => ConfirmCancelDialog(
@@ -297,80 +292,71 @@ class _ImageDialog extends StatelessWidget {
                 }
               },
             ),
-            TightCheckboxListTile(
-              title: const Text('压缩或旋转图片'),
-              value: toCompressImage.value,
-              onChanged: (toCompressImage) {
-                if (toCompressImage != null) {
-                  this.toCompressImage.value = toCompressImage;
-                }
-              },
-            ),
             TightListTile(
-              enabled: toCompressImage.value,
               title: const Text('压缩图片的最小宽度'),
-              trailing: Text('${imageCompressData.value.minWidth}'),
+              trailing: Text('${imageConfig.value.minWidth}'),
               onTap: () async {
                 final width = await Get.dialog<int>(NumRangeDialog<int>(
-                    text: '宽度',
-                    initialValue: imageCompressData.value.minWidth,
-                    min: 1));
+                  text: '宽度',
+                  initialValue: imageConfig.value.minWidth,
+                  min: 1,
+                  max: imageConfig.value.width,
+                ));
 
                 if (width != null) {
-                  imageCompressData.value.minWidth = width;
-                  imageCompressData.refresh();
+                  imageConfig.value.minWidth = width;
+                  imageConfig.refresh();
                 }
               },
             ),
             TightListTile(
-              enabled: toCompressImage.value,
               title: const Text('压缩图片的最小高度'),
-              trailing: Text('${imageCompressData.value.minHeight}'),
+              trailing: Text('${imageConfig.value.minHeight}'),
               onTap: () async {
                 final height = await Get.dialog<int>(NumRangeDialog<int>(
-                    text: '高度',
-                    initialValue: imageCompressData.value.minHeight,
-                    min: 1));
+                  text: '高度',
+                  initialValue: imageConfig.value.minHeight,
+                  min: 1,
+                  max: imageConfig.value.height,
+                ));
 
                 if (height != null) {
-                  imageCompressData.value.minHeight = height;
-                  imageCompressData.refresh();
+                  imageConfig.value.minHeight = height;
+                  imageConfig.refresh();
                 }
               },
             ),
             TightListTile(
-              enabled: toCompressImage.value,
               title: const Text('压缩图片的质量'),
-              trailing: Text('${imageCompressData.value.quality}'),
+              trailing: Text('${imageConfig.value.quality}'),
               onTap: () async {
                 final quality = await Get.dialog<int>(NumRangeDialog<int>(
                   text: '质量',
-                  initialValue: imageCompressData.value.quality,
-                  min: 1,
-                  max: 100,
+                  initialValue: imageConfig.value.quality,
+                  min: ImageConfig.minQuality,
+                  max: ImageConfig.maxQuality,
                 ));
 
                 if (quality != null) {
-                  imageCompressData.value.quality = quality;
-                  imageCompressData.refresh();
+                  imageConfig.value.quality = quality;
+                  imageConfig.refresh();
                 }
               },
             ),
             TightListTile(
-              enabled: toCompressImage.value,
-              title: const Text('图片旋转的角度'),
-              trailing: Text('${imageCompressData.value.rotate}'),
+              title: const Text('图片顺时针旋转的角度'),
+              trailing: Text('${imageConfig.value.rotate}'),
               onTap: () async {
                 final rotate = await Get.dialog<int>(NumRangeDialog<int>(
                   text: '旋转角度',
-                  initialValue: imageCompressData.value.rotate,
-                  min: -360,
-                  max: 360,
+                  initialValue: imageConfig.value.rotate,
+                  min: -ImageConfig.rotateCycle,
+                  max: ImageConfig.rotateCycle,
                 ));
 
                 if (rotate != null) {
-                  imageCompressData.value.rotate = rotate;
-                  imageCompressData.refresh();
+                  imageConfig.value.rotate = rotate;
+                  imageConfig.refresh();
                 }
               },
             ),
@@ -378,10 +364,10 @@ class _ImageDialog extends StatelessWidget {
         ),
         onConfirm: () {
           onWatermark(isWatermark.value);
-          if (toCompressImage.value) {
-            onImageCompressData(imageCompressData.value);
+          if (imageConfig.value.needToCompress) {
+            onImageConfig(imageConfig.value);
           } else {
-            onImageCompressData(null);
+            onImageConfig(null);
           }
 
           Get.back();
@@ -401,14 +387,14 @@ class _Image extends StatefulWidget {
 
   final bool isWatermark;
 
-  final ImageCompressData? imageCompressData;
+  final ImageConfig? imageConfig;
 
   final VoidCallback onCancel;
 
   /// 选取是否有水印时调用，参数为是否有水印
   final ValueSetter<bool> onWatermark;
 
-  final ValueSetter<ImageCompressData?> onImageCompressData;
+  final ValueSetter<ImageConfig?> onImageConfig;
 
   /// 文件图片加载后调用，参数是图片数据
   final ValueSetter<Uint8List> onLoadImageFile;
@@ -424,10 +410,10 @@ class _Image extends StatefulWidget {
       this.imagePath,
       this.imageData,
       required this.isWatermark,
-      this.imageCompressData,
+      this.imageConfig,
       required this.onCancel,
       required this.onWatermark,
-      required this.onImageCompressData,
+      required this.onImageConfig,
       required this.onLoadImageFile,
       required this.onPaintImage})
       : assert(imagePath != null || imageData != null);
@@ -443,15 +429,36 @@ class _ImageState extends State<_Image> {
 
   Future<Uint8List>? _readImageFile;
 
+  MemoryImage? _imageProvider;
+
+  ImageStream? _imageStream;
+
+  ImageStreamListener? _imageStreamListener;
+
+  int? _imageWidth;
+
+  int? _imageHeight;
+
+  void _getImageSize(ImageInfo image, bool synchronousCall) {
+    _imageWidth = image.image.width;
+    _imageHeight = image.image.height;
+  }
+
   void _setReadImageFile() => _readImageFile =
       widget.imageData == null ? File(widget.imagePath!).readAsBytes() : null;
 
-  Widget _memoryImage(Uint8List imageData) => Image.memory(
-        imageData,
+  Widget _memoryImage(Uint8List imageData) {
+    _imageProvider = MemoryImage(imageData);
+    _imageStream = _imageProvider!.resolve(const ImageConfiguration());
+    _imageStreamListener = ImageStreamListener(_getImageSize);
+    _imageStream!.addListener(_imageStreamListener!);
+
+    return Image(
+        image: _imageProvider!,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) =>
-            loadingImageErrorBuilder(context, widget.imagePath, error),
-      );
+            loadingImageErrorBuilder(context, widget.imagePath, error));
+  }
 
   Widget _fileImage() => FutureBuilder<Uint8List>(
         future: _readImageFile!,
@@ -487,7 +494,25 @@ class _ImageState extends State<_Image> {
     if (widget.imageData != oldWidget.imageData ||
         widget.imagePath != oldWidget.imagePath) {
       _setReadImageFile();
+
+      if (_imageStream != null && _imageStreamListener != null) {
+        _imageStream!.removeListener(_imageStreamListener!);
+      }
+      _imageProvider = null;
+      _imageStream = null;
+      _imageStreamListener = null;
+      _imageWidth = null;
+      _imageHeight = null;
     }
+  }
+
+  @override
+  void dispose() {
+    if (_imageStream != null && _imageStreamListener != null) {
+      _imageStream!.removeListener(_imageStreamListener!);
+    }
+
+    super.dispose();
   }
 
   @override
@@ -515,11 +540,16 @@ class _ImageState extends State<_Image> {
                   }
                 }
               : null,
-          onLongPress: () => Get.dialog(_ImageDialog(
-              isWatermark: widget.isWatermark,
-              imageCompressData: widget.imageCompressData,
-              onWatermark: widget.onWatermark,
-              onImageCompressData: widget.onImageCompressData)),
+          onLongPress: () {
+            if (_imageWidth != null && _imageHeight != null) {
+              Get.dialog(_ImageDialog(
+                  isWatermark: widget.isWatermark,
+                  imageConfig: widget.imageConfig?.copy() ??
+                      ImageConfig(width: _imageWidth!, height: _imageHeight!),
+                  onWatermark: widget.onWatermark,
+                  onImageConfig: widget.onImageConfig));
+            }
+          },
           child: Hero(
             tag: _imageHeroTag,
             transitionOnUserGestures: true,
@@ -990,7 +1020,7 @@ class _Post extends StatelessWidget {
 
   final bool isWatermark;
 
-  final ImageCompressData? imageCompressData;
+  final ImageConfig? imageConfig;
 
   final Uint8List? imageData;
 
@@ -1015,7 +1045,7 @@ class _Post extends StatelessWidget {
       this.forumId,
       this.poUserHash,
       this.isWatermark = false,
-      this.imageCompressData,
+      this.imageConfig,
       this.imageData,
       this.reportReason,
       required this.isPainted,
@@ -1200,7 +1230,7 @@ class _Post extends StatelessWidget {
                 Future(() async {
                   xdnmb_api.Image? image;
                   if (imageData != null) {
-                    image = await getImage(imageData!, imageCompressData);
+                    image = await getImage(imageData!, imageConfig);
                   }
 
                   if (!(postListType.isForumType ||
@@ -1783,7 +1813,7 @@ class _EditPostState extends State<EditPost> {
 
   late final RxBool _isWatermark;
 
-  late final Rxn<ImageCompressData> _imageCompressData;
+  late final Rxn<ImageConfig> _imageConfig;
 
   late final RxnString _reportReason;
 
@@ -1990,15 +2020,15 @@ class _EditPostState extends State<EditPost> {
                                     imagePath: _imagePath.value,
                                     imageData: _imageData.value,
                                     isWatermark: _isWatermark.value,
-                                    imageCompressData: _imageCompressData.value,
+                                    imageConfig: _imageConfig.value,
                                     onCancel: () {
                                       _imagePath.value = null;
                                       _imageData.value = null;
                                     },
                                     onWatermark: (isWatermark) =>
                                         _isWatermark.value = isWatermark,
-                                    onImageCompressData: (compressData) =>
-                                        _imageCompressData.value = compressData,
+                                    onImageConfig: (compressData) =>
+                                        _imageConfig.value = compressData,
                                     onLoadImageFile: (imageData) =>
                                         _imageData.value = imageData,
                                     onPaintImage: (imageData) {
@@ -2089,7 +2119,7 @@ class _EditPostState extends State<EditPost> {
                       forumId: _forumId.value,
                       poUserHash: _poUserHash.value,
                       isWatermark: _isWatermark.value,
-                      imageCompressData: _imageCompressData.value,
+                      imageConfig: _imageConfig.value,
                       imageData: _imageData.value,
                       isPainted:
                           _imagePath.value == null && _imageData.value != null,
@@ -2137,7 +2167,7 @@ class _EditPostState extends State<EditPost> {
     _imagePath = RxnString(widget.imagePath);
     _imageData = Rxn(widget.imageData);
     _isWatermark = (widget.isWatermark ?? SettingsService.to.isWatermark).obs;
-    _imageCompressData = Rxn(null);
+    _imageConfig = Rxn(null);
     _reportReason = RxnString(widget.reportReason);
     _isAttachDeviceInfo = (widget.isAttachDeviceInfo ?? true).obs;
 

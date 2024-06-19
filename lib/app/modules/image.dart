@@ -385,7 +385,9 @@ class _ImageState extends State<_Image>
 
   Offset? _positionDelta;
 
-  ImageStream? _imageStream;
+  late ImageStream _imageStream;
+
+  late ImageStreamListener _imageStreamListener;
 
   bool _fixWidth = false;
 
@@ -823,7 +825,8 @@ class _ImageState extends State<_Image>
     _disposeDistanceFactor = settings.fixedImageDisposeRatio;
 
     _imageStream = widget.provider.resolve(const ImageConfiguration());
-    _imageStream?.addListener(ImageStreamListener(_updateImage));
+    _imageStreamListener = ImageStreamListener(_updateImage);
+    _imageStream.addListener(_imageStreamListener);
   }
 
   @override
@@ -833,10 +836,9 @@ class _ImageState extends State<_Image>
     if (widget.provider != oldWidget.provider) {
       final oldImageStream = _imageStream;
       _imageStream = widget.provider.resolve(const ImageConfiguration());
-      if (_imageStream?.key != oldImageStream?.key) {
-        final listener = ImageStreamListener(_updateImage);
-        oldImageStream?.removeListener(listener);
-        _imageStream?.addListener(listener);
+      if (_imageStream.key != oldImageStream.key) {
+        oldImageStream.removeListener(_imageStreamListener);
+        _imageStream.addListener(_imageStreamListener);
       }
     }
   }
@@ -848,7 +850,7 @@ class _ImageState extends State<_Image>
     _transformationController.dispose();
     _animationController.dispose();
 
-    _imageStream?.removeListener(ImageStreamListener(_updateImage));
+    _imageStream.removeListener(_imageStreamListener);
 
     super.dispose();
   }
