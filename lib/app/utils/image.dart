@@ -165,10 +165,13 @@ class ImageConfig {
 
   int? _rotate;
 
+  bool mirror;
+
   ImageConfig({required int width, required int height})
       : assert(width > 0 && height > 0),
         _width = width,
-        _height = height;
+        _height = height,
+        mirror = false;
 
   ImageConfig._inner(
       {required int width,
@@ -176,7 +179,8 @@ class ImageConfig {
       required int? minWidth,
       required int? minHeight,
       required int? quality,
-      required int? rotate})
+      required int? rotate,
+      required this.mirror})
       : _width = width,
         _height = height,
         _minWidth = minWidth,
@@ -196,7 +200,14 @@ class ImageConfig {
 
   int get rotate => _rotate ?? defaultRotate;
 
-  bool get needToCompress =>
+  bool get needModified =>
+      minWidth != width ||
+      minHeight != height ||
+      quality != maxQuality ||
+      rotate % rotateCycle != 0 ||
+      mirror;
+
+  bool get needCompressed =>
       minWidth != width ||
       minHeight != height ||
       quality != maxQuality ||
@@ -230,7 +241,8 @@ class ImageConfig {
       minWidth: _minWidth,
       minHeight: _minHeight,
       quality: _quality,
-      rotate: _rotate);
+      rotate: _rotate,
+      mirror: mirror);
 }
 
 Future<Image> getImage(Uint8List imageData, [ImageConfig? config]) async {
@@ -241,7 +253,7 @@ Future<Image> getImage(Uint8List imageData, [ImageConfig? config]) async {
     if (imageType != null) {
       if (imageType != ImageType.gif && config != null) {
         if (GetPlatform.isAndroid || GetPlatform.isIOS || GetPlatform.isMacOS) {
-          imageData = await _nativeCompressImage(imageData, config);
+          imageData = await _nativeCompressImage(imageData, imageType, config);
         } else {
           imageData =
               await compute(_dartCompressImage, (imageData, imageType, config));
@@ -258,14 +270,30 @@ Future<Image> getImage(Uint8List imageData, [ImageConfig? config]) async {
 }
 
 Future<Uint8List> _nativeCompressImage(
-    Uint8List imageData, ImageConfig config) async {
-  if (config.needToCompress) {
-    return await FlutterImageCompress.compressWithList(imageData,
-        minWidth: config.minWidth,
-        minHeight: config.minHeight,
-        quality: config.quality,
-        rotate: config.rotate,
-        format: CompressFormat.jpeg);
+    Uint8List imageData, ImageType imageType, ImageConfig config) async {
+  if (config.needModified) {
+    if (config.mirror) {
+      imageData = await compute((data) {
+        final imageData = data.$1;
+        final imageType = data.$2;
+
+        var image = _getImageFromData(imageData, imageType);
+        image = img.flipHorizontal(image);
+
+        return _getDataFromImage(image, imageType);
+      }, (imageData, imageType));
+    }
+
+    if (config.needCompressed) {
+      return await FlutterImageCompress.compressWithList(imageData,
+          minWidth: config.minWidth,
+          minHeight: config.minHeight,
+          quality: config.quality,
+          rotate: config.rotate,
+          format: CompressFormat.jpeg);
+    } else {
+      return imageData;
+    }
   } else {
     return imageData;
   }
@@ -276,30 +304,51 @@ Uint8List _dartCompressImage((Uint8List, ImageType, ImageConfig) data) {
   final imageType = data.$2;
   final config = data.$3;
 
-  if (config.needToCompress) {
-    late final img.Image image;
-    if (imageType == ImageType.jpeg) {
-      image = img.decodeJpg(imageData)!;
-    } else if (imageType == ImageType.png) {
-      image = img.decodePng(imageData)!;
-    } else {
-      throw '无法处理的图片格式：$imageType';
+  if (config.needModified) {
+    var image = _getImageFromData(imageData, imageType);
+
+    if (config.mirror) {
+      image = img.flipHorizontal(image);
     }
 
-    final scale =
-        getScale(image.width, image.height, config.minWidth, config.minHeight);
-    final resizedImage = img.copyResize(image,
-        width: (image.width * scale).floor(),
-        height: (image.height * scale).floor());
-    final rotatedImage = img.copyRotate(resizedImage, angle: config.rotate);
+    if (config.needCompressed) {
+      final scale = _getScale(
+          config.width, config.height, config.minWidth, config.minHeight);
+      image = img.copyResize(image,
+          width: (config.width * scale).floor(),
+          height: (config.height * scale).floor());
+      image = img.copyRotate(image, angle: config.rotate);
 
-    return img.encodeJpg(rotatedImage, quality: config.quality);
+      return img.encodeJpg(image, quality: config.quality);
+    } else {
+      return _getDataFromImage(image, imageType);
+    }
   } else {
     return imageData;
   }
 }
 
-double getScale(
+img.Image _getImageFromData(Uint8List imageData, ImageType imageType) {
+  if (imageType == ImageType.jpeg) {
+    return img.decodeJpg(imageData)!;
+  } else if (imageType == ImageType.png) {
+    return img.decodePng(imageData)!;
+  } else {
+    throw '无法处理的图片格式：$imageType';
+  }
+}
+
+Uint8List _getDataFromImage(img.Image image, ImageType imageType) {
+  if (imageType == ImageType.jpeg) {
+    return img.encodeJpg(image, quality: 100);
+  } else if (imageType == ImageType.png) {
+    return img.encodePng(image);
+  } else {
+    throw '无法处理的图片格式：$imageType';
+  }
+}
+
+double _getScale(
   int width,
   int height,
   int minWidth,

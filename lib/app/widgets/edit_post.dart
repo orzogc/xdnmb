@@ -360,11 +360,21 @@ class _ImageDialog extends StatelessWidget {
                 }
               },
             ),
+            TightCheckboxListTile(
+              title: const Text('左右镜像图片'),
+              value: imageConfig.value.mirror,
+              onChanged: (toMirror) {
+                if (toMirror != null) {
+                  imageConfig.value.mirror = toMirror;
+                  imageConfig.refresh();
+                }
+              },
+            ),
           ],
         ),
         onConfirm: () {
           onWatermark(isWatermark.value);
-          if (imageConfig.value.needToCompress) {
+          if (imageConfig.value.needModified) {
             onImageConfig(imageConfig.value);
           } else {
             onImageConfig(null);
