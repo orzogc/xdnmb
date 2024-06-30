@@ -23,7 +23,7 @@ dependencies:
   easy_refresh: ^3.4.0
   expandable_text: ^2.3.0
   file_picker: ^8.0.5
-  float_column: ^2.1.5
+  float_column: ^2.1.6
   flutter:
     sdk: flutter
   flutter_cache_manager: ^3.3.2

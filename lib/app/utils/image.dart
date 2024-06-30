@@ -274,8 +274,7 @@ Future<Uint8List> _nativeCompressImage(
   if (config.needModified) {
     if (config.mirror) {
       imageData = await compute((data) {
-        final imageData = data.$1;
-        final imageType = data.$2;
+        final (imageData, imageType) = data;
 
         var image = _getImageFromData(imageData, imageType);
         image = img.flipHorizontal(image);
@@ -300,9 +299,7 @@ Future<Uint8List> _nativeCompressImage(
 }
 
 Uint8List _dartCompressImage((Uint8List, ImageType, ImageConfig) data) {
-  final imageData = data.$1;
-  final imageType = data.$2;
-  final config = data.$3;
+  final (imageData, imageType, config) = data;
 
   if (config.needModified) {
     var image = _getImageFromData(imageData, imageType);

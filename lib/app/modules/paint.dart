@@ -185,9 +185,12 @@ class PaintBinding implements Bindings {
 class PaintView extends GetView<PaintController> {
   const PaintView({super.key});
 
-  Future<Uint8List?> _exportImage() async =>
-      await controller._painterKey.currentState?.widget.controller
-          .exportImage();
+  Future<Uint8List?> _exportImage() async {
+    showToast('正在生成涂鸦');
+
+    return await controller._painterKey.currentState?.widget.controller
+        .exportImage();
+  }
 
   Future<void> _saveImage() async {
     final data = await _exportImage();

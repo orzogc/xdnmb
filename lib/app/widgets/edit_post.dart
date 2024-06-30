@@ -361,7 +361,7 @@ class _ImageDialog extends StatelessWidget {
               },
             ),
             TightCheckboxListTile(
-              title: const Text('左右镜像图片'),
+              title: const Text('镜像图片'),
               value: imageConfig.value.mirror,
               onChanged: (toMirror) {
                 if (toMirror != null) {
