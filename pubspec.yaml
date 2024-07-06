@@ -1,7 +1,7 @@
 name: nmbxd
 description: An app for nmbxd.com.
 publish_to: 'none'
-version: 0.5.2-alpha+12
+version: 0.5.2+13
 
 environment:
   sdk: '>=3.4.1 <4.0.0'
